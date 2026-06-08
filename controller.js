@@ -47,6 +47,40 @@ const App = (() => {
     return 'classic';
   }
 
+  // Lit le token individuel du répondant depuis l'URL (?token=...)
+  function readToken() {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('token') || null;
+    } catch (e) { return null; }
+  }
+
+  // Envoie le résultat au backend pour remplir le répondant dans Airtable
+  function enregistrerResultat(result) {
+    const token = readToken();
+    if (!token) return; // pas de token = test libre, on n'enregistre pas
+    const ENREGISTRER_URL = "https://sinea-profile-ia.vercel.app/api/enregistrer";
+    const profil = {
+      dominante: result.dominante ? result.dominante.nom : "",
+      secondaires: (result.secondaires || []).map(s => s.nom),
+      famille: result.dominante ? result.dominante.famille : "",
+      bigFive: result.scoresBigFive || {},
+    };
+    fetch(ENREGISTRER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, profil, resultatComplet: result }),
+    }).catch(() => {}); // silencieux : ne bloque pas l'expérience
+  }
+
+  // Détermine le bon type d'affichage selon le format de la question
+  function kindFromFormat(it, defaut) {
+    const f = it.format || 'qcm';
+    if (f === 'curseur') return 'curseur';
+    if (f === 'repartition') return 'repart';
+    return defaut || 'qcm';
+  }
+
   // ---- Définition des chapitres selon le type ----
   function chapitres() {
     const ch = [
@@ -71,7 +105,7 @@ const App = (() => {
       list.forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'socle' }));
     });
     d.sinea_hybride.forEach(it => q.push({ kind: 'curseur', id: it.id, item: it, chap: 'socle' }));
-    (d.sinea_transversales || []).forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'socle' }));
+    (d.sinea_transversales || []).forEach(it => q.push({ kind: kindFromFormat(it, 'qcm'), id: it.id, item: it, chap: 'socle' }));
     // Répartitions espacées dans le bloc socle
     const repart = (d.sinea_repartitions || []).map(it => ({ kind: 'repart', id: it.id, item: it, chap: 'socle' }));
     const base = q.length;
@@ -88,10 +122,10 @@ const App = (() => {
 
     // ===== CHAPITRE 3 : SPÉ (selon le type) =====
     if (diagType === 'manager') {
-      (d.spe_management.goleman.questions || []).forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'spe' }));
+      (d.spe_management.goleman.questions || []).forEach(it => q.push({ kind: kindFromFormat(it, 'qcm'), id: it.id, item: it, chap: 'spe' }));
       (d.spe_management.dimensions.questions || []).forEach(it => q.push({ kind: 'ctx', id: it.id, item: it, chap: 'spe' }));
     } else if (diagType === 'commercial') {
-      (d.spe_commercial.challenger.questions || []).forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'spe' }));
+      (d.spe_commercial.challenger.questions || []).forEach(it => q.push({ kind: kindFromFormat(it, 'qcm'), id: it.id, item: it, chap: 'spe' }));
       (d.spe_commercial.dimensions.questions || []).forEach(it => q.push({ kind: 'ctx', id: it.id, item: it, chap: 'spe' }));
     }
 
@@ -599,6 +633,10 @@ const App = (() => {
         result.speDims = Engine.scorerSpeDims(repSpeDims, diagType);
         result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
       }
+
+      // Enregistrer le résultat dans Airtable (si un token est présent dans l'URL)
+      enregistrerResultat(result);
+
       clearInterval(msgTimer);
       document.getElementById('screen-loader').classList.remove('active');
       document.getElementById('screen-result').classList.add('active');

@@ -194,14 +194,33 @@ function scorerSpeStyle(repSpeQcm, type) {
   const qById = {};
   (bloc.questions || []).forEach(q => { qById[q.id] = q; });
   const scores = {};
-  for (const [qid, repIdx] of Object.entries(repSpeQcm)) {
+  const add = (st, pts) => { if (st) scores[st] = (scores[st] || 0) + pts; };
+  for (const [qid, rep] of Object.entries(repSpeQcm)) {
     const q = qById[qid];
-    if (!q || !q.options) continue;
-    const opt = q.options[repIdx];
-    if (!opt || !opt.styles) continue;
-    for (const [st, pts] of Object.entries(opt.styles)) scores[st] = (scores[st] || 0) + pts;
+    if (!q) continue;
+    const fmt = q.format || 'qcm';
+    if (fmt === 'qcm') {
+      const opt = (q.options || [])[rep];
+      if (opt && opt.styles) for (const [st, pts] of Object.entries(opt.styles)) add(st, pts);
+    } else if (fmt === 'curseur') {
+      // position 0-100 : répartit points_max entre pôle gauche et droit
+      const pos = parseFloat(rep);
+      if (!isNaN(pos) && q.pole_gauche && q.pole_droit) {
+        const pmax = q.points_max || 3;
+        add(q.pole_gauche.style, pmax * (1 - pos / 100));
+        add(q.pole_droit.style, pmax * (pos / 100));
+      }
+    } else if (fmt === 'repartition') {
+      // rep = { styleOuIndex: points } ; on relie chaque axe à son style
+      if (rep && typeof rep === 'object' && q.axes) {
+        q.axes.forEach((axe, i) => {
+          const pts = rep[axe.style] ?? rep[i] ?? 0;
+          if (pts > 0) add(axe.style, pts);
+        });
+      }
+    }
   }
-  const classement = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const classement = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   return classement.length ? classement[0][0] : null;
 }
 
