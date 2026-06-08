@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sinéa Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ÉCRAN 1 : COVER -->
+  <section class="screen active" id="screen-cover">
+    <div class="cover"><div class="cover-inner">
+      <div class="cover-logo">Sinéa</div>
+      <div class="cover-mid">
+        <div class="cover-kicker" id="cover-kicker">Profil de personnalité</div>
+        <h1>Découvrez qui vous êtes au travail</h1>
+        <p class="cover-sub" id="cover-sub">Un portrait fondé sur la science, pour révéler vos forces et votre singularité.</p>
+        <div class="cover-meta">
+          <div><span class="cm-num" id="cover-nq">45</span><span class="cm-lab">questions</span></div>
+          <div><span class="cm-num" id="cover-nsec">3</span><span class="cm-lab">étapes</span></div>
+          <div><span class="cm-num">20</span><span class="cm-lab">archétypes</span></div>
+        </div>
+      </div>
+      <button class="btn-primary btn-light" onclick="App.start()">Commencer</button>
+      <p class="cover-note">Vos réponses restent confidentielles</p>
+      <div class="cover-side">
+        <div class="cover-side-card">
+          <h3>Ce que vous allez découvrir</h3>
+          <ul class="cover-side-list">
+            <li><span class="csl-num">1</span><span>Votre archétype dominant parmi 20 profils, et vos forces singulières</span></li>
+            <li><span class="csl-num">2</span><span>Votre tempérament détaillé, fondé sur le modèle scientifique du Big Five</span></li>
+            <li><span class="csl-num">3</span><span>Comment lire les autres et adapter votre communication à chacun</span></li>
+            <li><span class="csl-num">4</span><span>Des pistes concrètes pour développer votre plein potentiel</span></li>
+          </ul>
+        </div>
+        <button class="btn-primary btn-light" onclick="App.start()">Commencer le test</button>
+        <p class="cover-note">Vos réponses restent confidentielles</p>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ÉCRAN 2 : QUESTION -->
+  <section class="screen" id="screen-question">
+    <div class="q-screen">
+      <aside class="q-aside">
+        <div class="q-aside-halo"></div>
+        <div class="q-aside-in">
+          <div class="q-aside-logo">Sinéa</div>
+          <div class="q-aside-chap" id="q-aside-chap">Votre personnalité</div>
+          <div class="q-aside-step" id="q-aside-step">Étape 1 sur 3</div>
+          <div class="q-aside-note">Répondez spontanément. Il n'y a pas de bonne ou de mauvaise réponse, seulement la vôtre.</div>
+        </div>
+      </aside>
+      <div class="q-main">
+        <div class="q-top">
+          <div class="q-progress-head">
+            <span class="q-step" id="q-step">Question 1 / 45</span>
+          </div>
+          <div class="q-bar"><div class="q-bar-fill" id="q-bar-fill"></div></div>
+        </div>
+        <div class="q-card-wrap">
+          <div id="q-card"></div>
+        </div>
+        <div class="q-nav">
+          <button class="btn-ghost" id="btn-prev" onclick="App.prev()">Retour</button>
+          <button class="btn-primary" id="btn-next" onclick="App.next()" disabled>Continuer</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÉCRAN 3 : LOADER -->
+  <section class="screen" id="screen-loader">
+    <div class="loader"><div class="loader-content">
+      <div class="loader-ring"></div>
+      <h2>Nous composons votre portrait</h2>
+      <p>Analyse de vos 45 réponses...</p>
+    </div></div>
+  </section>
+
+  <!-- ÉCRAN 4 : RÉSULTAT -->
+  <section class="screen" id="screen-result">
+    <div class="r-screen" id="phone-scroll">
+      <div class="r-hero" id="r-hero"><div class="r-hero-in">
+        <div class="r-kicker" id="r-kicker">Votre archétype</div>
+        <div class="r-archetype" id="r-archetype"></div>
+        <div class="r-verb" id="r-verb"></div>
+      </div></div>
+      <div class="r-portrait"><img id="r-portrait-img" src="" alt=""></div>
+      <div class="r-body" id="r-body"></div>
+    </div>
+  </section>
+
+</div>
+
+<script src="sinea_data.js"></script>
+<script src="engine.js"></script>
+<script src="result.js"></script>
+<script src="controller.js"></script>
+</body>
+</html>
