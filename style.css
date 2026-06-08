@@ -636,7 +636,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Voile dégradé par-dessus la mosaïque pour la lisibilité du texte */
 .cover::after{
   content:"";position:absolute;inset:0;z-index:1;
-  background:linear-gradient(180deg, rgba(94,89,199,0.82) 0%, rgba(94,89,199,0.70) 40%, rgba(94,89,199,0.88) 100%);
+  background:radial-gradient(circle at 50% 38%, rgba(255,125,100,0.80) 0%, rgba(110,61,130,0.82) 50%, rgba(15,18,50,0.92) 100%);
 }
 /* le contenu passe au-dessus du voile */
 .cover-inner{z-index:3 !important;}
