@@ -129,6 +129,16 @@ const App = (() => {
       const sub = document.getElementById('cover-sub');
       if (sub) sub.textContent = 'Un portrait fondé sur la science, pour révéler votre personnalité et votre approche commerciale.';
     }
+
+    // Mosaïque des 20 personnages en fond de la page d'accueil
+    const mosaic = document.getElementById('cover-mosaic');
+    if (mosaic && !mosaic.dataset.filled && SINEA_DATA.images) {
+      const slugs = Object.values(SINEA_DATA.images);
+      // dupliquer pour remplir la grille si besoin
+      const tiles = slugs.concat(slugs).slice(0, 40);
+      mosaic.innerHTML = tiles.map(s => `<div class="cm-tile" style="background-image:url('${s}.webp')"></div>`).join('');
+      mosaic.dataset.filled = '1';
+    }
   }
 
   // ---- Navigation ----
