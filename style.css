@@ -646,3 +646,21 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 @media (min-width:768px){
   .cover-mosaic{grid-template-columns:repeat(8, 1fr);}
 }
+
+/* ============================================================
+   ÉCRAN D'IDENTIFICATION
+   ============================================================ */
+#screen-identif{position:absolute;inset:0;z-index:50;display:none;background:var(--c-beige);overflow-y:auto;}
+#screen-identif.active{display:flex;align-items:center;justify-content:center;}
+.identif-wrap{width:100%;max-width:460px;padding:32px 24px;}
+.identif-card{background:#fff;border-radius:22px;padding:32px 26px;box-shadow:var(--shadow-card);}
+.identif-kicker{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:10px;}
+.identif-title{font-size:30px;font-weight:800;letter-spacing:-0.02em;color:var(--c-black);margin:0 0 10px;}
+.identif-sub{font-size:15px;color:var(--c-grey);line-height:1.5;margin:0 0 26px;}
+.identif-label{display:block;font-size:13px;font-weight:600;color:var(--c-dark-grey);margin:14px 0 6px;}
+.identif-input{width:100%;border:1.5px solid #E5E3DD;border-radius:12px;padding:13px 15px;font-family:var(--font);font-size:15.5px;color:var(--c-black);background:#fff;transition:border-color 0.2s;}
+.identif-input:focus{outline:none;border-color:var(--c-purple);}
+.identif-error{color:var(--c-orange);font-size:13.5px;margin-top:12px;min-height:18px;font-weight:600;}
+.identif-btn{margin-top:18px;}
+.identif-resume{margin-top:8px;font-size:14px;}
+@media (min-width:768px){ .identif-title{font-size:34px;} }

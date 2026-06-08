@@ -8,15 +8,38 @@ const App = (() => {
   let result = null;
   let diagType = 'classic'; // 'classic' | 'manager' | 'commercial' (déterminé par le lien)
 
-  // ---- Sauvegarde de progression (localStorage) ----
+  // ---- Sauvegarde de progression (localStorage + serveur Airtable) ----
   // Protège contre la perte de réponses si l'onglet se ferme pendant le test.
   const SAVE_KEY = 'sinea_profile_progress';
+  const PROGRESSION_URL = "https://sinea-profile-ia.vercel.app/api/progression";
+  let saveTimer = null;
 
   function saveProgress() {
+    // 1) sauvegarde locale immédiate (secours rapide)
     try {
       const data = { v: 1, ts: Date.now(), diagType, idx, answers };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-    } catch (e) { /* localStorage indisponible : on continue sans sauvegarde */ }
+    } catch (e) { /* localStorage indisponible : on continue */ }
+    // 2) sauvegarde serveur (différée pour ne pas spammer : 1 appel max / 2s)
+    saveProgressServer();
+  }
+
+  function saveProgressServer() {
+    if (!identite.email) return; // pas d'email = pas de sauvegarde serveur
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      fetch(PROGRESSION_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save",
+          email: identite.email,
+          prenom: identite.prenom,
+          nom: identite.nom,
+          answers, idx, diagType,
+        }),
+      }).catch(() => {}); // silencieux : ne bloque jamais l'expérience
+    }, 2000);
   }
 
   function loadProgress() {
@@ -176,6 +199,82 @@ const App = (() => {
   }
 
   // ---- Navigation ----
+  // ---- Écran d'identification ----
+  const identite = { prenom: '', nom: '', email: '' };
+
+  function goToIdentif() {
+    document.getElementById('screen-cover').classList.remove('active');
+    const scr = document.getElementById('screen-identif');
+    scr.classList.add('active');
+    // câbler les boutons une seule fois
+    const submit = document.getElementById('id-submit');
+    const resume = document.getElementById('id-resume');
+    if (submit && !submit.dataset.bound) {
+      submit.onclick = submitIdentif;
+      submit.dataset.bound = '1';
+    }
+    if (resume && !resume.dataset.bound) {
+      resume.onclick = resumeIdentif;
+      resume.dataset.bound = '1';
+    }
+  }
+
+  function emailValide(e) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  }
+
+  function submitIdentif() {
+    const prenom = (document.getElementById('id-prenom').value || '').trim();
+    const nom = (document.getElementById('id-nom').value || '').trim();
+    const email = (document.getElementById('id-email').value || '').trim().toLowerCase();
+    const err = document.getElementById('id-error');
+    if (!prenom || !nom) { err.textContent = 'Merci d\'indiquer votre prénom et votre nom.'; return; }
+    if (!emailValide(email)) { err.textContent = 'Cette adresse email semble incorrecte.'; return; }
+    err.textContent = '';
+    identite.prenom = prenom; identite.nom = nom; identite.email = email;
+    document.getElementById('screen-identif').classList.remove('active');
+    start();
+  }
+
+  function resumeIdentif() {
+    const email = (document.getElementById('id-email').value || '').trim().toLowerCase();
+    const err = document.getElementById('id-error');
+    if (!emailValide(email)) { err.textContent = 'Entrez votre email pour reprendre votre test.'; return; }
+    err.textContent = 'Recherche de votre progression...';
+    identite.email = email;
+    diagType = readDiagType();
+    queue = buildQueue();
+    // Charger la progression depuis le serveur
+    fetch(PROGRESSION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "load", email }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.found && data.answers && Object.keys(data.answers).length > 0) {
+          identite.prenom = data.prenom || '';
+          identite.nom = data.nom || '';
+          answers = data.answers;
+          idx = data.idx || 0;
+          document.getElementById('screen-identif').classList.remove('active');
+          showResumePrompt({ diagType, idx, answers });
+        } else {
+          err.textContent = 'Aucune progression trouvée pour cet email. Vous pouvez commencer le test.';
+        }
+      })
+      .catch(() => {
+        // repli : essayer la sauvegarde locale
+        const saved = loadProgress();
+        if (saved) {
+          document.getElementById('screen-identif').classList.remove('active');
+          showResumePrompt(saved);
+        } else {
+          err.textContent = 'Connexion impossible. Réessayez dans un instant.';
+        }
+      });
+  }
+
   function start() {
     diagType = readDiagType();
     queue = buildQueue();
@@ -646,7 +745,7 @@ const App = (() => {
     }, 2200);
   }
 
-  return { start, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
+  return { start, goToIdentif, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

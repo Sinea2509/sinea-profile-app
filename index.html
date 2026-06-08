@@ -26,7 +26,7 @@
           <div><span class="cm-num">20</span><span class="cm-lab">archétypes</span></div>
         </div>
       </div>
-      <button class="btn-primary btn-light" onclick="App.start()">Commencer</button>
+      <button class="btn-primary btn-light" onclick="App.goToIdentif()">Commencer</button>
       <p class="cover-note">Vos réponses restent confidentielles</p>
       <div class="cover-side">
         <div class="cover-side-card">
@@ -45,6 +45,25 @@
   </section>
 
   <!-- ÉCRAN 2 : QUESTION -->
+  <section class="screen" id="screen-identif">
+    <div class="identif-wrap">
+      <div class="identif-card">
+        <div class="identif-kicker">Avant de commencer</div>
+        <h2 class="identif-title">Faisons connaissance</h2>
+        <p class="identif-sub">Vos réponses sont sauvegardées au fur et à mesure. Vous pourrez reprendre à tout moment.</p>
+        <label class="identif-label">Prénom</label>
+        <input class="identif-input" id="id-prenom" type="text" placeholder="Votre prénom" autocomplete="given-name" />
+        <label class="identif-label">Nom</label>
+        <input class="identif-input" id="id-nom" type="text" placeholder="Votre nom" autocomplete="family-name" />
+        <label class="identif-label">Email</label>
+        <input class="identif-input" id="id-email" type="email" placeholder="vous@entreprise.com" autocomplete="email" />
+        <div class="identif-error" id="id-error"></div>
+        <button class="btn-primary identif-btn" id="id-submit">Commencer le test</button>
+        <button class="btn-ghost identif-resume" id="id-resume">J'ai déjà commencé, reprendre</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-question">
     <div class="q-screen">
       <aside class="q-aside">
