@@ -731,6 +731,7 @@ const App = (() => {
       if (diagType !== 'classic') {
         result.speDims = Engine.scorerSpeDims(repSpeDims, diagType);
         result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
+        result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);
       }
 
       // Enregistrer le résultat dans Airtable (si un token est présent dans l'URL)

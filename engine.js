@@ -224,6 +224,40 @@ function scorerSpeStyle(repSpeQcm, type) {
   return classement.length ? classement[0][0] : null;
 }
 
+// Retourne les scores détaillés par style (pour les visuels radar/jauges)
+function scorerSpeStyleScores(repSpeQcm, type) {
+  const bloc = type === 'manager' ? SINEA_DATA.spe_management?.goleman : (type === 'commercial' ? SINEA_DATA.spe_commercial?.challenger : null);
+  if (!bloc) return {};
+  const qById = {};
+  (bloc.questions || []).forEach(q => { qById[q.id] = q; });
+  const scores = {};
+  const add = (st, pts) => { if (st) scores[st] = (scores[st] || 0) + pts; };
+  for (const [qid, rep] of Object.entries(repSpeQcm)) {
+    const q = qById[qid];
+    if (!q) continue;
+    const fmt = q.format || 'qcm';
+    if (fmt === 'qcm') {
+      const opt = (q.options || [])[rep];
+      if (opt && opt.styles) for (const [st, pts] of Object.entries(opt.styles)) add(st, pts);
+    } else if (fmt === 'curseur') {
+      const pos = parseFloat(rep);
+      if (!isNaN(pos) && q.pole_gauche && q.pole_droit) {
+        const pmax = q.points_max || 3;
+        add(q.pole_gauche.style, pmax * (1 - pos / 100));
+        add(q.pole_droit.style, pmax * (pos / 100));
+      }
+    } else if (fmt === 'repartition') {
+      if (rep && typeof rep === 'object' && q.axes) {
+        q.axes.forEach((axe, i) => {
+          const pts = rep[axe.style] ?? rep[i] ?? 0;
+          if (pts > 0) add(axe.style, pts);
+        });
+      }
+    }
+  }
+  return scores;
+}
+
 // ---- Naturel vs adapté (coût d'adaptation au travail) ----
 function scorerNaturelAdapte(repMini, repAdapte) {
   // Naturel : scores Big Five issus du mini-IPIP (déjà sur 0-100)
@@ -252,5 +286,5 @@ function scorerNaturelAdapte(repMini, repAdapte) {
 }
 
 // Export
-const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerSpeDims, scorerSpeStyle, scorerNaturelAdapte };
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte };
 

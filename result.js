@@ -204,6 +204,25 @@ const Result = (() => {
     labels.forEach((l,i)=>{ const lr=R+22,x=cx+Math.cos(ang(i))*lr,y=cy+Math.sin(ang(i))*lr; const a=Math.abs(Math.cos(ang(i)))<0.3?'middle':(Math.cos(ang(i))>0?'start':'end'); p+=`<text x="${x}" y="${y+4}" text-anchor="${a}" font-size="11" font-weight="600" font-family="Manrope" fill="#747474">${l}</text>`; });
     return `<svg viewBox="0 0 240 240" width="220" height="220">${p}</svg>`;
   }
+  // Radar des styles commerciaux / leadership (n branches selon le référentiel)
+  function radarStyleSpe(res, color){
+    const type = res.diagType;
+    const styles = STYLES_PAR_TYPE[type];
+    const scores = res.speStyleScores || {};
+    if (!styles || !Object.keys(scores).length) return '';
+    const vals = styles.map(s => scores[s] || 0);
+    const maxv = Math.max(...vals, 1); // normaliser sur le max
+    const cx=140, cy=130, R=82, n=styles.length;
+    const ang=i=>(2*Math.PI*i/n)-Math.PI/2; let p='';
+    [0.25,0.5,0.75,1].forEach(l=>{ const pts=vals.map((_,i)=>`${cx+Math.cos(ang(i))*R*l},${cy+Math.sin(ang(i))*R*l}`).join(' '); p+=`<polygon points="${pts}" fill="none" stroke="#E4E2DC" stroke-width="1"/>`; });
+    vals.forEach((_,i)=>{ p+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(ang(i))*R}" y2="${cy+Math.sin(ang(i))*R}" stroke="#E4E2DC" stroke-width="1"/>`; });
+    const dp=vals.map((v,i)=>`${cx+Math.cos(ang(i))*R*(v/maxv)},${cy+Math.sin(ang(i))*R*(v/maxv)}`).join(' ');
+    p+=`<polygon points="${dp}" fill="${color}33" stroke="${color}" stroke-width="2.5"/>`;
+    vals.forEach((v,i)=>{ const x=cx+Math.cos(ang(i))*R*(v/maxv),y=cy+Math.sin(ang(i))*R*(v/maxv); p+=`<circle cx="${x}" cy="${y}" r="4" fill="${color}"/>`; });
+    styles.forEach((st,i)=>{ const lr=R+24,x=cx+Math.cos(ang(i))*lr,y=cy+Math.sin(ang(i))*lr; const a=Math.abs(Math.cos(ang(i)))<0.3?'middle':(Math.cos(ang(i))>0?'start':'end'); p+=`<text x="${x}" y="${y+4}" text-anchor="${a}" font-size="11" font-weight="600" font-family="Manrope" fill="#747474">${STYLE_LABELS[st]||st}</text>`; });
+    return `<svg viewBox="-20 0 320 260" width="100%" style="max-width:340px">${p}</svg>`;
+  }
+
   function spectres(bf){
     // qualificatif selon la position sur l'axe
     const qualif = (v, low, high) => {
@@ -253,6 +272,7 @@ const Result = (() => {
         <p class="r-bloc-intro">Votre personnalité éclaire votre manière de manager. Voici comment vos traits se traduisent dans votre posture de leader.</p>
         <div class="r-section-tag">Votre style en un coup d'œil</div>
         ${carteStyle(res)}
+        <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
         ${carteDimensionsSpe(res)}
         <div class="r-section-tag">Comment votre personnalité nourrit votre management</div>
         <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
@@ -278,6 +298,7 @@ const Result = (() => {
         <p class="r-bloc-intro">Votre personnalité éclaire votre manière de vendre. Voici comment vos traits se traduisent dans votre posture commerciale.</p>
         <div class="r-section-tag">Votre style en un coup d'œil</div>
         ${carteStyle(res)}
+        <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
         ${carteDimensionsSpe(res)}
         <div class="r-section-tag">Comment votre personnalité nourrit votre vente</div>
         <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
