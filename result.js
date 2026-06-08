@@ -16,6 +16,177 @@ const Result = (() => {
 
   function dataSlug(nom){ return SINEA_DATA.slugs[nom]; }
   function img(nom){ const s=SINEA_DATA.images[nom]; return s?`${s}.webp`:''; }
+
+  // Visuel : matrice SWOT (forces, vigilances, leviers, frictions)
+  function matriceSwot(res){
+    const dc = contenu(res.dominante.nom) || {};
+    const li = arr => (arr || []).map(x => `<li>${x}</li>`).join('');
+    const forces = dc.forces || [];
+    const vig = dc.vigilance || [];
+    const leviers = dc.leviers || [];
+    const compl = dc.complementarites || {};
+    // frictions : à partir des frictions relationnelles
+    const frictions = [];
+    if (compl.pourquoi_friction) frictions.push(compl.pourquoi_friction);
+    if (compl.friction && compl.friction.length) frictions.push(`Vigilance avec les profils comme ${compl.friction.join(', ')}.`);
+    if (!forces.length && !vig.length) return '';
+    return `
+      <div class="swot-grid">
+        <div class="swot-cell swot-f">
+          <div class="swot-titre">Vos forces</div>
+          <div class="swot-sous">ce qui vient de vous</div>
+          <ul>${li(forces)}</ul>
+        </div>
+        <div class="swot-cell swot-v">
+          <div class="swot-titre">Vos vigilances</div>
+          <div class="swot-sous">ce qui vient de vous</div>
+          <ul>${li(vig)}</ul>
+        </div>
+        <div class="swot-cell swot-l">
+          <div class="swot-titre">Vos leviers</div>
+          <div class="swot-sous">à activer</div>
+          <ul>${li(leviers)}</ul>
+        </div>
+        <div class="swot-cell swot-r">
+          <div class="swot-titre">Vos frictions</div>
+          <div class="swot-sous">à anticiper</div>
+          <ul>${li(frictions)}</ul>
+        </div>
+      </div>`;
+  }
+
+  // Visuel : naturel vs adapté (coût d'adaptation par dimension)
+  function carteNaturelAdapte(res){
+    const na = res.naturelAdapte;
+    if (!na || !na.adapte || !Object.keys(na.adapte).length) return '';
+    const lignes = ['E','A','C','N','O'].filter(d => na.adapte[d] !== undefined).map(d => {
+      const [name, low, high] = BF_INFO[d];
+      // pour N on inverse l'affichage (cohérent avec les jauges : N affiché en "stabilité")
+      const nat = d === 'N' ? 100 - na.naturel[d] : na.naturel[d];
+      const adp = d === 'N' ? 100 - na.adapte[d] : na.adapte[d];
+      const ecart = Math.abs(adp - nat);
+      const fort = ecart >= 25;
+      return `
+        <div class="na-row">
+          <div class="na-top"><span class="na-name">${name}</span>${fort ? '<span class="na-flag">effort notable</span>' : ''}</div>
+          <div class="na-track">
+            <div class="na-link" style="left:${Math.min(nat,adp)}%;width:${ecart}%"></div>
+            <div class="na-dot na-nat" style="left:${nat}%" title="Naturel"></div>
+            <div class="na-dot na-adp" style="left:${adp}%" title="Au travail"></div>
+          </div>
+        </div>`;
+    }).join('');
+    const coutTxt = { 'faible':'faible', 'modéré':'modéré', 'élevé':'élevé' }[na.cout] || 'modéré';
+    return `
+      <div class="na-card">
+        <div class="na-legend">
+          <span><span class="na-leg-dot na-nat"></span>Votre naturel</span>
+          <span><span class="na-leg-dot na-adp"></span>Au travail</span>
+        </div>
+        ${lignes}
+        <div class="na-cout">Coût d'adaptation global : <strong>${coutTxt}</strong></div>
+      </div>`;
+  }
+
+  // Libellés des styles et dimensions spé
+  const STYLE_LABELS = {
+    visionnaire:'Visionnaire', chef_de_file:'Chef de file', democratique:'Démocratique',
+    directif:'Directif', coaching:'Coaching', affiliatif:'Affiliatif',
+    challenger:'Challenger', relationnel:'Relationnel', battant:'Battant', solitaire:'Indépendant', resolveur:'Résolveur'
+  };
+  const SPE_DIM_LABELS = {
+    delegation:{ titre:'Votre délégation', profils:{ controle:'Contrôle', cadre:'Cadre clair', autonomie:'Autonomie', lacher_prise:'Lâcher-prise' } },
+    feedback:{ titre:'Votre feedback', profils:{ direct:'Direct', factuel:'Factuel', enveloppe:'Enveloppé', questionnant:'Questionnant' } },
+    exigence_bienveillance:{ titre:'Exigence et bienveillance', profils:{ exigence:'Exigeant', equilibre:'Équilibré', bienveillance:'Bienveillant' } },
+    closing:{ titre:'Votre closing', profils:{ pousseur:'Pousseur', guide:'Guide', patient:'Patient', facilitateur:'Facilitateur' } },
+    objection:{ titre:'Face à l\'objection', profils:{ frontal:'Frontal', recadrage:'Recadrage', contournement:'Contournement', ecoute:'Écoute' } },
+    chasseur_eleveur:{ titre:'Chasseur ou éleveur', profils:{ chasseur:'Chasseur', mixte:'Mixte', eleveur:'Éleveur' } }
+  };
+  // Tous les styles d'un référentiel (pour situer le dominant)
+  const STYLES_PAR_TYPE = {
+    manager:['visionnaire','chef_de_file','democratique','directif','coaching','affiliatif'],
+    commercial:['challenger','relationnel','battant','solitaire','resolveur']
+  };
+
+  function carteStyle(res){
+    const type = res.diagType;
+    const dom = res.speStyle;
+    if (!dom || !STYLES_PAR_TYPE[type]) return '';
+    const pastilles = STYLES_PAR_TYPE[type].map(st =>
+      `<span class="dimc-opt ${st === dom ? 'dimc-sel' : ''}">${STYLE_LABELS[st] || st}</span>`
+    ).join('');
+    const titre = type === 'manager' ? 'Votre style de leadership dominant' : 'Votre style de vente dominant';
+    return `<div class="dimc-card"><div class="dimc-row"><div class="dimc-titre">${titre}</div><div class="dimc-opts">${pastilles}</div></div></div>`;
+  }
+
+  function carteDimensionsSpe(res){
+    const dims = res.speDims || {};
+    if (!Object.keys(dims).length) return '';
+    const ordre = res.diagType === 'manager'
+      ? ['delegation','feedback','exigence_bienveillance']
+      : ['closing','objection','chasseur_eleveur'];
+    const blocs = ordre.filter(d => dims[d] && SPE_DIM_LABELS[d]).map(d => {
+      const conf = SPE_DIM_LABELS[d];
+      const choisi = dims[d];
+      const pastilles = Object.entries(conf.profils).map(([key, label]) =>
+        `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`
+      ).join('');
+      return `<div class="dimc-row"><div class="dimc-titre">${conf.titre}</div><div class="dimc-opts">${pastilles}</div></div>`;
+    }).join('');
+    return blocs ? `<div class="dimc-card">${blocs}</div>` : '';
+  }
+
+  // Visuel : carte des dimensions profondes (profil dominant mis en évidence parmi 4)
+  const DIM_LABELS = {
+    stress: { titre: 'Face au stress', profils: { accelerateur:'Accélérateur', methodique:'Méthodique', retrait:'En retrait', appui:'Cherche appui' } },
+    motivation: { titre: 'Ce qui vous motive', profils: { accomplissement:'Accomplissement', reconnaissance:'Reconnaissance', sens:'Quête de sens', maitrise:'Maîtrise' } },
+    risque: { titre: 'Face au risque', profils: { audacieux:'Audacieux', calcule:'Calculé', prudent:'Prudent', securitaire:'Sécuritaire' } },
+    changement: { titre: 'Face au changement', profils: { moteur:'Moteur', adaptable:'Adaptable', pragmatique:'Pragmatique', ancre:'Ancré' } },
+    conflit: { titre: 'Face au conflit', profils: { affrontement:'Direct', mediation:'Médiateur', compromis:'Compromis', evitement:'Évitant' } }
+  };
+  function carteDimensions(res){
+    const ctx = res.contextuel || {};
+    if (!Object.keys(ctx).length) return '';
+    const ordre = ['stress','motivation','risque','changement','conflit'];
+    const blocs = ordre.filter(d => ctx[d] && DIM_LABELS[d]).map(d => {
+      const conf = DIM_LABELS[d];
+      const choisi = ctx[d];
+      const pastilles = Object.entries(conf.profils).map(([key, label]) =>
+        `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`
+      ).join('');
+      return `
+        <div class="dimc-row">
+          <div class="dimc-titre">${conf.titre}</div>
+          <div class="dimc-opts">${pastilles}</div>
+        </div>`;
+    }).join('');
+    return blocs ? `<div class="dimc-card">${blocs}</div>` : '';
+  }
+
+  // Visuel : classement complet des 20 archétypes avec barres de score par famille
+  function classementComplet(res){
+    const cl = res.classement || [];
+    if (!cl.length) return '';
+    const scoreMax = cl[0].score || 1;
+    const scoreMin = cl[cl.length - 1].score || 0;
+    const amplitude = (scoreMax - scoreMin) || 1;
+    const lignes = cl.map((item, i) => {
+      const color = FAM[item.famille] || '#999';
+      // largeur relative : du plus fort (100%) au plus faible (~22%)
+      const pct = 22 + ((item.score - scoreMin) / amplitude) * 78;
+      const isTop = i < 3;
+      const rang = i + 1;
+      return `
+        <div class="rk-row ${isTop ? 'rk-top' : ''}">
+          <div class="rk-rang">${rang}</div>
+          <div class="rk-body">
+            <div class="rk-nom">${item.nom}</div>
+            <div class="rk-bar-track"><div class="rk-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          </div>
+        </div>`;
+    }).join('');
+    return `<div class="rk-list">${lignes}</div>`;
+  }
   function contenu(nom){ const s=dataSlug(nom); return (SINEA_DATA.contenu&&SINEA_DATA.contenu[s])||{}; }
   function rarete(nom){ const s=dataSlug(nom); return (SINEA_DATA.rarete&&SINEA_DATA.rarete[s])||{pct:'',niveau:''}; }
   function verbe(nom){ const l=Object.values(SINEA_DATA.personnages||{}); const p=l.find(x=>x.nom===nom); return p?(p.verbe_signature||p.role||p.axe||''):''; }
@@ -34,11 +205,25 @@ const Result = (() => {
     return `<svg viewBox="0 0 240 240" width="220" height="220">${p}</svg>`;
   }
   function spectres(bf){
+    // qualificatif selon la position sur l'axe
+    const qualif = (v, low, high) => {
+      if (v >= 78) return `très ${high.toLowerCase()}`;
+      if (v >= 60) return `plutôt ${high.toLowerCase()}`;
+      if (v >= 41) return 'équilibré';
+      if (v >= 23) return `plutôt ${low.toLowerCase()}`;
+      return `très ${low.toLowerCase()}`;
+    };
     return ['E','A','C','N','O'].map(d=>{
       const val=d==='N'?100-bf[d]:bf[d]; const [name,low,high]=BF_INFO[d];
-      return `<div class="spectre-row"><div class="spectre-top"><span class="spectre-name">${name}</span></div>
+      const q = qualif(val, low, high);
+      return `<div class="spectre-row">
+        <div class="spectre-top"><span class="spectre-name">${name}</span><span class="spectre-qualif">${q}</span></div>
         <div class="spectre-ends"><span>${low}</span><span>${high}</span></div>
-        <div class="spectre-track"><div class="spectre-fill" style="width:${val}%"></div><div class="spectre-dot" style="left:${val}%"></div></div></div>`;
+        <div class="spectre-track">
+          <div class="spectre-grad"></div>
+          <div class="spectre-fill" style="width:${val}%"></div>
+          <div class="spectre-dot" style="left:${val}%"></div>
+        </div></div>`;
     }).join('');
   }
   function schemaScience(nbRep){
@@ -66,6 +251,9 @@ const Result = (() => {
       <div class="r-bloc" id="b-spe">
         <div class="r-bloc-head"><span class="r-bloc-tag">Votre métier</span><h2>Votre management</h2></div>
         <p class="r-bloc-intro">Votre personnalité éclaire votre manière de manager. Voici comment vos traits se traduisent dans votre posture de leader.</p>
+        <div class="r-section-tag">Votre style en un coup d'œil</div>
+        ${carteStyle(res)}
+        ${carteDimensionsSpe(res)}
         <div class="r-section-tag">Comment votre personnalité nourrit votre management</div>
         <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport à la délégation</div>
@@ -88,6 +276,9 @@ const Result = (() => {
       <div class="r-bloc" id="b-spe">
         <div class="r-bloc-head"><span class="r-bloc-tag">Votre métier</span><h2>Votre approche commerciale</h2></div>
         <p class="r-bloc-intro">Votre personnalité éclaire votre manière de vendre. Voici comment vos traits se traduisent dans votre posture commerciale.</p>
+        <div class="r-section-tag">Votre style en un coup d'œil</div>
+        ${carteStyle(res)}
+        ${carteDimensionsSpe(res)}
         <div class="r-section-tag">Comment votre personnalité nourrit votre vente</div>
         <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport au closing</div>
@@ -189,21 +380,35 @@ const Result = (() => {
         <div class="r-ia" id="ia-alchimie"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre combinaison</div>
         <div class="r-card"><div class="r-blend">${blendSegs}</div><div class="r-chips">${chips}</div></div>
+        <div class="r-section-tag">Votre affinité avec les 20 archétypes</div>
+        <p class="r-hint">Votre profil est une signature unique. Voici votre proximité avec chacun des 20 archétypes.</p>
+        <div class="r-card">${classementComplet(res)}</div>
+        <div class="r-section-tag">Les dynamiques entre vos forces</div>
+        <p class="r-hint">Vos trois archétypes ne coexistent pas, ils interagissent deux à deux.</p>
+        <div id="ia-dynamiques"><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos forces secondaires</div>
         <div class="r-secs-grid">${secHtml}</div>
         <div class="r-section-tag">Votre tempérament</div>
         <div class="r-card"><div class="r-temperament"><div class="r-radar">${radarSvg(res.radarFamilles,color)}</div><div class="r-spectres">${spectres(res.scoresBigFive)}</div></div></div>
         <div class="r-ia" id="ia-bigfive"><div class="r-ia-tag">Ce que révèle le croisement de vos dimensions</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Votre naturel et votre adaptation au travail</div>
+        <p class="r-hint">L'écart entre qui vous êtes spontanément et comment vous agissez au travail révèle où vous fournissez un effort.</p>
+        ${carteNaturelAdapte(res)}
         <div class="r-section-tag">Vous en situation</div>
         <div class="r-ia" id="ia-situation"><div class="r-ia-tag">Votre profil en action</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos forces, à valider</div>
         <p class="r-hint">Ce qui résonne le plus avec vous ?</p>
         <div class="r-validables-grid">${forcesVal}</div>
+        <div class="r-section-tag">La matrice de votre personnalité</div>
+        <p class="r-hint">Une vue d'ensemble de vos forces, vigilances, leviers de développement et points de friction.</p>
+        ${matriceSwot(res)}
       </div>
 
       <div class="r-bloc" id="b-dims">
         <div class="r-bloc-head"><span class="r-bloc-tag">Approfondissement</span><h2>Vos dimensions profondes</h2></div>
         <p class="r-bloc-intro">Cinq registres révèlent comment vous fonctionnez face aux situations clés du quotidien professionnel.</p>
+        <div class="r-section-tag">Votre profil en un coup d'œil</div>
+        ${carteDimensions(res)}
         <div class="r-section-tag">Votre rapport au stress</div>
         <div class="r-ia" id="ia-dim_stress"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos moteurs profonds</div>
@@ -281,7 +486,26 @@ const Result = (() => {
   // Backend IA (Vercel) : génère toutes les sections du portrait en parallèle.
   const BACKEND_URL = "https://sinea-profile-ia.vercel.app/api/generer";
 
-  function paras(t){return String(t).split("\n").filter(p=>p.trim()).map(p=>`<p>${p.trim()}</p>`).join("");}
+  // Convertit le gras markdown **texte** en <strong>
+  function mdInline(t){
+    return String(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+  // Met en forme un contenu IA : sous-titres en gras détachés, paragraphes aérés
+  function paras(t){
+    const blocs = String(t).split("\n").filter(p => p.trim());
+    let out = "";
+    for (const bloc of blocs){
+      const m = mdInline(bloc.trim());
+      // Si le bloc est entièrement un sous-titre en gras, le styler comme sous-titre
+      if (m.startsWith('<strong>') && m.endsWith('</strong>') && (m.match(/<strong>/g) || []).length === 1){
+        const inner = m.replace('<strong>','').replace('</strong>','');
+        out += `<p class="r-ia-subtitle">${inner}</p>`;
+      } else {
+        out += `<p>${m}</p>`;
+      }
+    }
+    return out;
+  }
 
   // Appelle le backend UNE fois : il génère toutes les sections en parallèle côté serveur.
   async function callWorker(res){
@@ -294,9 +518,9 @@ const Result = (() => {
         bigFive: res.scoresBigFive
       },
       tensions: res.tensions || [],
-      reponses_ouvertes: openAnswers,
-      naturel_adapte: res.naturel_adapte || {},
-      cout_adaptation: res.cout_adaptation || 'modéré',
+      reponses_ouvertes: Object.assign({}, res.reponsesOuvertes || {}, openAnswers),
+      naturel_adapte: (res.naturelAdapte ? { naturel: res.naturelAdapte.naturel, adapte: res.naturelAdapte.adapte, ecarts: res.naturelAdapte.ecarts } : {}),
+      cout_adaptation: (res.naturelAdapte ? res.naturelAdapte.cout : 'modéré'),
       // Spé déterminée par le lien (manager / commercial / classic)
       spe: (res.diagType && res.diagType !== 'classic') ? res.diagType : null,
       style_dominant: res.speStyle || null,
@@ -341,6 +565,22 @@ const Result = (() => {
         `<p>${situ.reunion||''}</p><p>${situ.pression||''}</p>`);
       poseSection('ia-angles','Analyse personnalisée', c.angles_relationnels,
         `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
+
+      // Les 3 dynamiques entre les forces (format JSON : paires)
+      const dynEl = document.getElementById('ia-dynamiques');
+      if (dynEl) {
+        const dyn = c.combo_dynamiques;
+        if (dyn && Array.isArray(dyn) && dyn.length) {
+          dynEl.innerHTML = dyn.map(d => `
+            <div class="dyn-card">
+              <div class="dyn-paire">${d.paire || ''}</div>
+              <div class="dyn-titre">${d.titre || ''}</div>
+              <p class="dyn-desc">${d.desc || ''}</p>
+            </div>`).join('');
+        } else {
+          dynEl.innerHTML = `<div class="r-card"><p>Vos trois forces s'équilibrent et se renforcent mutuellement.</p></div>`;
+        }
+      }
 
       // Dimensions profondes (socle)
       poseSection('ia-dim_stress','Analyse personnalisée', c.dim_stress, `<p>Votre rapport au stress reflète votre tempérament.</p>`);
@@ -420,6 +660,7 @@ const Result = (() => {
       </div>`).join('');
     scr.innerHTML = `
       <div class="m3-scroll">
+        <button class="qo-back" onclick="Result.backFromMoment3()">← Retour au portrait</button>
         <div class="m3-head">
           <div class="m3-kicker">Dernière étape</div>
           <h2 class="m3-title">Votre ressenti</h2>
@@ -449,6 +690,16 @@ const Result = (() => {
   }
 
   function setAvis(id, val){ avis[id] = val; }
+
+  function backFromMoment3(){
+    document.getElementById('screen-moment3').classList.remove('active');
+    document.getElementById('screen-result').classList.add('active');
+  }
+
+  function backFromDefis(){
+    document.getElementById('screen-defis').classList.remove('active');
+    showMoment3();
+  }
 
   function submitMoment3(){
     showDefis();
@@ -523,6 +774,7 @@ const Result = (() => {
     }
     scr.innerHTML = `
       <div class="defis-scroll">
+        <button class="qo-back" onclick="Result.backFromDefis()">← Retour</button>
         <div class="defis-head">
           <div class="defis-kicker">SeedUp</div>
           <h2 class="defis-title">Vos premiers défis</h2>
@@ -536,5 +788,5 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3 };
+  return { render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis };
 })();

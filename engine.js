@@ -205,6 +205,33 @@ function scorerSpeStyle(repSpeQcm, type) {
   return classement.length ? classement[0][0] : null;
 }
 
+// ---- Naturel vs adapté (coût d'adaptation au travail) ----
+function scorerNaturelAdapte(repMini, repAdapte) {
+  // Naturel : scores Big Five issus du mini-IPIP (déjà sur 0-100)
+  const naturel = scorerBigFive(repMini);
+  // Adapté : 1 question par dimension (échelle 1-4 -> 0-100)
+  const conv = {1:0.0, 2:33.333, 3:66.667, 4:100.0};
+  const map = { ADP_E:'E', ADP_A:'A', ADP_C:'C', ADP_N:'N', ADP_O:'O' };
+  const adapte = {};
+  for (const [qid, lettre] of Object.entries(map)) {
+    if (repAdapte[qid] !== undefined) adapte[lettre] = Math.round((conv[repAdapte[qid]]) * 10) / 10;
+  }
+  // Écart par dimension et coût global
+  const ecarts = {};
+  let sommeEcart = 0, n = 0;
+  for (const d of ['E','A','C','N','O']) {
+    if (adapte[d] !== undefined && naturel[d] !== undefined) {
+      ecarts[d] = Math.round((adapte[d] - naturel[d]) * 10) / 10;
+      sommeEcart += Math.abs(ecarts[d]); n++;
+    }
+  }
+  const moyenne = n ? sommeEcart / n : 0;
+  let cout = 'faible';
+  if (moyenne >= 33) cout = 'élevé';
+  else if (moyenne >= 18) cout = 'modéré';
+  return { naturel, adapte, ecarts, cout, moyenneEcart: Math.round(moyenne * 10) / 10 };
+}
+
 // Export
-const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerSpeDims, scorerSpeStyle };
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerSpeDims, scorerSpeStyle, scorerNaturelAdapte };
 

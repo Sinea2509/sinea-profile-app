@@ -496,3 +496,123 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}
 }
+
+/* ============================================================
+   MISE EN FORME DU CONTENU IA (sous-titres, paragraphes aérés)
+   ============================================================ */
+.r-ia p{margin:0 0 14px 0;line-height:1.65;}
+.r-ia p:last-child{margin-bottom:0;}
+.r-ia .r-ia-subtitle{
+  font-weight:700;color:var(--c-black);
+  margin-top:20px;margin-bottom:8px;font-size:16px;
+  line-height:1.35;
+}
+.r-ia .r-ia-subtitle:first-child{margin-top:0;}
+.r-ia strong{font-weight:700;color:var(--c-black);}
+
+/* ============================================================
+   ÉCRAN QUESTIONS OUVERTES (avant la restitution)
+   ============================================================ */
+#screen-open{position:absolute;inset:0;z-index:55;display:none;background:var(--c-beige);overflow-y:auto;}
+#screen-open.active{display:block;}
+.qo-scroll{max-width:480px;margin:0 auto;padding:48px 28px 60px;}
+.qo-head{margin-bottom:30px;}
+.qo-kicker{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:10px;}
+.qo-title{font-size:32px;font-weight:800;letter-spacing:-0.02em;margin-bottom:10px;color:var(--c-black);}
+.qo-sub{font-size:15.5px;color:var(--c-grey);line-height:1.5;}
+.qo-field{margin-bottom:24px;}
+.qo-q{display:block;font-size:16.5px;font-weight:600;color:var(--c-dark-grey);margin-bottom:12px;line-height:1.4;}
+.qo-input{width:100%;border:1.5px solid #E5E3DD;border-radius:14px;padding:15px;font-family:var(--font);font-size:15.5px;color:var(--c-black);background:#fff;resize:vertical;transition:border-color 0.2s;line-height:1.5;}
+.qo-input:focus{outline:none;border-color:var(--c-purple);}
+.qo-submit{margin-top:8px;margin-bottom:6px;}
+/* Desktop : centré, large */
+@media (min-width: 768px){
+  #screen-open .qo-scroll{max-width:620px;padding-top:80px;}
+  .qo-title{font-size:38px;}
+}
+
+/* Bouton retour sur les écrans de fin (questions ouvertes, moment 3, défis) */
+.qo-back{
+  background:transparent;border:none;color:var(--c-grey);
+  font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;
+  padding:8px 0;margin-bottom:20px;display:inline-block;
+  transition:color 0.18s,transform 0.18s;
+}
+.qo-back:hover{color:var(--c-purple-text);transform:translateX(-3px);}
+
+/* ============================================================
+   VISUEL : classement des 20 archétypes
+   ============================================================ */
+.rk-list{display:flex;flex-direction:column;gap:9px;}
+.rk-row{display:flex;align-items:center;gap:12px;opacity:0.62;transition:opacity 0.2s;}
+.rk-row.rk-top{opacity:1;}
+.rk-rang{width:22px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--c-medium-grey);text-align:center;}
+.rk-top .rk-rang{color:var(--c-dark-grey);}
+.rk-body{flex:1;min-width:0;}
+.rk-nom{font-size:13.5px;font-weight:600;color:var(--c-dark-grey);margin-bottom:4px;}
+.rk-top .rk-nom{font-weight:700;color:var(--c-black);font-size:14.5px;}
+.rk-bar-track{height:7px;background:#EEECE5;border-radius:4px;overflow:hidden;}
+.rk-bar-fill{height:100%;border-radius:4px;transition:width 0.9s cubic-bezier(0.22,1,0.36,1);}
+.rk-top .rk-bar-track{height:9px;}
+
+/* ============================================================
+   VISUEL : carte des dimensions profondes
+   ============================================================ */
+.dimc-card{background:#fff;border-radius:18px;padding:20px;box-shadow:var(--shadow-card);display:flex;flex-direction:column;gap:18px;}
+.dimc-row{display:flex;flex-direction:column;gap:9px;}
+.dimc-titre{font-size:13px;font-weight:700;color:var(--c-dark-grey);text-transform:uppercase;letter-spacing:0.04em;}
+.dimc-opts{display:flex;flex-wrap:wrap;gap:7px;}
+.dimc-opt{font-size:13px;font-weight:600;color:var(--c-medium-grey);background:#F2F0EA;border-radius:100px;padding:6px 13px;transition:all 0.2s;}
+.dimc-sel{background:var(--g-orangepink);color:#fff;box-shadow:0 3px 12px rgba(226,144,236,0.28);}
+
+/* Jauges Big Five enrichies : qualificatif + graduation */
+.spectre-qualif{font-size:12.5px;font-weight:600;color:var(--c-purple-text);font-style:italic;}
+.spectre-grad{position:absolute;inset:0;border-radius:4px;background:repeating-linear-gradient(90deg,transparent,transparent 19%,rgba(0,0,0,0.05) 19%,rgba(0,0,0,0.05) 20%);pointer-events:none;}
+.spectre-fill{position:relative;z-index:1;}
+.spectre-dot{z-index:2;box-shadow:0 2px 6px rgba(136,132,240,0.3);}
+
+/* ============================================================
+   VISUEL : naturel vs adapté (coût d'adaptation)
+   ============================================================ */
+.na-card{background:#fff;border-radius:18px;padding:22px;box-shadow:var(--shadow-card);}
+.na-legend{display:flex;gap:20px;margin-bottom:20px;font-size:12.5px;font-weight:600;color:var(--c-grey);}
+.na-leg-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+.na-row{margin-bottom:20px;}
+.na-row:last-of-type{margin-bottom:14px;}
+.na-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+.na-name{font-size:13.5px;font-weight:700;color:var(--c-black);}
+.na-flag{font-size:11px;font-weight:700;color:var(--c-orange);background:rgba(249,168,118,0.15);padding:3px 9px;border-radius:100px;}
+.na-track{position:relative;height:10px;background:#EEECE5;border-radius:5px;}
+.na-link{position:absolute;top:50%;transform:translateY(-50%);height:4px;background:linear-gradient(90deg,var(--c-purple),var(--c-orange));border-radius:2px;opacity:0.5;}
+.na-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.18);}
+.na-nat{background:var(--c-purple);}
+.na-adp{background:var(--c-orange);}
+.na-cout{margin-top:16px;padding-top:14px;border-top:1px solid #EFEDE7;font-size:14px;color:var(--c-dark-grey);text-align:center;}
+.na-cout strong{color:var(--c-black);}
+
+/* ============================================================
+   VISUEL : matrice SWOT
+   ============================================================ */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.swot-cell{border-radius:16px;padding:16px;}
+.swot-f{background:#E7F3E9;}
+.swot-v{background:#FBF0ED;}
+.swot-l{background:#EAF0FB;}
+.swot-r{background:#F3EFEA;}
+.swot-titre{font-size:14px;font-weight:800;margin-bottom:2px;}
+.swot-f .swot-titre{color:#2C6E3A;}
+.swot-v .swot-titre{color:#C4541F;}
+.swot-l .swot-titre{color:#3A5FC4;}
+.swot-r .swot-titre{color:#8A6D3B;}
+.swot-sous{font-size:10.5px;color:var(--c-grey);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px;}
+.swot-cell ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:6px;}
+.swot-cell li{font-size:13px;line-height:1.4;color:var(--c-dark-grey);}
+@media (max-width: 460px){ .swot-grid{grid-template-columns:1fr;} }
+
+/* ============================================================
+   VISUEL : dynamiques entre les forces
+   ============================================================ */
+.dyn-card{background:#fff;border-radius:16px;padding:18px;box-shadow:var(--shadow-card);margin-bottom:12px;border-left:3px solid var(--c-purple);}
+.dyn-paire{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-purple-text);margin-bottom:5px;}
+.dyn-titre{font-size:16px;font-weight:800;color:var(--c-black);margin-bottom:7px;}
+.dyn-desc{font-size:14.5px;line-height:1.6;color:var(--c-dark-grey);margin:0;}

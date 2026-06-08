@@ -65,6 +65,8 @@ const App = (() => {
 
     // ===== CHAPITRE 1 : SOCLE =====
     d.mini_items.forEach(it => q.push({ kind: 'mini', id: it.id, item: it, chap: 'socle' }));
+    // Questions "adapté" (comportement au travail) pour mesurer le coût d'adaptation
+    (d.adapte?.questions || []).forEach(it => q.push({ kind: 'mini', id: it.id, item: it, chap: 'socle' }));
     Object.values(d.sinea_famille).forEach(list => {
       list.forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'socle' }));
     });
@@ -238,8 +240,59 @@ const App = (() => {
         animateTransition('forward');
       }
     } else {
-      finish();
+      // Fin du test : poser les questions ouvertes avant le calcul
+      showQuestionsOuvertes();
     }
+  }
+
+  // ---- Écran des questions ouvertes (analysées par l'IA) ----
+  const openAnswers = {};
+
+  function showQuestionsOuvertes() {
+    const qo = SINEA_DATA.questions_ouvertes;
+    let scr = document.getElementById('screen-open');
+    if (!scr) {
+      scr = document.createElement('section');
+      scr.id = 'screen-open';
+      scr.className = 'screen';
+      (document.querySelector('.app') || document.body).appendChild(scr);
+    }
+    const champs = qo.questions.map(q => `
+      <div class="qo-field">
+        <label class="qo-q">${q.question}</label>
+        <textarea class="qo-input" rows="3" placeholder="${q.placeholder}" oninput="App.saveOpen('${q.id}', this.value)">${openAnswers[q.id] || ''}</textarea>
+      </div>`).join('');
+    scr.innerHTML = `
+      <div class="qo-scroll">
+        <button class="qo-back" onclick="App.backFromOpen()">← Retour aux questions</button>
+        <div class="qo-head">
+          <div class="qo-kicker">Presque terminé</div>
+          <h2 class="qo-title">Vos mots comptent</h2>
+          <p class="qo-sub">${qo.intro}</p>
+        </div>
+        ${champs}
+        <button class="btn-primary qo-submit" onclick="App.submitOpen()">Découvrir mon portrait</button>
+        <button class="btn-ghost" onclick="App.skipOpen()">Passer cette étape</button>
+      </div>`;
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    scr.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function saveOpen(id, val) { openAnswers[id] = val; saveProgress(); }
+  function backFromOpen() {
+    // Revenir à la dernière question du test
+    document.getElementById('screen-open').classList.remove('active');
+    document.getElementById('screen-question').classList.add('active');
+    render();
+  }
+  function submitOpen() {
+    document.getElementById('screen-open').classList.remove('active');
+    finish();
+  }
+  function skipOpen() {
+    document.getElementById('screen-open').classList.remove('active');
+    finish();
   }
 
   function prev() {
@@ -507,7 +560,7 @@ const App = (() => {
     }, 750);
 
     // Répartir les réponses par type, selon la nature de chaque question
-    const repMini = {}, repSinea = {}, repCtx = {}, repSpeQcm = {}, repSpeDims = {};
+    const repMini = {}, repSinea = {}, repCtx = {}, repSpeQcm = {}, repSpeDims = {}, repAdapte = {};
     const ctxIds = new Set((SINEA_DATA.contextuelles?.questions || []).map(q => q.id));
     const speDimIds = new Set([
       ...((SINEA_DATA.spe_management?.dimensions?.questions) || []).map(q => q.id),
@@ -515,7 +568,8 @@ const App = (() => {
     ]);
     queue.forEach(q => {
       const v = answers[q.id];
-      if (q.kind === 'mini') repMini[q.id] = v;
+      if (q.id.indexOf('ADP_') === 0) repAdapte[q.id] = v; // questions "adapté" isolées
+      else if (q.kind === 'mini') repMini[q.id] = v;
       else if (q.chap === 'socle') repSinea[q.id] = v;
       else if (ctxIds.has(q.id)) repCtx[q.id] = v;
       else if (q.chap === 'spe' && speDimIds.has(q.id)) repSpeDims[q.id] = v;
@@ -528,6 +582,9 @@ const App = (() => {
       // Dimensions contextuelles + spé (nouveau)
       result.contextuel = Engine.scorerContextuel(repCtx);
       result.diagType = diagType;
+      result.reponsesOuvertes = openAnswers; // pour l'analyse IA (rebond_q1, rebond_q2)
+      // Naturel vs adapté (coût d'adaptation)
+      result.naturelAdapte = Engine.scorerNaturelAdapte(repMini, repAdapte);
       if (diagType !== 'classic') {
         result.speDims = Engine.scorerSpeDims(repSpeDims, diagType);
         result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
@@ -541,7 +598,7 @@ const App = (() => {
     }, 2200);
   }
 
-  return { start, next, prev, answer, answerCurseur, repartChange, initCover, getResult: () => result };
+  return { start, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)
