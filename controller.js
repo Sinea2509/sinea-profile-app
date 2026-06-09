@@ -214,6 +214,11 @@ const App = (() => {
 
   // ---- Personnalisation de l'écran d'accueil selon le type ----
   function initCover() {
+    // mode dev : afficher le bouton de remplissage auto
+    if (isDev()) {
+      const dev = document.getElementById('dev-autofill');
+      if (dev) dev.style.display = 'block';
+    }
     diagType = readDiagType();
     const q = buildQueue();
     const nq = q.length;
@@ -554,6 +559,37 @@ const App = (() => {
       document.getElementById('screen-question').classList.add('active');
       render();
     });
+  }
+
+  // ---- MODE DEV : remplir automatiquement le parcours pour tester sans répondre ----
+  function isDev() {
+    try { return new URLSearchParams(window.location.search).get('dev') === '1'; } catch (e) { return false; }
+  }
+
+  function valeurAleatoire(q) {
+    const kind = q.kind;
+    if (kind === 'mini') return 1 + Math.floor(Math.random() * 4); // échelle 1-4
+    if (kind === 'curseur') return Math.floor(Math.random() * 101); // 0-100
+    if (kind === 'repart') {
+      // répartir ~10 points sur les axes
+      const item = q.item; const axes = (item && item.axes) || [];
+      const out = {}; let reste = 10;
+      axes.forEach((a, i) => { const v = i === axes.length - 1 ? reste : Math.floor(Math.random() * (reste + 1)); out[a.style] = v; reste -= v; });
+      return out;
+    }
+    // qcm / ctx : index d'option aléatoire
+    const opts = (q.item && q.item.options) || [];
+    return opts.length ? Math.floor(Math.random() * opts.length) : 0;
+  }
+
+  function autoFill() {
+    // remplit toutes les réponses de la queue courante, puis va aux questions ouvertes
+    queue.forEach(q => { answers[q.id] = valeurAleatoire(q); });
+    // pré-remplir les 2 questions ouvertes
+    openAnswers['q1'] = 'Réponse de test pour la première question ouverte.';
+    openAnswers['q2'] = 'Réponse de test pour la seconde question ouverte.';
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    finish();
   }
 
   function start() {
@@ -1053,7 +1089,7 @@ const App = (() => {
     }, 2200);
   }
 
-  return { start, goToIdentif, goToEspace, sauverAnalyse, envoyerInteractions, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
+  return { start, goToIdentif, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)
