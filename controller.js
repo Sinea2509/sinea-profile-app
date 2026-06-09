@@ -4,7 +4,7 @@
 const App = (() => {
   let queue = [];          // séquence des questions
   let idx = 0;             // index courant
-  const answers = {};      // réponses {id: valeur}
+  let answers = {};      // réponses {id: valeur}
   let result = null;
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
   let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
@@ -42,6 +42,21 @@ const App = (() => {
         }),
       }).catch(() => {}); // silencieux : ne bloque jamais l'expérience
     }, 2000);
+  }
+
+  // Envoie les choix interactifs de l'utilisateur (forces validées, réponses ouvertes...) au serveur
+  function envoyerInteractions(interactions) {
+    if (!identite.email) return;
+    fetch(PROGRESSION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "save_interactions",
+        email: identite.email,
+        type_analyse: interactions.diagType && interactions.diagType !== 'classic' ? interactions.diagType : 'socle',
+        interactions: interactions,
+      }),
+    }).catch(() => {});
   }
 
   // Sauvegarde l'analyse IA générée (texte figé) pour pouvoir la revoir plus tard
@@ -496,28 +511,49 @@ const App = (() => {
       .catch(() => alert('Impossible de charger votre analyse pour le moment.'));
   }
 
+  let profilSocleSauve = null; // profil du socle rechargé (pour les modules)
+  let interactionsSocleSauve = null;
+
   function commencerModule(mod) {
     if (!identite.email) return;
-    // récupérer les réponses du socle déjà données (pour le scoring complet)
+    // récupérer le profil socle déjà calculé + les interactions (réponses ouvertes du socle)
     fetch(PROGRESSION_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'load', email: identite.email }),
+      body: JSON.stringify({ action: 'load_analyse', email: identite.email }),
     })
       .then(r => r.json())
-      .then(prog => {
-        // repartir des réponses socle existantes (si disponibles)
-        answers = (prog && prog.answers) ? prog.answers : {};
-        diagType = mod;
-        // construire un parcours qui ne contient QUE les questions du module
-        queue = buildQueue(mod);
-        idx = 0;
-        document.getElementById('screen-espace').classList.remove('active');
-        showChapterIntro('spe', () => {
-          document.getElementById('screen-question').classList.add('active');
-          render();
-        });
+      .then(data => {
+        const analyses = (data && data.analyses) || {};
+        // le profil socle est stocké dans l'analyse socle
+        profilSocleSauve = (analyses.socle && analyses.socle.profil) ? analyses.socle.profil : null;
+        // récupérer aussi les réponses ouvertes du socle (pour nourrir le fil rouge)
+        interactionsSocleSauve = null;
+        fetch(PROGRESSION_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'load_interactions', email: identite.email }),
+        })
+          .then(r => r.json())
+          .then(inter => {
+            if (inter && inter.interactions && inter.interactions.socle) {
+              interactionsSocleSauve = inter.interactions.socle;
+            }
+            lancerModule(mod);
+          })
+          .catch(() => lancerModule(mod));
       })
       .catch(() => alert('Impossible de lancer le module pour le moment.'));
+  }
+
+  function lancerModule(mod) {
+    answers = {}; // le module ne réutilise pas les réponses brutes du socle (on a le profil figé)
+    diagType = mod;
+    queue = buildQueue(mod);
+    idx = 0;
+    document.getElementById('screen-espace').classList.remove('active');
+    showChapterIntro('spe', () => {
+      document.getElementById('screen-question').classList.add('active');
+      render();
+    });
   }
 
   function start() {
@@ -981,18 +1017,28 @@ const App = (() => {
     });
 
     setTimeout(() => {
-      // Profil archétypal (socle, inchangé)
-      result = Engine.scorer(repMini, repSinea);
-      // Dimensions contextuelles + spé (nouveau)
-      result.contextuel = Engine.scorerContextuel(repCtx);
-      result.diagType = diagType;
-      result.reponsesOuvertes = openAnswers; // pour l'analyse IA (rebond_q1, rebond_q2)
-      // Naturel vs adapté (coût d'adaptation)
-      result.naturelAdapte = Engine.scorerNaturelAdapte(repMini, repAdapte);
-      if (diagType !== 'classic') {
+      if (profilSocleSauve && diagType !== 'classic') {
+        // MODE MODULE : on réutilise le profil socle déjà calculé (archétype, Big Five, radar...)
+        // et on ajoute seulement le scoring du module par-dessus.
+        result = Object.assign({}, profilSocleSauve);
+        result.diagType = diagType;
+        // réponses ouvertes du socle (rechargées) pour nourrir le fil rouge
+        result.reponsesOuvertes = (interactionsSocleSauve && interactionsSocleSauve.reponses_ouvertes) ? interactionsSocleSauve.reponses_ouvertes : {};
         result.speDims = Engine.scorerSpeDims(repSpeDims, diagType);
         result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
         result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);
+      } else {
+        // MODE SOCLE (ou parcours complet)
+        result = Engine.scorer(repMini, repSinea);
+        result.contextuel = Engine.scorerContextuel(repCtx);
+        result.diagType = diagType;
+        result.reponsesOuvertes = openAnswers;
+        result.naturelAdapte = Engine.scorerNaturelAdapte(repMini, repAdapte);
+        if (diagType !== 'classic') {
+          result.speDims = Engine.scorerSpeDims(repSpeDims, diagType);
+          result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
+          result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);
+        }
       }
 
       // Enregistrer le résultat dans Airtable (si un token est présent dans l'URL)
@@ -1007,7 +1053,7 @@ const App = (() => {
     }, 2200);
   }
 
-  return { start, goToIdentif, goToEspace, sauverAnalyse, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
+  return { start, goToIdentif, goToEspace, sauverAnalyse, envoyerInteractions, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

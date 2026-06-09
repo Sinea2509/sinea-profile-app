@@ -483,14 +483,10 @@ const Result = (() => {
 
       ${speBlocHtml}
 
-      <div class="r-seedup">
-        <h3>Continuez avec SeedUp</h3>
-        <p>Transformez ce portrait en défis concrets, ancrés dans votre quotidien.</p>
-        <button class="btn-primary btn-light" onclick="Result.finishSeedup()">Envoyer vers SeedUp</button>
-      </div>
-
-      <div class="r-espace-cta" id="r-espace-cta" style="text-align:center;margin-top:18px;">
-        <button class="btn-ghost" onclick="App.goToEspace()">Accéder à mon espace</button>
+      <div class="r-fin-cta">
+        <h3>Votre portrait est prêt</h3>
+        <p>Retrouvez votre analyse et la suite de votre parcours dans votre espace.</p>
+        <button class="btn-primary btn-light r-cta-espace" onclick="App.goToEspace()">Accéder à mon espace</button>
       </div>
     `;
     document.getElementById('r-body').innerHTML=html;
@@ -503,9 +499,28 @@ const Result = (() => {
   function toggleValid(type,i){
     const key=`${type}_${i}`; validations[key]=!validations[key];
     document.getElementById(`v-${type}-${i}`).classList.toggle('sel',validations[key]);
+    sauvegarderInteractions();
   }
-  function saveOpen(q,v){ openAnswers[q]=v; }
-  function toggleAction(i){ const el=document.getElementById('act-'+i); el.classList.toggle('sel'); if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i); }
+  function saveOpen(q,v){ openAnswers[q]=v; sauvegarderInteractions(); }
+
+  // Collecte les choix de l'utilisateur (forces validées, vigilances, réponses ouvertes, pistes) et les envoie
+  let interTimer = null;
+  function sauvegarderInteractions(){
+    if (!window.App || !App.envoyerInteractions) return;
+    if (interTimer) clearTimeout(interTimer);
+    interTimer = setTimeout(() => {
+      const inter = {
+        forces_validees: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]),
+        vigilances_validees: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]),
+        moteur_valide: !!validations['moteur_0'],
+        reponses_ouvertes: Object.assign({}, openAnswers),
+        pistes_choisies: Array.from(selectedActions),
+        diagType: RES ? RES.diagType : 'classic',
+      };
+      App.envoyerInteractions(inter);
+    }, 1500);
+  }
+  function toggleAction(i){ const el=document.getElementById('act-'+i); el.classList.toggle('sel'); if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i); sauvegarderInteractions(); }
   function niveauTxt(niv){ return {'répandu':'Vous avez un profil répandu','courant':'Vous avez un profil courant','peu commun':'Vous avez un profil peu commun','rare':'Vous avez un profil rare'}[niv]||'Votre profil est unique'; }
 
   // Backend IA (Vercel) : génère toutes les sections du portrait en parallèle.

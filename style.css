@@ -711,3 +711,11 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Barre de progression dans une carte en cours */
 .esp-progress{height:7px;background:#EFEDE7;border-radius:10px;overflow:hidden;margin-top:8px;}
 .esp-progress-fill{height:100%;background:linear-gradient(90deg, var(--c-corail), var(--c-purple));border-radius:10px;transition:width 0.4s;}
+
+/* ============================================================
+   CTA final de restitution : accéder à l'espace (principal)
+   ============================================================ */
+.r-fin-cta{background:linear-gradient(120deg, #6E3D82 0%, #8884F0 100%);border-radius:22px;padding:32px 28px;text-align:center;color:#fff;margin-top:28px;}
+.r-fin-cta h3{font-size:22px;font-weight:800;margin:0 0 8px;color:#fff;}
+.r-fin-cta p{font-size:15px;opacity:0.9;margin:0 0 20px;line-height:1.5;}
+.r-cta-espace{background:#fff !important;color:#5E59C7 !important;font-weight:700;}
