@@ -6,7 +6,8 @@ const App = (() => {
   let idx = 0;             // index courant
   const answers = {};      // réponses {id: valeur}
   let result = null;
-  let diagType = 'classic'; // 'classic' | 'manager' | 'commercial' (déterminé par le lien)
+  let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
+  let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
 
   // ---- Sauvegarde de progression (localStorage + serveur Airtable) ----
   // Protège contre la perte de réponses si l'onglet se ferme pendant le test.
@@ -37,6 +38,7 @@ const App = (() => {
           prenom: identite.prenom,
           nom: identite.nom,
           answers, idx, diagType,
+          droits: droits,
         }),
       }).catch(() => {}); // silencieux : ne bloque jamais l'expérience
     }, 2000);
@@ -335,12 +337,17 @@ const App = (() => {
       .catch(() => renderEspace({}));
   }
 
+  // Nombre de questions par module (pour le taux de complétion)
+  const NB_QUESTIONS = { socle: 60, commercial: 36, manager: 36 };
+
   function renderEspace(data) {
     const prenom = data.prenom || identite.prenom || '';
     const archetype = data.archetype || '';
     const famille = data.famille || '';
     const analyses = data.analyses || {};
-    const droits = (data.droits || '').toLowerCase();
+    const droitsTxt = (data.droits || droits || '').toLowerCase();
+    const progression = data.progression || {};
+    const progType = data.diagTypeEnCours || ''; // type du module en cours si applicable
 
     document.getElementById('espace-name').textContent = 'Bonjour ' + prenom;
     const archEl = document.getElementById('espace-arch');
@@ -352,44 +359,109 @@ const App = (() => {
       archEl.style.display = 'none';
     }
 
-    // Construire les cartes
+    // Calcul du % d'avancement par module (à partir des réponses sauvegardées)
+    function pourcentage(mod) {
+      const total = NB_QUESTIONS[mod] || 60;
+      // compter les réponses qui appartiennent à ce module
+      let repondu = 0;
+      const ids = idsDuModule(mod);
+      ids.forEach(id => { if (progression[id] !== undefined && progression[id] !== null) repondu++; });
+      return Math.min(100, Math.round((repondu / total) * 100));
+    }
+
+    // ===== SECTION 1 : MES RÉSULTATS (modules terminés) =====
+    const faits = ['socle', 'commercial', 'manager'].filter(m => analyses[m]);
+    let resultatsHtml = '';
+    if (faits.length) {
+      resultatsHtml = '<div class="espace-label">Mes résultats</div>';
+      faits.forEach(m => { resultatsHtml += carteResultat(m); });
+    }
+    document.getElementById('espace-resultats').innerHTML = resultatsHtml;
+
+    // ===== SECTION 2 : VOTRE PARCOURS (à faire / en cours / verrouillé) =====
     const cards = [];
-    // 1) Socle
-    const socleFait = !!analyses.socle;
-    cards.push(carteModule('socle', socleFait ? 'done' : 'go'));
-    // 2) Modules selon droits
+    // socle : si pas fait, on le propose (commencer ou continuer)
+    if (!analyses.socle) {
+      const pct = pourcentage('socle');
+      cards.push(carteModule('socle', pct > 0 ? 'encours' : 'go', pct));
+    }
+    // modules selon droits (s'ils ne sont pas déjà faits)
     ['commercial', 'manager'].forEach(mod => {
-      const fait = !!analyses[mod];
-      const aLeDroit = droits.includes(mod);
-      if (fait) cards.push(carteModule(mod, 'done'));
-      else if (aLeDroit) cards.push(carteModule(mod, 'go'));
-      else cards.push(carteModule(mod, 'lock'));
+      if (analyses[mod]) return; // déjà fait : il est dans "Mes résultats"
+      const aLeDroit = droitsTxt.includes(mod);
+      if (!aLeDroit) { cards.push(carteModule(mod, 'lock', 0)); return; }
+      // a le droit : commencer ou continuer (uniquement si le socle est fait)
+      if (!analyses.socle) { cards.push(carteModule(mod, 'attente', 0)); return; }
+      const pct = pourcentage(mod);
+      cards.push(carteModule(mod, pct > 0 ? 'encours' : 'go', pct));
     });
-    document.getElementById('espace-cards').innerHTML = cards.join('');
+    let parcoursHtml = '';
+    if (cards.length) {
+      parcoursHtml = '<div class="espace-label">Votre parcours</div>' + cards.join('');
+    }
+    document.getElementById('espace-cards').innerHTML = parcoursHtml;
 
     // câbler les boutons
-    document.querySelectorAll('[data-revoir]').forEach(b => {
-      b.onclick = () => revoirAnalyse(b.getAttribute('data-revoir'));
-    });
-    document.querySelectorAll('[data-commencer]').forEach(b => {
-      b.onclick = () => commencerModule(b.getAttribute('data-commencer'));
-    });
+    document.querySelectorAll('[data-revoir]').forEach(b => { b.onclick = () => revoirAnalyse(b.getAttribute('data-revoir')); });
+    document.querySelectorAll('[data-commencer]').forEach(b => { b.onclick = () => commencerModule(b.getAttribute('data-commencer')); });
   }
 
-  function carteModule(mod, etat) {
-    const l = LABELS_MODULE[mod];
-    if (etat === 'done') {
-      return `<div class="esp-card">
-        <div class="esp-icon esp-ic-done">✓</div>
-        <div class="esp-body"><span class="esp-status esp-st-done">Terminé</span><div class="esp-title">${l.titre}</div><div class="esp-sub">${l.sub}</div></div>
-        <button class="esp-btn esp-btn-ghost" data-revoir="${mod}">Revoir</button>
-      </div>`;
+  // Liste des IDs de questions d'un module (pour calculer le %)
+  function idsDuModule(mod) {
+    const d = SINEA_DATA;
+    if (mod === 'socle') {
+      const ids = [];
+      d.mini_items.forEach(it => ids.push(it.id));
+      (d.adapte?.questions || []).forEach(it => ids.push(it.id));
+      Object.values(d.sinea_famille).forEach(l => l.forEach(it => ids.push(it.id)));
+      d.sinea_hybride.forEach(it => ids.push(it.id));
+      (d.sinea_transversales || []).forEach(it => ids.push(it.id));
+      (d.sinea_repartitions || []).forEach(it => ids.push(it.id));
+      (d.contextuelles?.questions || []).forEach(it => ids.push(it.id));
+      return ids;
     }
+    if (mod === 'commercial') return (d.spe_commercial.challenger.questions || []).map(q => q.id).concat((d.spe_commercial.dimensions.questions || []).map(q => q.id));
+    if (mod === 'manager') return (d.spe_management.goleman.questions || []).map(q => q.id).concat((d.spe_management.dimensions.questions || []).map(q => q.id));
+    return [];
+  }
+
+  // Carte d'un résultat terminé (section "Mes résultats", en vitrine cliquable)
+  function carteResultat(mod) {
+    const l = LABELS_MODULE[mod];
+    return `<div class="esp-resultat" data-revoir="${mod}">
+      <div class="esp-res-glow"></div>
+      <div class="esp-res-in">
+        <div class="esp-res-label">Portrait complété</div>
+        <div class="esp-res-title">${l.titre}</div>
+        <div class="esp-res-cta">Consulter mon analyse →</div>
+      </div>
+    </div>`;
+  }
+
+  function carteModule(mod, etat, pct) {
+    const l = LABELS_MODULE[mod];
     if (etat === 'go') {
       return `<div class="esp-card">
         <div class="esp-icon esp-ic-go">→</div>
-        <div class="esp-body"><span class="esp-status esp-st-go">Disponible</span><div class="esp-title">${l.titre}</div><div class="esp-sub">${l.sub}</div></div>
+        <div class="esp-body"><span class="esp-status esp-st-go">À découvrir</span><div class="esp-title">${l.titre}</div><div class="esp-sub">${l.sub}</div></div>
         <button class="esp-btn esp-btn-purple" data-commencer="${mod}">Commencer</button>
+      </div>`;
+    }
+    if (etat === 'encours') {
+      return `<div class="esp-card">
+        <div class="esp-icon esp-ic-go">▷</div>
+        <div class="esp-body">
+          <span class="esp-status esp-st-go">En cours · ${pct}%</span>
+          <div class="esp-title">${l.titre}</div>
+          <div class="esp-progress"><div class="esp-progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <button class="esp-btn esp-btn-purple" data-commencer="${mod}">Continuer</button>
+      </div>`;
+    }
+    if (etat === 'attente') {
+      return `<div class="esp-card esp-locked">
+        <div class="esp-icon esp-ic-lock">◔</div>
+        <div class="esp-body"><span class="esp-status esp-st-lock">Bientôt</span><div class="esp-title">${l.titre}</div><div class="esp-lock-note">Disponible après votre portrait de personnalité.</div></div>
       </div>`;
     }
     return `<div class="esp-card esp-locked">
@@ -449,16 +521,13 @@ const App = (() => {
   }
 
   function start() {
-    diagType = readDiagType();
-    queue = buildQueue();
-    // Reprise de session si une sauvegarde valide existe
-    const saved = loadProgress();
-    if (saved) {
-      showResumePrompt(saved);
-      return;
-    }
+    // Le premier parcours est TOUJOURS le socle. Le type d'URL définit les DROITS (modules débloqués ensuite).
+    droits = readDiagType(); // 'manager', 'commercial' ou 'classic'
+    diagType = 'classic';    // on fait le socle
+    queue = buildQueue();    // socle + contexte uniquement (le spé ne s'ajoute pas car diagType='classic')
     idx = 0;
     document.getElementById('screen-cover').classList.remove('active');
+    document.getElementById('screen-identif').classList.remove('active');
     showChapterIntro('socle', () => {
       document.getElementById('screen-question').classList.add('active');
       render();
@@ -875,21 +944,40 @@ const App = (() => {
       }
     }, 750);
 
-    // Répartir les réponses par type, selon la nature de chaque question
+    // Répartir les réponses par type, selon la nature de chaque question.
+    // On parcourt TOUTES les réponses disponibles (socle rechargé + module),
+    // pas seulement la queue courante, pour que le scoring soit complet même en mode module seul.
     const repMini = {}, repSinea = {}, repCtx = {}, repSpeQcm = {}, repSpeDims = {}, repAdapte = {};
     const ctxIds = new Set((SINEA_DATA.contextuelles?.questions || []).map(q => q.id));
     const speDimIds = new Set([
       ...((SINEA_DATA.spe_management?.dimensions?.questions) || []).map(q => q.id),
       ...((SINEA_DATA.spe_commercial?.dimensions?.questions) || []).map(q => q.id),
     ]);
-    queue.forEach(q => {
-      const v = answers[q.id];
-      if (q.id.indexOf('ADP_') === 0) repAdapte[q.id] = v; // questions "adapté" isolées
-      else if (q.kind === 'mini') repMini[q.id] = v;
-      else if (q.chap === 'socle') repSinea[q.id] = v;
-      else if (ctxIds.has(q.id)) repCtx[q.id] = v;
-      else if (q.chap === 'spe' && speDimIds.has(q.id)) repSpeDims[q.id] = v;
-      else if (q.chap === 'spe') repSpeQcm[q.id] = v;
+    // index : id -> { kind, chap } pour toutes les questions possibles
+    const indexQuestions = {};
+    const d = SINEA_DATA;
+    d.mini_items.forEach(it => indexQuestions[it.id] = { kind: 'mini', chap: 'socle' });
+    (d.adapte?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'mini', chap: 'socle' });
+    Object.values(d.sinea_famille).forEach(l => l.forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'socle' }));
+    d.sinea_hybride.forEach(it => indexQuestions[it.id] = { kind: 'curseur', chap: 'socle' });
+    (d.sinea_transversales || []).forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'socle' });
+    (d.sinea_repartitions || []).forEach(it => indexQuestions[it.id] = { kind: 'repart', chap: 'socle' });
+    (d.contextuelles?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'ctx', chap: 'contexte' });
+    (d.spe_management?.goleman?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'spe' });
+    (d.spe_management?.dimensions?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'ctx', chap: 'spe' });
+    (d.spe_commercial?.challenger?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'spe' });
+    (d.spe_commercial?.dimensions?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'ctx', chap: 'spe' });
+
+    Object.keys(answers).forEach(id => {
+      const v = answers[id];
+      const meta = indexQuestions[id];
+      if (!meta) return;
+      if (id.indexOf('ADP_') === 0) repAdapte[id] = v;
+      else if (meta.kind === 'mini') repMini[id] = v;
+      else if (meta.chap === 'socle') repSinea[id] = v;
+      else if (ctxIds.has(id)) repCtx[id] = v;
+      else if (meta.chap === 'spe' && speDimIds.has(id)) repSpeDims[id] = v;
+      else if (meta.chap === 'spe') repSpeQcm[id] = v;
     });
 
     setTimeout(() => {
