@@ -664,3 +664,34 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .identif-btn{margin-top:18px;}
 .identif-resume{margin-top:8px;font-size:14px;}
 @media (min-width:768px){ .identif-title{font-size:34px;} }
+
+/* ============================================================
+   ÉCRAN ESPACE PERSO (compte utilisateur)
+   ============================================================ */
+#screen-espace{position:absolute;inset:0;z-index:50;display:none;background:var(--c-beige);overflow-y:auto;}
+#screen-espace.active{display:block;}
+.espace-wrap{max-width:760px;margin:0 auto;padding:28px 20px 60px;}
+.espace-hero{background:radial-gradient(circle at 30% 20%, #F98272 0%, #6E3D82 55%, #0F1232 100%);border-radius:24px;padding:34px 30px;color:#fff;margin-bottom:24px;}
+.espace-hi{font-size:14px;font-weight:600;opacity:0.85;letter-spacing:0.04em;}
+.espace-name{font-size:30px;font-weight:800;letter-spacing:-0.02em;margin:6px 0 16px;}
+.espace-arch{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.16);border-radius:30px;padding:8px 16px;font-size:15px;font-weight:700;}
+.espace-arch-dot{width:30px;height:30px;border-radius:50%;background:#fff;color:#6E3D82;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.espace-label{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--c-purple-text);margin:8px 4px 12px;}
+.esp-card{background:#fff;border-radius:18px;padding:22px 24px;box-shadow:var(--shadow-card);margin-bottom:14px;display:flex;align-items:center;gap:18px;}
+.esp-icon{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;}
+.esp-ic-done{background:#E7F3E9;}
+.esp-ic-go{background:#FBE9E5;}
+.esp-ic-lock{background:#EFEDE7;}
+.esp-body{flex:1;}
+.esp-title{font-size:17px;font-weight:800;margin-bottom:3px;}
+.esp-sub{font-size:13.5px;color:var(--c-grey);line-height:1.4;}
+.esp-status{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:7px;}
+.esp-st-done{background:#E7F3E9;color:#2C6E3A;}
+.esp-st-go{background:#FBE9E5;color:#C4541F;}
+.esp-st-lock{background:#EFEDE7;color:#888;}
+.esp-btn{border:none;border-radius:11px;padding:11px 20px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.esp-btn-purple{background:var(--c-purple);color:#fff;}
+.esp-btn-ghost{background:var(--c-beige);color:var(--c-dark-grey);}
+.esp-locked{opacity:0.6;}
+.esp-lock-note{font-size:12px;color:var(--c-grey);font-style:italic;}
+.espace-foot{text-align:center;font-size:12.5px;color:var(--c-grey);margin-top:28px;}

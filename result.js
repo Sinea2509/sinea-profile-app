@@ -488,6 +488,10 @@ const Result = (() => {
         <p>Transformez ce portrait en défis concrets, ancrés dans votre quotidien.</p>
         <button class="btn-primary btn-light" onclick="Result.finishSeedup()">Envoyer vers SeedUp</button>
       </div>
+
+      <div class="r-espace-cta" id="r-espace-cta" style="text-align:center;margin-top:18px;">
+        <button class="btn-ghost" onclick="App.goToEspace()">Accéder à mon espace</button>
+      </div>
     `;
     document.getElementById('r-body').innerHTML=html;
     generateIA(res);
@@ -576,7 +580,29 @@ const Result = (() => {
     const sec=res.secondaires.map(s=>s.nom).join(' et ');
     const situ=dc.en_situation||{};
     try{
-      const c = await callWorker(res);
+      // Si on revoit une analyse sauvegardée : on utilise le contenu figé, sans rappeler l'IA
+      const c = res.contenuFige ? res.contenuFige : await callWorker(res);
+      // Sauvegarder l'analyse générée (figée) pour la revoir depuis l'espace perso
+      if (!res.contenuFige) {
+        try {
+          const typeAnalyse = (res.diagType && res.diagType !== 'classic') ? res.diagType : 'socle';
+          // on sauvegarde le contenu IA + un profil léger pour pouvoir tout réafficher
+          const profilLeger = {
+            dominante: res.dominante,
+            secondaires: res.secondaires,
+            scoresBigFive: res.scoresBigFive,
+            radarFamilles: res.radarFamilles,
+            blend: res.blend,
+            naturelAdapte: res.naturelAdapte,
+            contextuel: res.contextuel,
+            speStyle: res.speStyle,
+            speStyleScores: res.speStyleScores,
+            speDims: res.speDims,
+            diagType: res.diagType,
+          };
+          if (window.App && App.sauverAnalyse) App.sauverAnalyse(typeAnalyse, { contenu: c, profil: profilLeger });
+        } catch (e) {}
+      }
       poseSection('ia-ouverture','Analyse personnalisée', c.ouverture, `<p>${dc.essence||''}</p>`);
       poseSection('ia-alchimie','Analyse personnalisée', c.alchimie,
         `<p>Votre combinaison de ${dom.nom} et de ${sec} compose une signature singulière.</p>`);

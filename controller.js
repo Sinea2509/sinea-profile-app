@@ -42,6 +42,21 @@ const App = (() => {
     }, 2000);
   }
 
+  // Sauvegarde l'analyse IA générée (texte figé) pour pouvoir la revoir plus tard
+  function sauverAnalyse(typeAnalyse, contenu) {
+    if (!identite.email) return;
+    fetch(PROGRESSION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "save_analyse",
+        email: identite.email,
+        type_analyse: typeAnalyse, // 'socle' ou 'commercial' ou 'manager'
+        contenu: contenu,
+      }),
+    }).catch(() => {});
+  }
+
   function loadProgress() {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
@@ -116,9 +131,21 @@ const App = (() => {
   }
 
   // ---- Construction de la file de questions (avec chapitres) ----
-  function buildQueue() {
+  function buildQueue(moduleSeulType) {
     const d = SINEA_DATA;
     const q = [];
+
+    // Mode "module seul" : on ne repasse pas le socle, juste les questions du module
+    if (moduleSeulType) {
+      if (moduleSeulType === 'manager') {
+        (d.spe_management.goleman.questions || []).forEach(it => q.push({ kind: kindFromFormat(it, 'qcm'), id: it.id, item: it, chap: 'spe' }));
+        (d.spe_management.dimensions.questions || []).forEach(it => q.push({ kind: 'ctx', id: it.id, item: it, chap: 'spe' }));
+      } else if (moduleSeulType === 'commercial') {
+        (d.spe_commercial.challenger.questions || []).forEach(it => q.push({ kind: kindFromFormat(it, 'qcm'), id: it.id, item: it, chap: 'spe' }));
+        (d.spe_commercial.dimensions.questions || []).forEach(it => q.push({ kind: 'ctx', id: it.id, item: it, chap: 'spe' }));
+      }
+      return q;
+    }
 
     // ===== CHAPITRE 1 : SOCLE =====
     d.mini_items.forEach(it => q.push({ kind: 'mini', id: it.id, item: it, chap: 'socle' }));
@@ -239,40 +266,186 @@ const App = (() => {
   function resumeIdentif() {
     const email = (document.getElementById('id-email').value || '').trim().toLowerCase();
     const err = document.getElementById('id-error');
-    if (!emailValide(email)) { err.textContent = 'Entrez votre email pour reprendre votre test.'; return; }
-    err.textContent = 'Recherche de votre progression...';
+    if (!emailValide(email)) { err.textContent = 'Entrez votre email pour vous reconnecter.'; return; }
+    err.textContent = 'Recherche de votre espace...';
     identite.email = email;
     diagType = readDiagType();
-    queue = buildQueue();
-    // Charger la progression depuis le serveur
+    // Charger l'état complet de la personne (analyses + progression)
     fetch(PROGRESSION_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "load", email }),
+      body: JSON.stringify({ action: "load_analyse", email }),
     })
       .then(r => r.json())
       .then(data => {
-        if (data && data.found && data.answers && Object.keys(data.answers).length > 0) {
+        if (data && data.found) {
           identite.prenom = data.prenom || '';
           identite.nom = data.nom || '';
-          answers = data.answers;
-          idx = data.idx || 0;
-          document.getElementById('screen-identif').classList.remove('active');
-          showResumePrompt({ diagType, idx, answers });
-        } else {
-          err.textContent = 'Aucune progression trouvée pour cet email. Vous pouvez commencer le test.';
+          const aDesAnalyses = data.analyses && Object.keys(data.analyses).length > 0;
+          if (aDesAnalyses) {
+            // la personne a déjà fait au moins un test → on l'envoie à son espace
+            document.getElementById('screen-identif').classList.remove('active');
+            goToEspace();
+            return;
+          }
         }
+        // sinon : vérifier s'il y a une progression en cours à reprendre
+        fetch(PROGRESSION_URL, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "load", email }),
+        })
+          .then(r => r.json())
+          .then(prog => {
+            if (prog && prog.found && prog.answers && Object.keys(prog.answers).length > 0) {
+              identite.prenom = prog.prenom || identite.prenom;
+              answers = prog.answers; idx = prog.idx || 0;
+              queue = buildQueue();
+              document.getElementById('screen-identif').classList.remove('active');
+              showResumePrompt({ diagType, idx, answers });
+            } else {
+              err.textContent = "Aucun compte trouvé pour cet email. Vous pouvez commencer le test.";
+            }
+          })
+          .catch(() => { err.textContent = 'Connexion impossible. Réessayez dans un instant.'; });
       })
-      .catch(() => {
-        // repli : essayer la sauvegarde locale
-        const saved = loadProgress();
-        if (saved) {
-          document.getElementById('screen-identif').classList.remove('active');
-          showResumePrompt(saved);
-        } else {
-          err.textContent = 'Connexion impossible. Réessayez dans un instant.';
+      .catch(() => { err.textContent = 'Connexion impossible. Réessayez dans un instant.'; });
+  }
+
+  // ---- Espace perso (compte utilisateur) ----
+  const LABELS_MODULE = {
+    socle: { titre: 'Votre portrait de personnalité', sub: 'Votre socle, vos forces, vos dimensions profondes.' },
+    commercial: { titre: 'Votre approche commerciale', sub: 'Comment votre personnalité nourrit votre manière de vendre.' },
+    manager: { titre: 'Votre style de management', sub: 'Comment votre personnalité façonne votre leadership.' },
+  };
+
+  function goToEspace() {
+    // masquer les autres écrans
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    const scr = document.getElementById('screen-espace');
+    scr.classList.add('active');
+    // charger les données depuis le serveur
+    if (!identite.email) return;
+    fetch(PROGRESSION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load_analyse', email: identite.email }),
+    })
+      .then(r => r.json())
+      .then(data => renderEspace(data || {}))
+      .catch(() => renderEspace({}));
+  }
+
+  function renderEspace(data) {
+    const prenom = data.prenom || identite.prenom || '';
+    const archetype = data.archetype || '';
+    const famille = data.famille || '';
+    const analyses = data.analyses || {};
+    const droits = (data.droits || '').toLowerCase();
+
+    document.getElementById('espace-name').textContent = 'Bonjour ' + prenom;
+    const archEl = document.getElementById('espace-arch');
+    if (archetype) {
+      const initiale = archetype.replace(/^(Le |La |L'|Les )/, '').charAt(0);
+      archEl.innerHTML = `<span class="espace-arch-dot">${initiale}</span><span>${archetype}${famille ? ' · famille ' + famille.charAt(0) + famille.slice(1).toLowerCase() : ''}</span>`;
+      archEl.style.display = 'inline-flex';
+    } else {
+      archEl.style.display = 'none';
+    }
+
+    // Construire les cartes
+    const cards = [];
+    // 1) Socle
+    const socleFait = !!analyses.socle;
+    cards.push(carteModule('socle', socleFait ? 'done' : 'go'));
+    // 2) Modules selon droits
+    ['commercial', 'manager'].forEach(mod => {
+      const fait = !!analyses[mod];
+      const aLeDroit = droits.includes(mod);
+      if (fait) cards.push(carteModule(mod, 'done'));
+      else if (aLeDroit) cards.push(carteModule(mod, 'go'));
+      else cards.push(carteModule(mod, 'lock'));
+    });
+    document.getElementById('espace-cards').innerHTML = cards.join('');
+
+    // câbler les boutons
+    document.querySelectorAll('[data-revoir]').forEach(b => {
+      b.onclick = () => revoirAnalyse(b.getAttribute('data-revoir'));
+    });
+    document.querySelectorAll('[data-commencer]').forEach(b => {
+      b.onclick = () => commencerModule(b.getAttribute('data-commencer'));
+    });
+  }
+
+  function carteModule(mod, etat) {
+    const l = LABELS_MODULE[mod];
+    if (etat === 'done') {
+      return `<div class="esp-card">
+        <div class="esp-icon esp-ic-done">✓</div>
+        <div class="esp-body"><span class="esp-status esp-st-done">Terminé</span><div class="esp-title">${l.titre}</div><div class="esp-sub">${l.sub}</div></div>
+        <button class="esp-btn esp-btn-ghost" data-revoir="${mod}">Revoir</button>
+      </div>`;
+    }
+    if (etat === 'go') {
+      return `<div class="esp-card">
+        <div class="esp-icon esp-ic-go">→</div>
+        <div class="esp-body"><span class="esp-status esp-st-go">Disponible</span><div class="esp-title">${l.titre}</div><div class="esp-sub">${l.sub}</div></div>
+        <button class="esp-btn esp-btn-purple" data-commencer="${mod}">Commencer</button>
+      </div>`;
+    }
+    return `<div class="esp-card esp-locked">
+      <div class="esp-icon esp-ic-lock">🔒</div>
+      <div class="esp-body"><span class="esp-status esp-st-lock">Verrouillé</span><div class="esp-title">${l.titre}</div><div class="esp-lock-note">Ce module n'est pas inclus dans votre accès.</div></div>
+    </div>`;
+  }
+
+  function revoirAnalyse(mod) {
+    if (!identite.email) return;
+    fetch(PROGRESSION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load_analyse', email: identite.email }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        const analyses = (data && data.analyses) || {};
+        const a = analyses[mod];
+        if (!a || !a.profil || !a.contenu) {
+          alert("Cette analyse n'est pas disponible.");
+          return;
         }
-      });
+        // reconstruire l'objet résultat avec le contenu figé
+        const res = Object.assign({}, a.profil);
+        res.contenuFige = a.contenu;
+        res.diagType = a.profil.diagType || mod;
+        document.getElementById('screen-espace').classList.remove('active');
+        document.getElementById('screen-result').classList.add('active');
+        Result.render(res);
+      })
+      .catch(() => alert('Impossible de charger votre analyse pour le moment.'));
+  }
+
+  function commencerModule(mod) {
+    if (!identite.email) return;
+    // récupérer les réponses du socle déjà données (pour le scoring complet)
+    fetch(PROGRESSION_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load', email: identite.email }),
+    })
+      .then(r => r.json())
+      .then(prog => {
+        // repartir des réponses socle existantes (si disponibles)
+        answers = (prog && prog.answers) ? prog.answers : {};
+        diagType = mod;
+        // construire un parcours qui ne contient QUE les questions du module
+        queue = buildQueue(mod);
+        idx = 0;
+        document.getElementById('screen-espace').classList.remove('active');
+        showChapterIntro('spe', () => {
+          document.getElementById('screen-question').classList.add('active');
+          render();
+        });
+      })
+      .catch(() => alert('Impossible de lancer le module pour le moment.'));
   }
 
   function start() {
@@ -746,7 +919,7 @@ const App = (() => {
     }, 2200);
   }
 
-  return { start, goToIdentif, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
+  return { start, goToIdentif, goToEspace, sauverAnalyse, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)
