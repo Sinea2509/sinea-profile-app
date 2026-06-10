@@ -627,17 +627,17 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   grid-template-columns:repeat(5, 1fr);
   grid-auto-rows:1fr;
   gap:2px;
-  opacity:0.55;
+  opacity:0.5;
 }
 .cm-tile{
   background-size:cover;background-position:center;
   width:100%;padding-bottom:100%;
-  filter:saturate(1.15);
+  filter:saturate(1.35) contrast(1.05);
 }
 /* Voile dégradé par-dessus la mosaïque pour la lisibilité du texte */
 .cover::after{
   content:"";position:absolute;inset:0;z-index:1;
-  background:radial-gradient(circle at 50% 38%, rgba(255,125,100,0.62) 0%, rgba(110,61,130,0.68) 50%, rgba(15,18,50,0.82) 100%);
+  background:radial-gradient(circle at 50% 36%, rgba(249,125,90,0.78) 0%, rgba(110,50,135,0.84) 46%, rgba(10,12,40,0.93) 100%);
 }
 /* le contenu passe au-dessus du voile */
 .cover-inner{z-index:3 !important;}
