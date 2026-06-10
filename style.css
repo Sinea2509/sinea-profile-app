@@ -1,6 +1,6 @@
 :root{
   --c-white:#FFFFFF; --c-beige:#F5F4F0; --c-medium-grey:#C9C9C9; --c-grey:#747474;
-  --c-dark-grey:#2D2D2D; --c-black:#151416;
+  --c-dark-grey:#2D2D2D; --c-black:#151416; --c-dark:#1A1A1A;
   --c-red:#F98272; --c-orange:#F9A876; --c-pink:#E290EC; --c-pink-light:#F4BEFA;
   --c-purple:#8884F0; --c-purple-text:#5E59C7; --c-blue-purple:#5474F5; --c-blue:#3EADFF; --c-light-blue:#DCEEFF;
   --g-primary:linear-gradient(90deg,#F98272 0%,#F9A876 35%,#E290EC 70%,#5474F5 100%);
@@ -915,3 +915,41 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Conseil actionnable dans les compatibilités */
 .r-compat-conseil{margin-top:12px;padding:11px 13px;background:#F7F4FF;border-radius:11px;font-size:13.5px;line-height:1.45;color:var(--c-dark-grey);}
 .r-compat-conseil-label{display:block;font-size:10.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:3px;}
+
+/* Personnage dans la carte résultat (Mes résultats) */
+.esp-res-in{display:flex;align-items:center;gap:16px;}
+.esp-res-texte{flex:1;min-width:0;}
+.esp-res-perso{flex-shrink:0;width:96px;}
+.esp-res-perso img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.35);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+@media (max-width:520px){ .esp-res-perso{width:68px;} .esp-res-perso img{width:68px;height:68px;} }
+
+/* Bandeau d'accès rapide vers la partie spé (commercial/manager) */
+.r-acces-rapide{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;background:linear-gradient(135deg, var(--c-purple), var(--c-purple-text));color:#fff;border-radius:14px;padding:15px 20px;text-decoration:none;font-weight:700;font-size:15px;transition:transform 0.2s, box-shadow 0.2s;box-shadow:0 6px 20px rgba(94,89,199,0.25);}
+.r-acces-rapide:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(94,89,199,0.35);}
+.r-acces-rapide-fleche{font-size:20px;animation:acceRapideBounce 1.5s ease infinite;}
+@keyframes acceRapideBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(4px);}}
+
+/* Rappel de la famille + carte "votre propre famille" */
+.r-compat-rappel{font-size:14.5px;line-height:1.5;color:var(--c-dark-grey);margin:0 0 16px;padding:13px 16px;background:#F7F4FF;border-radius:12px;}
+.r-compat-badge.r-compat-soi{background:rgba(94,89,199,0.16);color:var(--c-purple-text);}
+.r-compat-card-soi{border-color:#D9D2F2;}
+
+/* Mode d'emploi : onglets collègues / manager + 2 boutons de partage */
+.r-me-tabs{display:flex;gap:8px;margin:18px 0;background:#F0ECF9;padding:5px;border-radius:14px;}
+.r-me-tab{flex:1;border:none;background:transparent;border-radius:10px;padding:11px;font-family:var(--font);font-size:13.5px;font-weight:700;color:var(--c-grey);cursor:pointer;transition:background 0.2s, color 0.2s;}
+.r-me-tab.active{background:#fff;color:var(--c-purple-text);box-shadow:0 2px 8px rgba(94,89,199,0.12);}
+.r-me-shares{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+.r-me-share-2{background:#fff;color:var(--c-purple-text);border:1.5px solid var(--c-purple-text);}
+
+/* ============================================================
+   LE SYSTÈME DES 4 FAMILLES (explication au début)
+   ============================================================ */
+.r-familles-intro{font-size:15px;line-height:1.55;color:var(--c-dark-grey);margin:0 0 18px;}
+.r-familles-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.r-famille-card{position:relative;background:#fff;border:1.5px solid #ECE6F5;border-radius:16px;padding:18px;transition:transform 0.2s;}
+.r-famille-card.r-famille-active{border-color:transparent;box-shadow:0 0 0 2.5px var(--fc1), 0 10px 28px rgba(0,0,0,0.1);transform:scale(1.02);}
+.r-famille-pastille{width:40px;height:40px;border-radius:12px;margin-bottom:12px;}
+.r-famille-nom{font-size:17px;font-weight:800;color:var(--c-dark);margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.r-famille-vous{font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;background:var(--fc1);color:#fff;padding:3px 9px;border-radius:20px;}
+.r-famille-essence{font-size:13.5px;line-height:1.5;color:var(--c-grey);margin:0;}
+@media (max-width:520px){ .r-familles-grid{grid-template-columns:1fr;} }

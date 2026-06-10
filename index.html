@@ -66,6 +66,21 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-magic">
+    <div class="identif-wrap">
+      <div class="identif-card">
+        <div class="identif-kicker">Accès au test</div>
+        <h2 class="identif-title">Entrez votre code d'accès</h2>
+        <p class="identif-sub">Votre code vous a été communiqué par votre entreprise. Il vous donne accès à votre test personnalisé.</p>
+        <label class="identif-label">Code d'accès</label>
+        <input class="identif-input identif-code-input" id="magic-input" type="text" placeholder="Ex : CHIESI-MGR-2026" autocomplete="off" autocapitalize="characters" />
+        <div class="identif-error" id="magic-error"></div>
+        <button class="btn-primary identif-btn" id="magic-submit">Valider mon accès</button>
+        <button class="btn-ghost identif-resume" id="magic-back">Revenir en arrière</button>
+      </div>
+    </div>
+  </section>
+
   <button id="dev-autofill" style="display:none;position:fixed;bottom:16px;right:16px;z-index:9999;background:#1A1A1A;color:#fff;border:none;border-radius:30px;padding:12px 18px;font-family:sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);" onclick="App.autoFill()">⚡ Remplir auto (test)</button>
 
   <section class="screen" id="screen-connexion">

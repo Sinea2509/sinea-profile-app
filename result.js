@@ -189,6 +189,27 @@ const Result = (() => {
   }
   function contenu(nom){ const s=dataSlug(nom); return (SINEA_DATA.contenu&&SINEA_DATA.contenu[s])||{}; }
   function rarete(nom){ const s=dataSlug(nom); return (SINEA_DATA.rarete&&SINEA_DATA.rarete[s])||{pct:'',niveau:''}; }
+  // Rareté de la COMBINAISON dominant + secondaire (plus marquante que le dominant seul)
+  function rareteCombinee(res){
+    const dom = res.dominante;
+    const sec = (res.secondaires && res.secondaires[0]) ? res.secondaires[0] : null;
+    const rd = rarete(dom.nom);
+    if (!sec || !rd.pct) return rd; // repli sur le dominant seul
+    const rs = rarete(sec.nom);
+    if (!rs.pct) return rd;
+    // probabilité d'avoir cette paire (en %) : produit des deux proportions
+    let pctCombi = (rd.pct * rs.pct) / 100;
+    // formater : si très petit, exprimer en "1 personne sur N"
+    let affichage, niveau;
+    if (pctCombi >= 0.1) {
+      affichage = pctCombi.toFixed(1) + '%';
+    } else {
+      const surN = Math.round(100 / pctCombi);
+      affichage = '1 sur ' + surN.toLocaleString('fr-FR');
+    }
+    niveau = 'combinaison';
+    return { pct: null, affichage, niveau, combi: true };
+  }
   function verbe(nom){ const l=Object.values(SINEA_DATA.personnages||{}); const p=l.find(x=>x.nom===nom); return p?(p.verbe_signature||p.role||p.axe||''):''; }
   function initiale(nom){ return nom.replace(/^(La |Le |L')/,'').charAt(0); }
 
@@ -259,7 +280,7 @@ const Result = (() => {
   function render(res){
     RES = res;
     const dom=res.dominante, color=FAM[dom.famille];
-    const dc=contenu(dom.nom), rar=rarete(dom.nom);
+    const dc=contenu(dom.nom), rar=rareteCombinee(res);
     const roles=['Dominante','Secondaire','Nuance'];
 
     // ---- Bloc spé (management ou commercial), affiché si le diagnostic en a une ----
@@ -322,6 +343,7 @@ const Result = (() => {
     // ---- Sommaire dynamique (reflète les blocs réellement présents) ----
     const tocItems = [
       { href: 'b0', label: 'Comprendre la méthode' },
+      { href: 'b-familles', label: 'Les 4 familles' },
       { href: 'b1', label: 'Vous connaître' },
       { href: 'b-dims', label: 'Vos dimensions profondes' },
       { href: 'b2', label: 'Lire les autres' },
@@ -376,10 +398,18 @@ const Result = (() => {
       return `<div class="r-cf-row"><div class="r-cf-badge" style="background:${FAM[f]}">${f[0]}</div>
         <div><b style="color:${FAM[f]}">${f}</b><p>${k.en_conflit||''}</p></div></div>`;}).join('');
 
+    // Bandeau d'accès rapide vers la partie spé (commercial / manager)
+    let accesRapide = '';
+    if (dt === 'commercial' || dt === 'manager') {
+      const labelSpe = dt === 'commercial' ? 'votre approche commerciale' : 'votre management';
+      accesRapide = `<a href="#b-spe" class="r-acces-rapide"><span class="r-acces-rapide-txt">Accéder directement à ${labelSpe}</span><span class="r-acces-rapide-fleche">↓</span></a>`;
+    }
+
     const html=`
       <p class="r-essence">${dc.essence||''}</p>
 
       <div class="r-toc">${tocHtml}</div>
+      ${accesRapide}
       </div>
 
       <div class="r-bloc" id="b0">
@@ -391,6 +421,12 @@ const Result = (() => {
           <div class="r-cmp r-cmp-b"><div class="r-cmp-t">Sinéa Profile</div>mesure des dimensions continues, puis les combine en un profil nuancé et unique.</div>
         </div>
         <div class="r-card"><p style="margin:0"><b>Pourquoi vos réponses sont fiables.</b> Nos questions utilisent un choix forcé, sans réponse neutre, ce qui limite le biais de complaisance. Votre profil mêle plusieurs archétypes, car une personne réelle ne tient jamais dans une seule case.</p></div>
+      </div>
+
+      <div class="r-bloc" id="b-familles">
+        <div class="r-bloc-head"><span class="r-bloc-tag">Le système</span><h2>Les 4 familles de profils</h2></div>
+        <p class="r-familles-intro">Chaque archétype appartient à l'une des quatre grandes familles. Elles donnent une lecture simple et immédiate de ce qui anime chaque personne. <strong>Votre famille est mise en avant ci-dessous.</strong></p>
+        <div class="r-familles-grid">${htmlFamilles(dom.famille)}</div>
       </div>
 
       <div class="r-bloc" id="b1">
@@ -478,7 +514,7 @@ const Result = (() => {
         <div class="r-section-tag">Vos pistes d'action</div>
         <div class="r-ia" id="ia-actions"><div class="r-ia-tag">L'IA propose, vous choisissez</div><p class="r-hint" style="margin-top:0">Sélectionnez les habitudes à développer.</p><div class="r-ia-loading"><span class="mini-spin"></span>Génération...</div></div>
         <div class="r-section-tag">Votre signature</div>
-        <div class="r-rare"><div class="r-rare-num">${rar.pct?rar.pct+'%':''}</div><div class="r-rare-txt">${niveauTxt(rar.niveau)}</div></div>
+        <div class="r-rare"><div class="r-rare-num">${rar.affichage || (rar.pct?rar.pct+'%':'')}</div><div class="r-rare-txt">${phraseSignature(res, rar)}</div></div>
       </div>
 
       ${speBlocHtml}
@@ -490,7 +526,6 @@ const Result = (() => {
           <p class="r-me-sub">Une fiche à partager à votre équipe pour mieux travailler ensemble.</p>
         </div>
         <div class="r-me-card" id="mode-emploi-contenu"></div>
-        <button class="r-me-share" id="mode-emploi-share">Partager à mon équipe</button>
       </div>
 
       <div class="r-carte-bloc" id="carte-bloc">
@@ -680,6 +715,16 @@ const Result = (() => {
   function toggleAction(i){ const el=document.getElementById('act-'+i); el.classList.toggle('sel'); if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i); sauvegarderInteractions(); }
   function niveauTxt(niv){ return {'répandu':'Vous avez un profil répandu','courant':'Vous avez un profil courant','peu commun':'Vous avez un profil peu commun','rare':'Vous avez un profil rare'}[niv]||'Votre profil est unique'; }
 
+  // Phrase signature marquante (ton "à la Alan" : direct, valorisant, mémorable)
+  function phraseSignature(res, rar){
+    const dom = res.dominante;
+    const sec = (res.secondaires && res.secondaires[0]) ? res.secondaires[0] : null;
+    if (sec && rar && rar.combi) {
+      return `Vous combinez ${dom.nom} et ${sec.nom}. Cette alliance de forces est la vôtre, et elle ne ressemble à aucune autre.`;
+    }
+    return `Vous êtes ${dom.nom}. Cette signature est la vôtre, et elle ne ressemble à aucune autre.`;
+  }
+
   // Backend IA (Vercel) : génère toutes les sections du portrait en parallèle.
   const BACKEND_URL = "https://sinea-profile-ia.vercel.app/api/generer";
 
@@ -736,11 +781,34 @@ const Result = (() => {
   }
 
   // Affiche une section, avec repli si elle a échoué.
+  // Génère le HTML des 4 familles (avec mise en avant de celle de la personne)
+  function htmlFamilles(familleActive) {
+    const famKey = (familleActive || '').toUpperCase();
+    const familles = [
+      { key: 'RELATION', nom: 'Relation', essence: 'Tisser les liens, créer l\'harmonie, prendre soin du collectif.' },
+      { key: 'ACTION', nom: 'Action', essence: 'Avancer, décider, transformer l\'énergie en résultats.' },
+      { key: 'STRUCTURE', nom: 'Structure', essence: 'Organiser, fiabiliser, bâtir des fondations solides.' },
+      { key: 'VISION', nom: 'Vision', essence: 'Imaginer, explorer, ouvrir des horizons nouveaux.' },
+    ];
+    return familles.map(f => {
+      const c = COULEURS_FAMILLE[f.key] || COULEURS_FAMILLE.VISION;
+      const active = f.key === famKey ? ' r-famille-active' : '';
+      const badge = f.key === famKey ? '<span class="r-famille-vous">Votre famille</span>' : '';
+      return `
+        <div class="r-famille-card${active}" style="--fc1:${c.c1};--fc2:${c.c2};">
+          <div class="r-famille-pastille" style="background:linear-gradient(135deg, ${c.c1}, ${c.c2});"></div>
+          <div class="r-famille-nom">${f.nom}${badge}</div>
+          <p class="r-famille-essence">${f.essence}</p>
+        </div>`;
+    }).join('');
+  }
+
   // Génère le HTML du bloc compatibilités à partir de la famille dominante
   function htmlCompatibilites(famille) {
     const famKey = (famille || '').toUpperCase();
     const c = COMPATIBILITES[famKey];
     if (!c) return '';
+    const labelFam = LABELS_FAMILLE[famKey] || '';
     const carte = (data, type) => {
       const fam = COULEURS_FAMILLE[data.fam] || COULEURS_FAMILLE.VISION;
       const badge = type === 'forte' ? 'Synergie naturelle' : (type === 'belle' ? 'Belle complémentarité' : 'Demande de l\'attention');
@@ -755,13 +823,38 @@ const Result = (() => {
           </div>
         </div>`;
     };
-    return carte(c.forte, 'forte') + carte(c.belle, 'belle') + carte(c.attention, 'attention');
+    // carte "avec votre propre famille"
+    const mf = MEME_FAMILLE[famKey];
+    const famCouleur = COULEURS_FAMILLE[famKey] || COULEURS_FAMILLE.VISION;
+    let carteMemeFamille = '';
+    if (mf) {
+      carteMemeFamille = `
+        <div class="r-compat-card r-compat-card-soi">
+          <div class="r-compat-bar" style="background:linear-gradient(180deg, ${famCouleur.c1}, ${famCouleur.c2});"></div>
+          <div class="r-compat-in">
+            <div class="r-compat-badge r-compat-soi">Votre famille</div>
+            <div class="r-compat-titre">${mf.titre}</div>
+            <p class="r-compat-txt">${mf.txt}</p>
+            ${mf.conseil ? `<div class="r-compat-conseil"><span class="r-compat-conseil-label">Le conseil</span>${mf.conseil}</div>` : ''}
+          </div>
+        </div>`;
+    }
+    // rappel de sa famille en intro
+    const rappel = labelFam ? `<p class="r-compat-rappel">Vous appartenez à la famille <strong>${labelFam}</strong>. Voici comment vous vous accordez avec chaque profil.</p>` : '';
+    return rappel + carteMemeFamille + carte(c.forte, 'forte') + carte(c.belle, 'belle') + carte(c.attention, 'attention');
   }
 
   // ============================================================
   // LES COMPATIBILITÉS D'ÉQUIPE (par famille, formulées avec nuance)
   // ============================================================
   const LABELS_FAMILLE = { RELATION: 'Relation', ACTION: 'Action', STRUCTURE: 'Structure', VISION: 'Vision' };
+  // Comment bien communiquer avec les personnes de SA PROPRE famille
+  const MEME_FAMILLE = {
+    RELATION: { titre: 'Avec votre propre famille Relation', txt: "Vous partagez le même goût du lien et de l'harmonie. Ensemble, vous créez un climat chaleureux et soudé.", conseil: "Veillez à ce que l'attention aux autres ne fasse pas oublier la décision : nommez clairement qui tranche et quand." },
+    ACTION: { titre: 'Avec votre propre famille Action', txt: "Vous partagez la même énergie et le même goût du résultat. Ensemble, vous avancez vite et fort.", conseil: "Accordez-vous des temps de respiration pour éviter la course permanente : planifiez les moments où l'on consolide avant de repartir." },
+    STRUCTURE: { titre: 'Avec votre propre famille Structure', txt: "Vous partagez le même sens du cadre et de la fiabilité. Ensemble, vous bâtissez du solide.", conseil: "Laissez de la place à la spontanéité et à l'expérimentation : fixez-vous un espace où tout n'a pas besoin d'être cadré à l'avance." },
+    VISION: { titre: 'Avec votre propre famille Vision', txt: "Vous partagez le même goût des idées et des horizons larges. Ensemble, vous imaginez grand.", conseil: "Désignez qui transforme les idées en actions concrètes : sans cela, les belles intentions risquent de rester en l'air." },
+  };
   // Pour chaque famille : avec qui la synergie est naturelle, et avec qui la complémentarité demande de l'attention.
   const COMPATIBILITES = {
     RELATION: {
@@ -935,7 +1028,53 @@ const Result = (() => {
     }, 'image/png');
   }
 
-  function partagerModeEmploi(me, archetype){
+  function partagerModeEmploi(me, archetype, cible){
+    const lignes = [];
+    const estManager = cible === 'manager';
+    const titre = estManager ? `Mon mode d'emploi pour mon manager · ${archetype}` : `Mon mode d'emploi · ${archetype}`;
+    lignes.push(titre);
+    lignes.push('');
+    if (me.intro) { lignes.push(me.intro); lignes.push(''); }
+
+    if (estManager && me.avec_manager) {
+      const mgr = me.avec_manager;
+      if (Array.isArray(mgr.ce_dont_jai_besoin)) {
+        lignes.push('Ce dont j\'ai besoin de mon manager :');
+        mgr.ce_dont_jai_besoin.forEach(x => lignes.push('· ' + x)); lignes.push('');
+      }
+      if (Array.isArray(mgr.comment_me_motiver)) {
+        lignes.push('Comment me motiver et me faire progresser :');
+        mgr.comment_me_motiver.forEach(x => lignes.push('· ' + x)); lignes.push('');
+      }
+      if (mgr.comment_me_faire_un_retour) { lignes.push('Comment me faire un retour : ' + mgr.comment_me_faire_un_retour); lignes.push(''); }
+    } else {
+      const col = me.avec_collegues || { pour_bien_travailler: me.pour_bien_travailler, ce_qui_me_motive: me.ce_qui_me_motive, ma_communication: me.ma_communication };
+      if (Array.isArray(col.pour_bien_travailler)) {
+        lignes.push('Pour bien travailler avec moi :');
+        col.pour_bien_travailler.forEach(x => lignes.push('· ' + x)); lignes.push('');
+      }
+      if (Array.isArray(col.ce_qui_me_motive)) {
+        lignes.push('Ce qui me motive :');
+        col.ce_qui_me_motive.forEach(x => lignes.push('· ' + x)); lignes.push('');
+      }
+      if (col.ma_communication) { lignes.push('Ma communication : ' + col.ma_communication); lignes.push(''); }
+    }
+    if (me.en_un_mot) lignes.push(me.en_un_mot);
+    lignes.push('');
+    lignes.push('Réalisé avec Sinéa Profile');
+    const texte = lignes.join('\n');
+
+    const btnId = estManager ? 'mode-emploi-share-mgr' : 'mode-emploi-share-col';
+    if (navigator.share) {
+      navigator.share({ title: titre, text: texte }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(texte).then(() => {
+        const btn = document.getElementById(btnId);
+        if (btn) { const old = btn.textContent; btn.textContent = 'Copié, prêt à partager'; setTimeout(() => { btn.textContent = old; }, 2200); }
+      }).catch(() => {});
+    }
+  }
+  function partagerModeEmploiOLD(me, archetype){
     // construire un texte propre à partager
     const lignes = [];
     lignes.push(`Mon mode d'emploi · ${archetype}`);
@@ -1022,39 +1161,69 @@ const Result = (() => {
       poseSection('ia-angles','Analyse personnalisée', c.angles_relationnels,
         `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
 
-      // Le mode d'emploi de moi-même (fiche partageable, format JSON)
+      // Le mode d'emploi de moi-même (fiche partageable, 2 parties : collègues + manager)
       const meBloc = document.getElementById('mode-emploi-bloc');
       const meContenu = document.getElementById('mode-emploi-contenu');
       if (meBloc && meContenu && c.mode_emploi && !c.mode_emploi._erreur) {
         const me = c.mode_emploi;
         const liste = (arr) => Array.isArray(arr) ? arr.map(x => `<li>${x}</li>`).join('') : '';
+        // compat : ancien format (à la racine) ou nouveau (avec_collegues / avec_manager)
+        const col = me.avec_collegues || { pour_bien_travailler: me.pour_bien_travailler, ce_qui_me_motive: me.ce_qui_me_motive, ma_communication: me.ma_communication };
+        const mgr = me.avec_manager || null;
+
+        const blocCollegues = `
+          <div class="r-me-section">
+            <div class="r-me-label">Pour bien travailler avec moi</div>
+            <ul class="r-me-list">${liste(col.pour_bien_travailler)}</ul>
+          </div>
+          ${Array.isArray(col.ce_qui_me_motive) ? `<div class="r-me-section"><div class="r-me-label">Ce qui me motive</div><ul class="r-me-list">${liste(col.ce_qui_me_motive)}</ul></div>` : ''}
+          ${col.ma_communication ? `<div class="r-me-section"><div class="r-me-label">Ma communication</div><p class="r-me-comm">${col.ma_communication}</p></div>` : ''}
+        `;
+        const blocManager = mgr ? `
+          <div class="r-me-section">
+            <div class="r-me-label">Ce dont j'ai besoin de mon manager</div>
+            <ul class="r-me-list">${liste(mgr.ce_dont_jai_besoin)}</ul>
+          </div>
+          ${Array.isArray(mgr.comment_me_motiver) ? `<div class="r-me-section"><div class="r-me-label">Comment me motiver et me faire progresser</div><ul class="r-me-list">${liste(mgr.comment_me_motiver)}</ul></div>` : ''}
+          ${mgr.comment_me_faire_un_retour ? `<div class="r-me-section"><div class="r-me-label">Comment me faire un retour</div><p class="r-me-comm">${mgr.comment_me_faire_un_retour}</p></div>` : ''}
+        ` : '';
+
         meContenu.innerHTML = `
           <div class="r-me-perso">${dom.nom}</div>
           ${me.intro ? `<p class="r-me-intro">${me.intro}</p>` : ''}
-          <div class="r-me-section">
-            <div class="r-me-label">Pour bien travailler avec moi</div>
-            <ul class="r-me-list">${liste(me.pour_bien_travailler)}</ul>
-          </div>
-          <div class="r-me-cols">
-            <div class="r-me-col r-me-col-plus">
-              <div class="r-me-label">Ce qui me motive</div>
-              <ul class="r-me-list">${liste(me.ce_qui_me_motive)}</ul>
-            </div>
-            <div class="r-me-col r-me-col-moins">
-              <div class="r-me-label">Ce qui m'aide à donner le meilleur</div>
-              <ul class="r-me-list">${liste(me.ce_qui_me_freine)}</ul>
-            </div>
-          </div>
-          ${me.ma_communication ? `<div class="r-me-section"><div class="r-me-label">Ma communication</div><p class="r-me-comm">${me.ma_communication}</p></div>` : ''}
+          ${mgr ? `<div class="r-me-tabs">
+            <button class="r-me-tab active" data-tab="collegues">Avec mes collègues</button>
+            <button class="r-me-tab" data-tab="manager">Avec mon manager</button>
+          </div>` : ''}
+          <div class="r-me-panel" id="r-me-panel-collegues">${blocCollegues}</div>
+          ${mgr ? `<div class="r-me-panel" id="r-me-panel-manager" style="display:none;">${blocManager}</div>` : ''}
           ${me.en_un_mot ? `<div class="r-me-mot">${me.en_un_mot}</div>` : ''}
+          <div class="r-me-shares">
+            <button class="r-me-share" id="mode-emploi-share-col">Partager à mes collègues</button>
+            ${mgr ? `<button class="r-me-share r-me-share-2" id="mode-emploi-share-mgr">Partager à mon manager</button>` : ''}
+          </div>
         `;
         meBloc.style.display = 'block';
-        // personnaliser le titre avec le prénom si disponible
-        const prenomMe = (window.App && App.getPrenom) ? App.getPrenom() : '';
-        const titreMe = document.getElementById('mode-emploi-titre');
-        if (titreMe && prenomMe) titreMe.textContent = 'Le mode d\'emploi de ' + prenomMe;
-        const shareBtn = document.getElementById('mode-emploi-share');
-        if (shareBtn) shareBtn.onclick = () => partagerModeEmploi(me, dom.nom);
+
+        // onglets
+        const tabs = meContenu.querySelectorAll('.r-me-tab');
+        tabs.forEach(tab => {
+          tab.onclick = () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const which = tab.getAttribute('data-tab');
+            const pc = document.getElementById('r-me-panel-collegues');
+            const pm = document.getElementById('r-me-panel-manager');
+            if (pc) pc.style.display = which === 'collegues' ? 'block' : 'none';
+            if (pm) pm.style.display = which === 'manager' ? 'block' : 'none';
+          };
+        });
+
+        // boutons de partage (collègues + manager)
+        const shareCol = document.getElementById('mode-emploi-share-col');
+        if (shareCol) shareCol.onclick = () => partagerModeEmploi(me, dom.nom, 'collegues');
+        const shareMgr = document.getElementById('mode-emploi-share-mgr');
+        if (shareMgr) shareMgr.onclick = () => partagerModeEmploi(me, dom.nom, 'manager');
       }
 
       // Les 3 dynamiques entre les forces (format JSON : paires)

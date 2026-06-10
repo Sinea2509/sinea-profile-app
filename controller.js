@@ -8,12 +8,14 @@ const App = (() => {
   let result = null;
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
   let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
+  let magicCode = '';       // magic code de campagne saisi par la personne (pour consommer le quota à la fin)
 
   // ---- Sauvegarde de progression (localStorage + serveur Airtable) ----
   // Protège contre la perte de réponses si l'onglet se ferme pendant le test.
   const SAVE_KEY = 'sinea_profile_progress';
   const PROGRESSION_URL = "https://sinea-profile-ia.vercel.app/api/progression";
   const AUTH_URL = "https://sinea-profile-ia.vercel.app/api/auth";
+  const VERIFIER_CODE_URL = "https://sinea-profile-ia.vercel.app/api/verifier_code";
   let saveTimer = null;
 
   function saveProgress() {
@@ -331,7 +333,91 @@ const App = (() => {
     err.textContent = '';
     identite.prenom = prenom; identite.nom = nom; identite.email = email;
     document.getElementById('screen-identif').classList.remove('active');
-    start();
+    goToMagicCode();
+  }
+
+  // Écran du magic code (après inscription, avant le test)
+  function goToMagicCode() {
+    const scr = document.getElementById('screen-magic');
+    if (!scr) { start(); return; } // sécurité : si pas d'écran, on laisse passer
+    scr.classList.add('active');
+    const input = document.getElementById('magic-input');
+    const submit = document.getElementById('magic-submit');
+    const back = document.getElementById('magic-back');
+    const err = document.getElementById('magic-error');
+    if (input) input.value = '';
+    if (err) err.textContent = '';
+    if (submit) submit.onclick = submitMagicCode;
+    if (input) input.onkeydown = (e) => { if (e.key === 'Enter') submitMagicCode(); };
+    if (back) back.onclick = () => { scr.classList.remove('active'); goToIdentif(); };
+    if (input) input.focus();
+  }
+
+  function brancherLienConnexion() {
+    const lien = document.getElementById('magic-vers-connexion');
+    if (lien) lien.onclick = (e) => {
+      e.preventDefault();
+      document.getElementById('screen-magic').classList.remove('active');
+      goToConnexion();
+      const champ = document.getElementById('cx-email');
+      if (champ) champ.value = identite.email;
+    };
+  }
+
+  function consommerMagicCode() {
+    if (!magicCode) return;
+    fetch(VERIFIER_CODE_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'consommer', code: magicCode }),
+    }).catch(() => {});
+  }
+
+  function submitMagicCode() {
+    const input = document.getElementById('magic-input');
+    const submit = document.getElementById('magic-submit');
+    const err = document.getElementById('magic-error');
+    const code = (input.value || '').trim();
+    if (!code) { err.textContent = 'Merci d\'entrer votre code d\'accès.'; return; }
+    err.textContent = 'Vérification...';
+    if (submit) submit.disabled = true;
+    fetch(VERIFIER_CODE_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verifier', code, email: identite.email }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (submit) submit.disabled = false;
+        if (data && data.ok) {
+          magicCode = code;
+          droits = data.type || 'classic';
+          err.textContent = '';
+          document.getElementById('screen-magic').classList.remove('active');
+          if (data.ajout_module && data.deja_socle) {
+            // la personne a déjà le socle : on lance directement le module (pas de re-socle)
+            diagType = data.type;
+            commencerModule(data.type);
+          } else {
+            start();
+          }
+        } else {
+          const raison = data ? data.raison : '';
+          if (raison === 'deja_fait') {
+            err.innerHTML = 'Vous avez déjà passé ce test. <a href="#" id="magic-vers-connexion" style="color:var(--c-purple-text);font-weight:600;">Accéder à mon espace</a>';
+            brancherLienConnexion();
+          }
+          else if (raison === 'module_deja_fait') {
+            err.innerHTML = 'Vous avez déjà passé ce module. <a href="#" id="magic-vers-connexion" style="color:var(--c-purple-text);font-weight:600;">Accéder à mon espace</a>';
+            brancherLienConnexion();
+          }
+          else if (raison === 'quota_epuise') err.textContent = 'Ce code a atteint son nombre maximum d\'utilisations. Contactez votre référent.';
+          else if (raison === 'campagne_fermee') err.textContent = 'Ce code n\'est plus actif. Contactez votre référent.';
+          else err.textContent = 'Ce code d\'accès est invalide. Vérifiez votre saisie.';
+        }
+      })
+      .catch(() => {
+        if (submit) submit.disabled = false;
+        err.textContent = 'La vérification a échoué. Réessayez dans un instant.';
+      });
   }
 
   function resumeIdentif() {
@@ -552,7 +638,7 @@ const App = (() => {
     let resultatsHtml = '';
     if (faits.length) {
       resultatsHtml = '<div class="espace-label">Mes résultats</div>';
-      faits.forEach(m => { resultatsHtml += carteResultat(m, (analyses[m] && analyses[m].date) || ''); });
+      faits.forEach(m => { resultatsHtml += carteResultat(m, (analyses[m] && analyses[m].date) || '', archetype); });
     }
     document.getElementById('espace-resultats').innerHTML = resultatsHtml;
 
@@ -632,20 +718,26 @@ const App = (() => {
     } catch (e) { return ''; }
   }
 
-  function carteResultat(mod, dateIso) {
+  function carteResultat(mod, dateIso, archetype) {
     const l = LABELS_MODULE[mod];
     const dateTxt = formaterDate(dateIso);
     const dateLigne = dateTxt ? `<div class="esp-res-date">Réalisé le ${dateTxt}</div>` : '';
+    // personnage de l'archétype (affiché pour le socle, qui porte le portrait de personnalité)
+    const slug = (archetype && SINEA_DATA.images && SINEA_DATA.images[archetype]) ? SINEA_DATA.images[archetype] : '';
+    const persoHtml = (mod === 'socle' && slug) ? `<div class="esp-res-perso"><img src="${slug}.webp" alt="${archetype}"/></div>` : '';
     return `<div class="esp-resultat">
       <div class="esp-res-glow"></div>
       <div class="esp-res-in">
-        <div class="esp-res-badge">Complété · 100%</div>
-        <div class="esp-res-title">${l.titre}</div>
-        ${dateLigne}
-        <div class="esp-res-actions">
-          <button class="esp-res-btn" data-revoir="${mod}">Consulter mon analyse</button>
-          <button class="esp-res-btn esp-res-btn-soon" disabled>Mon plan d'action · bientôt</button>
+        <div class="esp-res-texte">
+          <div class="esp-res-badge">Complété · 100%</div>
+          <div class="esp-res-title">${l.titre}</div>
+          ${dateLigne}
+          <div class="esp-res-actions">
+            <button class="esp-res-btn" data-revoir="${mod}">Consulter mon analyse</button>
+            <button class="esp-res-btn esp-res-btn-soon" disabled>Mon plan d'action · bientôt</button>
+          </div>
         </div>
+        ${persoHtml}
       </div>
     </div>`;
   }
@@ -1300,6 +1392,8 @@ const App = (() => {
         };
         // on sauvegarde d'abord le profil ; le contenu IA sera complété par result.js quand il arrive
         sauverAnalyse(typeAnalyse, { contenu: null, profil: profilLeger });
+        // consommer une utilisation du magic code (le quota se décompte à la génération de l'analyse)
+        if (magicCode && typeAnalyse === 'socle') { consommerMagicCode(); }
       } catch (e) {}
 
       clearInterval(msgTimer);
