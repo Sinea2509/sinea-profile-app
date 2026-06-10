@@ -719,3 +719,72 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-fin-cta h3{font-size:22px;font-weight:800;margin:0 0 8px;color:#fff;}
 .r-fin-cta p{font-size:15px;opacity:0.9;margin:0 0 20px;line-height:1.5;}
 .r-cta-espace{background:#fff !important;color:#5E59C7 !important;font-weight:700;}
+
+/* ============================================================
+   ESPACE PERSO : en-tête avec personnage
+   ============================================================ */
+.espace-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.espace-hero-txt{flex:1;min-width:0;}
+.espace-hero-perso{flex-shrink:0;width:120px;display:flex;align-items:flex-end;justify-content:center;}
+.espace-hero-perso img{width:120px;height:auto;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.3));}
+@media (max-width:520px){
+  .espace-hero-perso{width:88px;}
+  .espace-hero-perso img{width:88px;}
+}
+
+/* ============================================================
+   ESPACE PERSO : carte résultat v2 (badge complété + 2 CTA)
+   ============================================================ */
+.esp-res-badge{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;background:rgba(255,255,255,0.22);color:#fff;padding:4px 12px;border-radius:20px;margin-bottom:10px;}
+.esp-res-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.esp-res-btn{border:none;border-radius:11px;padding:11px 18px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:#5E59C7;transition:transform 0.12s;}
+.esp-res-btn:hover{transform:translateY(-1px);}
+.esp-res-btn-soon{background:rgba(255,255,255,0.18);color:rgba(255,255,255,0.7);cursor:not-allowed;}
+.esp-res-btn-soon:hover{transform:none;}
+
+/* ============================================================
+   ESPACE PERSO PREMIUM : accueil, progression globale, animations
+   ============================================================ */
+/* Phrase d'accueil adaptée */
+.espace-accueil{margin-top:14px;font-size:14.5px;line-height:1.55;color:rgba(255,255,255,0.92);max-width:90%;}
+.espace-accueil-fam{font-weight:600;}
+.espace-accueil-av{opacity:0.82;}
+
+/* Personnage détouré, rond et élégant */
+.espace-hero-perso img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.25);box-shadow:0 8px 28px rgba(0,0,0,0.35);}
+@media (max-width:520px){ .espace-hero-perso img{width:90px;height:90px;} }
+
+/* Barre de progression globale */
+.espace-prog-globale{background:#fff;border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card);margin-bottom:24px;}
+.espace-pg-head{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--c-dark-grey);margin-bottom:10px;}
+.espace-pg-head span:last-child{color:var(--c-purple-text);}
+.espace-pg-bar{height:9px;background:#EFEDE7;border-radius:10px;overflow:hidden;}
+.espace-pg-fill{height:100%;background:linear-gradient(90deg, var(--c-corail), var(--c-purple));border-radius:10px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+
+/* Animations douces : apparition en fondu */
+@keyframes espaceFadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.espace-hero{animation:espaceFadeUp 0.5s ease both;}
+.espace-prog-globale{animation:espaceFadeUp 0.5s ease 0.08s both;}
+#espace-resultats{animation:espaceFadeUp 0.5s ease 0.16s both;}
+#espace-cards{animation:espaceFadeUp 0.5s ease 0.24s both;}
+
+/* Signature Sinéa en bas */
+.espace-signature{text-align:center;margin-top:32px;padding-top:24px;border-top:1px solid #E4E2DC;}
+.espace-signature-logo{font-size:18px;font-weight:800;color:var(--c-purple-text);letter-spacing:-0.01em;margin-bottom:6px;}
+.espace-signature-tag{font-size:12.5px;color:var(--c-grey);font-style:italic;}
+
+/* Date de réalisation sur la carte résultat */
+.esp-res-date{font-size:12.5px;color:rgba(255,255,255,0.8);margin-top:4px;}
+
+/* Écran de saisie du code de connexion */
+#screen-code{position:absolute;inset:0;z-index:50;display:none;background:var(--c-beige);overflow-y:auto;}
+#screen-code.active{display:flex;align-items:center;justify-content:center;}
+.code-input{text-align:center;font-size:28px;font-weight:800;letter-spacing:10px;}
+
+/* Écran de connexion dédié */
+#screen-connexion{position:absolute;inset:0;z-index:50;display:none;background:var(--c-beige);overflow-y:auto;}
+#screen-connexion.active{display:flex;align-items:center;justify-content:center;}
+
+/* Lien "Se connecter" sur la cover */
+.cover-login-link{display:block;width:100%;margin-top:14px;background:transparent;border:none;color:rgba(255,255,255,0.85);font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.cover-login-link:hover{color:#fff;}

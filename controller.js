@@ -13,6 +13,7 @@ const App = (() => {
   // Protège contre la perte de réponses si l'onglet se ferme pendant le test.
   const SAVE_KEY = 'sinea_profile_progress';
   const PROGRESSION_URL = "https://sinea-profile-ia.vercel.app/api/progression";
+  const AUTH_URL = "https://sinea-profile-ia.vercel.app/api/auth";
   let saveTimer = null;
 
   function saveProgress() {
@@ -223,9 +224,13 @@ const App = (() => {
       if (dev) dev.style.display = 'block';
     }
     diagType = readDiagType();
+    // la cover présente le SOCLE (premier parcours), pas le module collé
+    const ancienDiag = diagType;
+    diagType = 'classic';
     const q = buildQueue();
+    diagType = ancienDiag;
     const nq = q.length;
-    const nsec = chapitres().length;
+    const nsec = 2; // socle + contexte
     const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
     setTxt('cover-nq', nq);
     setTxt('cover-nsec', nsec);
@@ -253,6 +258,43 @@ const App = (() => {
   // ---- Navigation ----
   // ---- Écran d'identification ----
   const identite = { prenom: '', nom: '', email: '' };
+
+  // ---- Écran de connexion dédié (depuis le bouton "Se connecter" de l'accueil) ----
+  function goToConnexion() {
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    const scr = document.getElementById('screen-connexion');
+    scr.classList.add('active');
+    const submit = document.getElementById('cx-submit');
+    if (submit && !submit.dataset.bound) { submit.onclick = soumettreConnexion; submit.dataset.bound = '1'; }
+  }
+
+  function goToCover() {
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-cover').classList.add('active');
+  }
+
+  function soumettreConnexion() {
+    const email = (document.getElementById('cx-email').value || '').trim().toLowerCase();
+    const err = document.getElementById('cx-error');
+    if (!emailValide(email)) { err.textContent = 'Cette adresse email semble incorrecte.'; return; }
+    err.textContent = 'Envoi du code...';
+    identite.email = email;
+    fetch(AUTH_URL, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "send_code", email }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.ok) {
+          err.textContent = '';
+          document.getElementById('screen-connexion').classList.remove('active');
+          afficherEcranCode(email);
+        } else {
+          err.textContent = (data && data.error) || "Impossible d'envoyer le code.";
+        }
+      })
+      .catch(() => { err.textContent = 'Connexion impossible. Réessayez dans un instant.'; });
+  }
 
   function goToIdentif() {
     document.getElementById('screen-cover').classList.remove('active');
@@ -292,48 +334,72 @@ const App = (() => {
     const email = (document.getElementById('id-email').value || '').trim().toLowerCase();
     const err = document.getElementById('id-error');
     if (!emailValide(email)) { err.textContent = 'Entrez votre email pour vous reconnecter.'; return; }
-    err.textContent = 'Recherche de votre espace...';
+    err.textContent = 'Envoi du code de connexion...';
     identite.email = email;
-    diagType = readDiagType();
-    // Charger l'état complet de la personne (analyses + progression)
-    fetch(PROGRESSION_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "load_analyse", email }),
+    // envoyer un code à 6 chiffres par email
+    fetch(AUTH_URL, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "send_code", email }),
     })
       .then(r => r.json())
       .then(data => {
-        if (data && data.found) {
-          identite.prenom = data.prenom || '';
-          identite.nom = data.nom || '';
-          const aDesAnalyses = data.analyses && Object.keys(data.analyses).length > 0;
-          if (aDesAnalyses) {
-            // la personne a déjà fait au moins un test → on l'envoie à son espace
-            document.getElementById('screen-identif').classList.remove('active');
-            goToEspace();
-            return;
-          }
+        if (data && data.ok) {
+          err.textContent = '';
+          document.getElementById('screen-identif').classList.remove('active');
+          afficherEcranCode(email);
+        } else {
+          err.textContent = (data && data.error) || "Impossible d'envoyer le code.";
         }
-        // sinon : vérifier s'il y a une progression en cours à reprendre
-        fetch(PROGRESSION_URL, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "load", email }),
-        })
-          .then(r => r.json())
-          .then(prog => {
-            if (prog && prog.found && prog.answers && Object.keys(prog.answers).length > 0) {
-              identite.prenom = prog.prenom || identite.prenom;
-              answers = prog.answers; idx = prog.idx || 0;
-              queue = buildQueue();
-              document.getElementById('screen-identif').classList.remove('active');
-              showResumePrompt({ diagType, idx, answers });
-            } else {
-              err.textContent = "Aucun compte trouvé pour cet email. Vous pouvez commencer le test.";
-            }
-          })
-          .catch(() => { err.textContent = 'Connexion impossible. Réessayez dans un instant.'; });
       })
       .catch(() => { err.textContent = 'Connexion impossible. Réessayez dans un instant.'; });
+  }
+
+  // ---- Écran de saisie du code ----
+  function afficherEcranCode(email) {
+    const scr = document.getElementById('screen-code');
+    scr.classList.add('active');
+    document.getElementById('code-email-rappel').textContent = email;
+    document.getElementById('code-saisie').value = '';
+    document.getElementById('code-error').textContent = '';
+    const submit = document.getElementById('code-submit');
+    const resend = document.getElementById('code-resend');
+    if (submit && !submit.dataset.bound) { submit.onclick = verifierCode; submit.dataset.bound = '1'; }
+    if (resend && !resend.dataset.bound) { resend.onclick = renvoyerCode; resend.dataset.bound = '1'; }
+  }
+
+  function verifierCode() {
+    const code = (document.getElementById('code-saisie').value || '').trim();
+    const err = document.getElementById('code-error');
+    if (code.length !== 6) { err.textContent = 'Entrez les 6 chiffres du code.'; return; }
+    err.textContent = 'Vérification...';
+    fetch(AUTH_URL, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "verify_code", email: identite.email, code }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.ok) {
+          identite.prenom = data.prenom || identite.prenom;
+          err.textContent = '';
+          document.getElementById('screen-code').classList.remove('active');
+          goToEspace();
+        } else {
+          err.textContent = (data && data.error) || 'Code incorrect.';
+        }
+      })
+      .catch(() => { err.textContent = 'Connexion impossible. Réessayez.'; });
+  }
+
+  function renvoyerCode() {
+    const err = document.getElementById('code-error');
+    err.textContent = 'Envoi d\'un nouveau code...';
+    fetch(AUTH_URL, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "send_code", email: identite.email }),
+    })
+      .then(r => r.json())
+      .then(data => { err.textContent = (data && data.ok) ? 'Nouveau code envoyé.' : 'Erreur lors de l\'envoi.'; })
+      .catch(() => { err.textContent = 'Connexion impossible.'; });
   }
 
   // ---- Espace perso (compte utilisateur) ----
@@ -363,6 +429,47 @@ const App = (() => {
   // Nombre de questions par module (pour le taux de complétion)
   const NB_QUESTIONS = { socle: 60, commercial: 36, manager: 36 };
 
+  // Phrases d'accueil par archétype précis (ton inspirant + chaleureux, affirmatif)
+  const ACCUEIL_ARCHETYPE = {
+    "La Tisseuse": "Votre talent pour créer du lien et faire tenir les liens ensemble se lit déjà dans votre portrait.",
+    "Le Passeur": "Votre art de relier les personnes et de transmettre transparaît dans votre portrait.",
+    "Le Roc": "Votre présence solide, celle sur qui les autres s'appuient, éclaire votre portrait.",
+    "Le Diplomate": "Votre finesse pour accorder les points de vue donne sa couleur à votre portrait.",
+    "L'Ambassadeur": "Votre talent pour porter haut les idées et rassembler se révèle dans votre portrait.",
+    "Le Capitaine": "Votre capacité à mener et à donner le cap transparaît dans votre portrait.",
+    "L'Indomptable": "Votre énergie qui ouvre la voie et ose se lit déjà dans votre portrait.",
+    "Le Champion": "Votre élan, ce moteur qui entraîne les autres vers le résultat, éclaire votre portrait.",
+    "Le Pionnier": "Votre goût d'explorer et d'ouvrir des chemins neufs donne sa couleur à votre portrait.",
+    "Le Résilient": "Votre force tranquille, celle qui rebondit et tient dans la durée, se révèle dans votre portrait.",
+    "L'Architecte": "Votre sens de la structure et de la vision d'ensemble transparaît dans votre portrait.",
+    "La Sentinelle": "Votre vigilance attentive, celle qui protège et anticipe, se lit dans votre portrait.",
+    "Le Gardien": "Votre sens de la justesse et de la solidité éclaire votre portrait.",
+    "L'Orfèvre": "Votre exigence du détail juste et du travail bien fait donne sa couleur à votre portrait.",
+    "Le Stratège": "Votre capacité à lire loin et à poser les bons coups transparaît dans votre portrait.",
+    "Le Conteur": "Votre talent pour donner du sens et embarquer par le récit se révèle dans votre portrait.",
+    "L'Étincelle": "Votre énergie créative, celle qui allume les idées, se lit déjà dans votre portrait.",
+    "Le Veilleur": "Votre regard qui perçoit les signaux faibles avant les autres éclaire votre portrait.",
+    "L'Explorateur": "Votre curiosité qui repousse les horizons donne sa couleur à votre portrait.",
+    "Le Révélateur": "Votre don pour faire émerger le potentiel des autres se révèle dans votre portrait.",
+  };
+
+  // Phrases d'accueil adaptées à la famille de l'archétype (repli si l'archétype n'est pas listé)
+  const ACCUEIL_FAMILLE = {
+    RELATION: "Votre talent pour relier les autres se lit déjà dans votre portrait.",
+    ACTION: "Votre énergie et votre élan transparaissent dans votre portrait.",
+    STRUCTURE: "Votre sens de la justesse et de la solidité éclaire votre portrait.",
+    VISION: "Votre regard tourné vers l'horizon donne sa couleur à votre portrait.",
+  };
+  // Sous-phrase selon l'avancement
+  function phraseAvancement(analyses, droitsTxt) {
+    const aModuleDispo = (droitsTxt.includes('commercial') && !analyses.commercial) || (droitsTxt.includes('manager') && !analyses.manager);
+    const toutFait = analyses.socle && (!droitsTxt.includes('commercial') || analyses.commercial) && (!droitsTxt.includes('manager') || analyses.manager);
+    if (toutFait) return "Votre parcours est complet. Explorez vos analyses quand vous le souhaitez.";
+    if (analyses.socle && aModuleDispo) return "Une exploration de plus vous attend pour révéler comment votre nature s'exprime au travail.";
+    if (!analyses.socle) return "Votre première exploration vous attend.";
+    return "Continuez votre parcours à votre rythme.";
+  }
+
   function renderEspace(data) {
     const prenom = data.prenom || identite.prenom || '';
     const analyses = data.analyses || {};
@@ -378,6 +485,45 @@ const App = (() => {
     const progType = data.diagTypeEnCours || ''; // type du module en cours si applicable
 
     document.getElementById('espace-name').textContent = 'Bonjour ' + prenom;
+
+    // Phrase d'accueil adaptée à la famille + avancement
+    const accueilEl = document.getElementById('espace-accueil');
+    if (accueilEl) {
+      const famKey = (famille || '').toUpperCase();
+      // priorité à la phrase par archétype précis, repli sur la famille
+      const phraseFam = ACCUEIL_ARCHETYPE[archetype] || ACCUEIL_FAMILLE[famKey] || "Voici votre espace personnel, le reflet de votre singularité.";
+      const phraseAv = phraseAvancement(analyses, droitsTxt);
+      accueilEl.innerHTML = `<span class="espace-accueil-fam">${phraseFam}</span> <span class="espace-accueil-av">${phraseAv}</span>`;
+    }
+
+    // Barre de progression globale du parcours
+    const progGlobalEl = document.getElementById('espace-prog-globale');
+    if (progGlobalEl) {
+      // total des explorations = socle + modules autorisés
+      let total = 1; // socle
+      if (droitsTxt.includes('commercial')) total++;
+      if (droitsTxt.includes('manager')) total++;
+      let faits = 0;
+      if (analyses.socle) faits++;
+      if (analyses.commercial) faits++;
+      if (analyses.manager) faits++;
+      const pctGlobal = Math.round((faits / total) * 100);
+      progGlobalEl.innerHTML = `
+        <div class="espace-pg-head"><span>Votre parcours</span><span>${faits} exploration${faits > 1 ? 's' : ''} sur ${total}</span></div>
+        <div class="espace-pg-bar"><div class="espace-pg-fill" style="width:${pctGlobal}%"></div></div>`;
+    }
+
+    // afficher le personnage de l'archétype dans l'en-tête
+    const persoEl = document.getElementById('espace-hero-perso');
+    if (persoEl) {
+      const slugImg = archetype ? (SINEA_DATA.images && SINEA_DATA.images[archetype]) : '';
+      if (slugImg) {
+        persoEl.innerHTML = `<img src="${slugImg}.webp" alt="${archetype}" />`;
+        persoEl.style.display = 'block';
+      } else {
+        persoEl.style.display = 'none';
+      }
+    }
     const archEl = document.getElementById('espace-arch');
     if (archetype) {
       const initiale = archetype.replace(/^(Le |La |L'|Les )/, '').charAt(0);
@@ -402,7 +548,7 @@ const App = (() => {
     let resultatsHtml = '';
     if (faits.length) {
       resultatsHtml = '<div class="espace-label">Mes résultats</div>';
-      faits.forEach(m => { resultatsHtml += carteResultat(m); });
+      faits.forEach(m => { resultatsHtml += carteResultat(m, (analyses[m] && analyses[m].date) || ''); });
     }
     document.getElementById('espace-resultats').innerHTML = resultatsHtml;
 
@@ -454,14 +600,29 @@ const App = (() => {
   }
 
   // Carte d'un résultat terminé (section "Mes résultats", en vitrine cliquable)
-  function carteResultat(mod) {
+  function formaterDate(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+      return `${d.getDate()} ${mois[d.getMonth()]} ${d.getFullYear()}`;
+    } catch (e) { return ''; }
+  }
+
+  function carteResultat(mod, dateIso) {
     const l = LABELS_MODULE[mod];
-    return `<div class="esp-resultat" data-revoir="${mod}">
+    const dateTxt = formaterDate(dateIso);
+    const dateLigne = dateTxt ? `<div class="esp-res-date">Réalisé le ${dateTxt}</div>` : '';
+    return `<div class="esp-resultat">
       <div class="esp-res-glow"></div>
       <div class="esp-res-in">
-        <div class="esp-res-label">Portrait complété</div>
+        <div class="esp-res-badge">Complété · 100%</div>
         <div class="esp-res-title">${l.titre}</div>
-        <div class="esp-res-cta">Consulter mon analyse →</div>
+        ${dateLigne}
+        <div class="esp-res-actions">
+          <button class="esp-res-btn" data-revoir="${mod}">Consulter mon analyse</button>
+          <button class="esp-res-btn esp-res-btn-soon" disabled>Mon plan d'action · bientôt</button>
+        </div>
       </div>
     </div>`;
   }
@@ -509,14 +670,18 @@ const App = (() => {
       .then(data => {
         const analyses = (data && data.analyses) || {};
         const a = analyses[mod];
-        if (!a || !a.profil || !a.contenu) {
-          alert("Cette analyse n'est pas disponible.");
+        if (!a || !a.profil || !a.profil.dominante) {
+          alert("Cette analyse n'est pas encore disponible.");
           return;
         }
-        // reconstruire l'objet résultat avec le contenu figé
+        // reconstruire l'objet résultat
         const res = Object.assign({}, a.profil);
-        res.contenuFige = a.contenu;
         res.diagType = a.profil.diagType || mod;
+        // si le contenu IA a été sauvegardé, on le réaffiche à l'identique (figé) ;
+        // sinon, on laisse generateIA le régénérer.
+        if (a.contenu && typeof a.contenu === 'object' && Object.keys(a.contenu).length > 0) {
+          res.contenuFige = a.contenu;
+        }
         document.getElementById('screen-espace').classList.remove('active');
         document.getElementById('screen-result').classList.add('active');
         Result.render(res);
@@ -1123,7 +1288,7 @@ const App = (() => {
     }, 2200);
   }
 
-  return { start, goToIdentif, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
+  return { start, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

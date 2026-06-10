@@ -27,6 +27,7 @@
         </div>
       </div>
       <button class="btn-primary btn-light" onclick="App.goToIdentif()">Commencer</button>
+      <button class="cover-login-link" onclick="App.goToConnexion()">J'ai déjà un compte · Se connecter</button>
       <p class="cover-note">Vos réponses restent confidentielles</p>
       <div class="cover-side">
         <div class="cover-side-card">
@@ -39,6 +40,7 @@
           </ul>
         </div>
         <button class="btn-primary btn-light" onclick="App.goToIdentif()">Commencer le test</button>
+        <button class="cover-login-link" onclick="App.goToConnexion()">J'ai déjà un compte · Se connecter</button>
         <p class="cover-note">Vos réponses restent confidentielles</p>
       </div>
     </div></div>
@@ -66,16 +68,53 @@
 
   <button id="dev-autofill" style="display:none;position:fixed;bottom:16px;right:16px;z-index:9999;background:#1A1A1A;color:#fff;border:none;border-radius:30px;padding:12px 18px;font-family:sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);" onclick="App.autoFill()">⚡ Remplir auto (test)</button>
 
+  <section class="screen" id="screen-connexion">
+    <div class="identif-wrap">
+      <div class="identif-card">
+        <div class="identif-kicker">Connexion</div>
+        <h2 class="identif-title">Accéder à mon espace</h2>
+        <p class="identif-sub">Entrez votre email. Nous vous envoyons un code de connexion sécurisé.</p>
+        <label class="identif-label">Email</label>
+        <input class="identif-input" id="cx-email" type="email" placeholder="vous@entreprise.com" autocomplete="email" />
+        <div class="identif-error" id="cx-error"></div>
+        <button class="btn-primary identif-btn" id="cx-submit">Recevoir mon code</button>
+        <button class="btn-ghost identif-resume" onclick="App.goToCover()">Retour</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-code">
+    <div class="identif-wrap">
+      <div class="identif-card">
+        <div class="identif-kicker">Connexion sécurisée</div>
+        <h2 class="identif-title">Entrez votre code</h2>
+        <p class="identif-sub">Nous avons envoyé un code à 6 chiffres à <span id="code-email-rappel" style="font-weight:600;"></span>. Vérifiez votre boîte mail.</p>
+        <input class="identif-input code-input" id="code-saisie" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
+        <div class="identif-error" id="code-error"></div>
+        <button class="btn-primary identif-btn" id="code-submit">Me connecter</button>
+        <button class="btn-ghost identif-resume" id="code-resend">Renvoyer un code</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-espace">
     <div class="espace-wrap">
       <div class="espace-hero" id="espace-hero">
-        <div class="espace-hi">Votre espace personnel</div>
-        <div class="espace-name" id="espace-name">Bonjour</div>
-        <div class="espace-arch" id="espace-arch"></div>
+        <div class="espace-hero-txt">
+          <div class="espace-hi">Votre espace personnel</div>
+          <div class="espace-name" id="espace-name">Bonjour</div>
+          <div class="espace-arch" id="espace-arch"></div>
+          <div class="espace-accueil" id="espace-accueil"></div>
+        </div>
+        <div class="espace-hero-perso" id="espace-hero-perso"></div>
       </div>
+      <div class="espace-prog-globale" id="espace-prog-globale"></div>
       <div id="espace-resultats"></div>
       <div id="espace-cards"></div>
-      <p class="espace-foot">Vous pouvez revenir sur cet espace à tout moment avec votre email.</p>
+      <div class="espace-signature">
+        <div class="espace-signature-logo">Sinéa</div>
+        <div class="espace-signature-tag">Votre espace évolue avec vous. Revenez quand vous le souhaitez, avec votre email.</div>
+      </div>
     </div>
   </section>
 
