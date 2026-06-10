@@ -579,6 +579,14 @@ const App = (() => {
     }
     document.getElementById('espace-cards').innerHTML = parcoursHtml;
 
+    // Compatibilités d'équipe (si on connaît la famille de la personne)
+    const compatEl = document.getElementById('espace-compat');
+    const compatGridEl = document.getElementById('espace-compat-grid');
+    if (compatEl && compatGridEl && famille && window.Result && Result.htmlCompatibilites) {
+      const html = Result.htmlCompatibilites(famille);
+      if (html) { compatGridEl.innerHTML = html; compatEl.style.display = 'block'; }
+    }
+
     // câbler les boutons
     document.querySelectorAll('[data-revoir]').forEach(b => { b.onclick = () => revoirAnalyse(b.getAttribute('data-revoir')); });
     document.querySelectorAll('[data-commencer]').forEach(b => {
@@ -1296,17 +1304,141 @@ const App = (() => {
 
       clearInterval(msgTimer);
       document.getElementById('screen-loader').classList.remove('active');
-      document.getElementById('screen-result').classList.add('active');
+      // Préparer la restitution en arrière-plan, puis lancer la révélation animée
       Result.render(result);
+      lancerRevelation(result);
       window.scrollTo(0, 0);
       document.getElementById('phone-scroll')?.scrollTo(0, 0);
     }, 2200);
+  }
+
+  // ============================================================
+  // LA RÉVÉLATION ANIMÉE DU PORTRAIT
+  // ============================================================
+  function lancerRevelation(result) {
+    const dom = result.dominante;
+    if (!dom) { document.getElementById('screen-result').classList.add('active'); return; }
+    const slug = (SINEA_DATA.images && SINEA_DATA.images[dom.nom]) ? SINEA_DATA.images[dom.nom] : '';
+    const familleLabel = { RELATION: 'Relation', ACTION: 'Action', STRUCTURE: 'Structure', VISION: 'Vision' }[(dom.famille || '').toUpperCase()] || '';
+
+    const scr = document.getElementById('screen-reveal');
+    const intro = document.getElementById('reveal-intro');
+    const perso = document.getElementById('reveal-perso');
+    const imgEl = document.getElementById('reveal-img');
+    const nomEl = document.getElementById('reveal-nom');
+    const famEl = document.getElementById('reveal-famille');
+    const cta = document.getElementById('reveal-cta');
+    if (!scr) { document.getElementById('screen-result').classList.add('active'); return; }
+
+    // réinitialiser
+    perso.classList.remove('reveal-show'); nomEl.textContent = ''; famEl.classList.remove('reveal-show'); cta.classList.remove('reveal-show'); intro.classList.remove('reveal-fade');
+    if (slug) imgEl.src = slug + '.webp';
+    scr.classList.add('active');
+
+    // séquence d'animation
+    setTimeout(() => { perso.classList.add('reveal-show'); lancerParticules(dom.famille); }, 700);  // le personnage apparaît + particules
+    setTimeout(() => { intro.classList.add('reveal-fade'); }, 1400);      // l'intro s'efface
+    setTimeout(() => { ecrireNom(nomEl, dom.nom); }, 1600);              // le nom s'écrit lettre par lettre
+    setTimeout(() => { famEl.textContent = 'Famille ' + familleLabel; famEl.classList.add('reveal-show'); }, 1600 + dom.nom.length * 75 + 300);
+    setTimeout(() => { cta.classList.add('reveal-show'); }, 1600 + dom.nom.length * 75 + 800);
+
+    cta.onclick = () => {
+      scr.classList.remove('active');
+      arreterParticules();
+      document.getElementById('screen-result').classList.add('active');
+      window.scrollTo(0, 0);
+      document.getElementById('phone-scroll')?.scrollTo(0, 0);
+    };
+  }
+
+  // Moteur de particules lumineuses pour la révélation
+  let particulesRAF = null;
+  function lancerParticules(famille) {
+    const canvas = document.getElementById('reveal-particles');
+    if (!canvas) return;
+    const wrap = canvas.parentElement;
+    canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight;
+    const ctx = canvas.getContext('2d');
+    const couleurs = {
+      RELATION: ['#F98272', '#F9A876', '#FFFFFF'],
+      ACTION: ['#F9A876', '#F98272', '#FFD9A0'],
+      STRUCTURE: ['#5474F5', '#8884F0', '#FFFFFF'],
+      VISION: ['#8884F0', '#5E59C7', '#FFFFFF'],
+    }[(famille || '').toUpperCase()] || ['#8884F0', '#FFFFFF', '#F9A876'];
+
+    const cx = canvas.width / 2, cy = canvas.height * 0.36;
+    const particules = [];
+    // jaillissement initial depuis le centre (le personnage)
+    for (let i = 0; i < 60; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const vitesse = 1.5 + Math.random() * 4;
+      particules.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * vitesse, vy: Math.sin(angle) * vitesse - 1,
+        r: 1.5 + Math.random() * 3,
+        couleur: couleurs[Math.floor(Math.random() * couleurs.length)],
+        vie: 1, declin: 0.006 + Math.random() * 0.01,
+      });
+    }
+    // quelques particules flottantes ambiantes
+    for (let i = 0; i < 25; i++) {
+      particules.push({
+        x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.4, vy: -0.2 - Math.random() * 0.4,
+        r: 0.8 + Math.random() * 1.8,
+        couleur: couleurs[Math.floor(Math.random() * couleurs.length)],
+        vie: 1, declin: 0.002 + Math.random() * 0.004, ambiant: true,
+      });
+    }
+
+    function frame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particules.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (!p.ambiant) p.vy += 0.02; // légère gravité pour le jaillissement
+        p.vie -= p.declin;
+        if (p.vie > 0) {
+          ctx.globalAlpha = Math.max(0, Math.min(1, p.vie));
+          ctx.fillStyle = p.couleur;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+          // halo doux
+          ctx.globalAlpha = Math.max(0, p.vie * 0.3);
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 2.5, 0, Math.PI * 2); ctx.fill();
+        }
+        // recycler les particules ambiantes
+        if (p.ambiant && (p.vie <= 0 || p.y < -10)) {
+          p.x = Math.random() * canvas.width; p.y = canvas.height + 10; p.vie = 1;
+        }
+      });
+      ctx.globalAlpha = 1;
+      particulesRAF = requestAnimationFrame(frame);
+    }
+    frame();
+  }
+
+  function arreterParticules() {
+    if (particulesRAF) { cancelAnimationFrame(particulesRAF); particulesRAF = null; }
+    const canvas = document.getElementById('reveal-particles');
+    if (canvas) { const ctx = canvas.getContext('2d'); ctx && ctx.clearRect(0, 0, canvas.width, canvas.height); }
+  }
+
+  function ecrireNom(el, nom) {
+    el.textContent = '';
+    el.classList.add('reveal-typing');
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i >= nom.length) { clearInterval(timer); el.classList.remove('reveal-typing'); return; }
+      el.textContent += nom[i]; i++;
+    }, 75);
   }
 
   return { start, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)
+// Exposer App globalement (pour que result.js puisse appeler App.sauverAnalyse, App.getPrenom, etc.)
+window.App = App;
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => App.initCover());
 } else {

@@ -518,6 +518,15 @@ const Result = (() => {
         </div>
       </div>
 
+      <div class="r-compat-bloc" id="compat-bloc">
+        <div class="r-me-head">
+          <div class="r-me-kicker">En équipe</div>
+          <h2 class="r-me-title">Vos compatibilités d'équipe</h2>
+          <p class="r-me-sub">Comment votre profil se combine avec les autres familles.</p>
+        </div>
+        <div class="r-compat-grid" id="compat-grid"></div>
+      </div>
+
       <div class="r-fin-cta">
         <h3>Votre portrait est prêt</h3>
         <p>Retrouvez votre analyse et la suite de votre parcours dans votre espace.</p>
@@ -546,6 +555,10 @@ const Result = (() => {
 
     // Câbler le chat avec l'archétype
     initChat(dom, res);
+
+    // Remplir les compatibilités d'équipe
+    const compatGrid = document.getElementById('compat-grid');
+    if (compatGrid) compatGrid.innerHTML = htmlCompatibilites(dom.famille);
 
     generateIA(res);
   }
@@ -723,6 +736,56 @@ const Result = (() => {
   }
 
   // Affiche une section, avec repli si elle a échoué.
+  // Génère le HTML du bloc compatibilités à partir de la famille dominante
+  function htmlCompatibilites(famille) {
+    const famKey = (famille || '').toUpperCase();
+    const c = COMPATIBILITES[famKey];
+    if (!c) return '';
+    const carte = (data, type) => {
+      const fam = COULEURS_FAMILLE[data.fam] || COULEURS_FAMILLE.VISION;
+      const badge = type === 'forte' ? 'Synergie naturelle' : (type === 'belle' ? 'Belle complémentarité' : 'Demande de l\'attention');
+      return `
+        <div class="r-compat-card">
+          <div class="r-compat-bar" style="background:linear-gradient(180deg, ${fam.c1}, ${fam.c2});"></div>
+          <div class="r-compat-in">
+            <div class="r-compat-badge r-compat-${type}">${badge}</div>
+            <div class="r-compat-titre">${data.titre}</div>
+            <p class="r-compat-txt">${data.txt}</p>
+            ${data.conseil ? `<div class="r-compat-conseil"><span class="r-compat-conseil-label">Le conseil</span>${data.conseil}</div>` : ''}
+          </div>
+        </div>`;
+    };
+    return carte(c.forte, 'forte') + carte(c.belle, 'belle') + carte(c.attention, 'attention');
+  }
+
+  // ============================================================
+  // LES COMPATIBILITÉS D'ÉQUIPE (par famille, formulées avec nuance)
+  // ============================================================
+  const LABELS_FAMILLE = { RELATION: 'Relation', ACTION: 'Action', STRUCTURE: 'Structure', VISION: 'Vision' };
+  // Pour chaque famille : avec qui la synergie est naturelle, et avec qui la complémentarité demande de l'attention.
+  const COMPATIBILITES = {
+    RELATION: {
+      forte: { fam: 'VISION', titre: 'Avec les profils Vision', txt: "Votre sens du lien donne corps aux idées qu'ils imaginent. Ensemble, vous transformez une vision en aventure collective portée par les gens.", conseil: "Proposez-leur de porter leurs idées auprès de l'équipe, c'est là que votre duo brille." },
+      belle: { fam: 'STRUCTURE', titre: 'Avec les profils Structure', txt: "Vous apportez la chaleur humaine, ils apportent le cadre. Cette alliance crée des équipes à la fois solides et soudées.", conseil: "Laissez-leur poser le cadre, et occupez-vous d'embarquer les personnes dedans." },
+      attention: { fam: 'ACTION', titre: 'Avec les profils Action', txt: "Leur rythme rapide et votre attention aux personnes se complètent quand vous accordez vos tempos. Posez ensemble le bon équilibre entre vitesse et écoute.", conseil: "Convenez en amont des moments où l'on accélère et de ceux où l'on prend soin du collectif." },
+    },
+    ACTION: {
+      forte: { fam: 'STRUCTURE', titre: 'Avec les profils Structure', txt: "Votre énergie avance, leur rigueur sécurise. Ensemble, vous transformez l'élan en résultats qui tiennent dans la durée.", conseil: "Confiez-leur le suivi et le cadrage, gardez pour vous l'impulsion et la mise en mouvement." },
+      belle: { fam: 'VISION', titre: 'Avec les profils Vision', txt: "Ils ouvrent les horizons, vous les atteignez. Cette alliance donne des projets ambitieux qui passent vraiment à l'action.", conseil: "Demandez-leur le cap à 3 ans, puis transformez-le en plan d'action des 3 prochains mois." },
+      attention: { fam: 'RELATION', titre: 'Avec les profils Relation', txt: "Votre rythme et leur attention aux personnes se renforcent quand vous accordez vos tempos. Gardez ensemble le lien autant que la cadence.", conseil: "Avant de lancer un sprint, prenez un instant avec eux pour vérifier que l'équipe suit." },
+    },
+    STRUCTURE: {
+      forte: { fam: 'ACTION', titre: 'Avec les profils Action', txt: "Votre cadre canalise leur énergie, leur élan donne vie à vos plans. Ensemble, vous alliez fiabilité et mouvement.", conseil: "Posez le cadre une fois pour toutes, puis laissez-leur la liberté d'avancer dedans." },
+      belle: { fam: 'RELATION', titre: 'Avec les profils Relation', txt: "Vous posez la structure, ils tissent le lien. Cette alliance crée des équipes organisées et humaines à la fois.", conseil: "Appuyez-vous sur eux pour faire accepter vos process, ils savent les rendre désirables." },
+      attention: { fam: 'VISION', titre: 'Avec les profils Vision', txt: "Leur foisonnement d'idées et votre besoin de cadre se complètent quand vous valorisez l'exploration avant de structurer. Laissez de l'espace à l'idée avant de l'ordonner.", conseil: "Accordez-leur un temps d'idéation libre, puis proposez de structurer ce qui est ressorti." },
+    },
+    VISION: {
+      forte: { fam: 'RELATION', titre: 'Avec les profils Relation', txt: "Vos idées prennent vie grâce à leur talent pour embarquer les gens. Ensemble, vous donnez du sens et de l'âme aux projets.", conseil: "Confiez-leur la diffusion de votre vision, ils la rendront vivante pour toute l'équipe." },
+      belle: { fam: 'ACTION', titre: 'Avec les profils Action', txt: "Vous imaginez loin, ils concrétisent vite. Cette alliance transforme les grandes idées en réalisations tangibles.", conseil: "Donnez-leur une idée claire et un premier pas concret, ils feront le reste." },
+      attention: { fam: 'STRUCTURE', titre: 'Avec les profils Structure', txt: "Votre créativité et leur sens du cadre se complètent quand vous accueillez la structure comme un appui. Ensemble, donnez forme à l'idée sans l'enfermer.", conseil: "Présentez-leur vos idées comme des pistes à structurer ensemble, pas comme des décisions figées." },
+    },
+  };
+
   // ============================================================
   // LA CARTE PARTAGEABLE (image carrée à télécharger pour LinkedIn/Insta)
   // ============================================================
@@ -1216,5 +1279,8 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis };
+  return { render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
 })();
+
+// Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)
+window.Result = Result;
