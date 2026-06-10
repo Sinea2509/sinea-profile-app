@@ -651,8 +651,10 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* ============================================================
    ÉCRAN D'IDENTIFICATION
    ============================================================ */
-#screen-identif{position:absolute;inset:0;z-index:50;display:none;background:var(--c-beige);overflow-y:auto;}
+#screen-identif{position:absolute;inset:0;z-index:50;display:none;overflow-y:auto;background:radial-gradient(circle at 30% 12%, #F9A876 0%, #8884F0 46%, #5E59C7 100%);}
 #screen-identif.active{display:flex;align-items:center;justify-content:center;}
+#screen-identif .identif-card{box-shadow:0 24px 60px rgba(40,20,80,0.35);}
+#screen-identif .identif-kicker{color:var(--c-purple-text);}
 
 /* Écran magic code : fond dégradé cohérent avec l'univers Sinéa */
 #screen-magic{position:absolute;inset:0;z-index:50;display:none;overflow-y:auto;background:radial-gradient(circle at 30% 15%, #F9A876 0%, #8884F0 45%, #5E59C7 100%);}
