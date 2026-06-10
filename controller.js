@@ -289,6 +289,10 @@ const App = (() => {
           err.textContent = '';
           document.getElementById('screen-connexion').classList.remove('active');
           afficherEcranCode(email);
+        } else if (data && data.no_account) {
+          err.innerHTML = "Aucun compte associé à cet email. <a href='#' id='cx-vers-test' style='color:var(--c-purple-text);font-weight:600;'>Commencer le test</a>";
+          const lien = document.getElementById('cx-vers-test');
+          if (lien) lien.onclick = (e) => { e.preventDefault(); document.getElementById('screen-connexion').classList.remove('active'); goToIdentif(); };
         } else {
           err.textContent = (data && data.error) || "Impossible d'envoyer le code.";
         }
@@ -577,7 +581,18 @@ const App = (() => {
 
     // câbler les boutons
     document.querySelectorAll('[data-revoir]').forEach(b => { b.onclick = () => revoirAnalyse(b.getAttribute('data-revoir')); });
-    document.querySelectorAll('[data-commencer]').forEach(b => { b.onclick = () => commencerModule(b.getAttribute('data-commencer')); });
+    document.querySelectorAll('[data-commencer]').forEach(b => {
+      b.onclick = () => {
+        const mod = b.getAttribute('data-commencer');
+        // le socle se lance via start() ; les modules spé via commencerModule()
+        if (mod === 'socle') {
+          document.getElementById('screen-espace').classList.remove('active');
+          start();
+        } else {
+          commencerModule(mod);
+        }
+      };
+    });
   }
 
   // Liste des IDs de questions d'un module (pour calculer le %)
@@ -1288,7 +1303,7 @@ const App = (() => {
     }, 2200);
   }
 
-  return { start, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result };
+  return { start, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

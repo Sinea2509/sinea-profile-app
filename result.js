@@ -483,6 +483,41 @@ const Result = (() => {
 
       ${speBlocHtml}
 
+      <div class="r-mode-emploi" id="mode-emploi-bloc" style="display:none;">
+        <div class="r-me-head">
+          <div class="r-me-kicker">Hors norme</div>
+          <h2 class="r-me-title" id="mode-emploi-titre">Le mode d'emploi de moi-même</h2>
+          <p class="r-me-sub">Une fiche à partager à votre équipe pour mieux travailler ensemble.</p>
+        </div>
+        <div class="r-me-card" id="mode-emploi-contenu"></div>
+        <button class="r-me-share" id="mode-emploi-share">Partager à mon équipe</button>
+      </div>
+
+      <div class="r-carte-bloc" id="carte-bloc">
+        <div class="r-me-head">
+          <div class="r-me-kicker">À partager</div>
+          <h2 class="r-me-title">Votre carte d'archétype</h2>
+          <p class="r-me-sub">Téléchargez votre carte et partagez votre profil sur LinkedIn.</p>
+        </div>
+        <div class="r-carte-preview" id="carte-preview"></div>
+        <button class="r-carte-btn" id="carte-share-btn">Télécharger ma carte</button>
+      </div>
+
+      <div class="r-chat-bloc" id="chat-bloc">
+        <div class="r-me-head">
+          <div class="r-me-kicker">Hors norme</div>
+          <h2 class="r-me-title">Échangez avec votre profil</h2>
+          <p class="r-me-sub">Posez vos questions, votre archétype vous répond.</p>
+        </div>
+        <div class="r-chat-window" id="chat-window">
+          <div class="r-chat-suggestions" id="chat-suggestions"></div>
+        </div>
+        <div class="r-chat-input-row">
+          <input class="r-chat-input" id="chat-input" type="text" placeholder="Posez une question sur vous..." maxlength="500" />
+          <button class="r-chat-send" id="chat-send" aria-label="Envoyer">→</button>
+        </div>
+      </div>
+
       <div class="r-fin-cta">
         <h3>Votre portrait est prêt</h3>
         <p>Retrouvez votre analyse et la suite de votre parcours dans votre espace.</p>
@@ -490,7 +525,116 @@ const Result = (() => {
       </div>
     `;
     document.getElementById('r-body').innerHTML=html;
+
+    // Câbler la carte partageable (aperçu + bouton de téléchargement)
+    const carteSlug = img(dom.nom).replace('.webp', '');
+    const cartePreview = document.getElementById('carte-preview');
+    const famKeyCarte = (dom.famille || '').toUpperCase();
+    const famCarte = COULEURS_FAMILLE[famKeyCarte] || COULEURS_FAMILLE.VISION;
+    if (cartePreview) {
+      cartePreview.innerHTML = `
+        <div class="r-carte-mini" style="background:linear-gradient(145deg, ${famCarte.c1}, ${famCarte.c2});">
+          <div class="r-carte-mini-logo">SINÉA</div>
+          <div class="r-carte-mini-perso"><img src="${img(dom.nom)}" alt="${dom.nom}"/></div>
+          <div class="r-carte-mini-nom">${dom.nom}</div>
+          <div class="r-carte-mini-fam">Famille ${famCarte.label}</div>
+        </div>`;
+    }
+    const carteBtn = document.getElementById('carte-share-btn');
+    const prenomUser = (window.App && App.getPrenom) ? App.getPrenom() : '';
+    if (carteBtn) carteBtn.onclick = () => genererCarte(dom.nom, dom.famille, carteSlug, prenomUser);
+
+    // Câbler le chat avec l'archétype
+    initChat(dom, res);
+
     generateIA(res);
+  }
+
+  // ============================================================
+  // LE CHAT AVEC SON ARCHÉTYPE
+  // ============================================================
+  const CHAT_URL = "https://sinea-profile-ia.vercel.app/api/chat";
+  let chatHistorique = [];
+
+  const QUESTIONS_SUGGEREES = [
+    "Pourquoi je procrastine parfois ?",
+    "Comment mieux gérer les conflits ?",
+    "Quelle est ma plus grande force au travail ?",
+    "Comment me ressourcer après une journée difficile ?",
+  ];
+
+  function initChat(dom, res) {
+    chatHistorique = [];
+    const win = document.getElementById('chat-window');
+    const sugg = document.getElementById('chat-suggestions');
+    const input = document.getElementById('chat-input');
+    const send = document.getElementById('chat-send');
+    if (!win || !input || !send) return;
+
+    // message d'accueil
+    win.querySelectorAll('.r-chat-msg').forEach(e => e.remove());
+    ajouterMessageChat('assistant', `Bonjour, je suis votre ${dom.nom}. Posez-moi une question sur votre façon de fonctionner, vos forces, vos relations au travail.`);
+
+    // suggestions cliquables
+    if (sugg) {
+      sugg.innerHTML = QUESTIONS_SUGGEREES.map(q => `<button class="r-chat-sugg">${q}</button>`).join('');
+      sugg.querySelectorAll('.r-chat-sugg').forEach(btn => {
+        btn.onclick = () => { input.value = btn.textContent; envoyerMessageChat(dom, res); };
+      });
+    }
+
+    send.onclick = () => envoyerMessageChat(dom, res);
+    input.onkeydown = (e) => { if (e.key === 'Enter') envoyerMessageChat(dom, res); };
+  }
+
+  function ajouterMessageChat(role, texte) {
+    const win = document.getElementById('chat-window');
+    if (!win) return null;
+    const div = document.createElement('div');
+    div.className = 'r-chat-msg r-chat-' + (role === 'assistant' ? 'bot' : 'user');
+    div.textContent = texte;
+    win.appendChild(div);
+    win.scrollTop = win.scrollHeight;
+    return div;
+  }
+
+  function envoyerMessageChat(dom, res) {
+    const input = document.getElementById('chat-input');
+    const sugg = document.getElementById('chat-suggestions');
+    if (!input) return;
+    const question = (input.value || '').trim();
+    if (!question) return;
+    input.value = '';
+    if (sugg) sugg.style.display = 'none'; // masquer les suggestions après la première question
+
+    ajouterMessageChat('user', question);
+    chatHistorique.push({ role: 'user', content: question });
+
+    // indicateur de saisie
+    const loader = ajouterMessageChat('assistant', '...');
+    if (loader) loader.classList.add('r-chat-loading');
+
+    fetch(CHAT_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        archetype: dom.nom, famille: dom.famille, bigFive: res.scoresBigFive,
+        question, historique: chatHistorique,
+      }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (loader) loader.remove();
+        if (data && data.ok && data.reponse) {
+          ajouterMessageChat('assistant', data.reponse);
+          chatHistorique.push({ role: 'assistant', content: data.reponse });
+        } else {
+          ajouterMessageChat('assistant', "Je ne peux pas répondre pour le moment. Réessayez dans un instant.");
+        }
+      })
+      .catch(() => {
+        if (loader) loader.remove();
+        ajouterMessageChat('assistant', "La connexion a échoué. Réessayez dans un instant.");
+      });
   }
 
   function validItem(type, i, txt){
@@ -579,6 +723,193 @@ const Result = (() => {
   }
 
   // Affiche une section, avec repli si elle a échoué.
+  // ============================================================
+  // LA CARTE PARTAGEABLE (image carrée à télécharger pour LinkedIn/Insta)
+  // ============================================================
+  const COULEURS_FAMILLE = {
+    RELATION: { c1: '#F98272', c2: '#F9A876', label: 'Relation' },
+    ACTION:   { c1: '#F9A876', c2: '#F98272', label: 'Action' },
+    STRUCTURE:{ c1: '#5474F5', c2: '#8884F0', label: 'Structure' },
+    VISION:   { c1: '#8884F0', c2: '#5E59C7', label: 'Vision' },
+  };
+  const PHRASES_CARTE = {
+    "La Tisseuse": "Je relie les personnes et fais tenir les liens.",
+    "Le Passeur": "Je relie les personnes et transmets ce qui compte.",
+    "Le Roc": "Je suis le point d'appui sur lequel on compte.",
+    "Le Diplomate": "J'accorde les points de vue avec finesse.",
+    "L'Ambassadeur": "Je porte haut les idées et rassemble.",
+    "Le Capitaine": "Je donne le cap et j'entraîne vers le but.",
+    "L'Indomptable": "J'ouvre la voie et j'ose là où d'autres hésitent.",
+    "Le Champion": "Je suis le moteur qui entraîne vers le résultat.",
+    "Le Pionnier": "J'explore et j'ouvre des chemins neufs.",
+    "Le Résilient": "Je rebondis et je tiens dans la durée.",
+    "L'Architecte": "Je construis la structure et la vision d'ensemble.",
+    "La Sentinelle": "Je protège et j'anticipe ce qui vient.",
+    "Le Gardien": "Je veille à la justesse et à la solidité.",
+    "L'Orfèvre": "Je cisèle le détail juste et le travail bien fait.",
+    "Le Stratège": "Je lis loin et je pose les bons coups.",
+    "Le Conteur": "Je donne du sens et j'embarque par le récit.",
+    "L'Étincelle": "J'allume les idées et l'énergie créative.",
+    "Le Veilleur": "Je perçois les signaux faibles avant les autres.",
+    "L'Explorateur": "Je repousse les horizons par curiosité.",
+    "Le Révélateur": "Je fais émerger le potentiel des autres.",
+  };
+
+  function genererCarte(archetype, famille, slug, prenom) {
+    // s'assurer que la police est chargée avant de dessiner (sinon police générique sur le PNG)
+    const lancer = () => genererCarteRendu(archetype, famille, slug, prenom);
+    if (document.fonts && document.fonts.ready) {
+      Promise.all([
+        document.fonts.load('800 76px Poppins'),
+        document.fonts.load('600 30px Poppins'),
+        document.fonts.load('400 34px Poppins'),
+        document.fonts.load('700 38px Poppins'),
+      ]).then(() => document.fonts.ready).then(lancer).catch(lancer);
+    } else {
+      lancer();
+    }
+  }
+
+  function genererCarteRendu(archetype, famille, slug, prenom) {
+    const taille = 1080; // carré HD pour les réseaux
+    const canvas = document.createElement('canvas');
+    canvas.width = taille; canvas.height = taille;
+    const ctx = canvas.getContext('2d');
+    const fam = COULEURS_FAMILLE[(famille || '').toUpperCase()] || COULEURS_FAMILLE.VISION;
+
+    // fond dégradé diagonal
+    const grad = ctx.createLinearGradient(0, 0, taille, taille);
+    grad.addColorStop(0, fam.c1); grad.addColorStop(1, fam.c2);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, taille, taille);
+
+    // halo lumineux central
+    const halo = ctx.createRadialGradient(taille/2, taille*0.42, 60, taille/2, taille*0.42, taille*0.6);
+    halo.addColorStop(0, 'rgba(255,255,255,0.22)'); halo.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = halo; ctx.fillRect(0, 0, taille, taille);
+
+    // fonction de dessin du texte (appelée après chargement de l'image)
+    const dessinerTexte = () => {
+      // logo Sinéa en haut
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.font = '700 38px Poppins, Arial, sans-serif';
+      ctx.fillText('SINÉA', taille/2, 92);
+      ctx.font = '500 22px Poppins, Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillText('PROFIL', taille/2, 124);
+
+      // prénom de la personne (si disponible)
+      if (prenom) {
+        ctx.font = '600 30px Poppins, Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.fillText(prenom, taille/2, taille*0.605);
+      }
+
+      // nom de l'archétype (grand)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '800 76px Poppins, Arial, sans-serif';
+      ctx.fillText(archetype, taille/2, taille*0.72);
+
+      // famille (pastille)
+      ctx.font = '600 30px Poppins, Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillText('Famille ' + fam.label, taille/2, taille*0.72 + 52);
+
+      // phrase signature (avec retour à la ligne automatique)
+      const phrase = PHRASES_CARTE[archetype] || '';
+      ctx.font = '400 34px Poppins, Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      const mots = phrase.split(' ');
+      let ligne = ''; let y = taille*0.84; const maxW = taille*0.82; const lh = 46;
+      const lignes = [];
+      mots.forEach(m => {
+        const test = ligne ? ligne + ' ' + m : m;
+        if (ctx.measureText(test).width > maxW && ligne) { lignes.push(ligne); ligne = m; }
+        else ligne = test;
+      });
+      if (ligne) lignes.push(ligne);
+      lignes.forEach((l, i) => ctx.fillText(l, taille/2, y + i*lh));
+
+      // mention bas
+      ctx.font = '500 24px Poppins, Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fillText('sineaformation.fr', taille/2, taille - 48);
+
+      // télécharger
+      telechargerCanvas(canvas, archetype);
+    };
+
+    // dessiner le personnage (rond, au centre haut) puis le texte
+    if (slug) {
+      const img = new Image();
+      img.onload = () => {
+        const d = taille*0.34; const cx = taille/2; const cy = taille*0.36;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, cy, d/2, 0, Math.PI*2); ctx.closePath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 8; ctx.stroke();
+        ctx.clip();
+        ctx.drawImage(img, cx - d/2, cy - d/2, d, d);
+        ctx.restore();
+        dessinerTexte();
+      };
+      img.onerror = () => dessinerTexte();
+      img.src = slug + '.webp';
+    } else {
+      dessinerTexte();
+    }
+  }
+
+  function telechargerCanvas(canvas, archetype) {
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `Mon-archetype-Sinea-${archetype.replace(/[^a-zA-Z]/g, '')}.png`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const btn = document.getElementById('carte-share-btn');
+      if (btn) { const old = btn.textContent; btn.textContent = 'Carte téléchargée'; setTimeout(() => { btn.textContent = old; }, 2200); }
+    }, 'image/png');
+  }
+
+  function partagerModeEmploi(me, archetype){
+    // construire un texte propre à partager
+    const lignes = [];
+    lignes.push(`Mon mode d'emploi · ${archetype}`);
+    lignes.push('');
+    if (me.intro) lignes.push(me.intro);
+    lignes.push('');
+    if (Array.isArray(me.pour_bien_travailler)) {
+      lignes.push('Pour bien travailler avec moi :');
+      me.pour_bien_travailler.forEach(x => lignes.push('· ' + x));
+      lignes.push('');
+    }
+    if (Array.isArray(me.ce_qui_me_motive)) {
+      lignes.push('Ce qui me motive :');
+      me.ce_qui_me_motive.forEach(x => lignes.push('· ' + x));
+      lignes.push('');
+    }
+    if (Array.isArray(me.ce_qui_me_freine)) {
+      lignes.push('Ce qui m\'aide à donner le meilleur :');
+      me.ce_qui_me_freine.forEach(x => lignes.push('· ' + x));
+      lignes.push('');
+    }
+    if (me.ma_communication) { lignes.push('Ma communication : ' + me.ma_communication); lignes.push(''); }
+    if (me.en_un_mot) lignes.push(me.en_un_mot);
+    lignes.push('');
+    lignes.push('Réalisé avec Sinéa Profile');
+    const texte = lignes.join('\n');
+    // partage natif si disponible (mobile), sinon copie presse-papier
+    if (navigator.share) {
+      navigator.share({ title: `Mon mode d'emploi · ${archetype}`, text: texte }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(texte).then(() => {
+        const btn = document.getElementById('mode-emploi-share');
+        if (btn) { const old = btn.textContent; btn.textContent = 'Copié, prêt à partager'; setTimeout(() => { btn.textContent = old; }, 2200); }
+      }).catch(() => {});
+    }
+  }
+
   function poseSection(elId, tag, contenu, fallback){
     const el = document.getElementById(elId);
     if(!el) return;
@@ -627,6 +958,41 @@ const Result = (() => {
         `<p>${situ.reunion||''}</p><p>${situ.pression||''}</p>`);
       poseSection('ia-angles','Analyse personnalisée', c.angles_relationnels,
         `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
+
+      // Le mode d'emploi de moi-même (fiche partageable, format JSON)
+      const meBloc = document.getElementById('mode-emploi-bloc');
+      const meContenu = document.getElementById('mode-emploi-contenu');
+      if (meBloc && meContenu && c.mode_emploi && !c.mode_emploi._erreur) {
+        const me = c.mode_emploi;
+        const liste = (arr) => Array.isArray(arr) ? arr.map(x => `<li>${x}</li>`).join('') : '';
+        meContenu.innerHTML = `
+          <div class="r-me-perso">${dom.nom}</div>
+          ${me.intro ? `<p class="r-me-intro">${me.intro}</p>` : ''}
+          <div class="r-me-section">
+            <div class="r-me-label">Pour bien travailler avec moi</div>
+            <ul class="r-me-list">${liste(me.pour_bien_travailler)}</ul>
+          </div>
+          <div class="r-me-cols">
+            <div class="r-me-col r-me-col-plus">
+              <div class="r-me-label">Ce qui me motive</div>
+              <ul class="r-me-list">${liste(me.ce_qui_me_motive)}</ul>
+            </div>
+            <div class="r-me-col r-me-col-moins">
+              <div class="r-me-label">Ce qui m'aide à donner le meilleur</div>
+              <ul class="r-me-list">${liste(me.ce_qui_me_freine)}</ul>
+            </div>
+          </div>
+          ${me.ma_communication ? `<div class="r-me-section"><div class="r-me-label">Ma communication</div><p class="r-me-comm">${me.ma_communication}</p></div>` : ''}
+          ${me.en_un_mot ? `<div class="r-me-mot">${me.en_un_mot}</div>` : ''}
+        `;
+        meBloc.style.display = 'block';
+        // personnaliser le titre avec le prénom si disponible
+        const prenomMe = (window.App && App.getPrenom) ? App.getPrenom() : '';
+        const titreMe = document.getElementById('mode-emploi-titre');
+        if (titreMe && prenomMe) titreMe.textContent = 'Le mode d\'emploi de ' + prenomMe;
+        const shareBtn = document.getElementById('mode-emploi-share');
+        if (shareBtn) shareBtn.onclick = () => partagerModeEmploi(me, dom.nom);
+      }
 
       // Les 3 dynamiques entre les forces (format JSON : paires)
       const dynEl = document.getElementById('ia-dynamiques');
