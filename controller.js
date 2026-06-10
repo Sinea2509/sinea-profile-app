@@ -70,6 +70,9 @@ const App = (() => {
         email: identite.email,
         type_analyse: typeAnalyse, // 'socle' ou 'commercial' ou 'manager'
         contenu: contenu,
+        prenom: identite.prenom,
+        nom: identite.nom,
+        droits: droits,
       }),
     }).catch(() => {});
   }
@@ -362,9 +365,14 @@ const App = (() => {
 
   function renderEspace(data) {
     const prenom = data.prenom || identite.prenom || '';
-    const archetype = data.archetype || '';
-    const famille = data.famille || '';
     const analyses = data.analyses || {};
+    // archétype : depuis le champ Airtable, ou à défaut depuis le profil de l'analyse socle
+    let archetype = data.archetype || '';
+    let famille = data.famille || '';
+    if ((!archetype) && analyses.socle && analyses.socle.profil && analyses.socle.profil.dominante) {
+      archetype = analyses.socle.profil.dominante.nom || '';
+      famille = analyses.socle.profil.dominante.famille || '';
+    }
     const droitsTxt = (data.droits || droits || '').toLowerCase();
     const progression = data.progression || {};
     const progType = data.diagTypeEnCours || ''; // type du module en cours si applicable
@@ -583,9 +591,20 @@ const App = (() => {
   }
 
   function autoFill() {
-    // remplit toutes les réponses de la queue courante, puis va aux questions ouvertes
+    // En mode dev : si pas d'identité, en mettre une de test (pour ne pas avoir à remplir l'identification)
+    if (!identite.email) {
+      identite.prenom = 'Test';
+      identite.nom = 'Dev';
+      identite.email = 'test.dev@sinea.fr';
+    }
+    // si on n'a pas encore lancé de parcours (queue vide), lancer le socle
+    if (!queue || queue.length === 0) {
+      droits = readDiagType();
+      diagType = 'classic';
+      queue = buildQueue();
+    }
+    // remplir toutes les réponses de la queue courante
     queue.forEach(q => { answers[q.id] = valeurAleatoire(q); });
-    // pré-remplir les 2 questions ouvertes
     openAnswers['q1'] = 'Réponse de test pour la première question ouverte.';
     openAnswers['q2'] = 'Réponse de test pour la seconde question ouverte.';
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
@@ -1079,6 +1098,21 @@ const App = (() => {
 
       // Enregistrer le résultat dans Airtable (si un token est présent dans l'URL)
       enregistrerResultat(result);
+
+      // Sauvegarder le profil dans l'espace perso (indépendamment de la génération IA,
+      // pour que l'analyse soit retrouvable même si l'IA a un souci)
+      try {
+        const typeAnalyse = (result.diagType && result.diagType !== 'classic') ? result.diagType : 'socle';
+        const profilLeger = {
+          dominante: result.dominante, secondaires: result.secondaires,
+          scoresBigFive: result.scoresBigFive, radarFamilles: result.radarFamilles,
+          blend: result.blend, naturelAdapte: result.naturelAdapte, contextuel: result.contextuel,
+          speStyle: result.speStyle, speStyleScores: result.speStyleScores, speDims: result.speDims,
+          diagType: result.diagType,
+        };
+        // on sauvegarde d'abord le profil ; le contenu IA sera complété par result.js quand il arrive
+        sauverAnalyse(typeAnalyse, { contenu: null, profil: profilLeger });
+      } catch (e) {}
 
       clearInterval(msgTimer);
       document.getElementById('screen-loader').classList.remove('active');
