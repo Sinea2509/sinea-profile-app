@@ -637,7 +637,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Voile dégradé par-dessus la mosaïque pour la lisibilité du texte */
 .cover::after{
   content:"";position:absolute;inset:0;z-index:1;
-  background:radial-gradient(circle at 50% 36%, rgba(249,125,90,0.78) 0%, rgba(110,50,135,0.84) 46%, rgba(10,12,40,0.93) 100%);
+  background:radial-gradient(circle at 50% 34%, rgba(225,95,65,0.82) 0%, rgba(85,40,115,0.90) 44%, rgba(8,8,30,0.97) 100%);
 }
 /* le contenu passe au-dessus du voile */
 .cover-inner{z-index:3 !important;}
@@ -651,13 +651,13 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* ============================================================
    ÉCRAN D'IDENTIFICATION
    ============================================================ */
-#screen-identif{position:absolute;inset:0;z-index:50;display:none;overflow-y:auto;background:radial-gradient(circle at 30% 12%, #F9A876 0%, #8884F0 46%, #5E59C7 100%);}
+#screen-identif{position:absolute;inset:0;z-index:50;display:none;overflow-y:auto;background:radial-gradient(circle at 28% 10%, #D9663F 0%, #6E3D82 42%, #2A1B4A 100%);}
 #screen-identif.active{display:flex;align-items:center;justify-content:center;}
 #screen-identif .identif-card{box-shadow:0 24px 60px rgba(40,20,80,0.35);}
 #screen-identif .identif-kicker{color:var(--c-purple-text);}
 
 /* Écran magic code : fond dégradé cohérent avec l'univers Sinéa */
-#screen-magic{position:absolute;inset:0;z-index:50;display:none;overflow-y:auto;background:radial-gradient(circle at 30% 15%, #F9A876 0%, #8884F0 45%, #5E59C7 100%);}
+#screen-magic{position:absolute;inset:0;z-index:50;display:none;overflow-y:auto;background:radial-gradient(circle at 30% 12%, #D9663F 0%, #6E3D82 42%, #2A1B4A 100%);}
 #screen-magic.active{display:flex;align-items:center;justify-content:center;}
 #screen-magic .identif-card{box-shadow:0 24px 60px rgba(40,20,80,0.35);}
 #screen-magic .identif-kicker{color:var(--c-purple-text);}
