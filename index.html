@@ -1,212 +1,290 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Sinéa Profile</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="app">
+// ============================================================
+// MOTEUR DE SCORING (porté du Python validé v2.2)
+// ============================================================
+const DIMS = ['E','A','C','N','O'];
+const POIDS_DIM = {E:1.0, A:1.0, C:1.0, N:0.8, O:1.0};
+const BONUS_SINEA_MAX = 18;
+const POINTS_REF = 3.0;
 
-  <!-- ÉCRAN 1 : COVER -->
-  <section class="screen active" id="screen-cover">
-    <div class="cover"><div class="cover-mosaic" id="cover-mosaic"></div><div class="cover-inner">
-      <div class="cover-logo">Sinéa</div>
-      <div class="cover-mid">
-        <div class="cover-kicker" id="cover-kicker">Profil de personnalité</div>
-        <h1>Découvrez qui vous êtes au travail</h1>
-        <p class="cover-sub" id="cover-sub">Un portrait fondé sur la science, pour révéler vos forces et votre singularité.</p>
-        <div class="cover-meta">
-          <div><span class="cm-num" id="cover-nq">45</span><span class="cm-lab">questions</span></div>
-          <div><span class="cm-num" id="cover-nsec">3</span><span class="cm-lab">étapes</span></div>
-          <div><span class="cm-num">20</span><span class="cm-lab">archétypes</span></div>
-        </div>
-      </div>
-      <button class="btn-primary btn-light" onclick="App.goToIdentif()">Commencer</button>
-      <button class="cover-login-link" onclick="App.goToConnexion()">J'ai déjà un compte · Se connecter</button>
-      <p class="cover-note">Vos réponses restent confidentielles</p>
-      <div class="cover-side">
-        <div class="cover-side-card">
-          <h3>Ce que vous allez découvrir</h3>
-          <ul class="cover-side-list">
-            <li><span class="csl-num">1</span><span>Votre archétype dominant parmi 20 profils, et vos forces singulières</span></li>
-            <li><span class="csl-num">2</span><span>Votre tempérament détaillé, fondé sur le modèle scientifique du Big Five</span></li>
-            <li><span class="csl-num">3</span><span>Comment lire les autres et adapter votre communication à chacun</span></li>
-            <li><span class="csl-num">4</span><span>Des pistes concrètes pour développer votre plein potentiel</span></li>
-          </ul>
-        </div>
-        <button class="btn-primary btn-light" onclick="App.goToIdentif()">Commencer le test</button>
-        <button class="cover-login-link" onclick="App.goToConnexion()">J'ai déjà un compte · Se connecter</button>
-        <p class="cover-note">Vos réponses restent confidentielles</p>
-      </div>
-    </div></div>
-  </section>
+const FAMILY_COLORS = {
+  RELATION: '#F98272', ACTION: '#F9A876', STRUCTURE: '#5474F5', VISION: '#8884F0'
+};
 
-  <!-- ÉCRAN 2 : QUESTION -->
-  <section class="screen" id="screen-identif">
-    <div class="identif-wrap">
-      <div class="identif-card">
-        <div class="identif-kicker">Avant de commencer</div>
-        <h2 class="identif-title">Faisons connaissance</h2>
-        <p class="identif-sub">Vos réponses sont sauvegardées au fur et à mesure. Vous pourrez reprendre à tout moment.</p>
-        <label class="identif-label">Prénom</label>
-        <input class="identif-input" id="id-prenom" type="text" placeholder="Votre prénom" autocomplete="given-name" />
-        <label class="identif-label">Nom</label>
-        <input class="identif-input" id="id-nom" type="text" placeholder="Votre nom" autocomplete="family-name" />
-        <label class="identif-label">Email</label>
-        <input class="identif-input" id="id-email" type="email" placeholder="vous@entreprise.com" autocomplete="email" />
-        <div class="identif-error" id="id-error"></div>
-        <button class="btn-primary identif-btn" id="id-submit">Commencer le test</button>
-        <button class="btn-ghost identif-resume" id="id-resume">J'ai déjà commencé, reprendre</button>
-      </div>
-    </div>
-  </section>
+function scorerBigFive(repMini) {
+  // Echelle 4 niveaux SANS milieu. Conversion 1->0, 2->33.33, 3->66.67, 4->100.
+  // Items negatifs inverses (5 - reponse) avant conversion.
+  const scoring = SINEA_DATA.mini_scoring;
+  const inverses = new Set(SINEA_DATA.mini_inverses);
+  const conv = {1:0.0, 2:33.333, 3:66.667, 4:100.0};
+  const lettreMap = {extraversion:'E', agreabilite:'A', conscience:'C', neuroticisme:'N', ouverture:'O'};
+  const scores = {};
+  for (const [dimNom, info] of Object.entries(scoring)) {
+    let vals = [];
+    for (const itemId of info.items) {
+      let r = repMini[itemId];
+      if (inverses.has(itemId)) r = 5 - r;
+      vals.push(conv[r]);
+    }
+    const moy = vals.reduce((a,b)=>a+b,0) / vals.length;
+    scores[lettreMap[dimNom]] = Math.round(moy * 10) / 10;
+  }
+  return scores;
+}
 
-  <section class="screen" id="screen-magic">
-    <div class="identif-wrap">
-      <div class="identif-card">
-        <div class="identif-kicker">Accès au test</div>
-        <h2 class="identif-title">Entrez votre code d'accès</h2>
-        <p class="identif-sub">Votre code vous a été communiqué par votre entreprise. Il vous donne accès à votre test personnalisé.</p>
-        <label class="identif-label">Code d'accès</label>
-        <input class="identif-input identif-code-input" id="magic-input" type="text" placeholder="Ex : CHIESI-MGR-2026" autocomplete="off" autocapitalize="characters" />
-        <div class="identif-error" id="magic-error"></div>
-        <button class="btn-primary identif-btn" id="magic-submit">Valider mon accès</button>
-        <button class="btn-ghost identif-resume" id="magic-back">Revenir en arrière</button>
-      </div>
-    </div>
-  </section>
+function calculerAffinites(scoresBf) {
+  const profils = SINEA_DATA.profils;
+  const noms = Object.keys(profils);
+  const maxDist = Math.sqrt(DIMS.reduce((s,d)=> s + Math.pow(POIDS_DIM[d]*100,2), 0));
+  const aff = {};
+  for (const nom of noms) {
+    let sumSq = 0;
+    for (const d of DIMS) {
+      const diff = (profils[nom][d] - scoresBf[d]) * POIDS_DIM[d];
+      sumSq += diff*diff;
+    }
+    const dist = Math.sqrt(sumSq);
+    aff[nom] = Math.round((100 * (1 - dist/maxDist)) * 100) / 100;
+  }
+  return aff;
+}
 
-  <button id="dev-autofill" style="display:none;position:fixed;bottom:16px;right:16px;z-index:9999;background:#1A1A1A;color:#fff;border:none;border-radius:30px;padding:12px 18px;font-family:sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.3);" onclick="App.autoFill()">⚡ Remplir auto (test)</button>
+// id court -> nom complet
+const ID_TO_NOM = {};
+for (const [id, p] of Object.entries(SINEA_DATA.personnages)) ID_TO_NOM[id] = p.nom;
 
-  <section class="screen" id="screen-connexion">
-    <div class="identif-wrap">
-      <div class="identif-card">
-        <div class="identif-kicker">Connexion</div>
-        <h2 class="identif-title">Accéder à mon espace</h2>
-        <p class="identif-sub">Entrez votre email. Nous vous envoyons un code de connexion sécurisé.</p>
-        <label class="identif-label">Email</label>
-        <input class="identif-input" id="cx-email" type="email" placeholder="vous@entreprise.com" autocomplete="email" />
-        <div class="identif-error" id="cx-error"></div>
-        <button class="btn-primary identif-btn" id="cx-submit">Recevoir mon code</button>
-        <button class="btn-ghost identif-resume" onclick="App.goToCover()">Retour</button>
-      </div>
-    </div>
-  </section>
+function calculerPointsSinea(repSinea) {
+  const points = {};
+  for (const nom of Object.values(ID_TO_NOM)) points[nom] = 0;
 
-  <section class="screen" id="screen-code">
-    <div class="identif-wrap">
-      <div class="identif-card">
-        <div class="identif-kicker">Connexion sécurisée</div>
-        <h2 class="identif-title">Entrez votre code</h2>
-        <p class="identif-sub">Nous avons envoyé un code à 6 chiffres à <span id="code-email-rappel" style="font-weight:600;"></span>. Vérifiez votre boîte mail.</p>
-        <input class="identif-input code-input" id="code-saisie" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
-        <div class="identif-error" id="code-error"></div>
-        <button class="btn-primary identif-btn" id="code-submit">Me connecter</button>
-        <button class="btn-ghost identif-resume" id="code-resend">Renvoyer un code</button>
-      </div>
-    </div>
-  </section>
+  // indexer toutes les questions
+  const questions = {};
+  for (const qs of Object.values(SINEA_DATA.sinea_famille)) for (const q of qs) questions[q.id]=q;
+  for (const q of SINEA_DATA.sinea_hybride) questions[q.id]=q;
+  for (const q of SINEA_DATA.sinea_transversales) questions[q.id]=q;
+  if (SINEA_DATA.sinea_repartitions) { for (const qr of SINEA_DATA.sinea_repartitions) questions[qr.id]=qr; }
+  else if (SINEA_DATA.sinea_repartition) { questions[SINEA_DATA.sinea_repartition.id]=SINEA_DATA.sinea_repartition; }
 
-  <section class="screen" id="screen-espace">
-    <div class="espace-wrap">
-      <div class="espace-hero" id="espace-hero">
-        <div class="espace-hero-txt">
-          <div class="espace-hi">Votre espace personnel</div>
-          <div class="espace-name" id="espace-name">Bonjour</div>
-          <div class="espace-arch" id="espace-arch"></div>
-          <div class="espace-accueil" id="espace-accueil"></div>
-        </div>
-        <div class="espace-hero-perso" id="espace-hero-perso"></div>
-      </div>
-      <div class="espace-prog-globale" id="espace-prog-globale"></div>
-      <div id="espace-resultats"></div>
-      <div id="espace-cards"></div>
-      <div class="espace-compat" id="espace-compat" style="display:none;">
-        <div class="espace-section-titre">Vos compatibilités d'équipe</div>
-        <div class="r-compat-grid" id="espace-compat-grid"></div>
-      </div>
-      <div class="espace-signature">
-        <div class="espace-signature-logo">Sinéa</div>
-        <div class="espace-signature-tag">Votre espace évolue avec vous. Revenez quand vous le souhaitez, avec votre email.</div>
-      </div>
-    </div>
-  </section>
+  for (const [qid, rep] of Object.entries(repSinea)) {
+    const q = questions[qid];
+    const fmt = q.format || 'qcm';
+    if (fmt === 'qcm') {
+      const opt = q.options[rep];
+      for (const [pid, pts] of Object.entries(opt.ponderation)) points[ID_TO_NOM[pid]] += pts;
+    } else if (fmt === 'curseur') {
+      const pos = parseFloat(rep);
+      const pmax = q.points_max || POINTS_REF;
+      points[ID_TO_NOM[q.pole_gauche.perso]] += pmax * (1 - pos/100);
+      points[ID_TO_NOM[q.pole_droit.perso]] += pmax * (pos/100);
+    } else if (fmt === 'repartition') {
+      const total = q.points_total || 10;
+      for (const axe of q.axes) {
+        const ptsFam = rep[axe.famille] || 0;
+        if (ptsFam <= 0) continue;
+        const ptsNorm = (ptsFam/total) * POINTS_REF;
+        for (const pid of axe.repartit_sur) points[ID_TO_NOM[pid]] += ptsNorm / axe.repartit_sur.length;
+      }
+    }
+  }
+  return points;
+}
 
-  <section class="screen" id="screen-question">
-    <div class="q-screen">
-      <aside class="q-aside">
-        <div class="q-aside-halo"></div>
-        <div class="q-aside-in">
-          <div class="q-aside-logo">Sinéa</div>
-          <div class="q-aside-chap" id="q-aside-chap">Votre personnalité</div>
-          <div class="q-aside-step" id="q-aside-step">Étape 1 sur 3</div>
-          <div class="q-aside-note">Répondez spontanément. Il n'y a pas de bonne ou de mauvaise réponse, seulement la vôtre.</div>
-        </div>
-      </aside>
-      <div class="q-main">
-        <div class="q-top">
-          <div class="q-progress-head">
-            <span class="q-step" id="q-step">Question 1 / 45</span>
-          </div>
-          <div class="q-bar"><div class="q-bar-fill" id="q-bar-fill"></div></div>
-        </div>
-        <div class="q-card-wrap">
-          <div id="q-card"></div>
-        </div>
-        <div class="q-nav">
-          <button class="btn-ghost" id="btn-prev" onclick="App.prev()">Retour</button>
-          <button class="btn-primary" id="btn-next" onclick="App.next()" disabled>Continuer</button>
-        </div>
-      </div>
-    </div>
-  </section>
+function calculerResultat(scoresBf, affinites, pointsSinea) {
+  const profils = SINEA_DATA.profils;
+  const familles = SINEA_DATA.familles;
+  const noms = Object.keys(profils);
 
-  <!-- ÉCRAN 3 : LOADER -->
-  <section class="screen" id="screen-loader">
-    <div class="loader"><div class="loader-content">
-      <div class="loader-ring"></div>
-      <h2>Nous composons votre portrait</h2>
-      <p>Analyse de vos 45 réponses...</p>
-    </div></div>
-  </section>
+  const maxPts = Math.max(...Object.values(pointsSinea), 1);
+  const bonus = {};
+  for (const nom of noms) {
+    const ratio = pointsSinea[nom] / maxPts;
+    bonus[nom] = Math.pow(ratio, 1.8) * BONUS_SINEA_MAX;
+  }
+  const score = {};
+  for (const nom of noms) score[nom] = affinites[nom] + bonus[nom];
 
-  <!-- ÉCRAN 4 : RÉSULTAT -->
-  <section class="screen" id="screen-reveal">
-    <div class="reveal-wrap">
-      <div class="reveal-pattern"></div>
-      <canvas class="reveal-particles" id="reveal-particles"></canvas>
-      <div class="reveal-content">
-        <div class="reveal-intro" id="reveal-intro">Votre portrait se révèle</div>
-        <div class="reveal-perso" id="reveal-perso"><div class="reveal-halo"></div><img id="reveal-img" src="" alt="" /></div>
-        <div class="reveal-nom" id="reveal-nom"></div>
-        <div class="reveal-famille" id="reveal-famille"></div>
-        <button class="reveal-cta" id="reveal-cta">Découvrir mon portrait complet</button>
-      </div>
-    </div>
-  </section>
+  const classement = [...noms].sort((a,b)=> score[b]-score[a]);
+  const dominante = classement[0];
+  const secondaires = [classement[1], classement[2]];
 
-  <section class="screen" id="screen-result">
-    <div class="r-screen" id="phone-scroll">
-      <div class="r-hero" id="r-hero"><div class="r-hero-in">
-        <div class="r-kicker" id="r-kicker">Votre archétype</div>
-        <div class="r-archetype" id="r-archetype"></div>
-        <div class="r-verb" id="r-verb"></div>
-      </div></div>
-      <div class="r-portrait"><img id="r-portrait-img" src="" alt=""></div>
-      <div class="r-body" id="r-body"></div>
-    </div>
-  </section>
+  // radar familles
+  const radarBrut = {};
+  for (const fam of ['RELATION','ACTION','STRUCTURE','VISION']) {
+    const membres = noms.filter(n=> familles[n]===fam);
+    radarBrut[fam] = membres.reduce((s,n)=> s+score[n],0)/membres.length;
+  }
+  const rmax = Math.max(...Object.values(radarBrut)), rmin = Math.min(...Object.values(radarBrut));
+  const radar = {};
+  for (const [f,v] of Object.entries(radarBrut)) radar[f] = rmax>rmin ? Math.round((v-rmin)/(rmax-rmin)*100) : 50;
 
-</div>
+  // blend sur écarts (4e comme plancher)
+  const top4 = classement.slice(0,4).map(c=>score[c]);
+  const plancher = top4[3] || 0;
+  const ecarts = [0,1,2].map(i=> Math.max(score[classement[i]]-plancher, 0.1));
+  const totalEc = ecarts.reduce((a,b)=>a+b,0);
+  const blend = {};
+  [0,1,2].forEach(i=> blend[classement[i]] = Math.round(ecarts[i]/totalEc*100));
 
-<script src="sinea_data.js"></script>
-<script src="engine.js"></script>
-<script src="result.js"></script>
-<script src="controller.js"></script>
-</body>
-</html>
+  return {
+    dominante: {nom: dominante, famille: familles[dominante], score: Math.round(score[dominante]*10)/10},
+    secondaires: secondaires.map(s=>({nom:s, famille:familles[s], score: Math.round(score[s]*10)/10})),
+    radarFamilles: radar,
+    scoresBigFive: scoresBf,
+    blend: blend,
+    classement: classement.map(n=>({nom:n, score: Math.round(score[n]*10)/10, famille: familles[n]}))
+  };
+}
+
+function scorer(repMini, repSinea) {
+  const scoresBf = scorerBigFive(repMini);
+  const aff = calculerAffinites(scoresBf);
+  const pts = calculerPointsSinea(repSinea);
+  return calculerResultat(scoresBf, aff, pts);
+}
+
+// ---- Dimensions contextuelles (profil dominant par dimension) ----
+function scorerContextuel(repCtx) {
+  // repCtx = { CTX_STRESS_01: indexOption, ... }
+  const data = SINEA_DATA.contextuelles;
+  if (!data) return {};
+  const parDim = {};
+  const qById = {};
+  data.questions.forEach(q => { qById[q.id] = q; });
+  for (const [qid, repIdx] of Object.entries(repCtx)) {
+    const q = qById[qid];
+    if (!q) continue;
+    const profil = q.options[repIdx]?.profil;
+    if (!profil) continue;
+    if (!parDim[q.dimension]) parDim[q.dimension] = {};
+    parDim[q.dimension][profil] = (parDim[q.dimension][profil] || 0) + 1;
+  }
+  // profil dominant de chaque dimension
+  const res = {};
+  for (const [dim, compte] of Object.entries(parDim)) {
+    res[dim] = Object.entries(compte).sort((a,b)=>b[1]-a[1])[0][0];
+  }
+  return res;
+}
+
+// ---- Dimensions spé (management ou commercial) ----
+function scorerSpeDims(repSpe, type) {
+  const bloc = type === 'manager' ? SINEA_DATA.spe_management : (type === 'commercial' ? SINEA_DATA.spe_commercial : null);
+  if (!bloc) return {};
+  const parDim = {};
+  const qById = {};
+  (bloc.dimensions.questions || []).forEach(q => { qById[q.id] = q; });
+  for (const [qid, repIdx] of Object.entries(repSpe)) {
+    const q = qById[qid];
+    if (!q) continue;
+    const profil = q.options[repIdx]?.profil;
+    if (!profil) continue;
+    if (!parDim[q.dimension]) parDim[q.dimension] = {};
+    parDim[q.dimension][profil] = (parDim[q.dimension][profil] || 0) + 1;
+  }
+  const res = {};
+  for (const [dim, compte] of Object.entries(parDim)) {
+    res[dim] = Object.entries(compte).sort((a,b)=>b[1]-a[1])[0][0];
+  }
+  return res;
+}
+
+// ---- Style spé dominant (Goleman ou Challenger) à partir des QCM spé ----
+function scorerSpeStyle(repSpeQcm, type) {
+  const bloc = type === 'manager' ? SINEA_DATA.spe_management?.goleman : (type === 'commercial' ? SINEA_DATA.spe_commercial?.challenger : null);
+  if (!bloc) return null;
+  const qById = {};
+  (bloc.questions || []).forEach(q => { qById[q.id] = q; });
+  const scores = {};
+  const add = (st, pts) => { if (st) scores[st] = (scores[st] || 0) + pts; };
+  for (const [qid, rep] of Object.entries(repSpeQcm)) {
+    const q = qById[qid];
+    if (!q) continue;
+    const fmt = q.format || 'qcm';
+    if (fmt === 'qcm') {
+      const opt = (q.options || [])[rep];
+      if (opt && opt.styles) for (const [st, pts] of Object.entries(opt.styles)) add(st, pts);
+    } else if (fmt === 'curseur') {
+      // position 0-100 : répartit points_max entre pôle gauche et droit
+      const pos = parseFloat(rep);
+      if (!isNaN(pos) && q.pole_gauche && q.pole_droit) {
+        const pmax = q.points_max || 3;
+        add(q.pole_gauche.style, pmax * (1 - pos / 100));
+        add(q.pole_droit.style, pmax * (pos / 100));
+      }
+    } else if (fmt === 'repartition') {
+      // rep = { styleOuIndex: points } ; on relie chaque axe à son style
+      if (rep && typeof rep === 'object' && q.axes) {
+        q.axes.forEach((axe, i) => {
+          const pts = rep[axe.style] ?? rep[i] ?? 0;
+          if (pts > 0) add(axe.style, pts);
+        });
+      }
+    }
+  }
+  const classement = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  return classement.length ? classement[0][0] : null;
+}
+
+// Retourne les scores détaillés par style (pour les visuels radar/jauges)
+function scorerSpeStyleScores(repSpeQcm, type) {
+  const bloc = type === 'manager' ? SINEA_DATA.spe_management?.goleman : (type === 'commercial' ? SINEA_DATA.spe_commercial?.challenger : null);
+  if (!bloc) return {};
+  const qById = {};
+  (bloc.questions || []).forEach(q => { qById[q.id] = q; });
+  const scores = {};
+  const add = (st, pts) => { if (st) scores[st] = (scores[st] || 0) + pts; };
+  for (const [qid, rep] of Object.entries(repSpeQcm)) {
+    const q = qById[qid];
+    if (!q) continue;
+    const fmt = q.format || 'qcm';
+    if (fmt === 'qcm') {
+      const opt = (q.options || [])[rep];
+      if (opt && opt.styles) for (const [st, pts] of Object.entries(opt.styles)) add(st, pts);
+    } else if (fmt === 'curseur') {
+      const pos = parseFloat(rep);
+      if (!isNaN(pos) && q.pole_gauche && q.pole_droit) {
+        const pmax = q.points_max || 3;
+        add(q.pole_gauche.style, pmax * (1 - pos / 100));
+        add(q.pole_droit.style, pmax * (pos / 100));
+      }
+    } else if (fmt === 'repartition') {
+      if (rep && typeof rep === 'object' && q.axes) {
+        q.axes.forEach((axe, i) => {
+          const pts = rep[axe.style] ?? rep[i] ?? 0;
+          if (pts > 0) add(axe.style, pts);
+        });
+      }
+    }
+  }
+  return scores;
+}
+
+// ---- Naturel vs adapté (coût d'adaptation au travail) ----
+function scorerNaturelAdapte(repMini, repAdapte) {
+  // Naturel : scores Big Five issus du mini-IPIP (déjà sur 0-100)
+  const naturel = scorerBigFive(repMini);
+  // Adapté : 1 question par dimension (échelle 1-4 -> 0-100)
+  const conv = {1:0.0, 2:33.333, 3:66.667, 4:100.0};
+  const map = { ADP_E:'E', ADP_A:'A', ADP_C:'C', ADP_N:'N', ADP_O:'O' };
+  const adapte = {};
+  for (const [qid, lettre] of Object.entries(map)) {
+    if (repAdapte[qid] !== undefined) adapte[lettre] = Math.round((conv[repAdapte[qid]]) * 10) / 10;
+  }
+  // Écart par dimension et coût global
+  const ecarts = {};
+  let sommeEcart = 0, n = 0;
+  for (const d of ['E','A','C','N','O']) {
+    if (adapte[d] !== undefined && naturel[d] !== undefined) {
+      ecarts[d] = Math.round((adapte[d] - naturel[d]) * 10) / 10;
+      sommeEcart += Math.abs(ecarts[d]); n++;
+    }
+  }
+  const moyenne = n ? sommeEcart / n : 0;
+  let cout = 'faible';
+  if (moyenne >= 33) cout = 'élevé';
+  else if (moyenne >= 18) cout = 'modéré';
+  return { naturel, adapte, ecarts, cout, moyenneEcart: Math.round(moyenne * 10) / 10 };
+}
+
+// Export
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte };
+
