@@ -592,6 +592,7 @@ const Result = (() => {
         </div>
         <div class="r-carte-preview" id="carte-preview"></div>
         <button class="r-carte-btn" id="carte-share-btn">Télécharger ma carte</button>
+        <button class="r-carte-btn r-pdf-btn" id="portrait-pdf-btn" onclick="Result.telechargerPortrait()" style="display:none;margin-top:10px;background:#1A1A2E">Télécharger mon portrait complet (PDF)</button>
       </div>
 
       <div class="r-chat-bloc" id="chat-bloc">
@@ -658,6 +659,39 @@ const Result = (() => {
   // LE CHAT AVEC SON ARCHÉTYPE
   // ============================================================
   const CHAT_URL = "https://sinea-profile-ia.vercel.app/api/chat";
+  const PDF_URL = "https://sinea-profile-ia.vercel.app/api/pdf_portrait";
+
+  // ----- Portrait PDF premium (visible si un token individuel est présent dans l'URL) -----
+  function lireToken(){
+    try { return new URLSearchParams(location.search).get('token') || null; } catch(e){ return null; }
+  }
+  function initPortraitPdf(){
+    const btn = document.getElementById('portrait-pdf-btn');
+    if (btn && lireToken()) btn.style.display = '';
+  }
+  async function telechargerPortrait(){
+    const btn = document.getElementById('portrait-pdf-btn');
+    const token = lireToken();
+    if (!token || !btn) return;
+    const texte = btn.textContent;
+    btn.textContent = 'Génération de votre portrait…';
+    btn.disabled = true;
+    try {
+      const rep = await fetch(PDF_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) });
+      if (!rep.ok) throw new Error('génération indisponible');
+      const blob = await rep.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'Portrait_Sinea.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      btn.textContent = 'Portrait téléchargé ✓';
+      setTimeout(()=>{ btn.textContent = texte; btn.disabled = false; }, 3500);
+    } catch(e){
+      btn.textContent = 'Réessayer le téléchargement';
+      btn.disabled = false;
+    }
+  }
   let chatHistorique = [];
 
   const QUESTIONS_SUGGEREES = [
@@ -1182,6 +1216,7 @@ const Result = (() => {
   }
 
   async function generateIA(res){
+    initPortraitPdf();
     const dom=res.dominante;
     const dc=contenu(dom.nom);
     const sec=res.secondaires.map(s=>s.nom).join(' et ');
@@ -1533,7 +1568,7 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
+  return { telechargerPortrait, render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

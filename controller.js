@@ -16,6 +16,8 @@ const App = (() => {
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
   let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
   let magicCode = '';       // magic code de campagne saisi par la personne (pour consommer le quota à la fin)
+  let nomCampagne = '';     // nom de la campagne (renvoyé par la vérification du code, écrit sur le répondant)
+  let estAjoutModule = false; // true si ce parcours est un module ajouté sur un socle existant (ne re-consomme pas le quota)
 
   // ---- Sauvegarde de progression (localStorage + serveur Airtable) ----
   // Protège contre la perte de réponses si l'onglet se ferme pendant le test.
@@ -49,6 +51,7 @@ const App = (() => {
           nom: identite.nom,
           answers, idx, diagType,
           droits: droits,
+          campagne: nomCampagne,
         }),
       }).catch(() => {}); // silencieux : ne bloque jamais l'expérience
     }, 2000);
@@ -137,7 +140,7 @@ const App = (() => {
     fetch(ENREGISTRER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, profil, resultatComplet: result }),
+      body: JSON.stringify({ token, profil, resultatComplet: result, campagne: nomCampagne }),
     }).catch(() => {}); // silencieux : ne bloque pas l'expérience
   }
 
@@ -402,14 +405,20 @@ const App = (() => {
         if (submit) submit.disabled = false;
         if (data && data.ok) {
           magicCode = code;
+          nomCampagne = data.campagne || '';
           droits = data.type || 'classic';
           err.textContent = '';
           document.getElementById('screen-magic').classList.remove('active');
           if (data.ajout_module && data.deja_socle) {
             // la personne a déjà le socle : on lance directement le module (pas de re-socle)
+            estAjoutModule = true;
             diagType = data.type;
             commencerModule(data.type);
           } else {
+            // parcours en deux étapes : le socle d'abord (start force diagType=classic),
+            // le module manager/commercial se débloque ensuite (droits = data.type).
+            estAjoutModule = false;
+            droits = data.type || 'classic';
             start();
           }
         } else {
@@ -906,8 +915,10 @@ const App = (() => {
   }
 
   function start() {
-    // Le premier parcours est TOUJOURS le socle. Le type d'URL définit les DROITS (modules débloqués ensuite).
-    droits = readDiagType(); // 'manager', 'commercial' ou 'classic'
+    // Le premier parcours est TOUJOURS le socle. Le type définit les DROITS (modules débloqués ensuite).
+    // Le droit accordé par le magic code fait foi ; l'URL (?type=...) ne sert
+    // que de repli pour les anciens liens directs sans code.
+    if (!droits || droits === 'classic') droits = readDiagType();
     diagType = 'classic';    // on fait le socle
     queue = buildQueue();    // socle + contexte uniquement (le spé ne s'ajoute pas car diagType='classic')
     idx = 0;
@@ -1525,8 +1536,13 @@ const App = (() => {
         };
         // on sauvegarde d'abord le profil ; le contenu IA sera complété par result.js quand il arrive
         sauverAnalyse(typeAnalyse, { contenu: null, profil: profilLeger });
-        // consommer une utilisation du magic code (le quota se décompte à la génération de l'analyse)
-        if (magicCode && typeAnalyse === 'socle') { consommerMagicCode(); }
+        // consommer une utilisation du magic code à la fin du parcours,
+        // quel que soit le type de campagne (classic, manager, commercial).
+        // Règle : le quota compte des PERSONNES. Un module ajouté sur un socle
+        // existant (parcours en deux étapes) ne re-consomme pas.
+        // On vide le code après usage pour garantir une seule consommation.
+        if (magicCode && !estAjoutModule) { consommerMagicCode(); }
+        magicCode = '';
       } catch (e) {}
 
       clearInterval(msgTimer);

@@ -252,11 +252,24 @@
 
   /* FICHE APPRENANT (modale) */
   .membre-clic{cursor:pointer;}
+  /* ===== Sélection par équipe ===== */
+  .membre{position:relative;}
+  .membre-corps{display:flex;align-items:center;gap:13px;flex:1;min-width:0;cursor:pointer;}
+  .membre-check{display:flex;align-items:center;flex-shrink:0;cursor:pointer;padding:4px;margin:-4px;}
+  .membre-check input{width:17px;height:17px;accent-color:var(--c-violet);cursor:pointer;}
+  .membre-exclu{opacity:0.42;background:#FAFAF8;}
+  .membre-exclu .membre-corps{filter:grayscale(0.6);}
+  .sel-bar{display:flex;align-items:center;gap:10px;margin:2px 0 14px;flex-wrap:wrap;}
+  .sel-count{font-size:12.5px;font-weight:800;color:var(--c-violet);background:rgba(94,89,199,0.08);padding:5px 11px;border-radius:99px;}
+  .sel-btn{border:1px solid var(--c-border);background:#fff;border-radius:99px;padding:5px 12px;font-family:inherit;font-size:12px;font-weight:700;color:var(--c-dark);cursor:pointer;transition:all 0.15s;}
+  .sel-btn:hover{border-color:var(--c-violet);color:var(--c-violet);}
   .membre-fleche{margin-left:auto;color:var(--c-medium-grey);font-size:20px;}
   .fm-overlay{position:fixed;inset:0;background:rgba(15,18,50,0.55);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
   .fm-card{position:relative;background:#fff;border-radius:22px;padding:30px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 90px rgba(0,0,0,0.35);}
   .fm-close{position:absolute;top:16px;right:18px;background:#F3F0FA;border:none;width:34px;height:34px;border-radius:50%;font-size:20px;color:var(--c-grey);cursor:pointer;line-height:1;}
   .fm-head{display:flex;align-items:center;gap:16px;margin-bottom:22px;}
+  .fm-pdf-btn{border:none;background:var(--c-dark);color:#fff;border-radius:11px;padding:10px 16px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;flex-shrink:0;transition:opacity 0.15s;margin-right:34px;}
+  .fm-pdf-btn:hover{opacity:0.85;} .fm-pdf-btn:disabled{opacity:0.55;cursor:default;}
   .fm-nom{font-size:20px;font-weight:800;letter-spacing:-0.01em;}
   .fm-arch{font-size:13.5px;font-weight:700;}
   .fm-section{margin-bottom:20px;padding-top:18px;border-top:1px solid var(--c-border);}
@@ -343,6 +356,7 @@
   const BACKEND = "https://sinea-profile-ia.vercel.app/api/dashboard";
   const ANALYSE_URL = "https://sinea-profile-ia.vercel.app/api/analyse_equipe";
   let cleAcces = "";
+  let codeCampagneCourant = "";
   let charts = {};
   let codeCampagneActuelle = "";
 
@@ -1136,7 +1150,8 @@ function axesFormation(membres, famillesStats){
           <button class="fm-close" onclick="fermerMembre()">×</button>
           <div class="fm-head">
             <div class="membre-ava" style="background:${col};width:56px;height:56px;font-size:20px;border-radius:15px">${esc(initiales(m.nom))}</div>
-            <div><div class="fm-nom">${esc(m.nom||'')}</div><div class="fm-arch" style="color:${col}">${esc(m.dominante||'')} · ${esc(FAM_LABELS[f]||f)}</div></div>
+            <div style="flex:1"><div class="fm-nom">${esc(m.nom||'')}</div><div class="fm-arch" style="color:${col}">${esc(m.dominante||'')} · ${esc(FAM_LABELS[f]||f)}</div></div>
+            ${m.email ? `<button class="fm-pdf-btn" id="fm-pdf-btn" onclick="telechargerPortraitMembre(${idx})">Portrait PDF</button>` : ''}
           </div>
           <div class="fm-section"><div class="fm-section-titre">Comment le manager</div>${mgrHtml}</div>
           ${fiabHtml}
@@ -1151,6 +1166,28 @@ function axesFormation(membres, famillesStats){
     document.body.appendChild(div);
   }
   function fermerMembre(){ const d=document.getElementById('fiche-membre'); if(d) d.remove(); }
+
+  const PDF_PORTRAIT_URL = "https://sinea-profile-ia.vercel.app/api/pdf_portrait";
+  async function telechargerPortraitMembre(idx){
+    const m = repsCourants[idx];
+    const btn = document.getElementById('fm-pdf-btn');
+    if(!m || !m.email || !btn) return;
+    const texte = btn.textContent;
+    btn.textContent = 'Génération…'; btn.disabled = true;
+    try{
+      const rep = await fetch(PDF_PORTRAIT_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cle: cleAcces, email: m.email }) });
+      if(!rep.ok) throw new Error('indisponible');
+      const blob = await rep.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'Portrait_' + (m.nom||'membre').replace(/\s+/g,'_') + '.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      btn.textContent = 'Téléchargé ✓';
+      setTimeout(()=>{ btn.textContent = texte; btn.disabled = false; }, 3000);
+    }catch(e){
+      btn.textContent = 'Réessayer'; btn.disabled = false;
+    }
+  }
 
 
   function detruireCharts(){ for(const k in charts){ try{charts[k].destroy();}catch(e){} } charts={}; }
@@ -1226,6 +1263,7 @@ function axesFormation(membres, famillesStats){
 
   // ====== VUE CAMPAGNE (waouh) ======
   function ouvrirCampagne(code){
+    codeCampagneCourant = code;
     codeCampagneActuelle = code;
     detruireCharts();
     const content=document.getElementById('content');
@@ -1235,12 +1273,44 @@ function axesFormation(membres, famillesStats){
       .catch(()=>{ content.innerHTML=`<div class="empty">Erreur de chargement. <a onclick="rechargerEnsemble()" style="color:var(--c-purple-text);cursor:pointer">Retour</a></div>`; });
   }
 
+  // ===== Sélection par équipe : la RH coche/décoche des membres pour une vue filtrée =====
+  let campagneData = null;        // données complètes reçues du backend
+  let selectionEquipe = null;     // Set des indices (dans data.repondants) des membres inclus dans la vue
+  function indicesTermines(repsTous){
+    const out=[]; (repsTous||[]).forEach((r,i)=>{ if(String(r.statut||'').toLowerCase().startsWith('termin')) out.push(i); });
+    return out;
+  }
+  function toggleMembre(i){
+    if(!selectionEquipe) return;
+    if(selectionEquipe.has(i)) selectionEquipe.delete(i); else selectionEquipe.add(i);
+    renderCampagneVue();
+  }
+  function selectionTous(){ selectionEquipe = new Set(indicesTermines((campagneData||{}).repondants)); renderCampagneVue(); }
+  function selectionAucun(){ selectionEquipe = new Set(); renderCampagneVue(); }
+
   function afficherCampagne(data){
+    campagneData = data;
+    selectionEquipe = null; // nouvelle campagne : tout le monde est sélectionné
+    renderCampagneVue();
+  }
+
+  function renderCampagneVue(){
+    const data = campagneData || {};
     detruireCharts();
-    const camp=data.campagne||{}; const stats=data.stats||{}; const reps=data.repondants||[];
+    const camp=data.campagne||{}; const repsTous=data.repondants||[];
+    const idxTerm = indicesTermines(repsTous);
+    if(selectionEquipe===null) selectionEquipe = new Set(idxTerm);
+    const filtreActif = selectionEquipe.size < idxTerm.length;
+    // les calculs de la vue portent sur la sélection ; la liste des membres montre tout le monde
+    const reps = repsTous.filter((r,i)=> selectionEquipe.has(i));
+    // stats recalculées sur la sélection (familles, terminés)
+    const statsBack = data.stats||{};
+    const famSel = {RELATION:0,ACTION:0,STRUCTURE:0,VISION:0};
+    reps.forEach(r=>{ const f=(r.famille||'').toUpperCase(); if(famSel[f]!==undefined) famSel[f]++; });
+    const stats = { total: statsBack.total||0, termines: reps.length, familles: famSel };
     const fams=stats.familles||{}; const totF=FAM_ORDER.reduce((s,f)=>s+(fams[f]||0),0)||1;
     const termines=stats.termines||0; const total=stats.total||0;
-    const pctComplet=total?Math.round(termines/total*100):0;
+    const pctComplet=total?Math.round((statsBack.termines||0)/total*100):0;
     // famille dominante
     let famDom='RELATION',famMax=-1; FAM_ORDER.forEach(f=>{if((fams[f]||0)>famMax){famMax=fams[f]||0;famDom=f;}});
     const type=(camp.type||'classic').toLowerCase();
@@ -1251,9 +1321,9 @@ function axesFormation(membres, famillesStats){
       <div class="camp-hero">
         <div class="camp-hero-kicker">${esc(camp.entreprise||'')} · ${esc(type)}</div>
         <div class="camp-hero-title">${esc(camp.nom||'')}</div>
-        <div class="camp-hero-sub">Photographie de l'équipe à partir de ${termines} profil${termines>1?'s':''} analysé${termines>1?'s':''}.</div>
+        <div class="camp-hero-sub">${filtreActif ? `Vue d'équipe filtrée : ${termines} profil${termines>1?'s':''} sélectionné${termines>1?'s':''} sur ${idxTerm.length}.` : `Photographie de l'équipe à partir de ${termines} profil${termines>1?'s':''} analysé${termines>1?'s':''}.`}</div>
         <div class="camp-hero-kpis">
-          <div><div class="kpi-big-num">${termines}</div><div class="kpi-big-lab">Profils analysés</div></div>
+          <div><div class="kpi-big-num">${termines}</div><div class="kpi-big-lab">${filtreActif?'Profils sélectionnés':'Profils analysés'}</div></div>
           <div><div class="kpi-big-num">${pctComplet}%</div><div class="kpi-big-lab">Taux de complétion</div></div>
           <div><div class="kpi-big-num" style="color:${FAM_COLORS[famDom]}">${FAM_LABELS[famDom]}</div><div class="kpi-big-lab">Famille dominante</div></div>
           <div><div class="kpi-big-num">${camp.quota||'∞'}</div><div class="kpi-big-lab">Quota de la campagne</div></div>
@@ -1496,30 +1566,36 @@ function axesFormation(membres, famillesStats){
       </div>`;
     }
 
-    // Membres
+    // Membres (tous les terminés, avec case à cocher pour composer la vue d'équipe)
     html += `<div class="panel" style="margin-bottom:20px">
       <div class="panel-title">Les membres de l'équipe</div>
-      <div class="panel-sub">${termines} personne${termines>1?'s':''} ayant complété leur profil.</div>
+      <div class="panel-sub">Cochez les membres à inclure dans la vue (par équipe, par service, par manager). Toutes les analyses de la page se recalculent sur la sélection.</div>
+      <div class="sel-bar">
+        <span class="sel-count">${selectionEquipe.size}/${idxTerm.length} sélectionné${selectionEquipe.size>1?'s':''}</span>
+        <button class="sel-btn" onclick="selectionTous()">Tout cocher</button>
+        <button class="sel-btn" onclick="selectionAucun()">Tout décocher</button>
+      </div>
       <div class="membres-grid">`;
-    repsCourants = reps;
-    for(let ri=0; ri<reps.length; ri++){
-      const r = reps[ri];
+    repsCourants = repsTous;
+    for(let ri=0; ri<repsTous.length; ri++){
+      const r = repsTous[ri];
       if(!String(r.statut||'').toLowerCase().startsWith('termin')) continue;
       const f=(r.famille||'').toUpperCase(); const col=FAM_COLORS[f]||'#999';
-      html += `<div class="membre membre-clic" onclick="ouvrirMembre(${ri})"><div class="membre-ava" style="background:${col}">${esc(initiales(r.nom))}</div><div class="membre-info"><div class="membre-nom">${esc(r.nom||'')}</div><div class="membre-arch">${esc(r.dominante||'')}</div></div><span class="membre-fleche">›</span></div>`;
+      const coche = selectionEquipe.has(ri);
+      html += `<div class="membre membre-clic ${coche?'':'membre-exclu'}"><label class="membre-check" onclick="event.stopPropagation()"><input type="checkbox" ${coche?'checked':''} onchange="toggleMembre(${ri})"></label><div class="membre-corps" onclick="ouvrirMembre(${ri})"><div class="membre-ava" style="background:${col}">${esc(initiales(r.nom))}</div><div class="membre-info"><div class="membre-nom">${esc(r.nom||'')}</div><div class="membre-arch">${esc(r.dominante||'')}</div></div><span class="membre-fleche">›</span></div></div>`;
     }
     html += `</div></div>`;
 
-    // Analyse stratégique IA (à venir, grisée)
-    if(termines>=2){
+    // Analyse stratégique IA
+    if(idxTerm.length>=2){
       html += `
       <div class="section-label">Aller plus loin</div>
-      <div class="analyse-cta analyse-cta-soon">
+      <div class="analyse-cta">
         <div>
-          <div class="analyse-cta-title">Approfondir avec l'analyse IA <span class="badge-soon">Bientôt disponible</span></div>
-          <div class="analyse-cta-sub">L'intelligence artificielle reliera les profils entre eux : synthèse narrative, dynamiques internes, plan d'action sur-mesure et conseil personnalisé par membre.</div>
+          <div class="analyse-cta-title">Approfondir avec l'analyse IA</div>
+          <div class="analyse-cta-sub">L'intelligence artificielle relie les profils entre eux : synthèse narrative, SWOT, dynamiques internes, risques RH, plan d'action et conseil personnalisé par membre.${filtreActif?` <b>L'analyse porte sur la campagne entière (${idxTerm.length} profils), indépendamment de la sélection ci-dessus.</b>`:''}</div>
         </div>
-        <button class="analyse-cta-btn" disabled>Générer l'analyse IA</button>
+        <button class="analyse-cta-btn" id="btn-analyse" onclick="genererAnalyse(codeCampagneCourant)">Générer l'analyse IA</button>
       </div>`;
     }
     html += `<div id="analyse-zone"></div>`;
@@ -1531,6 +1607,7 @@ function axesFormation(membres, famillesStats){
   }
 
   function dessinerGraphiques(stats, reps){
+    if(typeof Chart==='undefined') return; // CDN bloqué : la page reste fonctionnelle sans graphiques
     const fams=stats.familles||{};
     const famVals=FAM_ORDER.map(f=>fams[f]||0);
     const famCols=FAM_ORDER.map(f=>FAM_COLORS[f]);
