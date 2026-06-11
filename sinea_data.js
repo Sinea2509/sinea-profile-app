@@ -1,181 +1,194 @@
 const SINEA_DATA = {
   "mini_items": [
-    {
-      "id": "MINI_01",
-      "dimension": "extraversion",
-      "sens": "positif",
-      "texte": "Dans un événement professionnel, je vais facilement vers les autres et j'anime les échanges."
+  {
+    "id": "MINI_01",
+    "dimension": "extraversion",
+    "sens": "positif",
+    "texte": "Dans un groupe professionnel, je vais spontanément vers les autres."
+  },
+  {
+    "id": "MINI_02",
+    "dimension": "extraversion",
+    "sens": "positif",
+    "texte": "Prendre la parole devant plusieurs personnes me stimule plus que cela ne m'inquiète."
+  },
+  {
+    "id": "MINI_03",
+    "dimension": "extraversion",
+    "sens": "negatif",
+    "texte": "En réunion, je préfère observer plutôt que prendre la parole."
+  },
+  {
+    "id": "MINI_04",
+    "dimension": "agreabilite",
+    "sens": "positif",
+    "texte": "Je perçois vite ce que ressentent les personnes autour de moi."
+  },
+  {
+    "id": "MINI_05",
+    "dimension": "agreabilite",
+    "sens": "positif",
+    "texte": "Je cherche naturellement à rendre service, même sans qu'on me le demande."
+  },
+  {
+    "id": "MINI_06",
+    "dimension": "agreabilite",
+    "sens": "negatif",
+    "texte": "Les difficultés personnelles de mes collègues me touchent peu."
+  },
+  {
+    "id": "MINI_07",
+    "dimension": "conscience",
+    "sens": "positif",
+    "texte": "Quand une tâche m'incombe, je m'y attelle sans la repousser."
+  },
+  {
+    "id": "MINI_08",
+    "dimension": "conscience",
+    "sens": "positif",
+    "texte": "Je termine ce que je commence, même quand la motivation baisse."
+  },
+  {
+    "id": "MINI_09",
+    "dimension": "conscience",
+    "sens": "negatif",
+    "texte": "Il m'arrive de laisser traîner mes dossiers."
+  },
+  {
+    "id": "MINI_10",
+    "dimension": "neuroticisme",
+    "sens": "negatif",
+    "texte": "Même quand la pression monte, je reste posé."
+  },
+  {
+    "id": "MINI_11",
+    "dimension": "neuroticisme",
+    "sens": "negatif",
+    "texte": "Après une contrariété, je retrouve vite mon équilibre."
+  },
+  {
+    "id": "MINI_12",
+    "dimension": "neuroticisme",
+    "sens": "positif",
+    "texte": "Un imprévu suffit à me contrarier durablement."
+  },
+  {
+    "id": "MINI_13",
+    "dimension": "ouverture",
+    "sens": "positif",
+    "texte": "Les idées nouvelles et les approches originales me stimulent."
+  },
+  {
+    "id": "MINI_14",
+    "dimension": "ouverture",
+    "sens": "negatif",
+    "texte": "Les réflexions abstraites me laissent indifférent."
+  }
+],
+  "mini_choix_force": [
+  {
+    "id": "MINI_CF_E",
+    "dimension": "extraversion",
+    "format": "choix_force",
+    "a": {
+      "texte": "J'avance mieux en échangeant avec les autres",
+      "valeur": 4
     },
-    {
-      "id": "MINI_02",
-      "dimension": "agreabilite",
-      "sens": "positif",
-      "texte": "Je perçois rapidement ce que ressentent les personnes autour de moi."
-    },
-    {
-      "id": "MINI_03",
-      "dimension": "conscience",
-      "sens": "positif",
-      "texte": "Quand une tâche m'incombe, je m'y attelle sans la repousser."
-    },
-    {
-      "id": "MINI_04",
-      "dimension": "neuroticisme",
-      "sens": "positif",
-      "texte": "Mon humeur peut changer plusieurs fois dans une même journée de travail."
-    },
-    {
-      "id": "MINI_05",
-      "dimension": "ouverture",
-      "sens": "positif",
-      "texte": "Les idées originales et les concepts nouveaux stimulent mon esprit."
-    },
-    {
-      "id": "MINI_06",
-      "dimension": "extraversion",
-      "sens": "negatif",
-      "texte": "En réunion, je préfère observer et écouter plutôt que prendre la parole."
-    },
-    {
-      "id": "MINI_07",
-      "dimension": "agreabilite",
-      "sens": "negatif",
-      "texte": "Les difficultés personnelles de mes collègues me concernent peu."
-    },
-    {
-      "id": "MINI_08",
-      "dimension": "conscience",
-      "sens": "negatif",
-      "texte": "Il m'arrive souvent de laisser traîner mes dossiers et mes affaires."
-    },
-    {
-      "id": "MINI_09",
-      "dimension": "neuroticisme",
-      "sens": "negatif",
-      "texte": "Même quand la pression monte, je reste posé et serein."
-    },
-    {
-      "id": "MINI_10",
-      "dimension": "ouverture",
-      "sens": "negatif",
-      "texte": "Les réflexions théoriques ou abstraites me laissent indifférent."
-    },
-    {
-      "id": "MINI_11",
-      "dimension": "extraversion",
-      "sens": "positif",
-      "texte": "Lors d'un rassemblement, j'aime échanger avec un maximum de personnes différentes."
-    },
-    {
-      "id": "MINI_12",
-      "dimension": "agreabilite",
-      "sens": "positif",
-      "texte": "Je capte naturellement l'état émotionnel des personnes avec qui je travaille."
-    },
-    {
-      "id": "MINI_13",
-      "dimension": "conscience",
-      "sens": "positif",
-      "texte": "J'ai besoin que mon environnement et mes méthodes soient bien organisés."
-    },
-    {
-      "id": "MINI_14",
-      "dimension": "neuroticisme",
-      "sens": "positif",
-      "texte": "Un contretemps ou un imprévu suffit à me contrarier."
-    },
-    {
-      "id": "MINI_15",
-      "dimension": "ouverture",
-      "sens": "negatif",
-      "texte": "Les concepts complexes ou abstraits me demandent un effort important."
-    },
-    {
-      "id": "MINI_16",
-      "dimension": "extraversion",
-      "sens": "negatif",
-      "texte": "Dans un groupe, j'ai tendance à rester en arrière-plan."
-    },
-    {
-      "id": "MINI_17",
-      "dimension": "agreabilite",
-      "sens": "negatif",
-      "texte": "Je m'investis peu dans la vie et les préoccupations de mes collègues."
-    },
-    {
-      "id": "MINI_18",
-      "dimension": "conscience",
-      "sens": "negatif",
-      "texte": "Mon organisation est plutôt brouillonne et improvisée."
-    },
-    {
-      "id": "MINI_19",
-      "dimension": "neuroticisme",
-      "sens": "negatif",
-      "texte": "Je traverse rarement des périodes de découragement profond."
-    },
-    {
-      "id": "MINI_20",
-      "dimension": "ouverture",
-      "sens": "negatif",
-      "texte": "Imaginer des scénarios ou des possibilités nouvelles n'est pas mon fort."
-    }
-  ],
-  "mini_scoring": {
-    "extraversion": {
-      "items": [
-        "MINI_01",
-        "MINI_11",
-        "MINI_06",
-        "MINI_16"
-      ]
-    },
-    "agreabilite": {
-      "items": [
-        "MINI_02",
-        "MINI_12",
-        "MINI_07",
-        "MINI_17"
-      ]
-    },
-    "conscience": {
-      "items": [
-        "MINI_03",
-        "MINI_13",
-        "MINI_08",
-        "MINI_18"
-      ]
-    },
-    "neuroticisme": {
-      "items": [
-        "MINI_04",
-        "MINI_14",
-        "MINI_09",
-        "MINI_19"
-      ]
-    },
-    "ouverture": {
-      "items": [
-        "MINI_05",
-        "MINI_10",
-        "MINI_15",
-        "MINI_20"
-      ]
+    "b": {
+      "texte": "J'avance mieux dans le calme et la concentration",
+      "valeur": 1
     }
   },
-  "mini_inverses": [
-    "MINI_06",
-    "MINI_07",
-    "MINI_08",
-    "MINI_09",
-    "MINI_10",
-    "MINI_15",
-    "MINI_16",
-    "MINI_17",
-    "MINI_18",
-    "MINI_19",
-    "MINI_20"
-  ],
+  {
+    "id": "MINI_CF_A",
+    "dimension": "agreabilite",
+    "format": "choix_force",
+    "a": {
+      "texte": "Je dis ce que je pense, même si cela dérange",
+      "valeur": 1
+    },
+    "b": {
+      "texte": "Je préserve l'harmonie avant de dire ce qui fâche",
+      "valeur": 4
+    }
+  },
+  {
+    "id": "MINI_CF_C",
+    "dimension": "conscience",
+    "format": "choix_force",
+    "a": {
+      "texte": "Je planifie et j'organise avant de me lancer",
+      "valeur": 4
+    },
+    "b": {
+      "texte": "Je me lance et j'ajuste en chemin",
+      "valeur": 1
+    }
+  },
+  {
+    "id": "MINI_CF_N",
+    "dimension": "neuroticisme",
+    "format": "choix_force",
+    "a": {
+      "texte": "Je garde mon calme face à l'incertitude",
+      "valeur": 1
+    },
+    "b": {
+      "texte": "Je ressens fortement les tensions et les enjeux",
+      "valeur": 4
+    }
+  },
+  {
+    "id": "MINI_CF_O",
+    "dimension": "ouverture",
+    "format": "choix_force",
+    "a": {
+      "texte": "J'aime explorer des terrains nouveaux",
+      "valeur": 4
+    },
+    "b": {
+      "texte": "Je préfère m'appuyer sur ce qui a fait ses preuves",
+      "valeur": 1
+    }
+  }
+],
+  "mini_scoring": {
+  "extraversion": {
+    "items": [
+      "MINI_01",
+      "MINI_02",
+      "MINI_03"
+    ]
+  },
+  "agreabilite": {
+    "items": [
+      "MINI_04",
+      "MINI_05",
+      "MINI_06"
+    ]
+  },
+  "conscience": {
+    "items": [
+      "MINI_07",
+      "MINI_08",
+      "MINI_09"
+    ]
+  },
+  "neuroticisme": {
+    "items": [
+      "MINI_10",
+      "MINI_11",
+      "MINI_12"
+    ]
+  },
+  "ouverture": {
+    "items": [
+      "MINI_13",
+      "MINI_14"
+    ]
+  }
+},
+  "mini_inverses": ["MINI_03", "MINI_06", "MINI_09", "MINI_10", "MINI_11", "MINI_14"],
   "mini_ancres": {
     "1": "Pas du tout moi",
     "2": "Plutôt pas moi",
@@ -184,144 +197,144 @@ const SINEA_DATA = {
   },
   "profils": {
     "La Tisseuse": {
-      "E": 66,
-      "A": 83,
-      "C": 48,
-      "N": 38,
+      "E": 70,
+      "A": 85,
+      "C": 49,
+      "N": 39,
       "O": 58
     },
     "Le Passeur": {
-      "E": 54,
-      "A": 82,
-      "C": 52,
-      "N": 38,
-      "O": 58
+      "E": 49,
+      "A": 83,
+      "C": 51,
+      "N": 40,
+      "O": 60
     },
     "Le Roc": {
-      "E": 38,
-      "A": 73,
-      "C": 66,
-      "N": 21,
-      "O": 40
+      "E": 39,
+      "A": 74,
+      "C": 62,
+      "N": 18,
+      "O": 39
     },
     "Le Diplomate": {
       "E": 60,
-      "A": 76,
-      "C": 58,
-      "N": 32,
-      "O": 52
+      "A": 74,
+      "C": 60,
+      "N": 30,
+      "O": 49
     },
     "L'Ambassadeur": {
-      "E": 81,
-      "A": 68,
-      "C": 50,
-      "N": 34,
-      "O": 57
+      "E": 80,
+      "A": 66,
+      "C": 51,
+      "N": 33,
+      "O": 55
     },
     "Le Capitaine": {
-      "E": 70,
-      "A": 46,
+      "E": 72,
+      "A": 45,
       "C": 64,
-      "N": 28,
+      "N": 31,
       "O": 50
     },
     "L'Indomptable": {
-      "E": 66,
-      "A": 34,
+      "E": 68,
+      "A": 32,
       "C": 43,
-      "N": 52,
+      "N": 54,
       "O": 68
     },
     "Le Champion": {
-      "E": 62,
-      "A": 52,
-      "C": 76,
-      "N": 27,
-      "O": 46
+      "E": 61,
+      "A": 51,
+      "C": 81,
+      "N": 25,
+      "O": 45
     },
     "Le Pionnier": {
-      "E": 75,
+      "E": 76,
       "A": 46,
-      "C": 46,
-      "N": 32,
-      "O": 79
+      "C": 51,
+      "N": 30,
+      "O": 78
     },
     "Le Résilient": {
-      "E": 54,
-      "A": 50,
-      "C": 62,
+      "E": 52,
+      "A": 51,
+      "C": 60,
       "N": 22,
-      "O": 46
+      "O": 45
     },
     "L'Architecte": {
-      "E": 52,
+      "E": 54,
       "A": 46,
-      "C": 75,
+      "C": 77,
       "N": 34,
-      "O": 66
+      "O": 65
     },
     "La Sentinelle": {
       "E": 42,
       "A": 52,
       "C": 68,
-      "N": 43,
-      "O": 43
+      "N": 44,
+      "O": 42
     },
     "Le Gardien": {
-      "E": 38,
-      "A": 62,
-      "C": 75,
-      "N": 25,
-      "O": 40
+      "E": 35,
+      "A": 59,
+      "C": 77,
+      "N": 24,
+      "O": 39
     },
     "L'Orfèvre": {
-      "E": 35,
-      "A": 46,
-      "C": 83,
+      "E": 34,
+      "A": 47,
+      "C": 84,
       "N": 38,
       "O": 52
     },
     "Le Stratège": {
-      "E": 58,
+      "E": 59,
       "A": 40,
-      "C": 65,
-      "N": 24,
-      "O": 73
+      "C": 63,
+      "N": 21,
+      "O": 76
     },
     "Le Conteur": {
-      "E": 58,
-      "A": 66,
-      "C": 52,
-      "N": 38,
-      "O": 73
+      "E": 61,
+      "A": 71,
+      "C": 50,
+      "N": 37,
+      "O": 77
     },
     "L'Étincelle": {
-      "E": 72,
-      "A": 56,
+      "E": 74,
+      "A": 58,
       "C": 40,
-      "N": 46,
-      "O": 82
+      "N": 51,
+      "O": 80
     },
     "Le Veilleur": {
-      "E": 43,
-      "A": 54,
-      "C": 62,
+      "E": 42,
+      "A": 56,
+      "C": 65,
       "N": 40,
-      "O": 75
+      "O": 76
     },
     "L'Explorateur": {
-      "E": 68,
-      "A": 46,
-      "C": 40,
-      "N": 38,
-      "O": 84
+      "E": 63,
+      "A": 43,
+      "C": 36,
+      "N": 36,
+      "O": 85
     },
     "Le Révélateur": {
-      "E": 54,
-      "A": 57,
-      "C": 54,
+      "E": 55,
+      "A": 55,
+      "C": 52,
       "N": 34,
-      "O": 70
+      "O": 65
     }
   },
   "familles": {
@@ -2235,6 +2248,98 @@ SINEA_DATA.slugs = {"La Tisseuse": "tisseuse", "Le Passeur": "passeur", "Le Roc"
 
 // ===== Données enrichies (questions contextuelles + spés) =====
 SINEA_DATA.contextuelles = {"module": "Dimensions contextuelles", "version": "1.0", "principe": "10 questions mesurant 5 dimensions comportementales contextuelles, indépendantes du calcul des archétypes Big Five. Elles nourrissent 5 nouvelles sections de restitution. 2 questions par dimension pour la fiabilité. Chaque dimension a des profils-types (pas un score continu) identifiés par la combinaison des 2 réponses.", "echelle_note": "Chaque question est un QCM à 4 options. Chaque option correspond à un profil-type de la dimension. Le profil dominant de la dimension est celui le plus choisi sur les 2 questions.", "dimensions": {"stress": {"label": "Votre rapport au stress", "profils": ["accelerateur", "methodique", "retrait", "appui"], "description_profils": {"accelerateur": "Sous pression, vous accélérez et passez à l'action", "methodique": "Sous pression, vous vous structurez et organisez méthodiquement", "retrait": "Sous pression, vous prenez du recul pour analyser avant d'agir", "appui": "Sous pression, vous cherchez le soutien et l'échange avec d'autres"}}, "motivation": {"label": "Vos moteurs profonds", "profils": ["accomplissement", "reconnaissance", "sens", "maitrise"], "description_profils": {"accomplissement": "Vous êtes mû par l'atteinte d'objectifs et le dépassement", "reconnaissance": "Vous êtes mû par la reconnaissance et l'impact visible", "sens": "Vous êtes mû par l'utilité et le sens de ce que vous faites", "maitrise": "Vous êtes mû par la montée en compétence et l'expertise"}}, "risque": {"label": "Votre rapport au risque", "profils": ["audacieux", "calcule", "prudent", "securitaire"], "description_profils": {"audacieux": "Vous prenez des risques avec aisance et goût de l'incertitude", "calcule": "Vous prenez des risques après les avoir évalués", "prudent": "Vous préférez limiter l'exposition au risque", "securitaire": "Vous recherchez la sécurité et les terrains connus"}}, "changement": {"label": "Votre rapport au changement", "profils": ["moteur", "adaptable", "pragmatique", "ancre"], "description_profils": {"moteur": "Vous initiez et provoquez le changement", "adaptable": "Vous accueillez le changement avec souplesse", "pragmatique": "Vous acceptez le changement s'il est justifié", "ancre": "Vous valorisez la stabilité et les repères durables"}}, "conflit": {"label": "Votre posture face au conflit", "profils": ["affrontement", "mediation", "compromis", "evitement"], "description_profils": {"affrontement": "Vous abordez le désaccord de front, avec franchise", "mediation": "Vous cherchez à comprendre et réconcilier les positions", "compromis": "Vous cherchez un terrain d'entente équilibré", "evitement": "Vous préférez désamorcer ou contourner la tension"}}}, "questions": [{"id": "CTX_STRESS_01", "dimension": "stress", "situation": "Une échéance importante est avancée à la dernière minute. Votre première réaction :", "options": [{"texte": "Je passe immédiatement à l'action et j'accélère le rythme", "profil": "accelerateur"}, {"texte": "Je réorganise mon plan et je structure les priorités", "profil": "methodique"}, {"texte": "Je prends un instant pour analyser ce qui est vraiment essentiel", "profil": "retrait"}, {"texte": "Je mobilise les bonnes personnes pour avancer ensemble", "profil": "appui"}]}, {"id": "CTX_STRESS_02", "dimension": "stress", "situation": "Quand la pression monte sur plusieurs fronts en même temps, vous avez tendance à :", "options": [{"texte": "Foncer et traiter les choses dans l'urgence", "profil": "accelerateur"}, {"texte": "Lister, hiérarchiser et avancer méthodiquement", "profil": "methodique"}, {"texte": "Vous isoler un moment pour garder de la clarté", "profil": "retrait"}, {"texte": "Vous appuyer sur votre entourage pour tenir le cap", "profil": "appui"}]}, {"id": "CTX_MOTIV_01", "dimension": "motivation", "situation": "Ce qui vous procure le plus de satisfaction dans votre travail :", "options": [{"texte": "Atteindre un objectif ambitieux que je m'étais fixé", "profil": "accomplissement"}, {"texte": "Être reconnu pour la qualité de ce que j'apporte", "profil": "reconnaissance"}, {"texte": "Sentir que ce que je fais a une vraie utilité", "profil": "sens"}, {"texte": "Progresser et maîtriser de mieux en mieux mon domaine", "profil": "maitrise"}]}, {"id": "CTX_MOTIV_02", "dimension": "motivation", "situation": "Ce qui vous donne l'énergie de vous lever le matin pour travailler :", "options": [{"texte": "Le défi à relever et le résultat à décrocher", "profil": "accomplissement"}, {"texte": "L'impact que je vais avoir et la place que je prends", "profil": "reconnaissance"}, {"texte": "La contribution à quelque chose qui me dépasse", "profil": "sens"}, {"texte": "L'envie d'apprendre et de devenir meilleur", "profil": "maitrise"}]}, {"id": "CTX_RISQUE_01", "dimension": "risque", "situation": "Face à une opportunité prometteuse mais incertaine, vous :", "options": [{"texte": "Foncez, l'incertitude ne vous fait pas peur", "profil": "audacieux"}, {"texte": "Évaluez les risques puis décidez en connaissance de cause", "profil": "calcule"}, {"texte": "Préférez attendre d'en savoir plus avant de vous engager", "profil": "prudent"}, {"texte": "Privilégiez une option plus sûre, même moins ambitieuse", "profil": "securitaire"}]}, {"id": "CTX_RISQUE_02", "dimension": "risque", "situation": "Votre rapport à la prise de risque professionnelle se résume plutôt à :", "options": [{"texte": "Qui ne tente rien n'a rien, j'ose", "profil": "audacieux"}, {"texte": "Un risque maîtrisé est un risque qui vaut la peine", "profil": "calcule"}, {"texte": "Je préfère limiter mon exposition", "profil": "prudent"}, {"texte": "La sécurité et la stabilité passent avant tout", "profil": "securitaire"}]}, {"id": "CTX_CHGT_01", "dimension": "changement", "situation": "Quand un changement important s'annonce dans votre organisation, vous êtes souvent :", "options": [{"texte": "À l'origine, celui qui le pousse", "profil": "moteur"}, {"texte": "Parmi les premiers à vous y adapter avec souplesse", "profil": "adaptable"}, {"texte": "Favorable, à condition qu'il soit bien justifié", "profil": "pragmatique"}, {"texte": "Attaché à ce qui fonctionne et aux repères en place", "profil": "ancre"}]}, {"id": "CTX_CHGT_02", "dimension": "changement", "situation": "Face à la nouveauté et à l'imprévu, votre tendance naturelle :", "options": [{"texte": "J'aime provoquer le mouvement et explorer", "profil": "moteur"}, {"texte": "Je m'ajuste facilement à ce qui se présente", "profil": "adaptable"}, {"texte": "J'avance si le changement a du sens", "profil": "pragmatique"}, {"texte": "Je préfère la continuité et les choses éprouvées", "profil": "ancre"}]}, {"id": "CTX_CONFLIT_01", "dimension": "conflit", "situation": "Quand un désaccord sérieux survient avec un collègue, vous :", "options": [{"texte": "Abordez le sujet de front, sans détour", "profil": "affrontement"}, {"texte": "Cherchez à comprendre son point de vue pour réconcilier", "profil": "mediation"}, {"texte": "Proposez un compromis qui arrange les deux parties", "profil": "compromis"}, {"texte": "Préférez désamorcer et éviter l'affrontement direct", "profil": "evitement"}]}, {"id": "CTX_CONFLIT_02", "dimension": "conflit", "situation": "Votre posture spontanée quand les tensions montent dans une discussion :", "options": [{"texte": "Je dis clairement ce que je pense, quitte à créer du friction", "profil": "affrontement"}, {"texte": "J'écoute chacun et je cherche à rapprocher les positions", "profil": "mediation"}, {"texte": "Je propose une solution intermédiaire acceptable par tous", "profil": "compromis"}, {"texte": "Je calme le jeu et je remets la discussion à plus tard", "profil": "evitement"}]}]};
+
+// ===== 4 nouvelles dimensions (énergie, collaboration, autorité, reconnaissance) =====
+SINEA_DATA.contextuelles_plus = {
+  "dimensions": {
+    "energie": {
+      "label": "Votre rythme d'énergie",
+      "modele": "Modèle SMART (Parker & Knight)",
+      "profils": ["sprinteur","endurant","cyclique","deepworker"],
+      "description_profils": {
+        "sprinteur": "Vous donnez le meilleur sur des pics courts et intenses",
+        "endurant": "Vous tenez un effort régulier et constant dans la durée",
+        "cyclique": "Votre énergie alterne phases hautes et phases de récupération",
+        "deepworker": "Vous performez dans la concentration longue et ininterrompue"
+      }
+    },
+    "collaboration": {
+      "label": "Votre mode de collaboration",
+      "modele": "Modèle SMART (Parker & Knight)",
+      "profils": ["autonome","cooperatif","interdependant","federateur"],
+      "description_profils": {
+        "autonome": "Vous donnez le meilleur en pilotant votre périmètre seul",
+        "cooperatif": "Vous avancez mieux dans l'échange et le travail à plusieurs",
+        "interdependant": "Vous articulez naturellement votre travail avec celui des autres",
+        "federateur": "Vous tirez votre énergie de l'animation du collectif"
+      }
+    },
+    "autorite": {
+      "label": "Votre rapport au cadre",
+      "modele": "Self-Determination Theory",
+      "profils": ["cadre","sens","liberte","contributeur"],
+      "description_profils": {
+        "cadre": "Vous avancez mieux avec des règles et des attentes claires",
+        "sens": "Vous adhérez quand la direction est justifiée et porteuse de sens",
+        "liberte": "Vous donnez le meilleur avec une large marge de manœuvre",
+        "contributeur": "Vous cherchez à influencer les décisions, pas seulement à les suivre"
+      }
+    },
+    "reconnaissance": {
+      "label": "Votre besoin de reconnaissance",
+      "modele": "Self-Determination Theory",
+      "profils": ["resultats","effort","relation","autonomie"],
+      "description_profils": {
+        "resultats": "Vous avez besoin que vos résultats soient vus et nommés",
+        "effort": "Vous avez besoin que l'investissement fourni soit reconnu",
+        "relation": "Vous vous nourrissez de la qualité du lien et de la considération",
+        "autonomie": "La confiance et l'autonomie qu'on vous accorde valent toute reconnaissance"
+      }
+    }
+  },
+  "questions": [
+    {"id":"CTX_ENERGIE_01","dimension":"energie","situation":"On vous confie un dossier important avec deux semaines devant vous. Votre façon naturelle de le mener :","options":[
+      {"texte":"Un gros bloc intense en début ou fin de période","profil":"sprinteur"},
+      {"texte":"Un peu chaque jour, à un rythme régulier","profil":"endurant"},
+      {"texte":"En alternant phases de rush et phases plus calmes","profil":"cyclique"},
+      {"texte":"En bloquant de longues plages sans interruption","profil":"deepworker"}]},
+    {"id":"CTX_ENERGIE_02","dimension":"energie","situation":"En fin de journée intense, vous vous sentez plutôt :","options":[
+      {"texte":"Vidé après avoir tout donné d'un coup, j'ai besoin de couper","profil":"sprinteur"},
+      {"texte":"Stable, j'ai gardé le même rythme du début à la fin","profil":"endurant"},
+      {"texte":"Variable, j'ai eu des hauts et des bas dans la journée","profil":"cyclique"},
+      {"texte":"Satisfait si j'ai eu mes temps de concentration, frustré sinon","profil":"deepworker"}]},
+    {"id":"CTX_COLLABORATION_01","dimension":"collaboration","situation":"Sur un projet d'équipe, vous donnez le meilleur de vous-même quand :","options":[
+      {"texte":"On me confie un périmètre clair que je pilote seul","profil":"autonome"},
+      {"texte":"On avance ensemble, dans l'échange permanent","profil":"cooperatif"},
+      {"texte":"Mon travail s'articule étroitement avec celui des autres","profil":"interdependant"},
+      {"texte":"J'anime et je fais avancer le collectif","profil":"federateur"}]},
+    {"id":"CTX_COLLABORATION_02","dimension":"collaboration","situation":"Quand une décision d'équipe doit être prise, votre réflexe :","options":[
+      {"texte":"Je préfère qu'on me laisse trancher sur mon domaine","profil":"autonome"},
+      {"texte":"Je veux qu'on en discute tous ensemble","profil":"cooperatif"},
+      {"texte":"Je vérifie comment ça impacte le travail de chacun","profil":"interdependant"},
+      {"texte":"Je prends l'initiative de rassembler et d'animer le débat","profil":"federateur"}]},
+    {"id":"CTX_AUTORITE_01","dimension":"autorite","situation":"Avec un manager, vous fonctionnez le mieux quand il :","options":[
+      {"texte":"Fixe des attentes et un cadre clairs","profil":"cadre"},
+      {"texte":"Explique le pourquoi et donne du sens","profil":"sens"},
+      {"texte":"Me laisse une large marge de manœuvre","profil":"liberte"},
+      {"texte":"M'associe aux décisions qui me concernent","profil":"contributeur"}]},
+    {"id":"CTX_AUTORITE_02","dimension":"autorite","situation":"Ce qui vous démotive le plus dans la relation à votre manager :","options":[
+      {"texte":"Le flou, l'absence de cadre et d'attentes claires","profil":"cadre"},
+      {"texte":"Des décisions imposées sans explication","profil":"sens"},
+      {"texte":"Le contrôle excessif et le manque d'autonomie","profil":"liberte"},
+      {"texte":"Ne pas être consulté sur ce qui me concerne","profil":"contributeur"}]},
+    {"id":"CTX_RECONNAISSANCE_01","dimension":"reconnaissance","situation":"Ce qui vous touche le plus comme marque de reconnaissance :","options":[
+      {"texte":"Que mes résultats soient vus et nommés","profil":"resultats"},
+      {"texte":"Que l'effort et l'investissement fournis soient reconnus","profil":"effort"},
+      {"texte":"Une marque de considération et d'attention sincère","profil":"relation"},
+      {"texte":"Qu'on me confie plus d'autonomie et de responsabilités","profil":"autonomie"}]},
+    {"id":"CTX_RECONNAISSANCE_02","dimension":"reconnaissance","situation":"Ce qui vous démotive le plus :","options":[
+      {"texte":"Que mes résultats passent inaperçus","profil":"resultats"},
+      {"texte":"Que tous mes efforts ne soient pas vus","profil":"effort"},
+      {"texte":"Un manque de considération humaine","profil":"relation"},
+      {"texte":"Qu'on ne me fasse pas confiance pour agir seul","profil":"autonomie"}]}
+  ]
+};
 
 SINEA_DATA.spe_management = {"goleman": {"module": "management", "version": "2.0", "nom_commercial": "Sinéa Profile Management", "fondement": "Les 6 styles de leadership de Daniel Goleman (HBR 2000, Primal Leadership 2002), fondés sur l'intelligence émotionnelle.", "description": "Module de spécialisation managériale. S'ajoute au socle. Croise le profil Big Five avec des situations managériales pour identifier le style de leadership selon Goleman. Les 6 styles sont représentés de façon équilibrée.", "nombre_questions": 31, "styles": ["visionnaire", "coaching", "affiliatif", "democratique", "chef_de_file", "directif"], "questions": [{"id": "MGMT_01", "format": "qcm", "situation": "Pour lancer un projet important, vous comptez d'abord sur :", "options": [{"texte": "Une vision claire et inspirante de la destination", "styles": {"visionnaire": 3}}, {"texte": "Un objectif précis et des standards d'excellence élevés", "styles": {"chef_de_file": 3}}, {"texte": "L'adhésion construite avec toute l'équipe", "styles": {"democratique": 3}}, {"texte": "Un plan d'action clair et des consignes nettes", "styles": {"directif": 3}}]}, {"id": "MGMT_02", "format": "qcm", "situation": "Une décision importante engage votre équipe. Vous tranchez plutôt :", "options": [{"texte": "En cherchant l'avis et l'adhésion de chacun", "styles": {"democratique": 3}}, {"texte": "Seul et vite, c'est mon rôle d'assumer", "styles": {"directif": 3}}, {"texte": "En la reliant à la vision d'ensemble", "styles": {"visionnaire": 3}}, {"texte": "En pesant ce qui sert le développement de l'équipe", "styles": {"coaching": 3}}]}, {"id": "MGMT_03", "format": "qcm", "situation": "Un collaborateur rencontre une difficulté. Vous avez tendance à :", "options": [{"texte": "Le questionner pour qu'il trouve sa propre solution", "styles": {"coaching": 3}}, {"texte": "Lui donner la consigne claire pour avancer vite", "styles": {"directif": 3}}, {"texte": "Lui montrer comment vous feriez, à votre niveau d'exigence", "styles": {"chef_de_file": 3}}, {"texte": "Rétablir d'abord sa confiance et son moral", "styles": {"affiliatif": 3}}]}, {"id": "MGMT_04", "format": "qcm", "situation": "Un travail rendu est en dessous de vos attentes. Votre réaction première :", "options": [{"texte": "Je dis clairement et directement ce qui ne va pas", "styles": {"directif": 3}}, {"texte": "Je l'amène à identifier lui-même les axes de progrès", "styles": {"coaching": 3}}, {"texte": "Je montre le niveau attendu en le faisant moi-même", "styles": {"chef_de_file": 3}}, {"texte": "Je préserve la relation tout en évoquant l'amélioration", "styles": {"affiliatif": 3}}]}, {"id": "MGMT_05", "format": "qcm", "situation": "En période d'incertitude, votre équipe attend de vous surtout :", "options": [{"texte": "Du sens et une vision qui rassure sur l'avenir", "styles": {"visionnaire": 3}}, {"texte": "Des décisions claires et un cap ferme", "styles": {"directif": 3}}, {"texte": "De la présence et un soutien rapproché", "styles": {"affiliatif": 3}}, {"texte": "Une réflexion collective sur la marche à suivre", "styles": {"democratique": 3}}]}, {"id": "MGMT_06", "format": "qcm", "situation": "Deux membres de votre équipe sont en conflit ouvert. Vous :", "options": [{"texte": "Rétablissez d'abord le lien et l'écoute entre eux", "styles": {"affiliatif": 3}}, {"texte": "Tranchez rapidement pour rétablir le fonctionnement", "styles": {"directif": 3}}, {"texte": "Les réunissez pour qu'ils trouvent ensemble une issue", "styles": {"democratique": 3}}, {"texte": "Les amenez chacun à grandir de cette situation", "styles": {"coaching": 3}}]}, {"id": "MGMT_07", "format": "qcm", "situation": "Quand votre équipe réussit, votre réflexe :", "options": [{"texte": "Célébrer collectivement et nourrir le lien", "styles": {"affiliatif": 3}}, {"texte": "Mettre en avant le sens de ce qui a été accompli", "styles": {"visionnaire": 3}}, {"texte": "Souligner le niveau d'excellence atteint", "styles": {"chef_de_file": 3}}, {"texte": "Reconnaître la progression de chacun", "styles": {"coaching": 3}}]}, {"id": "MGMT_08", "format": "curseur", "situation": "Entre ces deux façons de diriger, où vous situez-vous ?", "pole_gauche": {"texte": "J'inspire par une vision qui donne du sens", "style": "visionnaire"}, "pole_droit": {"texte": "Je cadre par des consignes claires et nettes", "style": "directif"}, "points_max": 3}, {"id": "MGMT_09", "format": "curseur", "situation": "Votre tendance face aux décisions d'équipe :", "pole_gauche": {"texte": "Construire l'adhésion collective, même si c'est plus long", "style": "democratique"}, "pole_droit": {"texte": "Décider vite pour avancer", "style": "directif"}, "points_max": 3}, {"id": "MGMT_10", "format": "qcm", "situation": "Votre plus grande satisfaction en tant que manager :", "options": [{"texte": "Voir un collaborateur grandir et gagner en autonomie", "styles": {"coaching": 3}}, {"texte": "Sentir une équipe soudée et épanouie", "styles": {"affiliatif": 3}}, {"texte": "Concrétiser une vision qui semblait hors d'atteinte", "styles": {"visionnaire": 3}}, {"texte": "Atteindre un niveau d'excellence remarquable", "styles": {"chef_de_file": 3}}]}, {"id": "MGMT_11", "format": "qcm", "situation": "Votre rapport au niveau d'exigence dans l'équipe :", "options": [{"texte": "Je fixe la barre très haut et je l'incarne moi-même", "styles": {"chef_de_file": 3}}, {"texte": "J'adapte l'exigence au potentiel de chacun", "styles": {"coaching": 3}}, {"texte": "Je fixe des attentes claires et je les fais respecter", "styles": {"directif": 3}}, {"texte": "Je relie l'exigence au sens et à la vision", "styles": {"visionnaire": 3}}]}, {"id": "MGMT_12", "format": "qcm", "situation": "Ce qui vous définit le mieux comme leader :", "options": [{"texte": "Je donne une direction qui inspire", "styles": {"visionnaire": 3}}, {"texte": "Je fais grandir les personnes", "styles": {"coaching": 3}}, {"texte": "Je crée une équipe unie", "styles": {"affiliatif": 3}}, {"texte": "Je tire tout le monde vers l'excellence", "styles": {"chef_de_file": 3}}]}, {"id": "MGMT_13", "format": "curseur", "situation": "Ce qui compte le plus dans votre façon de motiver :", "pole_gauche": {"texte": "L'énergie et la cohésion du collectif", "style": "affiliatif"}, "pole_droit": {"texte": "L'exigence et le niveau de performance", "style": "chef_de_file"}, "points_max": 3}, {"id": "MGMT_14", "format": "qcm", "situation": "Quand vous confiez une mission stimulante mais risquée :", "options": [{"texte": "Je la confie à celui qui grandira en la relevant", "styles": {"coaching": 3}}, {"texte": "J'en discute avec l'équipe pour choisir ensemble", "styles": {"democratique": 3}}, {"texte": "Je la donne à celui qui atteindra le meilleur niveau", "styles": {"chef_de_file": 3}}, {"texte": "Je la relie à notre vision pour donner de l'élan", "styles": {"visionnaire": 3}}]}, {"id": "MGMT_15", "format": "qcm", "situation": "Pour vous, l'autorité d'un manager vient surtout :", "options": [{"texte": "De la vision et du sens qu'il porte", "styles": {"visionnaire": 3}}, {"texte": "De sa position et de la clarté de ses décisions", "styles": {"directif": 3}}, {"texte": "De l'exemple et du niveau qu'il incarne", "styles": {"chef_de_file": 3}}, {"texte": "De la confiance et du lien qu'il crée", "styles": {"affiliatif": 3}}]}, {"id": "MGMT_16", "format": "qcm", "situation": "Dans vos échanges avec l'équipe, vous passez le plus de temps à :", "options": [{"texte": "Écouter les avis et faire émerger les idées de chacun", "styles": {"democratique": 3}}, {"texte": "Accompagner et questionner pour faire progresser", "styles": {"coaching": 3}}, {"texte": "Partager la vision et donner le cap", "styles": {"visionnaire": 3}}, {"texte": "Prendre le pouls du moral et du climat", "styles": {"affiliatif": 3}}]}, {"id": "MGMT_17", "format": "qcm", "situation": "Face à une équipe expérimentée et autonome, vous :", "options": [{"texte": "Fixez un cap inspirant et les laissez faire", "styles": {"visionnaire": 3}}, {"texte": "Co-construisez les décisions avec eux", "styles": {"democratique": 3}}, {"texte": "Maintenez un haut niveau d'exigence partagé", "styles": {"chef_de_file": 3}}, {"texte": "Continuez à les faire progresser individuellement", "styles": {"coaching": 3}}]}, {"id": "MGMT_18", "format": "repartition", "situation": "Répartissez 10 points selon ce qui définit le mieux votre rôle de manager :", "points_total": 10, "axes": [{"texte": "Inspirer par une vision et du sens", "style": "visionnaire"}, {"texte": "Faire grandir et développer les personnes", "style": "coaching"}, {"texte": "Souder et animer le collectif", "style": "affiliatif"}, {"texte": "Impliquer et décider ensemble", "style": "democratique"}, {"texte": "Donner le cap et trancher", "style": "directif"}]}, {"id": "MGMT_19", "format": "qcm", "situation": "Un collaborateur talentueux montre des signes de démotivation. Votre premier réflexe :", "options": [{"texte": "Lui rappeler la vision et le sens de sa mission", "styles": {"visionnaire": 3}}, {"texte": "Prendre le temps d'un échange pour comprendre ce qu'il vit", "styles": {"affiliatif": 3}}, {"texte": "L'accompagner pour identifier son prochain défi de développement", "styles": {"coaching": 3}}, {"texte": "Clarifier mes attentes et le cadre à tenir", "styles": {"directif": 3}}]}, {"id": "MGMT_20", "format": "qcm", "situation": "Pour faire monter en compétence votre équipe, vous misez sur :", "options": [{"texte": "Des objectifs ambitieux qui tirent chacun vers le haut", "styles": {"chef_de_file": 3}}, {"texte": "Un accompagnement individuel et du feedback régulier", "styles": {"coaching": 3}}, {"texte": "La co-construction des solutions en équipe", "styles": {"democratique": 3}}, {"texte": "Une vision claire qui donne envie de progresser", "styles": {"visionnaire": 2, "coaching": 1}}]}, {"id": "MGMT_21", "format": "qcm", "situation": "Face à une décision urgente et risquée, vous :", "options": [{"texte": "Tranchez vite et donnez des consignes claires", "styles": {"directif": 3}}, {"texte": "Fixez le cap et montrez l'exemple à suivre", "styles": {"chef_de_file": 2, "directif": 1}}, {"texte": "Reliez la décision à la vision d'ensemble", "styles": {"visionnaire": 3}}, {"texte": "Consultez rapidement les personnes clés", "styles": {"democratique": 3}}]}, {"id": "MGMT_22", "format": "qcm", "situation": "Ce qui compte le plus pour vous dans une équipe qui fonctionne :", "options": [{"texte": "Un climat de confiance et de bienveillance", "styles": {"affiliatif": 3}}, {"texte": "Une exigence partagée et un haut niveau de performance", "styles": {"chef_de_file": 3}}, {"texte": "Une vision commune qui fédère", "styles": {"visionnaire": 3}}, {"texte": "La participation et l'engagement de chacun", "styles": {"democratique": 3}}]}, {"id": "MGMT_23", "format": "qcm", "situation": "Un désaccord éclate dans l'équipe sur la marche à suivre. Vous :", "options": [{"texte": "Tranchez en faveur de la solution la plus efficace", "styles": {"directif": 3}}, {"texte": "Organisez un échange pour décider ensemble", "styles": {"democratique": 3}}, {"texte": "Ramenez tout le monde à la vision commune", "styles": {"visionnaire": 3}}, {"texte": "Apaisez d'abord les tensions entre les personnes", "styles": {"affiliatif": 3}}]}, {"id": "MGMT_24", "format": "qcm", "situation": "Votre façon de donner du feedback ressemble plutôt à :", "options": [{"texte": "Des questions qui aident la personne à trouver elle-même", "styles": {"coaching": 3}}, {"texte": "Un retour direct et sans détour sur ce qui doit changer", "styles": {"directif": 2, "chef_de_file": 1}}, {"texte": "Un encouragement qui renforce la relation", "styles": {"affiliatif": 3}}, {"texte": "Un rappel des standards d'excellence attendus", "styles": {"chef_de_file": 3}}]}, {"id": "MGMT_25", "format": "qcm", "situation": "Quand vous déléguez une mission importante, vous :", "options": [{"texte": "Donnez le cap et laissez la personne trouver son chemin", "styles": {"visionnaire": 2, "coaching": 1}}, {"texte": "Précisez les attentes et le niveau de qualité requis", "styles": {"chef_de_file": 3}}, {"texte": "Détaillez les consignes et le mode opératoire", "styles": {"directif": 3}}, {"texte": "Accompagnez la personne dans sa montée en autonomie", "styles": {"coaching": 3}}]}, {"id": "MGMT_26", "format": "qcm", "situation": "Ce qui vous donne le sentiment d'avoir bien managé :", "options": [{"texte": "Avoir vu mes collaborateurs grandir et gagner en autonomie", "styles": {"coaching": 3}}, {"texte": "Avoir atteint des résultats remarquables", "styles": {"chef_de_file": 3}}, {"texte": "Avoir maintenu une équipe soudée et épanouie", "styles": {"affiliatif": 3}}, {"texte": "Avoir donné un cap qui a fédéré tout le monde", "styles": {"visionnaire": 3}}]}, {"id": "MGMT_27", "format": "qcm", "situation": "Un nouveau projet stratégique démarre. Votre première action en tant que manager :", "options": [{"texte": "Partager une vision inspirante de ce qu'on va accomplir", "styles": {"visionnaire": 3}}, {"texte": "Fixer des objectifs de performance ambitieux", "styles": {"chef_de_file": 3}}, {"texte": "Réunir l'équipe pour co-construire la feuille de route", "styles": {"democratique": 3}}, {"texte": "Établir un plan d'action détaillé avec des consignes claires", "styles": {"directif": 3}}]}, {"id": "MGMT_28", "format": "qcm", "situation": "Un collaborateur traverse une période personnelle difficile. Vous :", "options": [{"texte": "Prenez soin de lui et allégez temporairement sa charge", "styles": {"affiliatif": 3}}, {"texte": "L'accompagnez pour qu'il trouve son propre équilibre", "styles": {"coaching": 3}}, {"texte": "Lui rappelez avec bienveillance le cap à tenir", "styles": {"visionnaire": 2, "affiliatif": 1}}, {"texte": "Clarifiez ce qui peut être ajusté dans l'organisation", "styles": {"directif": 2, "democratique": 1}}]}, {"id": "MGMT_29", "format": "qcm", "situation": "Votre équipe vient de réussir un projet difficile. Votre réflexe :", "options": [{"texte": "Célébrer ensemble et renforcer les liens", "styles": {"affiliatif": 3}}, {"texte": "Fixer déjà le prochain défi à relever", "styles": {"chef_de_file": 3}}, {"texte": "Débriefer collectivement ce qui a fonctionné", "styles": {"democratique": 3}}, {"texte": "Souligner ce que chacun a appris et développé", "styles": {"coaching": 3}}]}, {"id": "MGMT_30", "format": "qcm", "situation": "Un collaborateur vous propose une idée audacieuse mais risquée. Vous :", "options": [{"texte": "L'encouragez si elle sert la vision d'ensemble", "styles": {"visionnaire": 3}}, {"texte": "L'aidez par des questions à affiner son idée", "styles": {"coaching": 3}}, {"texte": "En discutez avec l'équipe pour décider ensemble", "styles": {"democratique": 3}}, {"texte": "Évaluez vite et tranchez sur sa faisabilité", "styles": {"directif": 2, "chef_de_file": 1}}]}, {"id": "MGMT_31", "format": "qcm", "situation": "Pour maintenir un haut niveau d'engagement dans la durée, vous comptez surtout sur :", "options": [{"texte": "Une vision forte qui donne du sens", "styles": {"visionnaire": 3}}, {"texte": "Une exigence d'excellence partagée", "styles": {"chef_de_file": 3}}, {"texte": "Un climat de confiance et de cohésion", "styles": {"affiliatif": 3}}, {"texte": "Le développement continu de chacun", "styles": {"coaching": 3}}]}]}, "dimensions": {"module": "Dimensions managériales contextuelles", "version": "1.0", "principe": "5 questions mesurant 3 dimensions managériales nouvelles, indépendantes du calcul des styles Goleman. Elles nourrissent de nouvelles sections de la restitution manager. Délégation (2 questions), feedback (2 questions), exigence/bienveillance (1 question).", "dimensions": {"delegation": {"label": "Votre rapport à la délégation", "profils": ["controle", "cadre", "autonomie", "lacher_prise"], "description_profils": {"controle": "Vous gardez la main et suivez de près l'exécution", "cadre": "Vous déléguez avec un cadre précis et des points réguliers", "autonomie": "Vous déléguez en laissant une large autonomie", "lacher_prise": "Vous confiez pleinement et n'intervenez qu'en cas de besoin"}}, "feedback": {"label": "Votre style de feedback", "profils": ["direct", "factuel", "enveloppe", "questionnant"], "description_profils": {"direct": "Vous dites les choses franchement et sans détour", "factuel": "Vous vous appuyez sur des faits précis et observables", "enveloppe": "Vous soignez la forme pour préserver la relation", "questionnant": "Vous amenez la personne à trouver elle-même par des questions"}}, "exigence_bienveillance": {"label": "Votre équilibre exigence et bienveillance", "profils": ["exigence", "equilibre", "bienveillance"], "description_profils": {"exigence": "Vous placez la barre haut et tirez vers la performance", "equilibre": "Vous combinez haut niveau d'exigence et attention aux personnes", "bienveillance": "Vous privilégiez le soutien et le bien-être de l'équipe"}}}, "questions": [{"id": "MGMT_DELEG_01", "dimension": "delegation", "situation": "Quand vous confiez une mission importante à un collaborateur, vous :", "options": [{"texte": "Suivez de près chaque étape pour garantir le résultat", "profil": "controle"}, {"texte": "Fixez un cadre clair et planifiez des points réguliers", "profil": "cadre"}, {"texte": "Donnez l'objectif et laissez la personne libre du chemin", "profil": "autonomie"}, {"texte": "Faites pleinement confiance et restez disponible si besoin", "profil": "lacher_prise"}]}, {"id": "MGMT_DELEG_02", "dimension": "delegation", "situation": "Ce qui vous est le plus difficile quand vous déléguez :", "options": [{"texte": "Accepter que ce soit fait autrement que je l'aurais fait", "profil": "controle"}, {"texte": "Trouver le bon niveau de suivi sans surveiller", "profil": "cadre"}, {"texte": "Rien, je délègue avec aisance", "profil": "autonomie"}, {"texte": "Me retenir d'intervenir alors que je pourrais aider", "profil": "lacher_prise"}]}, {"id": "MGMT_FEEDBACK_01", "dimension": "feedback", "situation": "Quand un collaborateur doit améliorer quelque chose, vous lui dites :", "options": [{"texte": "Directement et clairement ce qui doit changer", "profil": "direct"}, {"texte": "En vous appuyant sur des exemples factuels précis", "profil": "factuel"}, {"texte": "En soignant la formulation pour ne pas le braquer", "profil": "enveloppe"}, {"texte": "En l'amenant à identifier lui-même le point d'amélioration", "profil": "questionnant"}]}, {"id": "MGMT_FEEDBACK_02", "dimension": "feedback", "situation": "Votre façon de féliciter un collaborateur :", "options": [{"texte": "Un compliment franc et spontané", "profil": "direct"}, {"texte": "En nommant précisément ce qui a été réussi", "profil": "factuel"}, {"texte": "Avec chaleur, en valorisant la personne", "profil": "enveloppe"}, {"texte": "En lui demandant ce dont il est le plus fier", "profil": "questionnant"}]}, {"id": "MGMT_EXIG_01", "dimension": "exigence_bienveillance", "situation": "Votre curseur naturel de manager se situe plutôt vers :", "options": [{"texte": "L'exigence, je tire l'équipe vers le haut niveau", "profil": "exigence"}, {"texte": "L'équilibre entre haute exigence et attention aux personnes", "profil": "equilibre"}, {"texte": "La bienveillance, je veille d'abord au bien-être de l'équipe", "profil": "bienveillance"}]}]}};
 

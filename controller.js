@@ -5,6 +5,13 @@ const App = (() => {
   let queue = [];          // séquence des questions
   let idx = 0;             // index courant
   let answers = {};      // réponses {id: valeur}
+  let answersTime = {};  // temps de réponse {id: ms} pour le score de fiabilité
+  let renderTimeStart = 0;
+  function enregistrerTemps(id) {
+    if (answersTime[id] !== undefined) return; // on garde le premier temps (pas les corrections)
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    if (renderTimeStart) answersTime[id] = Math.round(now - renderTimeStart);
+  }
   let result = null;
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
   let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
@@ -171,9 +178,11 @@ const App = (() => {
     }
 
     // ===== CHAPITRE 1 : SOCLE =====
-    d.mini_items.forEach(it => q.push({ kind: 'mini', id: it.id, item: it, chap: 'socle' }));
+    d.mini_items.forEach(it => q.push({ kind: 'swipe', id: it.id, item: it, chap: 'socle' }));
+    // Choix forcé Big Five (anti-désirabilité, alimente aussi le score de fiabilité)
+    (d.mini_choix_force || []).forEach(it => q.push({ kind: 'choixforce', id: it.id, item: it, chap: 'socle' }));
     // Questions "adapté" (comportement au travail) pour mesurer le coût d'adaptation
-    (d.adapte?.questions || []).forEach(it => q.push({ kind: 'mini', id: it.id, item: it, chap: 'socle' }));
+    (d.adapte?.questions || []).forEach(it => q.push({ kind: 'swipe', id: it.id, item: it, chap: 'socle' }));
     Object.values(d.sinea_famille).forEach(list => {
       list.forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'socle' }));
     });
@@ -188,8 +197,12 @@ const App = (() => {
       q.splice(Math.min(pos, q.length), 0, r);
     });
 
-    // ===== CHAPITRE 2 : CONTEXTE (dimensions contextuelles) =====
+    // ===== CHAPITRE 2 : CONTEXTE (dimensions contextuelles + nouvelles dimensions) =====
     (d.contextuelles?.questions || []).forEach(it => {
+      q.push({ kind: 'ctx', id: it.id, item: it, chap: 'contexte' });
+    });
+    // Nouvelles dimensions : énergie, collaboration, autorité, reconnaissance
+    (d.contextuelles_plus?.questions || []).forEach(it => {
       q.push({ kind: 'ctx', id: it.id, item: it, chap: 'contexte' });
     });
 
@@ -856,13 +869,14 @@ const App = (() => {
 
   function valeurAleatoire(q) {
     const kind = q.kind;
-    if (kind === 'mini') return 1 + Math.floor(Math.random() * 4); // échelle 1-4
+    if (kind === 'mini' || kind === 'swipe') return 1 + Math.floor(Math.random() * 4); // échelle 1-4
+    if (kind === 'choixforce') return Math.random() < 0.5 ? 'a' : 'b';
     if (kind === 'curseur') return Math.floor(Math.random() * 101); // 0-100
     if (kind === 'repart') {
       // répartir ~10 points sur les axes
       const item = q.item; const axes = (item && item.axes) || [];
       const out = {}; let reste = 10;
-      axes.forEach((a, i) => { const v = i === axes.length - 1 ? reste : Math.floor(Math.random() * (reste + 1)); out[a.style] = v; reste -= v; });
+      axes.forEach((a, i) => { const v = i === axes.length - 1 ? reste : Math.floor(Math.random() * (reste + 1)); out[a.famille || a.style] = v; reste -= v; });
       return out;
     }
     // qcm / ctx : index d'option aléatoire
@@ -1081,10 +1095,13 @@ const App = (() => {
     updateProgress();
     const body = document.getElementById('q-card');
     if (cur.kind === 'mini') body.innerHTML = renderMini(cur);
+    else if (cur.kind === 'swipe') { body.innerHTML = renderSwipe(cur); initSwipeDrag(cur); }
+    else if (cur.kind === 'choixforce') body.innerHTML = renderChoixForce(cur);
     else if (cur.kind === 'qcm' || cur.kind === 'ctx') body.innerHTML = renderQcm(cur);
     else if (cur.kind === 'curseur') body.innerHTML = renderCurseur(cur);
     else if (cur.kind === 'repart') body.innerHTML = renderRepart(cur);
     refreshNav();
+    renderTimeStart = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   }
 
   function updateProgress() {
@@ -1128,7 +1145,7 @@ const App = (() => {
 
   // Tag de section selon le type
   function sectionTag(cur) {
-    const tags = { mini: 'Vous, spontanément', qcm: 'En situation', ctx: 'Votre tendance', curseur: 'Entre deux pôles', repart: 'Vos priorités' };
+    const tags = { mini: 'Vous, spontanément', swipe: 'Vous, spontanément', choixforce: 'Ce qui vous ressemble le plus', qcm: 'En situation', ctx: 'Votre tendance', curseur: 'Entre deux pôles', repart: 'Vos priorités' };
     return tags[cur.kind] || '';
   }
 
@@ -1150,6 +1167,114 @@ const App = (() => {
       <div class="q-tag">${sectionTag(cur)}</div>
       <div class="q-text">${it.texte}</div>
       <div class="q-options">${opts}</div>`;
+  }
+
+  // ---- Swipe : carte d'affirmation, 4 réponses (échelle 1-4 conservée) ----
+  function renderSwipe(cur) {
+    const it = cur.item;
+    const val = answers[cur.id];
+    const niveaux = [
+      { v: 1, label: 'Pas du tout', cls: 'sw-non' },
+      { v: 2, label: 'Plutôt non', cls: 'sw-pnon' },
+      { v: 3, label: 'Plutôt oui', cls: 'sw-poui' },
+      { v: 4, label: 'Tout à fait', cls: 'sw-oui' },
+    ];
+    const btns = niveaux.map(n => `
+      <button class="sw-btn ${n.cls} ${val === n.v ? 'sel' : ''}" onclick="App.answerSwipe('${cur.id}', ${n.v})">${n.label}</button>`).join('');
+    return `
+      <div class="q-tag">${sectionTag(cur)}</div>
+      <div class="sw-zone">
+        <div class="sw-card" id="sw-card">
+          <span class="sw-mark sw-mark-oui">Oui</span>
+          <span class="sw-mark sw-mark-non">Non</span>
+          <div class="sw-quote">${it.texte}</div>
+        </div>
+      </div>
+      <div class="sw-actions">${btns}</div>
+      <p class="sw-hint">Glissez la carte ou touchez une réponse</p>`;
+  }
+
+  // Glisser la carte : droite = tout à fait (4), gauche = pas du tout (1)
+  function initSwipeDrag(cur) {
+    const card = document.getElementById('sw-card');
+    if (!card) return;
+    let sx = 0, dx = 0, drag = false;
+    const st = e => { drag = true; sx = (e.touches ? e.touches[0].clientX : e.clientX); card.style.transition = 'none'; };
+    const mv = e => {
+      if (!drag) return;
+      dx = (e.touches ? e.touches[0].clientX : e.clientX) - sx;
+      card.style.transform = `translateX(${dx}px) rotate(${dx / 18}deg)`;
+      const oui = card.querySelector('.sw-mark-oui'), non = card.querySelector('.sw-mark-non');
+      if (oui) oui.style.opacity = dx > 40 ? Math.min(dx / 120, 1) : 0;
+      if (non) non.style.opacity = dx < -40 ? Math.min(-dx / 120, 1) : 0;
+    };
+    const en = () => {
+      if (!drag) return;
+      drag = false;
+      if (Math.abs(dx) > 90) {
+        animerSwipe(dx > 0);
+        answerSwipe(cur.id, dx > 0 ? 4 : 1, true);
+      } else {
+        card.style.transition = 'transform 0.25s';
+        card.style.transform = '';
+        card.querySelectorAll('.sw-mark').forEach(m => m.style.opacity = 0);
+      }
+      dx = 0;
+    };
+    card.addEventListener('mousedown', st);
+    card.addEventListener('touchstart', st, { passive: true });
+    window.addEventListener('mousemove', mv);
+    window.addEventListener('touchmove', mv, { passive: true });
+    window.addEventListener('mouseup', en);
+    window.addEventListener('touchend', en);
+  }
+
+  function animerSwipe(versOui) {
+    const card = document.getElementById('sw-card');
+    if (!card) return;
+    card.style.transition = 'transform 0.3s, opacity 0.3s';
+    card.style.transform = `translateX(${versOui ? '120%' : '-120%'}) rotate(${versOui ? 14 : -14}deg)`;
+    card.style.opacity = '0';
+  }
+
+  function answerSwipe(id, val, dejaAnime) {
+    if (!dejaAnime) animerSwipe(val >= 3);
+    enregistrerTemps(id);
+    answers[id] = val;
+    saveProgress();
+    refreshNav();
+    if (idx < queue.length - 1) {
+      clearTimeout(window._autoNext);
+      window._autoNext = setTimeout(() => next(), 300);
+    }
+  }
+
+  // ---- Choix forcé : deux options également désirables, on tranche ----
+  function renderChoixForce(cur) {
+    const it = cur.item;
+    const val = answers[cur.id];
+    return `
+      <div class="q-tag">${sectionTag(cur)}</div>
+      <div class="q-text">Vous vous reconnaissez davantage dans :</div>
+      <div class="cfx-duo">
+        <button class="cfx-opt ${val === 'a' ? 'sel' : ''}" onclick="App.answerChoixForce('${cur.id}', 'a')">${it.a.texte}</button>
+        <div class="cfx-ou">ou</div>
+        <button class="cfx-opt ${val === 'b' ? 'sel' : ''}" onclick="App.answerChoixForce('${cur.id}', 'b')">${it.b.texte}</button>
+      </div>`;
+  }
+
+  function answerChoixForce(id, val) {
+    enregistrerTemps(id);
+    answers[id] = val;
+    saveProgress();
+    document.querySelectorAll('#q-card .cfx-opt').forEach((o, i) => {
+      o.classList.toggle('sel', (i === 0 ? 'a' : 'b') === val);
+    });
+    refreshNav();
+    if (idx < queue.length - 1) {
+      clearTimeout(window._autoNext);
+      window._autoNext = setTimeout(() => next(), 320);
+    }
   }
 
   // ---- QCM situationnel ----
@@ -1226,6 +1351,7 @@ const App = (() => {
 
   // ---- Gestion des réponses ----
   function answer(id, val) {
+    enregistrerTemps(id);
     answers[id] = val;
     saveProgress();
     // Mettre à jour visuellement la sélection sans tout re-render
@@ -1318,8 +1444,9 @@ const App = (() => {
     // Répartir les réponses par type, selon la nature de chaque question.
     // On parcourt TOUTES les réponses disponibles (socle rechargé + module),
     // pas seulement la queue courante, pour que le scoring soit complet même en mode module seul.
-    const repMini = {}, repSinea = {}, repCtx = {}, repSpeQcm = {}, repSpeDims = {}, repAdapte = {};
+    const repMini = {}, repSinea = {}, repCtx = {}, repCtxPlus = {}, repSpeQcm = {}, repSpeDims = {}, repAdapte = {};
     const ctxIds = new Set((SINEA_DATA.contextuelles?.questions || []).map(q => q.id));
+    const ctxPlusIds = new Set((SINEA_DATA.contextuelles_plus?.questions || []).map(q => q.id));
     const speDimIds = new Set([
       ...((SINEA_DATA.spe_management?.dimensions?.questions) || []).map(q => q.id),
       ...((SINEA_DATA.spe_commercial?.dimensions?.questions) || []).map(q => q.id),
@@ -1328,12 +1455,14 @@ const App = (() => {
     const indexQuestions = {};
     const d = SINEA_DATA;
     d.mini_items.forEach(it => indexQuestions[it.id] = { kind: 'mini', chap: 'socle' });
+    (d.mini_choix_force || []).forEach(it => indexQuestions[it.id] = { kind: 'mini', chap: 'socle' });
     (d.adapte?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'mini', chap: 'socle' });
     Object.values(d.sinea_famille).forEach(l => l.forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'socle' }));
     d.sinea_hybride.forEach(it => indexQuestions[it.id] = { kind: 'curseur', chap: 'socle' });
     (d.sinea_transversales || []).forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'socle' });
     (d.sinea_repartitions || []).forEach(it => indexQuestions[it.id] = { kind: 'repart', chap: 'socle' });
     (d.contextuelles?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'ctx', chap: 'contexte' });
+    (d.contextuelles_plus?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'ctx', chap: 'contexte' });
     (d.spe_management?.goleman?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'spe' });
     (d.spe_management?.dimensions?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'ctx', chap: 'spe' });
     (d.spe_commercial?.challenger?.questions || []).forEach(it => indexQuestions[it.id] = { kind: 'qcm', chap: 'spe' });
@@ -1345,6 +1474,7 @@ const App = (() => {
       if (!meta) return;
       if (id.indexOf('ADP_') === 0) repAdapte[id] = v;
       else if (meta.kind === 'mini') repMini[id] = v;
+      else if (ctxPlusIds.has(id)) repCtxPlus[id] = v;
       else if (meta.chap === 'socle') repSinea[id] = v;
       else if (ctxIds.has(id)) repCtx[id] = v;
       else if (meta.chap === 'spe' && speDimIds.has(id)) repSpeDims[id] = v;
@@ -1366,6 +1496,8 @@ const App = (() => {
         // MODE SOCLE (ou parcours complet)
         result = Engine.scorer(repMini, repSinea);
         result.contextuel = Engine.scorerContextuel(repCtx);
+        result.contextuelPlus = Engine.scorerContextuelPlus(repCtxPlus);
+        result.fiabilite = Engine.scorerFiabilite(repMini, answersTime);
         result.diagType = diagType;
         result.reponsesOuvertes = openAnswers;
         result.naturelAdapte = Engine.scorerNaturelAdapte(repMini, repAdapte);
@@ -1387,6 +1519,7 @@ const App = (() => {
           dominante: result.dominante, secondaires: result.secondaires,
           scoresBigFive: result.scoresBigFive, radarFamilles: result.radarFamilles,
           blend: result.blend, naturelAdapte: result.naturelAdapte, contextuel: result.contextuel,
+          contextuelPlus: result.contextuelPlus, fiabilite: result.fiabilite,
           speStyle: result.speStyle, speStyleScores: result.speStyleScores, speDims: result.speDims,
           diagType: result.diagType,
         };
@@ -1526,7 +1659,7 @@ const App = (() => {
     }, 75);
   }
 
-  return { start, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

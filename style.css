@@ -962,3 +962,36 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-famille-vous{font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;background:var(--fc1);color:#fff;padding:3px 9px;border-radius:20px;}
 .r-famille-essence{font-size:13.5px;line-height:1.5;color:var(--c-grey);margin:0;}
 @media (max-width:520px){ .r-familles-grid{grid-template-columns:1fr;} }
+
+/* ===== Format SWIPE (Big Five v2) ===== */
+.sw-zone{position:relative;min-height:200px;display:flex;align-items:center;justify-content:center;margin:6px 0 14px;}
+.sw-card{position:relative;width:100%;max-width:420px;background:var(--c-white);border-radius:22px;box-shadow:0 14px 44px rgba(80,60,140,0.14);border:1px solid rgba(94,89,199,0.10);padding:34px 24px;text-align:center;cursor:grab;touch-action:pan-y;user-select:none;}
+.sw-card:active{cursor:grabbing;}
+.sw-quote{font-size:18px;font-weight:700;line-height:1.42;color:var(--c-black);}
+.sw-mark{position:absolute;top:16px;padding:5px 12px;border-radius:10px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;opacity:0;transition:opacity 0.1s;pointer-events:none;}
+.sw-mark-oui{left:16px;color:#3EAD8B;border:2.5px solid #3EAD8B;transform:rotate(-10deg);}
+.sw-mark-non{right:16px;color:var(--c-red);border:2.5px solid var(--c-red);transform:rotate(10deg);}
+.sw-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+.sw-btn{border:none;border-radius:12px;padding:13px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;color:#fff;flex:1;min-width:78px;max-width:110px;transition:transform 0.12s;}
+.sw-btn:active{transform:scale(0.93);}
+.sw-btn.sel{outline:3px solid rgba(21,20,22,0.25);outline-offset:2px;}
+.sw-non{background:var(--c-red);}
+.sw-pnon{background:#F4A98C;}
+.sw-poui{background:#7FB8E8;}
+.sw-oui{background:#3EAD8B;}
+.sw-hint{text-align:center;font-size:12px;color:var(--c-grey);margin-top:12px;font-weight:600;}
+
+/* ===== Format CHOIX FORCÉ (anti-désirabilité) ===== */
+.cfx-duo{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+.cfx-opt{background:var(--c-white);border:2px solid rgba(94,89,199,0.12);border-radius:17px;padding:21px 19px;cursor:pointer;font-family:var(--font);font-size:15.5px;font-weight:600;line-height:1.42;text-align:left;color:var(--c-black);transition:all 0.15s;}
+.cfx-opt:active{transform:scale(0.985);}
+.cfx-opt.sel{border-color:var(--c-purple-text);background:linear-gradient(120deg,rgba(94,89,199,0.07),rgba(136,132,240,0.07));}
+.cfx-ou{text-align:center;font-size:11.5px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--c-medium-grey);}
+
+/* ===== Badge fiabilité (restitution) ===== */
+.r-fiab{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:14px;border:1.5px solid;margin-bottom:14px;}
+.r-fiab-lab{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;}
+.r-fiab-msg{font-size:13px;color:#555;line-height:1.45;}
+.r-fiab-score{font-size:28px;font-weight:800;flex-shrink:0;}
+/* Mention du modèle scientifique dans les dimensions de pilotage */
+.dimc-modele{font-size:10.5px;font-weight:600;color:#A89FC4;font-style:italic;margin-left:8px;text-transform:none;letter-spacing:0;}

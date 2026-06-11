@@ -1,364 +1,1611 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sinéa Profile · Pilotage</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
-    --c-purple:#8884F0; --c-purple-text:#5E59C7; --c-corail:#F98272; --c-orange:#F9A876;
-    --c-bleu:#5474F5; --c-violet:#8884F0;
-    --c-dark:#1A1A1A; --c-grey:#747474; --c-light:#F5F4F0; --c-border:#ECE6F5;
+    --c-corail:#F98272; --c-orange:#F9A876; --c-pink:#E290EC; --c-violet:#8884F0;
+    --c-bleu-violet:#5474F5; --c-bleu:#3EADFF; --c-purple-text:#5E59C7;
+    --c-dark:#1A1A1A; --c-black:#151416; --c-grey:#747474; --c-medium-grey:#C9C9C9;
+    --c-beige:#F5F4F0; --c-border:#ECE6F5; --c-white:#FFFFFF;
     --fam-relation:#F98272; --fam-action:#F9A876; --fam-structure:#5474F5; --fam-vision:#8884F0;
-    --font:'Poppins',-apple-system,sans-serif;
+    --g-primary:linear-gradient(90deg,#F98272 0%,#F9A876 35%,#E290EC 70%,#5474F5 100%);
+    --g-orangepink:linear-gradient(135deg,#F98272 0%,#E290EC 100%);
+    --g-pinkpurple:linear-gradient(135deg,#E290EC 0%,#8884F0 100%);
+    --g-purpleblue:linear-gradient(135deg,#5474F5 0%,#3EADFF 100%);
+    --g-halo:radial-gradient(circle at 50% 38%,#FF7D64 0%,#6E3D82 50%,#0F1232 100%);
+    --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --shadow-sm:0 2px 10px rgba(60,40,100,0.05);
+    --shadow-md:0 6px 28px rgba(60,40,100,0.08);
+    --shadow-lg:0 16px 50px rgba(60,40,100,0.12);
   }
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:var(--font);background:#FAF9F6;color:var(--c-dark);line-height:1.5;}
+  body{
+    font-family:var(--font);color:var(--c-dark);line-height:1.5;-webkit-font-smoothing:antialiased;
+    background-color:#FBFAFE;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:url("pattern.webp");
+    background-size:340px;
+    opacity:0.05;
+  }
+  #login,#app{position:relative;z-index:1;}
 
-  /* écran de connexion */
-  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at 30% 20%, #F98272 0%, #6E3D82 55%, #0F1232 100%);}
-  .login-card{background:#fff;border-radius:24px;padding:40px 34px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
-  .login-logo{font-size:22px;font-weight:800;color:var(--c-purple-text);margin-bottom:6px;}
-  .login-sub{font-size:14.5px;color:var(--c-grey);margin-bottom:24px;}
-  .login-input{width:100%;border:1.5px solid var(--c-border);border-radius:14px;padding:14px 16px;font-family:var(--font);font-size:15px;outline:none;margin-bottom:12px;}
-  .login-input:focus{border-color:var(--c-purple);}
-  .login-btn{width:100%;background:var(--c-purple-text);color:#fff;border:none;border-radius:14px;padding:15px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;}
-  .login-err{color:var(--c-corail);font-size:13.5px;margin-bottom:12px;min-height:18px;}
+  /* CONNEXION */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--g-halo);}
+  #login.hidden{display:none;}
+  .login-card{background:#fff;border-radius:26px;padding:42px 36px;max-width:410px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.35);}
+  .login-logo{font-size:13px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;background:var(--g-primary);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px;}
+  .login-card h1{font-size:25px;font-weight:800;letter-spacing:-0.02em;margin-bottom:8px;}
+  .login-sub{font-size:14.5px;color:var(--c-grey);margin-bottom:26px;}
+  .login-input{width:100%;border:1.5px solid var(--c-border);border-radius:14px;padding:15px 16px;font-family:var(--font);font-size:15px;outline:none;margin-bottom:14px;transition:border-color 0.15s;}
+  .login-input:focus{border-color:var(--c-violet);}
+  .login-btn{width:100%;background:var(--c-dark);color:#fff;border:none;border-radius:14px;padding:16px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:transform 0.12s;}
+  .login-btn:active{transform:scale(0.98);}
+  .login-err{color:var(--c-corail);font-size:13.5px;margin-bottom:12px;min-height:18px;font-weight:500;}
 
-  /* dashboard */
-  .dash{display:none;max-width:1100px;margin:0 auto;padding:28px 22px 80px;}
-  .dash.active{display:block;}
-  .dash-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
-  .dash-title{font-size:26px;font-weight:800;}
-  .dash-title span{color:var(--c-purple-text);}
-  .dash-logout{background:none;border:1.5px solid var(--c-border);border-radius:10px;padding:9px 16px;font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--c-grey);cursor:pointer;}
+  /* APP */
+  #app{display:none;}
+  #app.active{display:block;}
+  .wrap{max-width:1160px;margin:0 auto;padding:34px 24px 100px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;flex-wrap:wrap;gap:12px;}
+  .topbar-brand{font-size:25px;font-weight:800;letter-spacing:-0.02em;}
+  .topbar-brand span{background:var(--g-orangepink);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .topbar-logout{background:#fff;border:1px solid var(--c-border);border-radius:11px;padding:10px 18px;font-family:var(--font);font-size:13.5px;font-weight:600;color:var(--c-grey);cursor:pointer;transition:all 0.15s;box-shadow:var(--shadow-sm);}
+  .topbar-logout:hover{border-color:var(--c-violet);color:var(--c-purple-text);}
 
-  /* cartes de stats globales */
-  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:30px;}
-  .stat-card{background:#fff;border:1px solid var(--c-border);border-radius:16px;padding:20px;}
-  .stat-num{font-size:34px;font-weight:800;color:var(--c-purple-text);line-height:1;}
-  .stat-label{font-size:13px;color:var(--c-grey);margin-top:6px;}
+  .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--c-grey);margin-bottom:22px;}
+  .breadcrumb a{color:var(--c-purple-text);font-weight:600;cursor:pointer;text-decoration:none;}
+  .breadcrumb a:hover{text-decoration:underline;}
+  .breadcrumb .sep{color:var(--c-medium-grey);}
 
-  /* entreprises */
-  .ent-block{background:#fff;border:1px solid var(--c-border);border-radius:18px;padding:22px;margin-bottom:18px;}
-  .ent-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
-  .ent-nom{font-size:19px;font-weight:800;}
-  .ent-meta{font-size:13.5px;color:var(--c-grey);}
-  .camp-row{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--c-border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:border-color 0.15s, transform 0.15s;}
-  .camp-row:hover{border-color:var(--c-purple);transform:translateX(2px);}
-  .camp-info{flex:1;min-width:0;}
-  .camp-nom{font-size:15.5px;font-weight:700;}
-  .camp-code{font-size:12.5px;color:var(--c-grey);font-family:monospace;margin-top:2px;}
-  .camp-type{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;padding:3px 9px;border-radius:20px;margin-left:8px;background:rgba(94,89,199,0.12);color:var(--c-purple-text);}
-  .camp-quota{text-align:right;font-size:13px;color:var(--c-grey);white-space:nowrap;}
-  .camp-quota b{color:var(--c-dark);font-size:16px;}
-  .camp-jauge{width:120px;height:8px;background:var(--c-light);border-radius:10px;overflow:hidden;margin-top:6px;}
-  .camp-jauge-fill{height:100%;background:linear-gradient(90deg,var(--c-purple),var(--c-purple-text));border-radius:10px;}
-  .fam-mini{display:flex;gap:4px;margin-top:8px;}
-  .fam-dot{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+  /* VUE ENSEMBLE */
+  .stats-band{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:34px;}
+  .stat{position:relative;background:#fff;border-radius:18px;padding:24px;box-shadow:var(--shadow-sm);overflow:hidden;border:1px solid rgba(236,230,245,0.6);}
+  .stat-bar{position:absolute;top:0;left:0;width:100%;height:4px;}
+  .stat:nth-child(1) .stat-bar{background:var(--g-orangepink);}
+  .stat:nth-child(2) .stat-bar{background:var(--g-pinkpurple);}
+  .stat:nth-child(3) .stat-bar{background:var(--g-purpleblue);}
+  .stat-num{font-size:40px;font-weight:800;line-height:1;letter-spacing:-0.03em;}
+  .stat-lab{font-size:13px;color:var(--c-grey);margin-top:8px;font-weight:500;}
+  .section-label{font-size:12px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--c-medium-grey);margin-bottom:14px;}
+  .ent-grid{display:flex;flex-direction:column;gap:16px;}
+  .ent-card{background:#fff;border-radius:20px;padding:24px 26px;box-shadow:var(--shadow-sm);border:1px solid rgba(236,230,245,0.6);}
+  .ent-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap;}
+  .ent-name{font-size:19px;font-weight:800;letter-spacing:-0.01em;display:flex;align-items:center;gap:12px;}
+  .ent-name .bullet{width:8px;height:26px;border-radius:4px;background:var(--g-orangepink);}
+  .ent-info{font-size:13px;color:var(--c-grey);font-weight:500;}
+  .ent-campaigns{display:flex;flex-direction:column;gap:10px;}
+  .camp-line{display:flex;align-items:center;gap:18px;padding:16px 18px;border-radius:14px;background:linear-gradient(180deg,#fff,#FBFAFE);border:1px solid var(--c-border);cursor:pointer;transition:all 0.18s;}
+  .camp-line:hover{border-color:var(--c-violet);box-shadow:0 8px 26px rgba(136,132,240,0.16);transform:translateY(-2px);}
+  .camp-line-main{flex:1;min-width:0;}
+  .camp-line-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .camp-line-name{font-size:15.5px;font-weight:700;letter-spacing:-0.01em;}
+  .camp-badge{font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+  .camp-badge.manager{background:rgba(136,132,240,0.14);color:var(--c-purple-text);}
+  .camp-badge.commercial{background:rgba(249,168,118,0.18);color:#C77A35;}
+  .camp-badge.classic{background:rgba(84,116,245,0.13);color:var(--c-bleu-violet);}
+  .camp-line-code{font-size:12px;color:var(--c-grey);font-family:monospace;margin-top:3px;letter-spacing:0.03em;}
+  .camp-line-fams{display:flex;gap:5px;margin-top:10px;}
+  .fam-chip{height:8px;border-radius:5px;min-width:8px;}
+  .camp-line-right{text-align:right;white-space:nowrap;}
+  .camp-line-count{font-size:18px;font-weight:800;}
+  .camp-line-count small{font-size:13px;color:var(--c-medium-grey);font-weight:600;}
+  .camp-line-gauge{width:120px;height:6px;background:#EEEAF6;border-radius:10px;overflow:hidden;margin-top:8px;margin-left:auto;}
+  .camp-line-gauge i{display:block;height:100%;background:var(--g-primary);border-radius:10px;}
+  .camp-line-arrow{color:var(--c-medium-grey);font-size:24px;flex-shrink:0;line-height:1;}
 
-  /* vue détail campagne */
-  .detail-back{background:none;border:none;color:var(--c-purple-text);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:18px;}
-  .detail-head{margin-bottom:24px;}
-  .detail-nom{font-size:24px;font-weight:800;}
-  .detail-meta{font-size:14px;color:var(--c-grey);margin-top:4px;}
-  .repartition{background:#fff;border:1px solid var(--c-border);border-radius:18px;padding:22px;margin-bottom:20px;}
-  .repartition h3{font-size:16px;font-weight:800;margin-bottom:16px;}
-  .fam-bars{display:flex;flex-direction:column;gap:12px;}
-  .fam-bar-row{display:flex;align-items:center;gap:12px;}
-  .fam-bar-label{width:90px;font-size:13.5px;font-weight:600;}
-  .fam-bar-track{flex:1;height:26px;background:var(--c-light);border-radius:8px;overflow:hidden;}
-  .fam-bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 10px;color:#fff;font-size:12.5px;font-weight:700;min-width:28px;transition:width 0.5s;}
-  .membres{background:#fff;border:1px solid var(--c-border);border-radius:18px;padding:22px;}
-  .membres h3{font-size:16px;font-weight:800;margin-bottom:16px;}
-  .membre-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--c-light);}
-  .membre-row:last-child{border-bottom:none;}
-  .membre-pastille{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;}
-  .membre-info{flex:1;min-width:0;}
-  .membre-nom{font-size:14.5px;font-weight:600;}
-  .membre-arch{font-size:12.5px;color:var(--c-grey);}
-  .membre-statut{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;padding:3px 10px;border-radius:20px;}
-  .statut-termine{background:rgba(63,174,110,0.14);color:#2E9359;}
-  .statut-attente{background:rgba(249,168,118,0.16);color:#C77A35;}
-  .loading{text-align:center;padding:50px;color:var(--c-grey);}
-  .empty{text-align:center;padding:40px;color:var(--c-grey);font-size:14.5px;}
-
-  /* analyse stratégique */
-  .analyse-cta-block{display:flex;align-items:center;justify-content:space-between;gap:16px;background:linear-gradient(135deg,#6E3D82,#2A1B4A);border-radius:18px;padding:22px;margin-bottom:20px;flex-wrap:wrap;}
-  .analyse-cta-titre{font-size:17px;font-weight:800;color:#fff;}
-  .analyse-cta-sub{font-size:13.5px;color:rgba(255,255,255,0.8);margin-top:4px;max-width:520px;}
-  .analyse-cta-btn{background:#fff;color:var(--c-purple-text);border:none;border-radius:12px;padding:13px 22px;font-family:var(--font);font-size:14.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  /* VUE CAMPAGNE */
+  .camp-hero{background:var(--g-halo);border-radius:24px;padding:34px 32px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);}
+  .camp-hero::after{content:"";position:absolute;top:-40%;right:-10%;width:380px;height:380px;background:radial-gradient(circle,rgba(255,255,255,0.14),transparent 70%);pointer-events:none;}
+  .camp-hero::before{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:300px;opacity:0.09;pointer-events:none;}
+  .camp-hero-kicker{font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;margin-bottom:10px;position:relative;}
+  .camp-hero-title{font-size:30px;font-weight:800;letter-spacing:-0.02em;margin-bottom:8px;position:relative;}
+  .camp-hero-sub{font-size:14.5px;opacity:0.88;position:relative;}
+  .camp-hero-kpis{display:flex;gap:36px;margin-top:26px;flex-wrap:wrap;position:relative;}
+  .kpi-big-num{font-size:34px;font-weight:800;line-height:1;letter-spacing:-0.02em;}
+  .kpi-big-lab{font-size:12.5px;opacity:0.82;margin-top:6px;font-weight:500;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+  .grid-3{display:grid;grid-template-columns:1.1fr 0.9fr;gap:20px;margin-bottom:20px;}
+  .panel{background:#fff;border-radius:20px;padding:26px;box-shadow:var(--shadow-sm);border:1px solid rgba(236,230,245,0.6);}
+  .panel-title{font-size:16px;font-weight:800;letter-spacing:-0.01em;margin-bottom:4px;}
+  .panel-sub{font-size:13px;color:var(--c-grey);margin-bottom:20px;}
+  .chart-box{position:relative;height:280px;}
+  .chart-box.tall{height:330px;}
+  .dominante-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:16px;background:linear-gradient(135deg,rgba(249,130,114,0.08),rgba(136,132,240,0.08));margin-bottom:20px;}
+  .dominante-emoji{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0;}
+  .dominante-txt-lab{font-size:12px;color:var(--c-grey);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+  .dominante-txt-val{font-size:20px;font-weight:800;letter-spacing:-0.01em;}
+  .fam-legend{display:flex;flex-direction:column;gap:13px;margin-top:8px;}
+  .fam-legend-row{display:flex;align-items:center;gap:12px;}
+  .fam-legend-dot{width:14px;height:14px;border-radius:5px;flex-shrink:0;}
+  .fam-legend-name{font-size:14px;font-weight:700;width:90px;}
+  .fam-legend-bar{flex:1;height:9px;background:#F0EDF7;border-radius:6px;overflow:hidden;}
+  .fam-legend-bar i{display:block;height:100%;border-radius:6px;}
+  .fam-legend-pct{font-size:13.5px;font-weight:700;color:var(--c-grey);min-width:54px;text-align:right;}
+  .membres-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+  .membre{display:flex;align-items:center;gap:13px;padding:14px 16px;border-radius:14px;border:1px solid var(--c-border);background:linear-gradient(180deg,#fff,#FCFBFE);transition:all 0.15s;}
+  .membre:hover{border-color:var(--c-violet);box-shadow:var(--shadow-sm);}
+  .membre-ava{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;}
+  .membre-info{min-width:0;}
+  .membre-nom{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .membre-arch{font-size:12px;color:var(--c-grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .analyse-cta{display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--g-halo);border-radius:20px;padding:26px 30px;color:#fff;flex-wrap:wrap;box-shadow:var(--shadow-md);margin-bottom:20px;}
+  .analyse-cta-title{font-size:18px;font-weight:800;letter-spacing:-0.01em;}
+  .analyse-cta-sub{font-size:13.5px;opacity:0.85;margin-top:5px;max-width:540px;}
+  .analyse-cta-btn{background:#fff;color:var(--c-purple-text);border:none;border-radius:13px;padding:14px 26px;font-family:var(--font);font-size:14.5px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform 0.12s;}
+  .analyse-cta-btn:active{transform:scale(0.97);}
   .analyse-cta-btn:disabled{opacity:0.6;cursor:default;}
-  .analyse-result{background:#fff;border:1px solid var(--c-border);border-radius:18px;padding:24px;margin-bottom:20px;}
-  .analyse-badge{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;background:rgba(94,89,199,0.12);color:var(--c-purple-text);padding:4px 11px;border-radius:20px;margin-bottom:14px;}
-  .analyse-synthese{font-size:15.5px;line-height:1.6;color:var(--c-dark);margin-bottom:22px;font-weight:500;}
-  .swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
-  .swot-card{border-radius:14px;padding:16px 18px;}
-  .swot-titre{font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px;}
-  .swot-card ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
-  .swot-card li{font-size:13.5px;line-height:1.45;padding-left:16px;position:relative;}
+
+  /* SWOT */
+  .analyse-result{background:#fff;border-radius:20px;padding:28px;box-shadow:var(--shadow-sm);border:1px solid rgba(236,230,245,0.6);margin-bottom:20px;}
+  .analyse-badge{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;background:rgba(94,89,199,0.12);color:var(--c-purple-text);padding:5px 12px;border-radius:20px;margin-bottom:16px;}
+  .analyse-synthese{font-size:16px;line-height:1.6;font-weight:500;margin-bottom:24px;}
+  .swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+  .swot-card{border-radius:15px;padding:18px 20px;}
+  .swot-card-title{font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:11px;}
+  .swot-card ul{list-style:none;display:flex;flex-direction:column;gap:9px;}
+  .swot-card li{font-size:13.5px;line-height:1.45;padding-left:17px;position:relative;}
   .swot-card li::before{content:"";position:absolute;left:2px;top:7px;width:6px;height:6px;border-radius:50%;}
-  .swot-forces{background:rgba(63,174,110,0.09);} .swot-forces .swot-titre{color:#2E9359;} .swot-forces li::before{background:#3Fae6e;}
-  .swot-faiblesses{background:rgba(249,168,118,0.1);} .swot-faiblesses .swot-titre{color:#C77A35;} .swot-faiblesses li::before{background:#F9A876;}
-  .swot-opportunites{background:rgba(84,116,245,0.08);} .swot-opportunites .swot-titre{color:#3A57C7;} .swot-opportunites li::before{background:#5474F5;}
-  .swot-risques{background:rgba(249,130,114,0.09);} .swot-risques .swot-titre{color:#C8503F;} .swot-risques li::before{background:#F98272;}
-  .analyse-section{margin-bottom:22px;}
-  .analyse-section h4{font-size:15px;font-weight:800;margin-bottom:10px;}
-  .analyse-section p{font-size:14px;line-height:1.6;color:var(--c-dark);}
+  .swot-f{background:rgba(63,174,110,0.08);} .swot-f .swot-card-title{color:#2E9359;} .swot-f li::before{background:#3Fae6e;}
+  .swot-w{background:rgba(249,168,118,0.1);} .swot-w .swot-card-title{color:#C77A35;} .swot-w li::before{background:#F9A876;}
+  .swot-o{background:rgba(84,116,245,0.08);} .swot-o .swot-card-title{color:#3A57C7;} .swot-o li::before{background:#5474F5;}
+  .swot-r{background:rgba(249,130,114,0.09);} .swot-r .swot-card-title{color:#C8503F;} .swot-r li::before{background:#F98272;}
+  .analyse-sec{margin-bottom:22px;}
+  .analyse-sec h4{font-size:15px;font-weight:800;margin-bottom:11px;}
+  .analyse-sec p{font-size:14px;line-height:1.6;}
   .liste-rh{list-style:none;display:flex;flex-direction:column;gap:9px;}
   .liste-rh li{font-size:14px;line-height:1.45;padding-left:18px;position:relative;}
-  .liste-rh li::before{content:"";position:absolute;left:3px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--c-purple);}
+  .liste-rh li::before{content:"";position:absolute;left:3px;top:7px;width:7px;height:7px;border-radius:50%;background:var(--c-violet);}
   .plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  .plan-item{background:var(--c-light);border-radius:12px;padding:14px 16px;}
-  .plan-titre{font-size:14px;font-weight:700;color:var(--c-purple-text);margin-bottom:5px;}
-  .plan-desc{font-size:13px;line-height:1.45;color:var(--c-dark);}
+  .plan-item{background:#FBFAFE;border-radius:13px;padding:15px 17px;border:1px solid var(--c-border);}
+  .plan-titre{font-size:14px;font-weight:700;color:var(--c-purple-text);margin-bottom:6px;}
+  .plan-desc{font-size:13px;line-height:1.45;color:var(--c-grey);}
   .focus-grid{display:flex;flex-direction:column;gap:10px;}
-  .focus-item{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--c-border);border-radius:12px;padding:13px 16px;}
-  .focus-nom{font-size:13.5px;font-weight:700;color:var(--c-dark);min-width:120px;flex-shrink:0;}
+  .focus-item{display:flex;gap:13px;align-items:flex-start;border:1px solid var(--c-border);border-radius:13px;padding:14px 16px;}
+  .focus-nom{font-size:13.5px;font-weight:700;min-width:130px;flex-shrink:0;}
   .focus-conseil{font-size:13px;line-height:1.45;color:var(--c-grey);}
-  @media (max-width:680px){ .swot-grid{grid-template-columns:1fr;} .plan-grid{grid-template-columns:1fr;} .focus-item{flex-direction:column;gap:4px;} .focus-nom{min-width:0;} }
-  @media (max-width:680px){ .stats-row{grid-template-columns:1fr;} .camp-row{flex-wrap:wrap;} }
+
+  .loading{text-align:center;padding:60px;color:var(--c-grey);}
+  .empty{text-align:center;padding:50px;color:var(--c-grey);font-size:14.5px;}
+  .spinner{display:inline-block;width:30px;height:30px;border:3px solid var(--c-border);border-top-color:var(--c-violet);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* SECTION ANALYSE DÉTAILLÉE (sans IA) */
+  .analyse-data{background:#fff;border-radius:20px;padding:28px;box-shadow:var(--shadow-sm);border:1px solid rgba(236,230,245,0.6);margin-bottom:20px;}
+  .analyse-data-head{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+
+  /* DUO graphique + texte côte à côte */
+  .duo{display:grid;grid-template-columns:1.15fr 0.85fr;gap:20px;margin-bottom:20px;align-items:stretch;}
+  .duo-visuel{display:flex;flex-direction:column;}
+  .duo-texte{display:flex;flex-direction:column;justify-content:center;background:linear-gradient(165deg,#fff,#FBFAFE);}
+  .duo-texte-titre{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800;letter-spacing:-0.01em;margin-bottom:14px;}
+  .duo-texte-titre .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+  .ad-extremes-compact{display:flex;flex-direction:column;gap:8px;margin-top:18px;padding-top:18px;border-top:1px solid var(--c-border);}
+  .ad-extc{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+  .ad-extc-lab{color:var(--c-grey);font-weight:600;}
+  .ad-extc-val{font-weight:700;color:var(--c-purple-text);}
+
+  /* CARTOGRAPHIE */
+  .carto-wrap{position:relative;padding:20px 24px 22px;}
+  .carto-axe-y,.carto-axe-x{position:absolute;font-size:10.5px;font-weight:700;color:var(--c-medium-grey);text-transform:uppercase;letter-spacing:0.05em;z-index:2;}
+  .carto-axe-y.haut{top:8px;left:50%;transform:translateX(-50%);}
+  .carto-axe-y.bas{bottom:2px;left:50%;transform:translateX(-50%);}
+  .carto-axe-x.gauche{left:-6px;top:50%;transform:translateY(-50%) rotate(-90deg);}
+  .carto-axe-x.droite{right:-6px;top:50%;transform:translateY(-50%) rotate(90deg);}
+
+  /* BANDEAU ARCHÉTYPE D'ÉQUIPE */
+  .archetype-banner{position:relative;background:var(--g-halo);border-radius:24px;padding:36px 34px;color:#fff;margin-bottom:24px;overflow:hidden;box-shadow:var(--shadow-lg);}
+  .archetype-glow{position:absolute;top:-50%;left:25%;width:420px;height:420px;background:radial-gradient(circle,rgba(255,255,255,0.16),transparent 70%);pointer-events:none;}
+  .archetype-banner::before{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:300px;opacity:0.10;pointer-events:none;}
+  .archetype-label{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;opacity:0.82;margin-bottom:12px;position:relative;}
+  .archetype-nom{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;position:relative;}
+  .archetype-essence{font-size:15.5px;line-height:1.6;opacity:0.94;max-width:680px;position:relative;}
+  .archetype-tags{display:flex;gap:10px;margin-top:20px;position:relative;}
+  .archetype-tag{font-size:11.5px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;padding:7px 15px;border-radius:20px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,0.18);}
+
+  /* RECOMMANDATIONS D'ACTIVATION */
+  .reco-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .reco-item{display:flex;gap:15px;padding:18px 20px;border-radius:15px;border:1px solid var(--c-border);background:linear-gradient(165deg,#fff,#FBFAFE);}
+  .reco-num{width:30px;height:30px;border-radius:9px;background:var(--g-orangepink);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .reco-titre{font-size:14.5px;font-weight:800;margin-bottom:6px;letter-spacing:-0.01em;}
+  .reco-desc{font-size:13.5px;line-height:1.5;color:#4a4a4a;}
+
+  /* INDICATEURS */
+  .ind-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px;}
+  .ind-card{padding:18px 20px;border-radius:15px;background:linear-gradient(135deg,rgba(249,130,114,0.06),rgba(136,132,240,0.06));border:1px solid var(--c-border);}
+  .ind-cle{font-size:13.5px;font-weight:800;margin-bottom:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .ind-val{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;padding:3px 10px;border-radius:20px;background:var(--c-violet);color:#fff;}
+  .ind-txt{font-size:13.5px;line-height:1.55;color:#4a4a4a;}
+
+  /* ANALYSES AVANCÉES */
+  .compl-cercle{width:118px;height:118px;border-radius:50%;background:var(--g-halo);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--shadow-md);}
+  .compl-cercle b{font-size:30px;font-weight:800;letter-spacing:-0.02em;}
+  .compl-cercle span{font-size:10.5px;opacity:0.85;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+  .compl-sous{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-size:13px;}
+  .compl-sous span{width:230px;color:var(--c-grey);font-weight:600;}
+  .compl-sous b{min-width:42px;text-align:right;font-weight:800;color:var(--c-purple-text);}
+  .compl-bar{flex:1;height:8px;background:#EEEAF6;border-radius:6px;overflow:hidden;}
+  .compl-bar i{display:block;height:100%;background:var(--g-primary);border-radius:6px;}
+  .risque-item{padding:18px 20px;border-radius:15px;background:rgba(249,130,114,0.06);border:1px solid rgba(249,130,114,0.18);}
+  .risque-titre{font-size:14.5px;font-weight:800;margin-bottom:7px;letter-spacing:-0.01em;}
+  .angle-item{padding:18px 20px;border-radius:15px;background:rgba(136,132,240,0.06);border:1px solid rgba(136,132,240,0.18);}
+  .nat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
+  .nat-item{padding:16px 18px;border-radius:14px;border:1px solid var(--c-border);}
+  .nat-item.nat-eleve{background:rgba(249,130,114,0.07);border-color:rgba(249,130,114,0.22);}
+  .nat-item.nat-modere{background:rgba(249,168,118,0.07);border-color:rgba(249,168,118,0.22);}
+  .nat-item.nat-faible{background:rgba(63,174,110,0.06);border-color:rgba(63,174,110,0.18);}
+  .nat-cout{display:inline-block;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:4px 11px;border-radius:20px;background:#fff;margin-bottom:9px;border:1px solid var(--c-border);}
+  .binome-grid{display:flex;flex-direction:column;gap:12px;}
+  .binome-item{display:flex;gap:15px;align-items:flex-start;padding:16px 18px;border-radius:14px;border:1px solid var(--c-border);background:linear-gradient(165deg,#fff,#FBFAFE);}
+  .binome-rang{width:30px;height:30px;border-radius:50%;background:var(--g-orangepink);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .binome-noms{font-size:15px;font-weight:800;margin-bottom:5px;letter-spacing:-0.01em;}
+  .analyse-cta-soon{opacity:0.62;filter:saturate(0.55);}
+  .badge-soon{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,0.22);margin-left:10px;vertical-align:middle;}
+
+  /* FICHE APPRENANT (modale) */
+  .membre-clic{cursor:pointer;}
+  .membre-fleche{margin-left:auto;color:var(--c-medium-grey);font-size:20px;}
+  .fm-overlay{position:fixed;inset:0;background:rgba(15,18,50,0.55);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+  .fm-card{position:relative;background:#fff;border-radius:22px;padding:30px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 90px rgba(0,0,0,0.35);}
+  .fm-close{position:absolute;top:16px;right:18px;background:#F3F0FA;border:none;width:34px;height:34px;border-radius:50%;font-size:20px;color:var(--c-grey);cursor:pointer;line-height:1;}
+  .fm-head{display:flex;align-items:center;gap:16px;margin-bottom:22px;}
+  .fm-nom{font-size:20px;font-weight:800;letter-spacing:-0.01em;}
+  .fm-arch{font-size:13.5px;font-weight:700;}
+  .fm-section{margin-bottom:20px;padding-top:18px;border-top:1px solid var(--c-border);}
+  .fm-section-titre{font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--c-medium-grey);margin-bottom:12px;}
+  .dim-grid-i{display:flex;flex-direction:column;gap:10px;}
+  .dim-item{padding:14px 16px;border-radius:13px;background:linear-gradient(120deg,rgba(136,132,240,0.06),rgba(84,116,245,0.05));border:1px solid var(--c-border);}
+  .dim-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px;}
+  .dim-nom-i{font-size:13px;font-weight:800;}
+  .dim-prof-i{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;padding:3px 10px;border-radius:20px;background:var(--c-purple-text);color:#fff;}
+  .dim-modele-i{font-size:10px;color:#A89FC4;margin-top:6px;font-style:italic;}
+  .fm-fiab{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;border-radius:14px;border:1.5px solid;margin-bottom:20px;}
+  .fm-fiab-lab{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+  .fm-fiab-msg{font-size:12.5px;color:#5a5a5a;line-height:1.4;}
+  .fm-fiab-score{font-size:28px;font-weight:800;flex-shrink:0;}
+  .fm-conseil{margin-bottom:13px;}
+  .fm-conseil-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;}
+  .fm-dim{font-size:13px;font-weight:800;}
+  .fm-profil{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;padding:3px 10px;border-radius:20px;background:rgba(136,132,240,0.13);color:var(--c-purple-text);}
+  .fm-conseil p{font-size:13px;line-height:1.5;color:#4a4a4a;}
+  .fm-bf{display:flex;align-items:center;gap:12px;margin-bottom:8px;font-size:12.5px;}
+  .fm-bf span{width:150px;color:var(--c-grey);font-weight:600;}
+  .fm-bf b{min-width:30px;text-align:right;font-weight:800;color:var(--c-purple-text);}
+  .analyse-data-head .ico{width:40px;height:40px;border-radius:11px;background:var(--g-orangepink);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .analyse-data-head .ico svg{width:21px;height:21px;}
+  .analyse-data-head h3{font-size:18px;font-weight:800;letter-spacing:-0.01em;}
+  .analyse-data-head p{font-size:13px;color:var(--c-grey);}
+  .ad-bloc{padding:22px 0;border-top:1px solid var(--c-border);}
+  .ad-bloc:first-of-type{border-top:none;padding-top:4px;}
+  .ad-bloc-titre{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:800;margin-bottom:12px;}
+  .ad-bloc-titre .dot{width:10px;height:10px;border-radius:50%;}
+  .ad-texte{font-size:14.5px;line-height:1.65;color:#3A3A3A;}
+  .ad-texte strong{color:var(--c-dark);font-weight:700;}
+  /* indice de diversité visuel */
+  .ad-indice{display:flex;align-items:center;gap:20px;margin-top:16px;padding:18px;background:linear-gradient(135deg,rgba(249,130,114,0.06),rgba(136,132,240,0.06));border-radius:14px;}
+  .ad-indice-jauge{flex:1;}
+  .ad-indice-jauge-bar{height:12px;background:#EEEAF6;border-radius:8px;overflow:hidden;margin-top:8px;}
+  .ad-indice-jauge-bar i{display:block;height:100%;background:var(--g-primary);border-radius:8px;}
+  .ad-indice-score{text-align:center;flex-shrink:0;}
+  .ad-indice-score b{font-size:32px;font-weight:800;letter-spacing:-0.02em;}
+  .ad-indice-score span{display:block;font-size:12px;color:var(--c-grey);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+  /* extrêmes Big Five */
+  .ad-extremes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:14px;}
+  .ad-ext{border:1px solid var(--c-border);border-radius:12px;padding:13px 15px;}
+  .ad-ext-lab{font-size:12px;font-weight:700;color:var(--c-grey);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:8px;}
+  .ad-ext-row{display:flex;justify-content:space-between;font-size:13px;margin-top:4px;}
+  .ad-ext-row .n{font-weight:600;}
+  .ad-ext-row .v{font-weight:800;color:var(--c-purple-text);}
+
+  .empty{text-align:center;padding:50px;color:var(--c-grey);font-size:14.5px;}
+
+  @media (max-width:820px){
+    .stats-band{grid-template-columns:1fr;}
+    .grid-2,.grid-3,.swot-grid,.plan-grid,.duo,.reco-grid{grid-template-columns:1fr;}
+    .camp-hero-kpis{gap:24px;}
+    .focus-item{flex-direction:column;gap:4px;}
+    .focus-nom{min-width:0;}
+  }
 </style>
 </head>
 <body>
 
-<div class="login-wrap" id="login">
+<div id="login">
   <div class="login-card">
     <div class="login-logo">Sinéa Profile</div>
-    <div class="login-sub">Espace de pilotage. Entrez votre clé d'accès.</div>
+    <h1>Espace de pilotage</h1>
+    <p class="login-sub">Entrez votre clé d'accès pour consulter vos campagnes.</p>
     <div class="login-err" id="login-err"></div>
-    <input class="login-input" id="login-key" type="password" placeholder="Clé d'accès" />
-    <button class="login-btn" id="login-btn">Accéder au tableau de bord</button>
+    <input type="password" class="login-input" id="login-key" placeholder="Clé d'accès" onkeydown="if(event.key==='Enter')tenterConnexion()">
+    <button class="login-btn" id="login-btn" onclick="tenterConnexion()">Accéder au tableau de bord</button>
   </div>
 </div>
 
-<div class="dash" id="dash">
-  <div class="dash-head">
-    <div class="dash-title">Pilotage <span>Sinéa Profile</span></div>
-    <button class="dash-logout" id="logout">Se déconnecter</button>
+<div id="app">
+  <div class="wrap">
+    <div class="topbar">
+      <div class="topbar-brand">Pilotage <span>Sinéa Profile</span></div>
+      <button class="topbar-logout" onclick="deconnexion()">Se déconnecter</button>
+    </div>
+    <div id="content"></div>
   </div>
-  <div id="dash-content"><div class="loading">Chargement...</div></div>
 </div>
 
 <script>
   const BACKEND = "https://sinea-profile-ia.vercel.app/api/dashboard";
+  const ANALYSE_URL = "https://sinea-profile-ia.vercel.app/api/analyse_equipe";
   let cleAcces = "";
-  const FAM_COULEURS = { RELATION:'#F98272', ACTION:'#F9A876', STRUCTURE:'#5474F5', VISION:'#8884F0' };
+  let charts = {};
+  let codeCampagneActuelle = "";
+
+  const FAM_COLORS = { RELATION:'#F98272', ACTION:'#F9A876', STRUCTURE:'#5474F5', VISION:'#8884F0' };
   const FAM_LABELS = { RELATION:'Relation', ACTION:'Action', STRUCTURE:'Structure', VISION:'Vision' };
+  const FAM_ORDER = ['RELATION','ACTION','STRUCTURE','VISION'];
 
-  // connexion
-  document.getElementById('login-btn').onclick = tenterConnexion;
-  document.getElementById('login-key').onkeydown = (e) => { if (e.key === 'Enter') tenterConnexion(); };
+  // ===== MODULE ANALYSE DATA (sans IA) =====
+// ============================================================
+// analyse_data.js — Analyse data avancée d'une équipe SANS IA
+// Calculs statistiques + génération de textes explicatifs par règles.
+// Utilisé par le dashboard pour la vue campagne.
+// ============================================================
 
-  function tenterConnexion() {
-    const key = document.getElementById('login-key').value.trim();
-    const err = document.getElementById('login-err');
-    if (!key) { err.textContent = 'Entrez votre clé d\'accès.'; return; }
-    err.textContent = 'Vérification...';
-    fetch(BACKEND + '?cle=' + encodeURIComponent(key) + '&liste=ensemble')
-      .then(r => { if (r.status === 401) throw new Error('cle'); return r.json(); })
-      .then(data => {
-        cleAcces = key;
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('dash').classList.add('active');
-        afficherEnsemble(data);
-      })
-      .catch(e => {
-        err.textContent = (e.message === 'cle') ? 'Clé d\'accès incorrecte.' : 'Connexion impossible. Réessayez.';
-      });
+
+const BF_LABELS = { E:'Extraversion', A:'Agréabilité', C:'Conscience', N:'Stabilité émotionnelle', O:'Ouverture' };
+const BF_KEYS = ['E','A','C','N','O'];
+
+// Descriptions des familles (ce qu'elles apportent à une équipe)
+const FAM_APPORT = {
+  RELATION: "le liant humain, l'écoute et la cohésion du collectif",
+  ACTION: "l'énergie d'exécution, la prise de décision et l'avancement concret",
+  STRUCTURE: "la rigueur, la fiabilité et la qualité dans la durée",
+  VISION: "l'innovation, la prise de hauteur et l'anticipation"
+};
+const FAM_MANQUE = {
+  RELATION: "La dimension relationnelle est peu représentée. L'équipe pourrait manquer de liant dans les moments de tension et négliger le climat collectif.",
+  ACTION: "La dimension Action est peu représentée. L'équipe pourrait peiner à trancher et à transformer les réflexions en décisions concrètes.",
+  STRUCTURE: "La dimension Structure est peu représentée. L'équipe pourrait manquer de rigueur dans le suivi et la fiabilisation des process.",
+  VISION: "La dimension Vision est peu représentée. L'équipe pourrait rester dans l'opérationnel et manquer de recul stratégique."
+};
+
+function moyenne(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function ecartType(arr){
+  if(arr.length<2) return 0;
+  const m=moyenne(arr);
+  return Math.sqrt(arr.reduce((s,v)=>s+Math.pow(v-m,2),0)/arr.length);
+}
+
+// Calcule l'analyse complète d'une équipe à partir des répondants terminés
+function analyserEquipe(repondants){
+  const membres = repondants.filter(r=>{
+    const s=String(r.statut||'').toLowerCase();
+    return (s==='terminé'||s==='termine') && r.bigFive && r.bigFive.E!=null;
+  });
+  const n = membres.length;
+  if(n===0) return null;
+
+  // === FAMILLES ===
+  const famCount = { RELATION:0, ACTION:0, STRUCTURE:0, VISION:0 };
+  membres.forEach(m=>{ const f=(m.famille||'').toUpperCase(); if(famCount[f]!==undefined) famCount[f]++; });
+  const famPct = {}; FAM_ORDER.forEach(f=>famPct[f]=Math.round(famCount[f]/n*100));
+  const famTriees = FAM_ORDER.slice().sort((a,b)=>famCount[b]-famCount[a]);
+  const famDom = famTriees[0];
+  const famAbsentes = FAM_ORDER.filter(f=>famCount[f]===0);
+  const famFaibles = FAM_ORDER.filter(f=>famCount[f]>0 && famPct[f]<15);
+
+  // === BIG FIVE moyenne + dispersion ===
+  const bfStats = {};
+  BF_KEYS.forEach(k=>{
+    const vals = membres.map(m=>Number(m.bigFive[k])||0);
+    const moy = Math.round(moyenne(vals));
+    const sd = Math.round(ecartType(vals));
+    bfStats[k] = { moyenne:moy, ecartType:sd, min:Math.min(...vals), max:Math.max(...vals),
+      // affichage : N inversé en "stabilité"
+      affiche: k==='N' ? 100-moy : moy };
+  });
+
+  // === DIVERSITÉ COGNITIVE ===
+  // basée sur le nombre de familles représentées + dispersion Big Five moyenne
+  const famRepresentees = FAM_ORDER.filter(f=>famCount[f]>0).length;
+  const dispMoyenne = moyenne(BF_KEYS.map(k=>bfStats[k].ecartType));
+  // score 0-100 : combine couverture familles (0-4) et dispersion
+  const scoreDiv = Math.min(100, Math.round((famRepresentees/4)*55 + Math.min(dispMoyenne,30)/30*45));
+  let nivDiv, txtDiv;
+  if(scoreDiv>=70){ nivDiv='élevée'; txtDiv="forte complémentarité"; }
+  else if(scoreDiv>=45){ nivDiv='modérée'; txtDiv="complémentarité équilibrée"; }
+  else { nivDiv='faible'; txtDiv="forte homogénéité"; }
+
+  // === ARCHÉTYPES ===
+  const archCount = {};
+  membres.forEach(m=>{ const a=m.dominante||'?'; archCount[a]=(archCount[a]||0)+1; });
+  const archUniques = Object.keys(archCount).length;
+  const archTriees = Object.entries(archCount).sort((a,b)=>b[1]-a[1]);
+
+  // === PROFILS EXTRÊMES (par dimension) ===
+  const extremes = {};
+  BF_KEYS.forEach(k=>{
+    let hi=membres[0], lo=membres[0];
+    membres.forEach(m=>{ if((Number(m.bigFive[k])||0)>(Number(hi.bigFive[k])||0))hi=m; if((Number(m.bigFive[k])||0)<(Number(lo.bigFive[k])||0))lo=m; });
+    extremes[k]={ haut:{nom:hi.nom,val:Number(hi.bigFive[k])||0}, bas:{nom:lo.nom,val:Number(lo.bigFive[k])||0} };
+  });
+
+  return {
+    n, membres,
+    familles:{ count:famCount, pct:famPct, triees:famTriees, dominante:famDom, absentes:famAbsentes, faibles:famFaibles, representees:famRepresentees },
+    bigFive:bfStats,
+    diversite:{ score:scoreDiv, niveau:nivDiv, texte:txtDiv, archetypesUniques:archUniques },
+    archetypes:{ count:archCount, uniques:archUniques, triees:archTriees },
+    extremes,
+  };
+}
+
+// ====== GÉNÉRATION DE TEXTES EXPLICATIFS (par règles, sans IA) ======
+
+// Texte d'analyse des familles
+function texteFamilles(a){
+  const f=a.familles;
+  const dom=f.dominante, second=f.triees[1];
+  let t = `Cette équipe de ${a.n} personne${a.n>1?'s':''} est orientée principalement vers <strong>${FAM_LABELS[dom]}</strong> (${f.pct[dom]}%), ce qui lui apporte ${FAM_APPORT[dom]}. `;
+  if(f.count[second]>0){
+    t += `La dimension <strong>${FAM_LABELS[second]}</strong> (${f.pct[second]}%) complète ce socle en apportant ${FAM_APPORT[second]}. `;
+  }
+  if(f.representees===4){
+    t += `Les quatre familles sont représentées : c'est une équipe complète, capable de mobiliser tous les registres selon les situations. `;
+  } else if(f.absentes.length){
+    t += f.absentes.map(fa=>FAM_MANQUE[fa]).join(' ') + ' ';
+  }
+  if(f.faibles.length && !f.absentes.length){
+    t += `Restez attentif aux dimensions ${f.faibles.map(x=>FAM_LABELS[x]).join(' et ')}, faiblement présentes, qui pourraient devenir des angles morts sous pression. `;
+  }
+  return t.trim();
+}
+
+// Texte d'analyse Big Five (avec dispersion)
+function texteBigFive(a){
+  const bf=a.bigFive;
+  // trait le plus élevé et le plus bas (en valeur affichée)
+  const parAffiche = BF_KEYS.map(k=>({k, v:bf[k].affiche, label: k==='N'?'Stabilité émotionnelle':BF_LABELS[k]}));
+  const triHaut = parAffiche.slice().sort((x,y)=>y.v-x.v);
+  const plusHaut = triHaut[0], plusBas = triHaut[triHaut.length-1];
+  // trait le plus dispersé
+  const plusDisperse = BF_KEYS.map(k=>({k,sd:bf[k].ecartType,label:BF_LABELS[k]})).sort((x,y)=>y.sd-x.sd)[0];
+
+  let t = `Le trait le plus marqué de l'équipe est <strong>${plusHaut.label}</strong> (${plusHaut.v}/100 en moyenne), tandis que <strong>${plusBas.label}</strong> est le moins prononcé (${plusBas.v}/100). `;
+  // interprétation du trait dominant
+  const interpHaut = {
+    E:"L'équipe est tournée vers l'extérieur, à l'aise dans l'échange et l'animation.",
+    A:"L'équipe privilégie la coopération, la bienveillance et l'harmonie relationnelle.",
+    C:"L'équipe est rigoureuse, organisée et fiable dans ses engagements.",
+    N:"L'équipe fait preuve de stabilité émotionnelle et de résilience face à la pression.",
+    O:"L'équipe est curieuse, ouverte aux idées nouvelles et à l'expérimentation."
+  };
+  if(interpHaut[plusHaut.k]) t += interpHaut[plusHaut.k]+' ';
+
+  // dispersion
+  if(plusDisperse.sd>=20){
+    t += `Sur le plan de l'homogénéité, c'est sur <strong>${plusDisperse.label}</strong> que les profils diffèrent le plus (écart-type de ${plusDisperse.sd} points) : l'équipe rassemble ici des tempéraments très contrastés, ce qui est une richesse à condition de bien faire dialoguer ces différences. `;
+  } else {
+    t += `Les profils sont relativement homogènes sur l'ensemble des traits (dispersion modérée), ce qui facilite la compréhension mutuelle mais peut limiter la diversité des points de vue. `;
+  }
+  return t.trim();
+}
+
+// Texte d'analyse de la diversité
+function texteDiversite(a){
+  const d=a.diversite;
+  let t = `Avec un indice de diversité <strong>${d.niveau}</strong> (${d.score}/100), cette équipe présente une ${d.texte}. `;
+  t += `Elle réunit <strong>${a.archetypes.uniques} archétype${a.archetypes.uniques>1?'s':''} distinct${a.archetypes.uniques>1?'s':''}</strong> sur ${a.n} membre${a.n>1?'s':''}, répartis sur <strong>${a.familles.representees} des 4 familles</strong>. `;
+  if(d.score>=70){
+    t += `Cette complémentarité est un atout majeur : les profils se complètent et couvrent un large spectre de compétences comportementales. Le défi consiste à faire travailler ensemble des personnes qui fonctionnent différemment. `;
+  } else if(d.score>=45){
+    t += `L'équipe trouve un équilibre entre cohésion et diversité. Les membres se comprennent tout en apportant des angles différents. `;
+  } else {
+    t += `L'équipe est très homogène : ses membres se ressemblent et se comprennent vite, ce qui fluidifie la collaboration. En contrepartie, veillez à introduire des points de vue extérieurs pour éviter l'angle mort collectif. `;
+  }
+  return t.trim();
+}
+
+// Calcule la position (x,y) d'un membre sur la cartographie
+// X : Relation (0) <-> Tâche (100) = orientation vers les gens ou vers le résultat
+// Y : Réflexion (0) <-> Action (100) = énergie posée ou tournée vers le mouvement
+function positionCarto(m){
+  const bf=m.bigFive||{};
+  const A=Number(bf.A)||50, C=Number(bf.C)||50, E=Number(bf.E)||50, O=Number(bf.O)||50;
+  // X : plus C est haut et A bas => orienté tâche ; plus A haut => orienté relation
+  let x = 50 + (C - A)/2;
+  // Y : plus E est haut => action ; plus O domine (réflexion/idées) tempère
+  let y = E*0.65 + (100-O)*0.35;
+  x=Math.max(5,Math.min(95,Math.round(x)));
+  y=Math.max(5,Math.min(95,Math.round(y)));
+  return {x,y};
+}
+
+// Texte d'analyse de la cartographie
+function texteCartographie(a, repondants){
+  const membres=a.membres;
+  const pts=membres.map(m=>({nom:m.nom,famille:(m.famille||'').toUpperCase(),...positionCarto(m)}));
+  // détecter dispersion spatiale
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  const etX=ecartType(xs), etY=ecartType(ys);
+  const etalement=Math.round((etX+etY)/2);
+  // quadrant dominant
+  const quad={ha:0,hr:0,ba:0,br:0}; // haut-action/tâche, etc.
+  pts.forEach(p=>{ const droite=p.x>=50, haut=p.y>=50; if(haut&&droite)quad.ha++; else if(haut&&!droite)quad.hr++; else if(!haut&&droite)quad.ba++; else quad.br++; });
+  const quadNoms={ha:"orientés action et résultat",hr:"orientés action et relation",ba:"posés et orientés résultat",br:"posés et orientés relation"};
+  const quadMax=Object.entries(quad).sort((x,y)=>y[1]-x[1])[0];
+
+  let t=`Cette carte positionne chaque membre selon deux axes : son orientation (vers les personnes ou vers les tâches) et son énergie (posée et réfléchie, ou tournée vers l'action). `;
+  if(quadMax[1]>=Math.ceil(membres.length/2)){
+    t+=`La majorité des profils se regroupe dans la zone des personnes <strong>${quadNoms[quadMax[0]]}</strong>, ce qui donne à l'équipe une couleur dominante claire. `;
+  } else {
+    t+=`Les profils se répartissent sur plusieurs zones, signe d'une équipe aux registres variés. `;
+  }
+  if(etalement>=22){
+    t+=`L'étalement est important : les membres occupent des positions très différentes, ce qui confirme une vraie complémentarité. Les personnes situées aux extrémités apportent des perspectives uniques et méritent une attention particulière pour rester pleinement intégrées. `;
+  } else if(etalement>=12){
+    t+=`L'équipe présente un étalement modéré : assez de proximité pour se comprendre, assez de variété pour se compléter. `;
+  } else {
+    t+=`Les membres sont resserrés sur la carte : ils partagent une façon de fonctionner très proche, gage de fluidité mais à compléter par des profils différents pour élargir le champ de vision. `;
+  }
+  // zones vides
+  const vides=[]; if(!quad.ha)vides.push("action et résultat"); if(!quad.hr)vides.push("action et relation"); if(!quad.ba)vides.push("réflexion et résultat"); if(!quad.br)vides.push("réflexion et relation");
+  if(vides.length && vides.length<4){
+    t+=`Aucun membre ne se positionne dans le registre ${vides.join(', ou ')} : c'est un angle naturel à surveiller selon les besoins de l'équipe.`;
+  }
+  return t.trim();
+}
+
+
+
+  // ===== MODULE SOCLE PLUS (archétype, reco, swot, indicateurs) =====
+// ============================================================
+// analyse_socle_plus.js — Analyse socle UNIQUE (sans IA)
+// Archétype d'équipe, recommandations d'activation, SWOT data, indicateurs.
+// Se branche sur le résultat de analyserEquipe(reps).
+// ============================================================
+
+const FAM_LABELS_2 = { RELATION:'Relation', ACTION:'Action', STRUCTURE:'Structure', VISION:'Vision' };
+
+// ====== 1. ARCHÉTYPE D'ÉQUIPE ======
+// Combine les 2 familles dominantes en une identité collective mémorable.
+const ARCHETYPES_EQUIPE = {
+  'ACTION+STRUCTURE': { nom:"L'équipe Bâtisseuse", essence:"Elle transforme les décisions en résultats concrets et fiables. Son moteur : avancer vite, mais bien.", force:"exécution rigoureuse" },
+  'ACTION+RELATION':  { nom:"L'équipe Conquérante", essence:"Elle conjugue énergie d'action et sens du collectif. Son moteur : atteindre les objectifs en embarquant les gens.", force:"mobilisation et conquête" },
+  'ACTION+VISION':    { nom:"L'équipe Pionnière", essence:"Elle ose, teste et défriche. Son moteur : transformer les idées neuves en mouvement.", force:"innovation et audace" },
+  'STRUCTURE+RELATION':{ nom:"L'équipe Gardienne", essence:"Elle protège la qualité et le climat. Son moteur : la fiabilité au service des personnes.", force:"stabilité et confiance" },
+  'STRUCTURE+VISION': { nom:"L'équipe Architecte", essence:"Elle conçoit des systèmes pensés pour durer. Son moteur : structurer une vision de long terme.", force:"conception stratégique" },
+  'RELATION+VISION':  { nom:"L'équipe Inspirante", essence:"Elle donne du sens et fédère autour d'idées. Son moteur : embarquer les gens vers un futur désirable.", force:"sens et inspiration" },
+};
+
+function archetypeEquipe(a){
+  const f=a.familles;
+  const tri=f.triees; // déjà triées par effectif décroissant
+  const dom=tri[0], second=tri[1];
+  // équilibre : si les 4 familles sont à moins de 10 points d'écart en %
+  const pcts=Object.values(f.pct);
+  const ecart=Math.max(...pcts)-Math.min(...pcts);
+  if(ecart<=12 && f.representees===4){
+    return { nom:"L'équipe Polyvalente", essence:"Aucune famille ne domine : cette équipe est complète et adaptable, capable de mobiliser tous les registres selon les situations. Son défi : choisir un cap commun plutôt que se disperser.", force:"polyvalence", dom, second };
+  }
+  // mono-dominante très forte
+  if(f.pct[dom]>=55){
+    const labels={RELATION:"L'équipe Relationnelle",ACTION:"L'équipe Énergique",STRUCTURE:"L'équipe Méthodique",VISION:"L'équipe Visionnaire"};
+    const ess={RELATION:"Le collectif et l'humain priment sur tout. Son moteur : la qualité des liens.",ACTION:"Le mouvement et le résultat priment. Son moteur : l'action immédiate.",STRUCTURE:"La rigueur et la fiabilité priment. Son moteur : la maîtrise.",VISION:"Les idées et l'avenir priment. Son moteur : l'imagination."};
+    return { nom:labels[dom], essence:ess[dom]+" Cette force marquée gagne à s'entourer des autres registres pour rester équilibrée.", force:FAM_LABELS_2[dom].toLowerCase(), dom, second };
+  }
+  // combinaison de 2 familles
+  const cle=[dom,second].sort().join('+');
+  const found=ARCHETYPES_EQUIPE[cle];
+  if(found) return {...found, dom, second};
+  // fallback
+  return { nom:"L'équipe "+FAM_LABELS_2[dom], essence:"Cette équipe s'appuie principalement sur la dimension "+FAM_LABELS_2[dom]+".", force:FAM_LABELS_2[dom].toLowerCase(), dom, second };
+}
+
+function texteArchetypeEquipe(a){
+  const arch=archetypeEquipe(a);
+  const f=a.familles;
+  let t=`Au-delà des profils individuels, l'équipe possède une personnalité collective. Avec une dominante <strong>${FAM_LABELS_2[arch.dom]}</strong>`;
+  if(arch.second && f.pct[arch.second]>0) t+=` portée par <strong>${FAM_LABELS_2[arch.second]}</strong>`;
+  t+=`, elle se révèle comme <strong>${arch.nom}</strong>. ${arch.essence}`;
+  return t.trim();
+}
+
+// ====== 2. RECOMMANDATIONS D'ACTIVATION ======
+// Que faire concrètement avec cette typologie d'équipe.
+function recommandationsActivation(a){
+  const f=a.familles, bf=a.bigFive;
+  const recos=[];
+
+  // Animer les réunions (selon famille dominante)
+  const animer={
+    RELATION:"Ouvrez vos réunions par un temps d'échange humain. Cette équipe a besoin de se sentir reliée avant d'entrer dans le concret.",
+    ACTION:"Allez droit au but : ordres du jour courts, décisions claires, prochaines actions. Cette équipe déteste les réunions qui s'éternisent.",
+    STRUCTURE:"Préparez des ordres du jour précis et documentés. Cette équipe apprécie le cadre, les données et les comptes rendus écrits.",
+    VISION:"Laissez de l'espace pour les idées et le pourquoi. Cette équipe se mobilise quand on relie le sujet à une vision plus large."
+  };
+  recos.push({ titre:"Animer les réunions", desc:animer[f.dominante] });
+
+  // Confier les rôles (selon ce qui est présent)
+  const roles=[];
+  if(f.count.ACTION>0) roles.push("confiez le pilotage et les deadlines aux profils Action");
+  if(f.count.STRUCTURE>0) roles.push("appuyez-vous sur les profils Structure pour la qualité et le suivi");
+  if(f.count.RELATION>0) roles.push("laissez les profils Relation gérer la cohésion et les tensions");
+  if(f.count.VISION>0) roles.push("sollicitez les profils Vision pour le cadrage stratégique et les idées neuves");
+  if(roles.length) recos.push({ titre:"Répartir les rôles", desc:"Pour tirer parti de la complémentarité : "+roles.join(', ')+"." });
+
+  // Combler les angles morts
+  if(f.absentes.length){
+    const manques={RELATION:"nommer un référent cohésion ou faire appel à un facilitateur externe",ACTION:"introduire un cadre de décision clair pour éviter l'immobilisme",STRUCTURE:"mettre en place des process et un suivi rigoureux",VISION:"organiser des temps dédiés à la prise de recul stratégique"};
+    recos.push({ titre:"Compenser les angles morts", desc:"La dimension "+f.absentes.map(x=>FAM_LABELS_2[x]).join(' et ')+" est absente. Pensez à "+f.absentes.map(x=>manques[x]).join(', et ')+"." });
   }
 
-  document.getElementById('logout').onclick = () => {
-    cleAcces = "";
-    document.getElementById('dash').classList.remove('active');
-    document.getElementById('login').style.display = 'flex';
-    document.getElementById('login-key').value = '';
-    document.getElementById('login-err').textContent = '';
+  // Selon la stabilité émotionnelle de l'équipe
+  const stab=bf.N.affiche; // déjà inversé
+  if(stab<45){
+    recos.push({ titre:"Accompagner sous pression", desc:"L'équipe est sensible au stress. Sécurisez les périodes de tension par une communication claire et un soutien managérial rapproché." });
+  } else if(stab>=65){
+    recos.push({ titre:"Capitaliser sur la résilience", desc:"L'équipe garde son calme sous pression : elle peut porter des projets exigeants et servir d'ancrage dans les moments difficiles." });
+  }
+
+  return recos;
+}
+
+// ====== 3. SWOT DATA (par règles) ======
+function swotData(a){
+  const f=a.familles, bf=a.bigFive, d=a.diversite;
+  const forces=[], faiblesses=[], opportunites=[], risques=[];
+
+  // FORCES : familles fortes + traits hauts
+  f.triees.slice(0,2).forEach(fam=>{ if(f.pct[fam]>=25){
+    const txt={RELATION:"Forte cohésion et sens du collectif",ACTION:"Grande capacité d'exécution et d'avancement",STRUCTURE:"Rigueur et fiabilité dans la durée",VISION:"Créativité et vision stratégique"};
+    forces.push(txt[fam]);
+  }});
+  if(bf.C.moyenne>=62) forces.push("Sérieux et sens de l'engagement (conscience élevée)");
+  if(bf.A.moyenne>=65) forces.push("Climat coopératif et bienveillant");
+  if(bf.N.affiche>=62) forces.push("Stabilité émotionnelle face à la pression");
+  if(d.score>=70) forces.push("Forte complémentarité des profils");
+  if(!forces.length) forces.push("Équipe équilibrée sans excès marqué");
+
+  // FAIBLESSES : familles absentes/faibles + traits bas
+  f.absentes.concat(f.faibles).forEach(fam=>{
+    const txt={RELATION:"Dimension relationnelle peu présente",ACTION:"Capacité de décision et d'exécution à renforcer",STRUCTURE:"Rigueur et suivi à structurer",VISION:"Prise de recul stratégique limitée"};
+    if(txt[fam] && !faiblesses.includes(txt[fam])) faiblesses.push(txt[fam]);
+  });
+  if(bf.C.moyenne<45) faiblesses.push("Organisation et constance à consolider");
+  if(d.score<45) faiblesses.push("Profils très homogènes : risque d'angle mort collectif");
+  if(!faiblesses.length) faiblesses.push("Pas de faiblesse structurelle marquée");
+
+  // OPPORTUNITÉS : ce que l'équipe peut développer
+  if(f.count.VISION>0 && f.count.ACTION>0) opportunites.push("Transformer les idées en projets concrets rapidement");
+  if(f.count.RELATION>0 && f.count.STRUCTURE>0) opportunites.push("Construire une culture d'équipe solide et durable");
+  if(d.score>=60) opportunites.push("Faire dialoguer les profils pour des décisions plus complètes");
+  opportunites.push("Confier à chacun un rôle aligné sur sa zone de force naturelle");
+
+  // RISQUES : angles morts comportementaux
+  if(f.count.STRUCTURE===0 || f.pct.STRUCTURE<15) risques.push("Décisions précipitées ou suivi insuffisant");
+  if(f.count.ACTION===0 || f.pct.ACTION<15) risques.push("Lenteur à trancher et à passer à l'action");
+  if(f.count.RELATION===0 || f.pct.RELATION<15) risques.push("Tensions mal gérées faute de liant relationnel");
+  if(f.count.VISION===0 || f.pct.VISION<15) risques.push("Manque de hauteur stratégique, focalisation sur l'opérationnel");
+  if(bf.A.moyenne>=78) risques.push("Recherche d'harmonie au détriment des débats francs");
+  if(!risques.length) risques.push("Pas de risque comportemental majeur identifié");
+
+  return { forces, faiblesses, opportunites, risques };
+}
+
+// ====== 4. INDICATEURS SURPRENANTS ======
+function indicateurs(a){
+  const ind=[];
+  const f=a.familles, bf=a.bigFive, d=a.diversite;
+
+  // Pensée unique
+  let penseeUnique;
+  if(d.score<45) penseeUnique={niveau:"élevé",txt:"Les profils se ressemblent fortement. Risque de converger trop vite sans explorer d'alternatives."};
+  else if(d.score<70) penseeUnique={niveau:"modéré",txt:"L'équipe garde une diversité de points de vue suffisante pour éviter la pensée unique."};
+  else penseeUnique={niveau:"faible",txt:"La diversité des profils protège bien l'équipe contre la pensée unique."};
+  ind.push({ cle:"Risque de pensée unique", valeur:penseeUnique.niveau, texte:penseeUnique.txt });
+
+  // Profil de communication
+  let commu;
+  const E=bf.E.moyenne, A=bf.A.moyenne;
+  if(E>=60 && A>=60) commu="Chaleureuse et expressive : l'équipe échange volontiers et cherche l'harmonie.";
+  else if(E>=60 && A<60) commu="Directe et affirmée : l'équipe débat ouvertement, parfois avec franchise.";
+  else if(E<50 && A>=60) commu="Posée et à l'écoute : l'équipe privilégie les échanges calmes et le consensus.";
+  else commu="Factuelle et réservée : l'équipe communique de façon mesurée, centrée sur le concret.";
+  ind.push({ cle:"Style de communication", valeur:"", texte:commu });
+
+  // Gestion du changement (Ouverture)
+  let chgt;
+  if(bf.O.moyenne>=62) chgt="L'équipe accueille le changement avec curiosité : terrain favorable aux transformations.";
+  else if(bf.O.moyenne>=45) chgt="L'équipe accepte le changement s'il est expliqué et accompagné.";
+  else chgt="L'équipe préfère la stabilité : accompagnez les changements progressivement, avec du sens.";
+  ind.push({ cle:"Rapport au changement", valeur:"", texte:chgt });
+
+  return ind;
+}
+
+
+
+  // ===== MODULE ANALYSES AVANCÉES (données riches) =====
+// ============================================================
+// analyse_avancee.js — 6 analyses d'équipe poussées (sans IA)
+// Basées sur les données RÉELLES : contextuel (stress, conflit...),
+// naturelAdapte (coût d'adaptation), familles, Big Five, speStyle.
+// Chaque analyse vérifie la disponibilité des données et le dit
+// honnêtement si elles manquent (zéro bullshit).
+// ============================================================
+
+const CTX_LABELS = {
+  stress: { accelerateur:"accélérateur", methodique:"méthodique", retrait:"en retrait stratégique", appui:"en recherche d'appui" },
+  conflit: { affrontement:"frontal", mediation:"médiateur", compromis:"facilitateur de compromis", evitement:"évitant" },
+  changement: { moteur:"moteur du changement", adaptable:"adaptable", pragmatique:"pragmatique", ancre:"ancré" },
+  risque: { audacieux:"audacieux", calcule:"calculé", prudent:"prudent", securitaire:"sécuritaire" },
+  motivation: { accomplissement:"l'accomplissement", reconnaissance:"la reconnaissance", sens:"le sens", maitrise:"la maîtrise" }
+};
+
+function membresValides(reps){
+  return reps.filter(r=>{
+    const s=String(r.statut||'').toLowerCase();
+    return (s==='terminé'||s==='termine') && r.bigFive && r.bigFive.E!=null;
+  });
+}
+function avecContextuel(membres){ return membres.filter(m=>m.contextuel && m.contextuel.stress); }
+function avecAdapte(membres){ return membres.filter(m=>m.naturelAdapte && m.naturelAdapte.cout); }
+
+// ====== 1. % DE COMPLÉMENTARITÉ ======
+// Croise 3 niveaux : familles (couverture), Big Five (dispersion utile), profils contextuels (variété des modes)
+function complementarite(membres){
+  const n=membres.length;
+  if(n<2) return null;
+  // niveau 1 : couverture des familles (max 4)
+  const fams=new Set(membres.map(m=>(m.famille||'').toUpperCase()).filter(Boolean));
+  const scoreFam=(fams.size/4)*100;
+  // niveau 2 : dispersion Big Five utile (écart-type moyen, optimal autour de 18-25)
+  const ds=['E','A','C','N','O'].map(k=>{
+    const vs=membres.map(m=>Number(m.bigFive[k])||0);
+    const moy=vs.reduce((a,b)=>a+b,0)/vs.length;
+    return Math.sqrt(vs.reduce((s,v)=>s+Math.pow(v-moy,2),0)/vs.length);
+  });
+  const dispMoy=ds.reduce((a,b)=>a+b,0)/ds.length;
+  const scoreDisp=Math.min(100,(dispMoy/22)*100); // 22 points d'écart-type = dispersion riche
+  // niveau 3 : variété des modes contextuels (si données dispo)
+  const ctx=avecContextuel(membres);
+  let scoreCtx=null;
+  if(ctx.length>=2){
+    let variete=0, dims=0;
+    ['stress','conflit','changement','risque'].forEach(d=>{
+      const profils=new Set(ctx.map(m=>m.contextuel[d]).filter(Boolean));
+      if(profils.size>0){ variete += Math.min(profils.size,3)/3; dims++; }
+    });
+    scoreCtx = dims? (variete/dims)*100 : null;
+  }
+  // pondération : familles 40%, Big Five 30%, contextuel 30% (ou redistribué si absent)
+  let score;
+  if(scoreCtx!=null) score=Math.round(scoreFam*0.4 + scoreDisp*0.3 + scoreCtx*0.3);
+  else score=Math.round(scoreFam*0.55 + scoreDisp*0.45);
+  return { score:Math.min(100,score), scoreFam:Math.round(scoreFam), scoreDisp:Math.round(scoreDisp), scoreCtx:scoreCtx!=null?Math.round(scoreCtx):null, basesCtx:ctx.length, n };
+}
+
+function texteComplementarite(c, membres){
+  if(!c) return "Au moins 2 profils complets sont nécessaires pour mesurer la complémentarité.";
+  let t=`L'équipe atteint <strong>${c.score}% de complémentarité</strong>, un indice qui croise trois niveaux de lecture. `;
+  t+=`La couverture des familles (${c.scoreFam}%) mesure la variété des registres comportementaux présents. `;
+  t+=`La dispersion des tempéraments (${c.scoreDisp}%) évalue si les personnalités se complètent ou se dupliquent. `;
+  if(c.scoreCtx!=null){
+    t+=`La variété des modes de fonctionnement (${c.scoreCtx}%) compare les réactions face au stress, au conflit, au changement et au risque, mesurées sur ${c.basesCtx} membre${c.basesCtx>1?'s':''}. `;
+  } else {
+    t+=`Les modes de fonctionnement contextuels (stress, conflit, changement) ne sont pas encore disponibles pour cette équipe : l'indice s'appuie sur les familles et les tempéraments. `;
+  }
+  if(c.score>=70) t+=`À ce niveau, l'équipe dispose d'une vraie richesse interne : les angles de vue se complètent, à condition d'organiser le dialogue entre des personnes qui fonctionnent différemment.`;
+  else if(c.score>=45) t+=`L'équipe trouve un équilibre fonctionnel : assez de proximité pour se comprendre vite, assez de différence pour se compléter.`;
+  else t+=`L'équipe est fortement homogène : la collaboration est fluide, et le regard extérieur devient indispensable pour éviter l'angle mort collectif.`;
+  return t;
+}
+
+// ====== 2. RISQUES EN SITUATION DE STRESS ======
+// Basé sur les profils stress réels + coûts d'adaptation
+function risquesStress(membres){
+  const ctx=avecContextuel(membres);
+  const adapte=avecAdapte(membres);
+  if(!ctx.length && !adapte.length) return null;
+
+  const risques=[];
+  // répartition des profils stress
+  const compte={accelerateur:0,methodique:0,retrait:0,appui:0};
+  ctx.forEach(m=>{ if(compte[m.contextuel.stress]!==undefined) compte[m.contextuel.stress]++; });
+  const tot=ctx.length;
+
+  if(tot>0){
+    if(compte.accelerateur/tot>=0.5){
+      risques.push({ titre:"Emballement collectif", desc:`${compte.accelerateur} membre${compte.accelerateur>1?'s':''} sur ${tot} accélèrent sous pression. En crise, l'équipe risque de multiplier les actions dans l'urgence sans prioriser, et de s'épuiser sur des fronts secondaires. Un rituel de priorisation expresse (10 minutes, 3 priorités max) canalise cette énergie.` });
+    }
+    if(compte.retrait/tot>=0.4){
+      risques.push({ titre:"Silence au mauvais moment", desc:`${compte.retrait} membre${compte.retrait>1?'s':''} sur ${tot} se mettent en retrait sous pression pour analyser. Le risque : un déficit de communication précisément quand l'équipe a besoin de signaux. Convenir d'un point de synchronisation court mais obligatoire en période tendue protège le collectif.` });
+    }
+    if(compte.accelerateur>0 && compte.retrait>0){
+      risques.push({ titre:"Désynchronisation des rythmes", desc:`L'équipe mélange des profils qui accélèrent (${compte.accelerateur}) et des profils qui se retirent pour analyser (${compte.retrait}). Sous stress, les premiers peuvent vivre le silence des seconds comme un désengagement, et inversement. Nommer explicitement ces différences de mode désamorce les procès d'intention.` });
+    }
+    if(compte.appui/tot>=0.4){
+      risques.push({ titre:"Besoin de présence managériale", desc:`${compte.appui} membre${compte.appui>1?'s':''} sur ${tot} cherchent l'appui et l'échange sous pression. En période de crise, un management distant ou silencieux serait coûteux : prévoir des points de contact rapprochés pendant les pics.` });
+    }
+  }
+  // coût d'adaptation élevé = risque d'épuisement
+  if(adapte.length){
+    const couts={eleve:0,modere:0,faible:0};
+    adapte.forEach(m=>{ const c=(m.naturelAdapte.cout||'').replace('é','e'); if(c.indexOf('elev')>=0)couts.eleve++; else if(c.indexOf('moder')>=0)couts.modere++; else couts.faible++; });
+    if(couts.eleve>0){
+      const noms=adapte.filter(m=>(m.naturelAdapte.cout||'').indexOf('lev')>=0).map(m=>m.nom.split(' ')[0]);
+      risques.push({ titre:"Risque d'épuisement par sur-adaptation", desc:`${couts.eleve} membre${couts.eleve>1?'s':''} (${noms.join(', ')}) fonctionne${couts.eleve>1?'nt':''} au quotidien avec un coût d'adaptation élevé : leur posture professionnelle s'écarte fortement de leur nature profonde. Sous stress prolongé, ce sur-effort se paie en fatigue, en irritabilité ou en désengagement. Leur offrir des espaces où leur style naturel peut s'exprimer protège leur énergie.` });
+    }
+  }
+  if(!risques.length) risques.push({ titre:"Pas de risque majeur identifié", desc:"Les profils de réaction au stress disponibles ne révèlent pas de déséquilibre marqué dans cette équipe." });
+  return { risques, basesCtx:ctx.length, basesAdapte:adapte.length, total:membres.length };
+}
+
+// ====== 3. MEILLEURS BINÔMES ======
+// Score de complémentarité par paire : familles différentes + Big Five complémentaires + modes stress compatibles
+function meilleursBinomes(membres){
+  if(membres.length<2) return null;
+  const paires=[];
+  for(let i=0;i<membres.length;i++){
+    for(let j=i+1;j<membres.length;j++){
+      const a=membres[i], b=membres[j];
+      let score=0; const raisons=[];
+      // familles différentes = complémentarité de registre
+      if((a.famille||'').toUpperCase()!==(b.famille||'').toUpperCase()){
+        score+=30; raisons.push(`registres complémentaires (${a.famille} et ${b.famille})`);
+      }
+      // Big Five complémentaires : l'un fort là où l'autre est faible (C et O surtout)
+      const dC=Math.abs((a.bigFive.C||50)-(b.bigFive.C||50));
+      const dO=Math.abs((a.bigFive.O||50)-(b.bigFive.O||50));
+      const dE=Math.abs((a.bigFive.E||50)-(b.bigFive.E||50));
+      if(dC>=25){ score+=20; raisons.push("équilibre rigueur et souplesse"); }
+      if(dO>=25){ score+=20; raisons.push("équilibre innovation et pragmatisme"); }
+      if(dE>=25){ score+=10; raisons.push("équilibre animation et écoute"); }
+      // modes stress compatibles (un accélérateur + un méthodique = duo efficace ; deux accélérateurs = surchauffe)
+      if(a.contextuel && b.contextuel){
+        const sa=a.contextuel.stress, sb=b.contextuel.stress;
+        if((sa==='accelerateur'&&sb==='methodique')||(sa==='methodique'&&sb==='accelerateur')){ score+=20; raisons.push("sous pression, l'un accélère pendant que l'autre structure"); }
+        if((sa==='retrait'&&sb==='appui')||(sa==='appui'&&sb==='retrait')){ score+=10; raisons.push("sous pression, l'un analyse pendant que l'autre maintient le lien"); }
+        if(sa===sb && sa==='accelerateur'){ score-=15; }
+        // conflit : un frontal + un médiateur = duo qui ose ET répare
+        const ca=a.contextuel.conflit, cb=b.contextuel.conflit;
+        if((ca==='affrontement'&&cb==='mediation')||(ca==='mediation'&&cb==='affrontement')){ score+=15; raisons.push("face au désaccord, l'un ose dire, l'autre répare le lien"); }
+      }
+      if(score>0) paires.push({ a:a.nom, b:b.nom, score, raisons });
+    }
+  }
+  paires.sort((x,y)=>y.score-x.score);
+  return paires.slice(0,3);
+}
+
+// ====== 4. ANGLES MORTS (enrichi) ======
+function anglesMorts(membres, famillesStats){
+  const angles=[];
+  // familles absentes
+  const FAM_TXT={RELATION:"Personne ne porte naturellement le registre relationnel : la cohésion, la gestion des tensions et le climat reposent sur des efforts d'adaptation plutôt que sur un talent naturel.",ACTION:"Personne ne porte naturellement le registre de l'action : le passage à la décision et l'élan d'exécution demandent un effort à toute l'équipe.",STRUCTURE:"Personne ne porte naturellement le registre de la structure : le suivi, la rigueur et la fiabilisation reposent sur la bonne volonté plutôt que sur un réflexe.",VISION:"Personne ne porte naturellement le registre de la vision : la prise de recul et l'anticipation stratégique risquent de passer après l'opérationnel."};
+  ['RELATION','ACTION','STRUCTURE','VISION'].forEach(f=>{ if(!famillesStats[f]) angles.push({titre:"Registre "+f.toLowerCase()+" absent", desc:FAM_TXT[f]}); });
+  // modes contextuels absents (sur les membres qui ont la donnée)
+  const ctx=avecContextuel(membres);
+  if(ctx.length>=3){
+    const conflits=new Set(ctx.map(m=>m.contextuel.conflit));
+    if(!conflits.has('affrontement')){
+      angles.push({titre:"Personne n'ose l'affrontement direct", desc:`Sur les ${ctx.length} membres mesurés, aucun n'aborde naturellement le désaccord de front. Les sujets qui fâchent risquent de rester sous le tapis jusqu'à ce qu'ils explosent. L'équipe gagne à ritualiser un espace où le désaccord est explicitement autorisé et attendu.`});
+    }
+    const changements=new Set(ctx.map(m=>m.contextuel.changement));
+    if(!changements.has('moteur')){
+      angles.push({titre:"Pas de moteur du changement", desc:`Aucun des ${ctx.length} membres mesurés n'initie spontanément le changement. L'équipe s'adapte mais ne provoque pas : les transformations devront être portées de l'extérieur ou par le manager.`});
+    }
+    const risquesP=new Set(ctx.map(m=>m.contextuel.risque));
+    if(!risquesP.has('audacieux') && !risquesP.has('calcule')){
+      angles.push({titre:"Aversion au risque généralisée", desc:`Les profils mesurés penchent tous vers la prudence ou la sécurité. L'équipe protège bien l'existant, et risque de laisser passer les opportunités qui demandent un pari.`});
+    }
+  }
+  if(!angles.length) angles.push({titre:"Pas d'angle mort structurel", desc:"Les registres et modes de fonctionnement mesurés couvrent les besoins essentiels d'une équipe."});
+  return angles;
+}
+
+// ====== 5. STYLE NATUREL VS AU TRAVAIL / SOUS PRESSION ======
+function naturelVsTravail(membres){
+  const adapte=avecAdapte(membres);
+  const ctx=avecContextuel(membres);
+  if(!adapte.length && !ctx.length) return null;
+  const items=[];
+  // par membre avec donnée naturelAdapte
+  adapte.forEach(m=>{
+    const na=m.naturelAdapte;
+    const cout=(na.cout||'').toLowerCase();
+    let lecture;
+    if(cout.indexOf('lev')>=0) lecture="s'adapte fortement au travail : sa posture professionnelle s'écarte beaucoup de sa nature profonde, un effort qui coûte de l'énergie au quotidien";
+    else if(cout.indexOf('mod')>=0) lecture="ajuste sa posture au travail de façon modérée : un équilibre globalement tenable";
+    else lecture="travaille proche de sa nature : peu d'effort d'adaptation, une énergie préservée";
+    const stress=m.contextuel && m.contextuel.stress ? ` Sous pression, son mode est ${CTX_LABELS.stress[m.contextuel.stress]||m.contextuel.stress}.` : '';
+    items.push({ nom:m.nom, cout:na.cout, ecart:na.moyenneEcart, texte:`${m.nom.split(' ')[0]} ${lecture}.${stress}` });
+  });
+  // synthèse équipe
+  let synthese='';
+  if(adapte.length){
+    const nbEleve=adapte.filter(m=>(m.naturelAdapte.cout||'').indexOf('lev')>=0).length;
+    const pct=Math.round(nbEleve/adapte.length*100);
+    if(pct>=40) synthese=`Attention : ${pct}% des membres mesurés fonctionnent avec un coût d'adaptation élevé. Cette équipe « joue un rôle » une grande partie du temps, ce qui la rend performante en façade et vulnérable à l'usure. Créer des espaces d'authenticité (rétrospectives franches, temps informels) est un investissement direct dans sa durabilité.`;
+    else if(nbEleve>0) synthese=`La plupart des membres travaillent proche de leur nature. ${nbEleve} personne${nbEleve>1?'s':''} porte${nbEleve>1?'nt':''} en revanche un coût d'adaptation élevé et mérite${nbEleve>1?'nt':''} une attention particulière.`;
+    else synthese=`L'équipe travaille globalement proche de sa nature : l'énergie n'est pas consommée à jouer un rôle, un facteur protecteur précieux.`;
+  }
+  return { items, synthese, bases:adapte.length, total:membres.length };
+}
+
+// ====== 6. AXES DE DÉVELOPPEMENT / FORMATION ======
+// Déduits des écarts naturel/adapté dominants, des angles morts et des registres faibles
+function axesFormation(membres, famillesStats){
+  const axes=[];
+  const adapte=avecAdapte(membres);
+  const ctx=avecContextuel(membres);
+  // écarts d'adaptation dominants par dimension -> besoins de formation ciblés
+  if(adapte.length>=2){
+    const dims={E:0,A:0,C:0,N:0,O:0}; let nb=0;
+    adapte.forEach(m=>{ if(m.naturelAdapte.ecarts){ ['E','A','C','N','O'].forEach(k=>{ dims[k]+=Math.abs(m.naturelAdapte.ecarts[k]||0); }); nb++; } });
+    if(nb){
+      ['E','A','C','N','O'].forEach(k=>dims[k]=dims[k]/nb);
+      const triees=Object.entries(dims).sort((a,b)=>b[1]-a[1]);
+      const [dimMax,ecartMax]=triees[0];
+      if(ecartMax>=25){
+        const FORMATIONS={
+          A:{titre:"Assertivité et communication authentique",desc:`L'équipe force massivement son registre relationnel (écart moyen de ${Math.round(ecartMax)} points entre nature et posture). Une formation à l'assertivité aiderait chacun à exprimer son point de vue sans sur-jouer la diplomatie, réduisant le coût d'adaptation quotidien.`},
+          E:{titre:"Prise de parole et présence sereine",desc:`L'équipe force son exposition sociale (écart moyen de ${Math.round(ecartMax)} points). Un travail sur la prise de parole authentique permettrait d'être présent sans se sur-adapter, et de doser l'exposition selon les enjeux réels.`},
+          N:{titre:"Gestion de la pression et récupération",desc:`L'équipe maintient une vigilance forcée (écart moyen de ${Math.round(ecartMax)} points sur la stabilité). Une formation à la gestion du stress et aux stratégies de récupération protégerait l'énergie collective.`},
+          C:{titre:"Organisation personnelle et priorisation",desc:`L'équipe force sa rigueur au-delà de sa nature (écart de ${Math.round(ecartMax)} points). Des méthodes d'organisation simples rendraient cette rigueur moins coûteuse.`},
+          O:{titre:"Créativité et ouverture en confiance",desc:`L'équipe force son ouverture (écart de ${Math.round(ecartMax)} points). Des formats d'idéation cadrés rendraient l'exploration plus naturelle.`}
+        };
+        if(FORMATIONS[dimMax]) axes.push(FORMATIONS[dimMax]);
+      }
+    }
+  }
+  // registres faibles -> compétences à développer collectivement
+  const FAM_FORM={
+    VISION:{titre:"Prise de recul et vision stratégique",desc:"Le registre Vision est peu présent : un atelier de prise de hauteur régulier (revue stratégique trimestrielle animée) compenserait ce manque naturel et installerait le réflexe."},
+    RELATION:{titre:"Cohésion et intelligence relationnelle",desc:"Le registre Relation est peu présent : un travail sur l'écoute, le feedback et la gestion des tensions donnerait à l'équipe les outils que personne ne porte naturellement."},
+    ACTION:{titre:"Décision et passage à l'action",desc:"Le registre Action est peu présent : des méthodes de décision rapide (cadres de décision, délégation claire) compenseraient la tendance naturelle à différer."},
+    STRUCTURE:{titre:"Méthode et fiabilisation",desc:"Le registre Structure est peu présent : des outils de suivi simples et partagés sécuriseraient l'exécution sans dépendre d'un profil qui n'existe pas dans l'équipe."}
+  };
+  const total=Object.values(famillesStats).reduce((a,b)=>a+b,0)||1;
+  ['RELATION','ACTION','STRUCTURE','VISION'].forEach(f=>{
+    const pct=(famillesStats[f]||0)/total*100;
+    if(pct<15 && FAM_FORM[f]) axes.push(FAM_FORM[f]);
+  });
+  // gestion du conflit si évitement dominant
+  if(ctx.length>=3){
+    const evit=ctx.filter(m=>m.contextuel.conflit==='evitement').length;
+    if(evit/ctx.length>=0.5){
+      axes.push({titre:"Conversations difficiles et feedback direct",desc:`${evit} membres sur ${ctx.length} évitent naturellement le conflit. Une formation aux conversations difficiles donnerait à l'équipe le courage relationnel qui lui manque structurellement, avant que les non-dits ne s'accumulent.`});
+    }
+  }
+  if(!axes.length) axes.push({titre:"Consolidation des forces",desc:"Aucun besoin structurel marqué : l'investissement le plus rentable consiste à approfondir les forces existantes et la connaissance mutuelle des modes de fonctionnement."});
+  return axes.slice(0,4);
+}
+
+
+  // ===== FIN MODULE ANALYSE DATA =====
+
+
+  // ===== ANALYSES NOUVELLES DIMENSIONS (équipe) =====
+  function analyseEnergieEq(membres){
+    const avec=membres.filter(m=>m.energie&&m.energie.profil); if(avec.length<2)return null;
+    const c={sprinteur:0,endurant:0,cyclique:0,deepworker:0}; avec.forEach(m=>c[m.energie.profil]++); const t=avec.length;
+    const r=[];
+    if(c.sprinteur/t>=0.5)r.push({titre:"Risque d'épuisement collectif",desc:`${c.sprinteur} membres sur ${t} fonctionnent par pics intenses. Sans culture de récupération, l'accumulation mène à l'usure. Installez des temps de respiration.`});
+    if(c.sprinteur>0&&c.endurant>0)r.push({titre:"Friction de rythme",desc:`L'équipe mêle ${c.sprinteur} sprinteur(s) et ${c.endurant} endurant(s). Sans explicitation, chacun peut mal lire le rythme de l'autre. Nommez ces différences.`});
+    if(c.deepworker>0)r.push({titre:"Protéger la concentration",desc:`${c.deepworker} membre(s) performe(nt) en concentration longue. Préservez des plages calmes sans interruption.`});
+    if(!r.length)r.push({titre:"Rythmes compatibles",desc:"Les rythmes de l'équipe se complètent sans friction majeure."});
+    return {compte:c,risques:r,total:t};
+  }
+  function analyseAutoriteEq(membres){
+    const avec=membres.filter(m=>m.autorite); if(avec.length<2)return null;
+    const c={cadre:0,sens:0,liberte:0,contributeur:0}; avec.forEach(m=>c[m.autorite.profil]++); const t=avec.length;
+    const r=[];
+    if(c.cadre/t>=0.5)r.push({titre:"Équipe en demande de cadre",desc:`${c.cadre}/${t} ont besoin d'un cadre clair. Un management structurant les sécurisera.`});
+    if(c.liberte/t>=0.5)r.push({titre:"Équipe en demande d'autonomie",desc:`${c.liberte}/${t} ont besoin de liberté. Un management délégatif les fera s'épanouir.`});
+    if(c.cadre>0&&c.liberte>0)r.push({titre:"Besoins de management opposés",desc:`L'équipe mêle des profils en demande de cadre (${c.cadre}) et de liberté (${c.liberte}). Individualisez votre posture managériale.`});
+    if(!r.length)r.push({titre:"Rapport au cadre homogène",desc:"L'équipe partage un rapport au cadre cohérent."});
+    return {compte:c,risques:r,total:t};
+  }
+  function analyseRecoEq(membres){
+    const avec=membres.filter(m=>m.reconnaissance); if(avec.length<2)return null;
+    const c={resultats:0,effort:0,relation:0,autonomie:0}; avec.forEach(m=>c[m.reconnaissance.profil]++); const t=avec.length;
+    const lab={resultats:"la reconnaissance des résultats",effort:"la reconnaissance de l'effort",relation:"la considération humaine",autonomie:"la confiance et l'autonomie"};
+    const dom=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+    const r=[{titre:"Levier de reconnaissance dominant",desc:`L'équipe est surtout sensible à ${lab[dom[0]]} (${dom[1]}/${t}). Orientez la reconnaissance dans ce sens, tout en individualisant.`}];
+    if(c.relation>0&&c.resultats>0)r.push({titre:"Reconnaissances à individualiser",desc:`Certains se nourrissent de résultats (${c.resultats}), d'autres de relation (${c.relation}). Une reconnaissance uniforme ratera la moitié de l'équipe.`});
+    return {compte:c,risques:r,total:t};
+  }
+  function analyseCollabEq(membres){
+    const avec=membres.filter(m=>m.collaboration); if(avec.length<2)return null;
+    const c={autonome:0,cooperatif:0,interdependant:0,federateur:0}; avec.forEach(m=>c[m.collaboration.profil]++); const t=avec.length;
+    const r=[];
+    if(c.autonome/t>=0.5)r.push({titre:"Risque de silos",desc:`${c.autonome}/${t} fonctionnent en autonomie. L'équipe risque de devenir une somme d'individus. Instaurez des rituels de partage.`});
+    if(c.federateur===0&&t>=3)r.push({titre:"Pas d'animateur naturel",desc:"Aucun membre ne tire spontanément le collectif. La dynamique devra être portée par le manager."});
+    if(c.federateur>=2)r.push({titre:"Plusieurs animateurs",desc:`${c.federateur} profils fédérateurs : clarifiez qui anime quoi pour éviter les chevauchements.`});
+    if(!r.length)r.push({titre:"Collaboration équilibrée",desc:"L'équipe mêle autonomie et coopération sans déséquilibre."});
+    return {compte:c,risques:r,total:t};
+  }
+
+  // ===== FICHE APPRENANT (modale au clic sur un membre) =====
+  let repsCourants = [];
+  const MGR_CONSEILS = {
+    stress: {
+      accelerateur: { lab:"Accélérateur", txt:"Sous pression, il passe immédiatement à l'action et accélère. Canalisez cette énergie sur les vraies priorités (3 maximum) pour éviter la dispersion dans l'urgence." },
+      methodique: { lab:"Méthodique", txt:"Sous pression, il se structure et organise. Donnez-lui quelques minutes pour hiérarchiser : son plan sera un atout pour toute l'équipe." },
+      retrait: { lab:"Retrait stratégique", txt:"Sous pression, il s'isole pour analyser avant d'agir. N'interprétez pas son silence comme un désengagement : convenez d'un moment de retour et son analyse sera précieuse." },
+      appui: { lab:"Recherche d'appui", txt:"Sous pression, il cherche l'échange et le soutien. Soyez présent et disponible pendant les pics : un management distant lui coûte cher dans ces moments." }
+    },
+    conflit: {
+      affrontement: { lab:"Frontal", txt:"Il aborde le désaccord de front, avec franchise. C'est une ressource rare : aidez-le à soigner la forme pour que son courage relationnel reste audible." },
+      mediation: { lab:"Médiateur", txt:"Il cherche à comprendre et réconcilier les positions. Appuyez-vous sur lui quand des tensions traversent l'équipe." },
+      compromis: { lab:"Compromis", txt:"Il cherche le terrain d'entente équilibré. Fiable dans les négociations, veillez à ce qu'il ne cède pas sur l'essentiel pour préserver l'accord." },
+      evitement: { lab:"Évitant", txt:"Il préfère désamorcer ou contourner la tension. Créez des espaces sûrs où il peut exprimer un désaccord tôt, sinon les sujets sensibles resteront sous le tapis." }
+    },
+    motivation: {
+      accomplissement: { lab:"Accomplissement", txt:"Son moteur : atteindre des objectifs ambitieux. Fixez-lui des défis mesurables et célébrez les caps franchis." },
+      reconnaissance: { lab:"Reconnaissance", txt:"Son moteur : l'impact visible et la reconnaissance. Un feedback explicite et régulier est pour lui un carburant, pas un bonus." },
+      sens: { lab:"Sens", txt:"Son moteur : l'utilité de ce qu'il fait. Reliez ses missions à leur impact réel, sinon l'engagement s'érode même si tout va bien en surface." },
+      maitrise: { lab:"Maîtrise", txt:"Son moteur : progresser et approfondir. Offrez-lui des terrains d'expertise et des formations pointues ; la précipitation permanente l'use." }
+    },
+    changement: {
+      moteur: { lab:"Moteur", txt:"Il initie et pousse le changement. Confiez-lui les transformations à porter : il en fera un terrain de jeu." },
+      adaptable: { lab:"Adaptable", txt:"Il accueille le changement avec souplesse. Un allié naturel des transitions, veillez juste à ce qu'il n'absorbe pas tout sans exprimer ses besoins." },
+      pragmatique: { lab:"Pragmatique", txt:"Il accepte le changement s'il est justifié. Expliquez le pourquoi avant le comment : son adhésion se gagne par les raisons." },
+      ancre: { lab:"Ancré", txt:"Il valorise la stabilité et les repères. Annoncez les changements tôt et accompagnez progressivement : le brusquer crée de la résistance durable." }
+    },
+    risque: {
+      audacieux: { lab:"Audacieux", txt:"Il prend des risques avec aisance. Confiez-lui les paris et les territoires inexplorés, en cadrant les enjeux critiques." },
+      calcule: { lab:"Calculé", txt:"Il ose après avoir évalué. Le profil idéal pour les décisions engageantes : donnez-lui les données et il tranchera juste." },
+      prudent: { lab:"Prudent", txt:"Il limite son exposition au risque. Sa vigilance protège l'équipe ; sécurisez le cadre quand vous lui demandez de sortir de sa zone." },
+      securitaire: { lab:"Sécuritaire", txt:"Il recherche la stabilité et les terrains connus. Précieux pour fiabiliser l'existant ; les missions exploratoires lui coûtent cher." }
+    }
   };
 
-  // vue d'ensemble (entreprises + campagnes)
-  function afficherEnsemble(data) {
-    const content = document.getElementById('dash-content');
+  function ouvrirMembre(idx){
+    const m = repsCourants[idx];
+    if(!m) return;
+    const f=(m.famille||'').toUpperCase(); const col=FAM_COLORS[f]||'#999';
+    const ctx=m.contextuel||{};
+    const na=m.naturelAdapte||null;
+    // blocs "comment le manager"
+    let mgrHtml='';
+    ['stress','conflit','motivation','changement','risque'].forEach(d=>{
+      const v=ctx[d]; const c=v && MGR_CONSEILS[d] && MGR_CONSEILS[d][v];
+      if(c) mgrHtml+=`<div class="fm-conseil"><div class="fm-conseil-head"><span class="fm-dim">${d==='stress'?'Sous pression':d==='conflit'?'Face au conflit':d==='motivation'?'Moteur profond':d==='changement'?'Face au changement':'Rapport au risque'}</span><span class="fm-profil">${esc(c.lab)}</span></div><p>${esc(c.txt)}</p></div>`;
+    });
+    if(!mgrHtml) mgrHtml='<p class="reco-desc">Les modes de fonctionnement contextuels ne sont pas disponibles pour ce profil (test passé avant leur mise en place).</p>';
+    // coût d'adaptation
+    let coutHtml='';
+    if(na && na.cout){
+      const c=(na.cout||'').indexOf('lev')>=0?'eleve':((na.cout||'').indexOf('mod')>=0?'modere':'faible');
+      const alerte={eleve:"Signal RH important : sa posture professionnelle s'écarte fortement de sa nature. Sujet à aborder en entretien : où peut-il être davantage lui-même ?",modere:"Équilibre globalement tenable entre nature et posture professionnelle.",faible:"Il travaille proche de sa nature : énergie préservée, facteur de durabilité."}[c];
+      coutHtml=`<div class="fm-section"><div class="fm-section-titre">Coût d'adaptation</div><div class="nat-item nat-${c}" style="margin-top:8px"><div class="nat-cout">${esc(na.cout)}${na.moyenneEcart!=null?' · écart moyen '+na.moyenneEcart:''}</div><div class="reco-desc">${esc(alerte)}</div></div></div>`;
+    }
+    // Big Five barres
+    const bf=m.bigFive||{};
+    const bfRows=[['E','Extraversion'],['A','Agréabilité'],['C','Conscience'],['N','Stabilité émotionnelle'],['O','Ouverture']].map(([k,lab])=>{
+      let v=Number(bf[k]); if(isNaN(v)) return ''; if(k==='N') v=100-v;
+      return `<div class="fm-bf"><span>${lab}</span><div class="compl-bar"><i style="width:${Math.round(v)}%"></i></div><b>${Math.round(v)}</b></div>`;
+    }).join('');
+    // style spé
+    let speHtml='';
+    if(m.speStyle){
+      const scores=m.speStyleScores||{};
+      const tri=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+      speHtml=`<div class="fm-section"><div class="fm-section-titre">Style ${esc(m.speStyle)}</div>${tri.map(([s,v])=>`<div class="fm-bf"><span style="text-transform:capitalize">${esc(s.replace(/_/g,' '))}</span><div class="compl-bar"><i style="width:${Math.round(v*2)}%"></i></div><b>${Math.round(v)}</b></div>`).join('')}</div>`;
+    }
+    // énergie / rythme
+    let energieHtml='';
+    if(m.energie && m.energie.profil){
+      const EN={sprinteur:["Sprinteur","Donne le meilleur sur des pics courts et intenses. Confiez-lui les missions à deadline, prévoyez des temps de récupération."],endurant:["Endurant","Tient un effort régulier et fiable dans la durée. Appuyez-vous sur lui pour les projets longs."],cyclique:["Cyclique","Alterne phases intenses et phases calmes. Ses creux préparent ses pics, ne les lisez pas comme un désengagement."],deepworker:["Deep-worker","Performe en concentration longue. Protégez ses créneaux sans réunion ni interruption."]};
+      const e=EN[m.energie.profil];
+      if(e) energieHtml=`<div class="fm-section"><div class="fm-section-titre">Énergie & rythme</div><div class="dim-item"><div class="dim-head"><span class="dim-nom-i">Rythme de travail</span><span class="dim-prof-i">${esc(e[0])}</span></div><div class="reco-desc">${esc(e[1])}</div><div class="dim-modele-i">Modèle SMART</div></div></div>`;
+    }
+    // dimensions de pilotage (collaboration, autorité, reconnaissance)
+    let pilotageHtml='';
+    const DIMS_PILOT={
+      collaboration:{titre:"Collaboration",modele:"Modèle SMART",profils:{autonome:["Autonome","Donne le meilleur en pilotant son périmètre seul. Confiez-lui un cadre clair, évitez le micro-management."],cooperatif:["Coopératif","S'épanouit dans l'échange et le travail à plusieurs. Intégrez-le aux dynamiques collectives."],interdependant:["Interdépendant","Articule son travail avec celui des autres. Placez-le aux interfaces, sur les projets transverses."],federateur:["Fédérateur","Anime et fait avancer le collectif. Confiez-lui des rituels ou sous-groupes à animer."]}},
+      autorite:{titre:"Rapport au cadre",modele:"Self-Determination Theory",profils:{cadre:["Besoin de cadre","Donnez-lui des attentes explicites et stables. Le flou le déstabilise."],sens:["Besoin de sens","Expliquez toujours le pourquoi : le sens est sa condition d'adhésion."],liberte:["Besoin de liberté","Accordez-lui autonomie et confiance. Le contrôle excessif le démotive."],contributeur:["Contributeur","Associez-le aux décisions qui le concernent : il s'engage quand il est consulté."]}},
+      reconnaissance:{titre:"Reconnaissance",modele:"Self-Determination Theory",profils:{resultats:["Résultats","Soulignez explicitement ses réussites. Ne passez pas au sujet suivant sans marquer le coup."],effort:["Effort","Reconnaissez l'investissement et le chemin, pas seulement le résultat final."],relation:["Relation","Accordez-lui attention sincère et considération, au-delà des chiffres."],autonomie:["Autonomie","Récompensez-le en lui confiant plus d'autonomie : c'est sa vraie reconnaissance."]}}
+    };
+    ['collaboration','autorite','reconnaissance'].forEach(d=>{
+      const data=m[d];
+      if(data && data.profil && DIMS_PILOT[d].profils[data.profil]){
+        const [nom,desc]=DIMS_PILOT[d].profils[data.profil];
+        pilotageHtml+=`<div class="dim-item"><div class="dim-head"><span class="dim-nom-i">${DIMS_PILOT[d].titre}</span><span class="dim-prof-i">${esc(nom)}</span></div><div class="reco-desc">${esc(desc)}</div><div class="dim-modele-i">${DIMS_PILOT[d].modele}</div></div>`;
+      }
+    });
+    if(pilotageHtml) pilotageHtml=`<div class="fm-section"><div class="fm-section-titre">Dimensions de pilotage</div><div class="dim-grid-i">${pilotageHtml}</div></div>`;
+    // badge fiabilité
+    let fiabHtml='';
+    if(m.fiabilite && m.fiabilite.score!=null){
+      const fs=m.fiabilite.score; const fc=fs>=85?'#3EAD8B':(fs>=70?'#F9A876':'#F98272');
+      fiabHtml=`<div class="fm-fiab" style="border-color:${fc}33;background:${fc}0d"><div><div class="fm-fiab-lab">Fiabilité du profil</div><div class="fm-fiab-msg">${esc(m.fiabilite.message||'')}</div></div><div class="fm-fiab-score" style="color:${fc}">${fs}%</div></div>`;
+    }
+    const html=`
+      <div class="fm-overlay" onclick="if(event.target===this)fermerMembre()">
+        <div class="fm-card">
+          <button class="fm-close" onclick="fermerMembre()">×</button>
+          <div class="fm-head">
+            <div class="membre-ava" style="background:${col};width:56px;height:56px;font-size:20px;border-radius:15px">${esc(initiales(m.nom))}</div>
+            <div><div class="fm-nom">${esc(m.nom||'')}</div><div class="fm-arch" style="color:${col}">${esc(m.dominante||'')} · ${esc(FAM_LABELS[f]||f)}</div></div>
+          </div>
+          <div class="fm-section"><div class="fm-section-titre">Comment le manager</div>${mgrHtml}</div>
+          ${fiabHtml}
+          ${coutHtml}
+          ${energieHtml}
+          ${pilotageHtml}
+          <div class="fm-section"><div class="fm-section-titre">Tempérament</div>${bfRows}</div>
+          ${speHtml}
+        </div>
+      </div>`;
+    const div=document.createElement('div'); div.id='fiche-membre'; div.innerHTML=html;
+    document.body.appendChild(div);
+  }
+  function fermerMembre(){ const d=document.getElementById('fiche-membre'); if(d) d.remove(); }
+
+
+  function detruireCharts(){ for(const k in charts){ try{charts[k].destroy();}catch(e){} } charts={}; }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function initiales(nom){ const p=(nom||'').trim().split(/\s+/); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
+
+  function tenterConnexion(){
+    const key = document.getElementById('login-key').value.trim();
+    const err = document.getElementById('login-err');
+    if(!key){ err.textContent='Entrez votre clé d\'accès.'; return; }
+    err.textContent='Vérification...';
+    fetch(BACKEND+'?cle='+encodeURIComponent(key)+'&liste=ensemble')
+      .then(r=>{ if(r.status===401) throw new Error('cle'); return r.json(); })
+      .then(data=>{
+        cleAcces=key;
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('app').classList.add('active');
+        afficherEnsemble(data);
+      })
+      .catch(e=>{ err.textContent=(e.message==='cle')?'Clé d\'accès incorrecte.':'Connexion impossible. Réessayez.'; });
+  }
+  function deconnexion(){ location.reload(); }
+
+  function rechargerEnsemble(){
+    const content=document.getElementById('content');
+    content.innerHTML=`<div class="loading"><div class="spinner"></div><div>Chargement...</div></div>`;
+    fetch(BACKEND+'?cle='+encodeURIComponent(cleAcces)+'&liste=ensemble').then(r=>r.json()).then(afficherEnsemble);
+  }
+
+  // ====== VUE D'ENSEMBLE ======
+  function afficherEnsemble(data){
+    detruireCharts();
     const entreprises = data.entreprises || [];
     let html = `
-      <div class="stats-row">
-        <div class="stat-card"><div class="stat-num">${entreprises.length}</div><div class="stat-label">Entreprises</div></div>
-        <div class="stat-card"><div class="stat-num">${data.totalCampagnes || 0}</div><div class="stat-label">Campagnes</div></div>
-        <div class="stat-card"><div class="stat-num">${data.totalTermines || 0}</div><div class="stat-label">Analyses réalisées</div></div>
+      <div class="stats-band">
+        <div class="stat"><div class="stat-bar"></div><div class="stat-num">${entreprises.length}</div><div class="stat-lab">Entreprises</div></div>
+        <div class="stat"><div class="stat-bar"></div><div class="stat-num">${data.totalCampagnes||0}</div><div class="stat-lab">Campagnes actives</div></div>
+        <div class="stat"><div class="stat-bar"></div><div class="stat-num">${data.totalTermines||0}</div><div class="stat-lab">Profils analysés</div></div>
+      </div>
+      <div class="section-label">Vos entreprises</div>
+      <div class="ent-grid">`;
+    if(!entreprises.length) html += `<div class="empty">Aucune campagne pour le moment.</div>`;
+    for(const ent of entreprises){
+      html += `<div class="ent-card">
+        <div class="ent-card-head">
+          <div class="ent-name"><span class="bullet"></span>${esc(ent.entreprise)}</div>
+          <div class="ent-info">${ent.totalTermines||0} profil${(ent.totalTermines||0)>1?'s':''} · ${(ent.campagnes||[]).length} campagne${(ent.campagnes||[]).length>1?'s':''}</div>
+        </div>
+        <div class="ent-campaigns">`;
+      for(const c of (ent.campagnes||[])){
+        const fams=c.familles||{}; const totF=FAM_ORDER.reduce((s,f)=>s+(fams[f]||0),0)||1;
+        const chips=FAM_ORDER.map(f=>{const v=fams[f]||0;if(!v)return '';const w=Math.max(8,Math.round(v/totF*110));return `<span class="fam-chip" style="background:${FAM_COLORS[f]};width:${w}px"></span>`;}).join('');
+        const pct=c.quota?Math.min(100,Math.round((c.utilisations||0)/c.quota*100)):0;
+        const type=(c.type||'classic').toLowerCase();
+        html += `<div class="camp-line" onclick="ouvrirCampagne('${esc(c.code||'')}')">
+          <div class="camp-line-main">
+            <div class="camp-line-top"><span class="camp-line-name">${esc(c.nom||'Sans nom')}</span><span class="camp-badge ${type}">${esc(type)}</span></div>
+            <div class="camp-line-code">${esc(c.code||'')}</div>
+            <div class="camp-line-fams">${chips}</div>
+          </div>
+          <div class="camp-line-right">
+            <div class="camp-line-count">${c.nbTermines||0}<small> / ${c.quota||'∞'}</small></div>
+            <div class="camp-line-gauge"><i style="width:${pct}%"></i></div>
+          </div>
+          <div class="camp-line-arrow">›</div>
+        </div>`;
+      }
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+    document.getElementById('content').innerHTML = html;
+  }
+
+  // ====== VUE CAMPAGNE (waouh) ======
+  function ouvrirCampagne(code){
+    codeCampagneActuelle = code;
+    detruireCharts();
+    const content=document.getElementById('content');
+    content.innerHTML=`<div class="loading"><div class="spinner"></div><div>Chargement de la campagne...</div></div>`;
+    fetch(BACKEND+'?cle='+encodeURIComponent(cleAcces)+'&campagne='+encodeURIComponent(code))
+      .then(r=>r.json()).then(afficherCampagne)
+      .catch(()=>{ content.innerHTML=`<div class="empty">Erreur de chargement. <a onclick="rechargerEnsemble()" style="color:var(--c-purple-text);cursor:pointer">Retour</a></div>`; });
+  }
+
+  function afficherCampagne(data){
+    detruireCharts();
+    const camp=data.campagne||{}; const stats=data.stats||{}; const reps=data.repondants||[];
+    const fams=stats.familles||{}; const totF=FAM_ORDER.reduce((s,f)=>s+(fams[f]||0),0)||1;
+    const termines=stats.termines||0; const total=stats.total||0;
+    const pctComplet=total?Math.round(termines/total*100):0;
+    // famille dominante
+    let famDom='RELATION',famMax=-1; FAM_ORDER.forEach(f=>{if((fams[f]||0)>famMax){famMax=fams[f]||0;famDom=f;}});
+    const type=(camp.type||'classic').toLowerCase();
+
+    let html = `
+      <div class="breadcrumb"><a onclick="rechargerEnsemble()">Vos entreprises</a><span class="sep">›</span>${esc(camp.entreprise||'')}<span class="sep">›</span><strong style="color:var(--c-dark)">${esc(camp.nom||'')}</strong></div>
+
+      <div class="camp-hero">
+        <div class="camp-hero-kicker">${esc(camp.entreprise||'')} · ${esc(type)}</div>
+        <div class="camp-hero-title">${esc(camp.nom||'')}</div>
+        <div class="camp-hero-sub">Photographie de l'équipe à partir de ${termines} profil${termines>1?'s':''} analysé${termines>1?'s':''}.</div>
+        <div class="camp-hero-kpis">
+          <div><div class="kpi-big-num">${termines}</div><div class="kpi-big-lab">Profils analysés</div></div>
+          <div><div class="kpi-big-num">${pctComplet}%</div><div class="kpi-big-lab">Taux de complétion</div></div>
+          <div><div class="kpi-big-num" style="color:${FAM_COLORS[famDom]}">${FAM_LABELS[famDom]}</div><div class="kpi-big-lab">Famille dominante</div></div>
+          <div><div class="kpi-big-num">${camp.quota||'∞'}</div><div class="kpi-big-lab">Quota de la campagne</div></div>
+        </div>
       </div>`;
-    if (!entreprises.length) {
-      html += `<div class="empty">Aucune campagne pour le moment. Créez-en une dans Airtable.</div>`;
-      content.innerHTML = html;
+
+    if(termines===0){
+      html += `<div class="empty">Aucun profil terminé pour cette campagne.</div>`;
+      document.getElementById('content').innerHTML=html;
       return;
     }
-    entreprises.forEach(ent => {
-      html += `<div class="ent-block">
-        <div class="ent-head">
-          <div class="ent-nom">${ent.entreprise}</div>
-          <div class="ent-meta">${ent.totalTermines} analyse${ent.totalTermines > 1 ? 's' : ''} · ${ent.campagnes.length} campagne${ent.campagnes.length > 1 ? 's' : ''}</div>
-        </div>`;
-      ent.campagnes.forEach(c => {
-        const pct = c.quota > 0 ? Math.round((c.utilisations / c.quota) * 100) : 0;
-        const famDots = Object.entries(c.familles).filter(([k,v]) => v > 0).map(([k,v]) =>
-          `<div class="fam-dot" style="background:${FAM_COULEURS[k]}" title="${FAM_LABELS[k]}">${v}</div>`).join('');
-        html += `<div class="camp-row" onclick="ouvrirCampagne('${(c.code || '').replace(/'/g, "")}')">
-          <div class="camp-info">
-            <div class="camp-nom">${c.nom}<span class="camp-type">${c.type || 'classic'}</span></div>
-            <div class="camp-code">${c.code || ''}</div>
-            ${famDots ? `<div class="fam-mini">${famDots}</div>` : ''}
+
+    // ===== ANALYSE : graphique + texte côte à côte =====
+    const ad = analyserEquipe(reps);
+    const bf=stats.moyenneBigFive||{};
+
+    // ===== ARCHÉTYPE D'ÉQUIPE (identité collective) =====
+    if(ad){
+      const arch=archetypeEquipe(ad);
+      html += `
+      <div class="archetype-banner">
+        <div class="archetype-glow"></div>
+        <div class="archetype-label">L'identité de cette équipe</div>
+        <div class="archetype-nom">${esc(arch.nom)}</div>
+        <div class="archetype-essence">${esc(arch.essence)}</div>
+        <div class="archetype-tags">
+          <span class="archetype-tag" style="background:${FAM_COLORS[arch.dom]}">${FAM_LABELS[arch.dom]}</span>
+          ${arch.second && ad.familles.pct[arch.second]>0?`<span class="archetype-tag" style="background:${FAM_COLORS[arch.second]}">${FAM_LABELS[arch.second]}</span>`:''}
+        </div>
+      </div>`;
+    }
+
+    // SECTION 1 — Familles (donut + texte)
+    html += `
+      <div class="section-label" style="margin-top:6px">Composition de l'équipe</div>
+      <div class="duo">
+        <div class="panel duo-visuel">
+          <div class="panel-title">Répartition par famille</div>
+          <div class="panel-sub">Les 4 familles Sinéa présentes dans l'équipe.</div>
+          <div class="chart-box"><canvas id="chartDonut"></canvas></div>
+          <div class="fam-legend">${FAM_ORDER.map(f=>{const v=fams[f]||0;const p=Math.round(v/totF*100);return `<div class="fam-legend-row"><span class="fam-legend-dot" style="background:${FAM_COLORS[f]}"></span><span class="fam-legend-name">${FAM_LABELS[f]}</span><span class="fam-legend-bar"><i style="width:${p}%;background:${FAM_COLORS[f]}"></i></span><span class="fam-legend-pct">${v} · ${p}%</span></div>`;}).join('')}</div>
+        </div>
+        <div class="panel duo-texte">
+          <div class="duo-texte-titre"><span class="dot" style="background:${ad?FAM_COLORS[ad.familles.dominante]:'#999'}"></span>Profil collectif</div>
+          <div class="ad-texte">${ad?texteFamilles(ad):''}</div>
+        </div>
+      </div>`;
+
+    // SECTION 2 — Tempérament (radar Big Five + texte)
+    html += `
+      <div class="section-label">Tempérament de l'équipe</div>
+      <div class="duo">
+        <div class="panel duo-visuel">
+          <div class="panel-title">Profil Big Five</div>
+          <div class="panel-sub">La forme de personnalité moyenne, et l'écart entre les membres.</div>
+          <div class="chart-box tall"><canvas id="chartRadarBF"></canvas></div>
+        </div>
+        <div class="panel duo-texte">
+          <div class="duo-texte-titre"><span class="dot" style="background:var(--c-bleu-violet)"></span>Personnalité dominante</div>
+          <div class="ad-texte">${ad?texteBigFive(ad):''}</div>
+          ${ad?`<div class="ad-extremes-compact">${BF_KEYS.map(k=>{const e=ad.extremes[k];const lab=k==='N'?'Stabilité':BF_LABELS[k];const hv=k==='N'?100-e.haut.val:e.haut.val;return `<div class="ad-extc"><span class="ad-extc-lab">${lab}</span><span class="ad-extc-val">${esc(e.haut.nom.split(' ')[0])} · ${hv}</span></div>`;}).join('')}</div>`:''}
+        </div>
+      </div>`;
+
+    // SECTION 3 — Cartographie premium (nuage de points + texte)
+    html += `
+      <div class="section-label">Cartographie de l'équipe</div>
+      <div class="duo">
+        <div class="panel duo-visuel">
+          <div class="panel-title">Positionnement des membres</div>
+          <div class="panel-sub">Chaque membre placé selon son orientation et son énergie.</div>
+          <div class="carto-wrap">
+            <div class="carto-axe-y haut">Action</div>
+            <div class="carto-axe-y bas">Réflexion</div>
+            <div class="carto-axe-x gauche">Relation</div>
+            <div class="carto-axe-x droite">Tâche</div>
+            <div class="chart-box tall"><canvas id="chartCarto"></canvas></div>
           </div>
-          <div class="camp-quota">
-            <b>${c.utilisations}</b> / ${c.quota || '∞'}
-            ${c.quota > 0 ? `<div class="camp-jauge"><div class="camp-jauge-fill" style="width:${pct}%"></div></div>` : ''}
+        </div>
+        <div class="panel duo-texte">
+          <div class="duo-texte-titre"><span class="dot" style="background:var(--c-pink)"></span>Lecture de la carte</div>
+          <div class="ad-texte">${ad?texteCartographie(ad,reps):''}</div>
+        </div>
+      </div>`;
+
+    // ===== ANALYSES AVANCÉES (données riches : contextuel, naturel/adapté) =====
+    const membres_av = membresValides(reps);
+    if(membres_av.length>=2){
+      const compl=complementarite(membres_av);
+      const rStress=risquesStress(membres_av);
+      const binomes=meilleursBinomes(membres_av);
+      const angles=anglesMorts(membres_av, fams);
+      const natTrav=naturelVsTravail(membres_av);
+      const axes=axesFormation(membres_av, fams);
+
+      // Complémentarité (avec jauge %)
+      if(compl){
+        html += `
+        <div class="section-label">Complémentarité</div>
+        <div class="panel" style="margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-bottom:16px">
+            <div class="compl-cercle"><b>${compl.score}%</b><span>complémentarité</span></div>
+            <div style="flex:1;min-width:240px">
+              <div class="compl-sous"><span>Couverture des registres</span><div class="compl-bar"><i style="width:${compl.scoreFam}%"></i></div><b>${compl.scoreFam}%</b></div>
+              <div class="compl-sous"><span>Dispersion des tempéraments</span><div class="compl-bar"><i style="width:${compl.scoreDisp}%"></i></div><b>${compl.scoreDisp}%</b></div>
+              ${compl.scoreCtx!=null?`<div class="compl-sous"><span>Variété des modes (stress, conflit...)</span><div class="compl-bar"><i style="width:${compl.scoreCtx}%"></i></div><b>${compl.scoreCtx}%</b></div>`:''}
+            </div>
+          </div>
+          <div class="ad-texte">${texteComplementarite(compl, membres_av)}</div>
+        </div>`;
+      }
+
+      // Risques sous stress
+      if(rStress){
+        html += `
+        <div class="section-label">Sous pression</div>
+        <div class="panel" style="margin-bottom:20px">
+          <div class="panel-title">Risques en situation de stress</div>
+          <div class="panel-sub">Déduits des modes de réaction réels mesurés sur ${rStress.basesCtx||0} membre${(rStress.basesCtx||0)>1?'s':''}${rStress.basesAdapte?` et des coûts d'adaptation de ${rStress.basesAdapte}`:''}.</div>
+          <div class="reco-grid">
+            ${rStress.risques.map(r=>`<div class="risque-item"><div class="risque-titre">${esc(r.titre)}</div><div class="reco-desc">${esc(r.desc)}</div></div>`).join('')}
           </div>
         </div>`;
-      });
-      html += `</div>`;
+      }
+
+      // Naturel vs travail
+      if(natTrav && natTrav.items.length){
+        html += `
+        <div class="panel" style="margin-bottom:20px">
+          <div class="panel-title">Style naturel et style au travail</div>
+          <div class="panel-sub">L'écart entre la nature profonde de chacun et sa posture professionnelle, mesuré sur ${natTrav.bases} membre${natTrav.bases>1?'s':''}.</div>
+          ${natTrav.synthese?`<div class="ad-texte" style="margin-bottom:16px">${esc(natTrav.synthese)}</div>`:''}
+          <div class="nat-grid">
+            ${natTrav.items.map(i=>{const c=(i.cout||'').indexOf('lev')>=0?'eleve':((i.cout||'').indexOf('mod')>=0?'modere':'faible');return `<div class="nat-item nat-${c}"><div class="nat-cout">${esc(i.cout||'?')}</div><div class="reco-desc">${esc(i.texte)}</div></div>`;}).join('')}
+          </div>
+        </div>`;
+      }
+
+      // Binômes
+      if(binomes && binomes.length){
+        html += `
+        <div class="section-label">Collaborations</div>
+        <div class="panel" style="margin-bottom:20px">
+          <div class="panel-title">Les binômes à fort potentiel</div>
+          <div class="panel-sub">Les paires dont les profils se complètent le mieux, pour les projets à deux ou les parrainages.</div>
+          <div class="binome-grid">
+            ${binomes.map((b,i)=>`<div class="binome-item"><div class="binome-rang">${i+1}</div><div><div class="binome-noms">${esc(b.a.split(' ')[0])} + ${esc(b.b.split(' ')[0])}</div><div class="reco-desc">${b.raisons.map(r=>esc(r)).join(' · ')}</div></div></div>`).join('')}
+          </div>
+        </div>`;
+      }
+
+      // Angles morts
+      if(angles && angles.length){
+        html += `
+        <div class="panel" style="margin-bottom:20px">
+          <div class="panel-title">Angles morts</div>
+          <div class="panel-sub">Ce que la composition de l'équipe ne couvre pas naturellement.</div>
+          <div class="reco-grid">
+            ${angles.map(a=>`<div class="angle-item"><div class="risque-titre">${esc(a.titre)}</div><div class="reco-desc">${esc(a.desc)}</div></div>`).join('')}
+          </div>
+        </div>`;
+      }
+
+      // Axes de formation
+      if(axes && axes.length){
+        html += `
+        <div class="section-label">Développement</div>
+        <div class="panel" style="margin-bottom:20px">
+          <div class="panel-title">Axes de développement et de formation</div>
+          <div class="panel-sub">Déduits des écarts d'adaptation réels et des registres peu couverts.</div>
+          <div class="reco-grid">
+            ${axes.map((a,i)=>`<div class="reco-item"><div class="reco-num" style="background:var(--g-purpleblue)">${i+1}</div><div class="reco-body"><div class="reco-titre">${esc(a.titre)}</div><div class="reco-desc">${esc(a.desc)}</div></div></div>`).join('')}
+          </div>
+        </div>`;
+      }
+
+      // ===== ANALYSES DES NOUVELLES DIMENSIONS (énergie, collaboration, autorité, reconnaissance) =====
+      const aEnergie=analyseEnergieEq(membres_av);
+      const aCollab=analyseCollabEq(membres_av);
+      const aAutorite=analyseAutoriteEq(membres_av);
+      const aReco=analyseRecoEq(membres_av);
+      const blocsDim=[];
+      if(aEnergie) blocsDim.push({label:"Rythmes de l'équipe",sub:`Profils d'énergie · modèle SMART · sur ${aEnergie.total} membre${aEnergie.total>1?'s':''}`,risques:aEnergie.risques});
+      if(aCollab) blocsDim.push({label:"Modes de collaboration",sub:`Comment l'équipe travaille ensemble · sur ${aCollab.total} membre${aCollab.total>1?'s':''}`,risques:aCollab.risques});
+      if(aAutorite) blocsDim.push({label:"Besoins de management",sub:`Rapport au cadre · Self-Determination Theory · sur ${aAutorite.total} membre${aAutorite.total>1?'s':''}`,risques:aAutorite.risques});
+      if(aReco) blocsDim.push({label:"Leviers de reconnaissance",sub:`Ce qui motive l'équipe · Self-Determination Theory · sur ${aReco.total} membre${aReco.total>1?'s':''}`,risques:aReco.risques});
+      if(blocsDim.length){
+        html += `<div class="section-label">Pilotage humain</div>`;
+        blocsDim.forEach(b=>{
+          html += `
+          <div class="panel" style="margin-bottom:16px">
+            <div class="panel-title">${esc(b.label)}</div>
+            <div class="panel-sub">${esc(b.sub)}</div>
+            <div class="reco-grid">
+              ${b.risques.map(r=>`<div class="angle-item"><div class="risque-titre">${esc(r.titre)}</div><div class="reco-desc">${esc(r.desc)}</div></div>`).join('')}
+            </div>
+          </div>`;
+        });
+      }
+    }
+
+    // ===== RECOMMANDATIONS D'ACTIVATION =====
+    if(ad){
+      const recos=recommandationsActivation(ad);
+      html += `
+      <div class="section-label">Activer cette équipe</div>
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-title">Que faire avec cette typologie de profils</div>
+        <div class="panel-sub">Des leviers concrets pour piloter et tirer le meilleur de cette équipe.</div>
+        <div class="reco-grid">
+          ${recos.map((r,i)=>`<div class="reco-item"><div class="reco-num">${i+1}</div><div class="reco-body"><div class="reco-titre">${esc(r.titre)}</div><div class="reco-desc">${esc(r.desc)}</div></div></div>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    // ===== SWOT DATA + INDICATEURS =====
+    if(ad){
+      const sw=swotData(ad);
+      const inds=indicateurs(ad);
+      const liSW=arr=>arr.map(x=>`<li>${esc(x)}</li>`).join('');
+      html += `
+      <div class="section-label">Forces et vigilances</div>
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-title">Lecture stratégique de l'équipe</div>
+        <div class="panel-sub">Une matrice déduite des données, sans intelligence artificielle.</div>
+        <div class="swot-grid" style="margin-top:18px">
+          <div class="swot-card swot-f"><div class="swot-card-title">Forces</div><ul>${liSW(sw.forces)}</ul></div>
+          <div class="swot-card swot-w"><div class="swot-card-title">Points de vigilance</div><ul>${liSW(sw.faiblesses)}</ul></div>
+          <div class="swot-card swot-o"><div class="swot-card-title">Opportunités</div><ul>${liSW(sw.opportunites)}</ul></div>
+          <div class="swot-card swot-r"><div class="swot-card-title">Risques</div><ul>${liSW(sw.risques)}</ul></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-title">Indicateurs de dynamique</div>
+        <div class="panel-sub">Des signaux comportementaux pour mieux comprendre l'équipe.</div>
+        <div class="ind-grid">
+          ${inds.map(i=>`<div class="ind-card"><div class="ind-cle">${esc(i.cle)}${i.valeur?` <span class="ind-val">${esc(i.valeur)}</span>`:''}</div><div class="ind-txt">${esc(i.texte)}</div></div>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    // Membres
+    html += `<div class="panel" style="margin-bottom:20px">
+      <div class="panel-title">Les membres de l'équipe</div>
+      <div class="panel-sub">${termines} personne${termines>1?'s':''} ayant complété leur profil.</div>
+      <div class="membres-grid">`;
+    repsCourants = reps;
+    for(let ri=0; ri<reps.length; ri++){
+      const r = reps[ri];
+      if(!String(r.statut||'').toLowerCase().startsWith('termin')) continue;
+      const f=(r.famille||'').toUpperCase(); const col=FAM_COLORS[f]||'#999';
+      html += `<div class="membre membre-clic" onclick="ouvrirMembre(${ri})"><div class="membre-ava" style="background:${col}">${esc(initiales(r.nom))}</div><div class="membre-info"><div class="membre-nom">${esc(r.nom||'')}</div><div class="membre-arch">${esc(r.dominante||'')}</div></div><span class="membre-fleche">›</span></div>`;
+    }
+    html += `</div></div>`;
+
+    // Analyse stratégique IA (à venir, grisée)
+    if(termines>=2){
+      html += `
+      <div class="section-label">Aller plus loin</div>
+      <div class="analyse-cta analyse-cta-soon">
+        <div>
+          <div class="analyse-cta-title">Approfondir avec l'analyse IA <span class="badge-soon">Bientôt disponible</span></div>
+          <div class="analyse-cta-sub">L'intelligence artificielle reliera les profils entre eux : synthèse narrative, dynamiques internes, plan d'action sur-mesure et conseil personnalisé par membre.</div>
+        </div>
+        <button class="analyse-cta-btn" disabled>Générer l'analyse IA</button>
+      </div>`;
+    }
+    html += `<div id="analyse-zone"></div>`;
+
+    document.getElementById('content').innerHTML=html;
+
+    // ==== GRAPHIQUES ====
+    requestAnimationFrame(()=>dessinerGraphiques(stats, reps));
+  }
+
+  function dessinerGraphiques(stats, reps){
+    const fams=stats.familles||{};
+    const famVals=FAM_ORDER.map(f=>fams[f]||0);
+    const famCols=FAM_ORDER.map(f=>FAM_COLORS[f]);
+    const famLabs=FAM_ORDER.map(f=>FAM_LABELS[f]);
+    Chart.defaults.font.family="Manrope, sans-serif";
+    Chart.defaults.color="#747474";
+
+    const membres=reps.filter(r=>String(r.statut||'').toLowerCase().startsWith('termin') && r.bigFive && r.bigFive.E!=null);
+
+    // 1) Donut familles
+    const c1=document.getElementById('chartDonut');
+    if(c1) charts.donut=new Chart(c1,{type:'doughnut',data:{labels:famLabs,datasets:[{data:famVals,backgroundColor:famCols,borderWidth:3,borderColor:'#fff',hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false}},animation:{animateRotate:true,duration:900}}});
+
+    // 2) Radar Big Five : moyenne + enveloppe (min/max) pour montrer la dispersion
+    const bfKeys=['E','A','C','N','O'];
+    const bfLabels=['Extraversion','Agréabilité','Conscience','Stabilité','Ouverture'];
+    const val=(m,k)=>{ let v=Number(m.bigFive[k])||0; if(k==='N')v=100-v; return v; };
+    const moy=bfKeys.map(k=>{ const vs=membres.map(m=>val(m,k)); return vs.length?Math.round(vs.reduce((a,b)=>a+b,0)/vs.length):0; });
+    const mins=bfKeys.map(k=>{ const vs=membres.map(m=>val(m,k)); return vs.length?Math.min(...vs):0; });
+    const maxs=bfKeys.map(k=>{ const vs=membres.map(m=>val(m,k)); return vs.length?Math.max(...vs):0; });
+    const c2=document.getElementById('chartRadarBF');
+    if(c2) charts.radarBF=new Chart(c2,{type:'radar',data:{labels:bfLabels,datasets:[
+      {label:'Maximum',data:maxs,backgroundColor:'rgba(136,132,240,0.10)',borderColor:'rgba(136,132,240,0.30)',borderWidth:1,pointRadius:0,fill:true},
+      {label:'Moyenne',data:moy,backgroundColor:'rgba(249,130,114,0.20)',borderColor:'#F98272',borderWidth:2.5,pointBackgroundColor:'#F98272',pointBorderColor:'#fff',pointRadius:5,pointHoverRadius:7,fill:true},
+      {label:'Minimum',data:mins,backgroundColor:'rgba(255,255,255,0)',borderColor:'rgba(136,132,240,0.30)',borderWidth:1,pointRadius:0,fill:false}
+    ]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:true,max:100,ticks:{stepSize:25,backdropColor:'transparent',font:{size:10}},grid:{color:'#ECE6F5'},angleLines:{color:'#ECE6F5'},pointLabels:{font:{size:12.5,weight:'700'},color:'#1A1A1A'}}},plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:14}}},animation:{duration:900}}});
+
+    // 3) Cartographie : nuage de points (un point par membre, couleur = famille)
+    const datasetsByFam={};
+    membres.forEach(m=>{
+      const f=(m.famille||'').toUpperCase(); const pos=positionCarto(m);
+      if(!datasetsByFam[f]) datasetsByFam[f]={label:FAM_LABELS[f]||f,data:[],backgroundColor:FAM_COLORS[f]||'#999',pointRadius:9,pointHoverRadius:12,borderColor:'#fff',borderWidth:2};
+      datasetsByFam[f].data.push({x:pos.x,y:pos.y,nom:m.nom});
     });
-    content.innerHTML = html;
+    const c3=document.getElementById('chartCarto');
+    if(c3) charts.carto=new Chart(c3,{type:'scatter',data:{datasets:Object.values(datasetsByFam)},options:{responsive:true,maintainAspectRatio:false,scales:{x:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}},y:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}}},plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:12}},tooltip:{callbacks:{label:c=>c.raw.nom}}},animation:{duration:800}}});
   }
 
-  // génération de l'analyse stratégique d'équipe
-  const ANALYSE_URL = "https://sinea-profile-ia.vercel.app/api/analyse_equipe";
-  let dernierCodeCampagne = "";
-
-  function genererAnalyse(code, force) {
-    dernierCodeCampagne = code;
-    const btn = document.getElementById('btn-analyse');
-    const zone = document.getElementById('analyse-zone');
-    if (btn) { btn.disabled = true; btn.textContent = 'Génération en cours...'; }
-    if (zone) zone.innerHTML = `<div class="loading">Analyse de l'équipe par l'IA, cela peut prendre une minute...</div>`;
-    fetch(ANALYSE_URL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cle: cleAcces, code, force: !!force }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (btn) { btn.disabled = false; btn.textContent = 'Régénérer l\'analyse'; }
-        if (data && data.ok && data.analyse) {
-          afficherAnalyse(data.analyse, data.cache);
-        } else if (data && data.raison === 'pas_assez') {
-          if (zone) zone.innerHTML = `<div class="empty">${data.message}</div>`;
-        } else {
-          if (zone) zone.innerHTML = `<div class="empty">L'analyse n'a pas pu être générée. Réessayez.</div>`;
-        }
+  // ====== ANALYSE STRATÉGIQUE ======
+  function genererAnalyse(code, force){
+    const btn=document.getElementById('btn-analyse'); const zone=document.getElementById('analyse-zone');
+    if(btn){btn.disabled=true;btn.textContent='Génération en cours...';}
+    if(zone) zone.innerHTML=`<div class="loading"><div class="spinner"></div><div>Analyse de l'équipe par l'IA, cela peut prendre une minute...</div></div>`;
+    fetch(ANALYSE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cle:cleAcces,code:code,force:!!force})})
+      .then(r=>r.json())
+      .then(data=>{
+        if(btn){btn.disabled=false;btn.textContent='Régénérer l\'analyse';}
+        if(data&&data.ok&&data.analyse) afficherAnalyse(data.analyse,data.cache);
+        else if(data&&data.raison==='pas_assez'){ if(zone)zone.innerHTML=`<div class="empty">${esc(data.message||'Il faut au moins 2 profils.')}</div>`; }
+        else { if(zone)zone.innerHTML=`<div class="empty">L'analyse n'a pas pu être générée. Réessayez.</div>`; }
       })
-      .catch(() => {
-        if (btn) { btn.disabled = false; btn.textContent = 'Générer l\'analyse'; }
-        if (zone) zone.innerHTML = `<div class="empty">Erreur de génération. Réessayez dans un instant.</div>`;
-      });
+      .catch(()=>{ if(btn){btn.disabled=false;btn.textContent='Générer l\'analyse';} if(zone)zone.innerHTML=`<div class="empty">Erreur de génération.</div>`; });
   }
 
-  function afficherAnalyse(a, estCache) {
-    const zone = document.getElementById('analyse-zone');
-    if (!zone) return;
-    const swot = a.swot || {};
-    const liste = (arr) => Array.isArray(arr) ? arr.map(x => `<li>${x}</li>`).join('') : '';
-    const planItems = Array.isArray(a.plan_action) ? a.plan_action.map(p =>
-      `<div class="plan-item"><div class="plan-titre">${p.titre || ''}</div><p class="plan-desc">${p.desc || ''}</p></div>`).join('') : '';
-    const focusItems = Array.isArray(a.focus_individuel) ? a.focus_individuel.map(f =>
-      `<div class="focus-item"><div class="focus-nom">${f.nom || ''}</div><p class="focus-conseil">${f.conseil || ''}</p></div>`).join('') : '';
-
-    zone.innerHTML = `
+  function afficherAnalyse(a, cache){
+    const zone=document.getElementById('analyse-zone'); if(!zone)return;
+    const sw=a.swot||{};
+    const li=arr=>Array.isArray(arr)?arr.map(x=>`<li>${esc(x)}</li>`).join(''):'';
+    const plan=Array.isArray(a.plan_action)?a.plan_action.map(p=>`<div class="plan-item"><div class="plan-titre">${esc(p.titre||'')}</div><p class="plan-desc">${esc(p.desc||'')}</p></div>`).join(''):'';
+    const focus=Array.isArray(a.focus_individuel)?a.focus_individuel.map(f=>`<div class="focus-item"><div class="focus-nom">${esc(f.nom||'')}</div><p class="focus-conseil">${esc(f.conseil||'')}</p></div>`).join(''):'';
+    zone.innerHTML=`
       <div class="analyse-result">
-        <div class="analyse-badge">Analyse stratégique${estCache ? ' · enregistrée' : ' · nouvelle'}</div>
-        ${a.synthese ? `<p class="analyse-synthese">${a.synthese}</p>` : ''}
-
+        <div class="analyse-badge">Analyse stratégique${cache?' · enregistrée':' · nouvelle'}</div>
+        ${a.synthese?`<p class="analyse-synthese">${esc(a.synthese)}</p>`:''}
         <div class="swot-grid">
-          <div class="swot-card swot-forces"><div class="swot-titre">Forces</div><ul>${liste(swot.forces)}</ul></div>
-          <div class="swot-card swot-faiblesses"><div class="swot-titre">Points de vigilance</div><ul>${liste(swot.faiblesses)}</ul></div>
-          <div class="swot-card swot-opportunites"><div class="swot-titre">Opportunités</div><ul>${liste(swot.opportunites)}</ul></div>
-          <div class="swot-card swot-risques"><div class="swot-titre">Risques</div><ul>${liste(swot.risques)}</ul></div>
+          <div class="swot-card swot-f"><div class="swot-card-title">Forces</div><ul>${li(sw.forces)}</ul></div>
+          <div class="swot-card swot-w"><div class="swot-card-title">Points de vigilance</div><ul>${li(sw.faiblesses)}</ul></div>
+          <div class="swot-card swot-o"><div class="swot-card-title">Opportunités</div><ul>${li(sw.opportunites)}</ul></div>
+          <div class="swot-card swot-r"><div class="swot-card-title">Risques</div><ul>${li(sw.risques)}</ul></div>
         </div>
-
-        ${a.dynamiques ? `<div class="analyse-section"><h4>Dynamiques d'équipe</h4><p>${a.dynamiques}</p></div>` : ''}
-
-        ${Array.isArray(a.risques_rh) ? `<div class="analyse-section"><h4>Points d'attention RH</h4><ul class="liste-rh">${liste(a.risques_rh)}</ul></div>` : ''}
-
-        ${planItems ? `<div class="analyse-section"><h4>Plan d'action de pilotage</h4><div class="plan-grid">${planItems}</div></div>` : ''}
-
-        ${focusItems ? `<div class="analyse-section"><h4>Focus individuel</h4><div class="focus-grid">${focusItems}</div></div>` : ''}
-      </div>
-    `;
-  }
-
-  // détail d'une campagne
-  function ouvrirCampagne(code) {
-    const content = document.getElementById('dash-content');
-    content.innerHTML = `<div class="loading">Chargement de la campagne...</div>`;
-    fetch(BACKEND + '?cle=' + encodeURIComponent(cleAcces) + '&campagne=' + encodeURIComponent(code))
-      .then(r => r.json())
-      .then(data => afficherDetail(data))
-      .catch(() => { content.innerHTML = `<div class="empty">Erreur de chargement. <button class="detail-back" onclick="recharger()">Retour</button></div>`; });
-  }
-
-  function recharger() {
-    const content = document.getElementById('dash-content');
-    content.innerHTML = `<div class="loading">Chargement...</div>`;
-    fetch(BACKEND + '?cle=' + encodeURIComponent(cleAcces) + '&liste=ensemble')
-      .then(r => r.json()).then(data => afficherEnsemble(data));
-  }
-
-  function afficherDetail(data) {
-    const content = document.getElementById('dash-content');
-    const camp = data.campagne || {};
-    const stats = data.stats || {};
-    const reps = data.repondants || [];
-    const familles = stats.familles || {};
-    const totalTermines = stats.termines || 0;
-
-    // barres de répartition des familles
-    const maxFam = Math.max(1, ...Object.values(familles));
-    const famBars = Object.entries(familles).map(([k, v]) => {
-      const pct = totalTermines > 0 ? Math.round((v / totalTermines) * 100) : 0;
-      const largeur = (v / maxFam) * 100;
-      return `<div class="fam-bar-row">
-        <div class="fam-bar-label">${FAM_LABELS[k]}</div>
-        <div class="fam-bar-track"><div class="fam-bar-fill" style="width:${Math.max(largeur, v > 0 ? 12 : 0)}%;background:${FAM_COULEURS[k]}">${v > 0 ? v + ' · ' + pct + '%' : ''}</div></div>
+        ${a.dynamiques?`<div class="analyse-sec"><h4>Dynamiques d'équipe</h4><p>${esc(a.dynamiques)}</p></div>`:''}
+        ${Array.isArray(a.risques_rh)?`<div class="analyse-sec"><h4>Points d'attention RH</h4><ul class="liste-rh">${li(a.risques_rh)}</ul></div>`:''}
+        ${plan?`<div class="analyse-sec"><h4>Plan d'action de pilotage</h4><div class="plan-grid">${plan}</div></div>`:''}
+        ${focus?`<div class="analyse-sec"><h4>Focus individuel</h4><div class="focus-grid">${focus}</div></div>`:''}
       </div>`;
-    }).join('');
-
-    // liste des membres
-    const membres = reps.map(r => {
-      const fam = (r.famille || '').toUpperCase();
-      const couleur = FAM_COULEURS[fam] || '#C9C9C9';
-      const init = (r.dominante || '?').replace(/^(Le |La |L'|Les )/, '').charAt(0);
-      const estTermine = (r.statut || '').toLowerCase().startsWith('termin');
-      return `<div class="membre-row">
-        <div class="membre-pastille" style="background:${couleur}">${init}</div>
-        <div class="membre-info">
-          <div class="membre-nom">${r.nom || r.email || 'Anonyme'}</div>
-          <div class="membre-arch">${r.dominante ? r.dominante + (r.famille ? ' · ' + FAM_LABELS[fam] : '') : 'En attente de réponse'}</div>
-        </div>
-        <div class="membre-statut ${estTermine ? 'statut-termine' : 'statut-attente'}">${estTermine ? 'Terminé' : 'En attente'}</div>
-      </div>`;
-    }).join('');
-
-    content.innerHTML = `
-      <button class="detail-back" onclick="recharger()">← Retour aux campagnes</button>
-      <div class="detail-head">
-        <div class="detail-nom">${camp.nom || ''}</div>
-        <div class="detail-meta">${camp.entreprise ? camp.entreprise + ' · ' : ''}${stats.termines || 0} analyse${(stats.termines||0) > 1 ? 's' : ''} réalisée${(stats.termines||0) > 1 ? 's' : ''} sur ${stats.total || 0} inscrit${(stats.total||0) > 1 ? 's' : ''}</div>
-      </div>
-      ${totalTermines > 0 ? `<div class="repartition">
-        <h3>Répartition des familles dans l'équipe</h3>
-        <div class="fam-bars">${famBars}</div>
-      </div>` : ''}
-      ${totalTermines >= 2 ? `<div class="analyse-cta-block">
-        <div class="analyse-cta-txt">
-          <div class="analyse-cta-titre">Analyse stratégique de l'équipe</div>
-          <div class="analyse-cta-sub">SWOT, dynamiques, risques RH et plan d'action, généré pour piloter cette équipe.</div>
-        </div>
-        <button class="analyse-cta-btn" id="btn-analyse" onclick="genererAnalyse('${(camp.code||'').replace(/'/g,'')}')">Générer l'analyse</button>
-      </div>
-      <div id="analyse-zone"></div>` : ''}
-      <div class="membres">
-        <h3>Les membres (${reps.length})</h3>
-        ${membres || '<div class="empty">Personne n\'a encore répondu.</div>'}
-      </div>
-    `;
   }
 </script>
 </body>

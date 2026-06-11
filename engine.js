@@ -13,20 +13,43 @@ const FAMILY_COLORS = {
 function scorerBigFive(repMini) {
   // Echelle 4 niveaux SANS milieu. Conversion 1->0, 2->33.33, 3->66.67, 4->100.
   // Items negatifs inverses (5 - reponse) avant conversion.
+  // V2 : si des reponses de choix force (MINI_CF_*) sont presentes,
+  // le score = 70% swipe + 30% choix force (triangulation anti-desirabilite).
   const scoring = SINEA_DATA.mini_scoring;
   const inverses = new Set(SINEA_DATA.mini_inverses);
   const conv = {1:0.0, 2:33.333, 3:66.667, 4:100.0};
   const lettreMap = {extraversion:'E', agreabilite:'A', conscience:'C', neuroticisme:'N', ouverture:'O'};
+
+  // index choix force par dimension
+  const cfParDim = {};
+  (SINEA_DATA.mini_choix_force || []).forEach(q => { cfParDim[q.dimension] = q; });
+
   const scores = {};
   for (const [dimNom, info] of Object.entries(scoring)) {
     let vals = [];
     for (const itemId of info.items) {
       let r = repMini[itemId];
+      if (r === undefined || r === null) continue;
       if (inverses.has(itemId)) r = 5 - r;
       vals.push(conv[r]);
     }
-    const moy = vals.reduce((a,b)=>a+b,0) / vals.length;
-    scores[lettreMap[dimNom]] = Math.round(moy * 10) / 10;
+    const moySwipe = vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
+
+    // contribution du choix force si repondu
+    let valCF = null;
+    const qcf = cfParDim[dimNom];
+    if (qcf && repMini[qcf.id] !== undefined && repMini[qcf.id] !== null) {
+      const choix = repMini[qcf.id]; // 'a' ou 'b'
+      const v = (choix === 'a') ? qcf.a.valeur : qcf.b.valeur; // 1-4
+      valCF = conv[v];
+    }
+
+    let final;
+    if (moySwipe !== null && valCF !== null) final = moySwipe * 0.7 + valCF * 0.3;
+    else if (moySwipe !== null) final = moySwipe;
+    else if (valCF !== null) final = valCF;
+    else final = 50;
+    scores[lettreMap[dimNom]] = Math.round(final * 10) / 10;
   }
   return scores;
 }
@@ -93,14 +116,27 @@ function calculerResultat(scoresBf, affinites, pointsSinea) {
   const familles = SINEA_DATA.familles;
   const noms = Object.keys(profils);
 
-  const maxPts = Math.max(...Object.values(pointsSinea), 1);
-  const bonus = {};
+  // ===== ÉQUITÉ STRUCTURELLE : normalisation par potentiel =====
+  // Chaque archétype peut gagner un total différent de points via les questions
+  // (accident de rédaction). On normalise pour que tous aient le même potentiel.
+  const potentiels = calculerPotentielsSinea();
+  const potMoyen = Object.values(potentiels).reduce((a,b)=>a+b,0) / noms.length;
+  const ptsNorm = {};
   for (const nom of noms) {
-    const ratio = pointsSinea[nom] / maxPts;
-    bonus[nom] = Math.pow(ratio, 1.8) * BONUS_SINEA_MAX;
+    const p = potentiels[nom] || potMoyen;
+    ptsNorm[nom] = pointsSinea[nom] * (potMoyen / p);
   }
+
+  // ===== DOSAGE EXPLICITE 60/40 =====
+  // 60% tempérament (affinité Big Five, validé scientifiquement)
+  // 40% questions Sinéa (signature propriétaire, affine le choix)
+  const maxPts = Math.max(...Object.values(ptsNorm), 0.001);
   const score = {};
-  for (const nom of noms) score[nom] = affinites[nom] + bonus[nom];
+  for (const nom of noms) {
+    const compAffinite = affinites[nom];                                // 0-100
+    const compSinea = Math.pow(ptsNorm[nom] / maxPts, 1.3) * 100;       // 0-100
+    score[nom] = 0.6 * compAffinite + 0.4 * compSinea;
+  }
 
   const classement = [...noms].sort((a,b)=> score[b]-score[a]);
   const dominante = classement[0];
@@ -134,6 +170,26 @@ function calculerResultat(scoresBf, affinites, pointsSinea) {
   };
 }
 
+// Potentiel total de points sinea par archétype (somme de toutes les options possibles).
+// Calculé une fois et mis en cache.
+let _potentielsCache = null;
+function calculerPotentielsSinea() {
+  if (_potentielsCache) return _potentielsCache;
+  const pot = {};
+  for (const nom of Object.values(ID_TO_NOM)) pot[nom] = 0;
+  for (const qs of Object.values(SINEA_DATA.sinea_famille)) for (const q of qs) {
+    q.options.forEach(o => { for (const [pid, pts] of Object.entries(o.ponderation || {})) { const nom = ID_TO_NOM[pid]; if (nom) pot[nom] += pts; } });
+  }
+  SINEA_DATA.sinea_hybride.forEach(q => {
+    [q.pole_gauche, q.pole_droit].forEach(p => { const nom = ID_TO_NOM[p.perso]; if (nom) pot[nom] += (q.points_max || POINTS_REF); });
+  });
+  (SINEA_DATA.sinea_transversales || []).forEach(q => {
+    q.options.forEach(o => { for (const [pid, pts] of Object.entries(o.ponderation || {})) { const nom = ID_TO_NOM[pid]; if (nom) pot[nom] += pts; } });
+  });
+  _potentielsCache = pot;
+  return pot;
+}
+
 function scorer(repMini, repSinea) {
   const scoresBf = scorerBigFive(repMini);
   const aff = calculerAffinites(scoresBf);
@@ -163,6 +219,101 @@ function scorerContextuel(repCtx) {
     res[dim] = Object.entries(compte).sort((a,b)=>b[1]-a[1])[0][0];
   }
   return res;
+}
+
+// ---- Nouvelles dimensions (énergie, collaboration, autorité, reconnaissance) ----
+function scorerContextuelPlus(repCtxPlus) {
+  const data = SINEA_DATA.contextuelles_plus;
+  if (!data) return {};
+  const parDim = {};
+  const qById = {};
+  data.questions.forEach(q => { qById[q.id] = q; });
+  for (const [qid, repIdx] of Object.entries(repCtxPlus)) {
+    const q = qById[qid];
+    if (!q) continue;
+    const profil = q.options[repIdx]?.profil;
+    if (!profil) continue;
+    if (!parDim[q.dimension]) parDim[q.dimension] = {};
+    parDim[q.dimension][profil] = (parDim[q.dimension][profil] || 0) + 1;
+  }
+  const res = {};
+  for (const [dim, compte] of Object.entries(parDim)) {
+    res[dim] = Object.entries(compte).sort((a,b)=>b[1]-a[1])[0][0];
+  }
+  return res;
+}
+
+// ---- Score de fiabilité du profil (cohérence des réponses Big Five) ----
+// repMini : { MINI_01: 1-4, ..., MINI_CF_E: 'a'|'b', ... }
+// tempsReponses : { questionId: millisecondes } (optionnel)
+function scorerFiabilite(repMini, tempsReponses) {
+  const conv = {1:0.0, 2:33.333, 3:66.667, 4:100.0};
+  const inverses = new Set(SINEA_DATA.mini_inverses);
+  const signaux = [];
+  let penalites = 0;
+
+  // valeurs converties par trait (swipe seulement)
+  const parTrait = {};
+  SINEA_DATA.mini_items.forEach(it => {
+    let r = repMini[it.id];
+    if (r === undefined || r === null) return;
+    if (inverses.has(it.id)) r = 5 - r;
+    (parTrait[it.dimension] = parTrait[it.dimension] || []).push(conv[r]);
+  });
+
+  // SIGNAL 1 : cohérence interne (les items d'un même trait concordent-ils ?)
+  let dispMax = 0, traitIncoherent = null;
+  for (const [t, vals] of Object.entries(parTrait)) {
+    if (vals.length < 2) continue;
+    const moy = vals.reduce((a,b)=>a+b,0) / vals.length;
+    const ecart = Math.sqrt(vals.reduce((s,v)=>s+Math.pow(v-moy,2),0) / vals.length);
+    if (ecart > dispMax) { dispMax = ecart; traitIncoherent = t; }
+  }
+  if (dispMax > 45) { penalites += 18; signaux.push({ type:'incoherence', niveau:'fort', detail:'Réponses contradictoires sur un même trait' }); }
+  else if (dispMax > 33) { penalites += 9; signaux.push({ type:'incoherence', niveau:'modéré', detail:'Légères contradictions internes' }); }
+
+  // SIGNAL 2 : concordance swipe vs choix forcé
+  let nbDesaccords = 0;
+  (SINEA_DATA.mini_choix_force || []).forEach(q => {
+    const c = repMini[q.id];
+    const vals = parTrait[q.dimension];
+    if (!c || !vals || !vals.length) return;
+    const moySwipe = vals.reduce((a,b)=>a+b,0) / vals.length;
+    const v = (c === 'a') ? q.a.valeur : q.b.valeur;
+    const valCF = conv[v];
+    if (Math.abs(moySwipe - valCF) > 55) nbDesaccords++;
+  });
+  if (nbDesaccords >= 2) { penalites += 20; signaux.push({ type:'desaccord', niveau:'fort', detail:'Plusieurs divergences entre auto-description et choix tranchés' }); }
+  else if (nbDesaccords === 1) { penalites += 8; signaux.push({ type:'desaccord', niveau:'modéré', detail:'Une divergence entre auto-description et choix tranchés' }); }
+
+  // SIGNAL 3 : réponses au hasard / patterns suspects
+  const valeursBrutes = SINEA_DATA.mini_items.map(it => repMini[it.id]).filter(v => v !== undefined && v !== null);
+  if (valeursBrutes.length >= 8) {
+    const uniques = new Set(valeursBrutes);
+    if (uniques.size === 1) { penalites += 30; signaux.push({ type:'uniforme', niveau:'fort', detail:'Toutes les réponses identiques' }); }
+    else if (uniques.size === 2) { penalites += 10; signaux.push({ type:'faible_variance', niveau:'modéré', detail:'Très peu de variété dans les réponses' }); }
+    const extremes = valeursBrutes.filter(v => v === 1 || v === 4).length;
+    if (extremes === valeursBrutes.length && uniques.size > 1) { penalites += 6; signaux.push({ type:'extremes', niveau:'léger', detail:'Réponses toujours tranchées, jamais nuancées' }); }
+  }
+
+  // SIGNAL 4 : vitesse de réponse (si mesurée)
+  if (tempsReponses) {
+    const temps = SINEA_DATA.mini_items.map(it => tempsReponses[it.id]).filter(t => typeof t === 'number');
+    if (temps.length >= 8) {
+      const ratio = temps.filter(t => t < 800).length / temps.length;
+      if (ratio > 0.5) { penalites += 18; signaux.push({ type:'vitesse', niveau:'fort', detail:'Plus de la moitié des réponses très rapides' }); }
+      else if (ratio > 0.3) { penalites += 7; signaux.push({ type:'vitesse', niveau:'modéré', detail:'Plusieurs réponses très rapides' }); }
+    }
+  }
+
+  const score = Math.max(0, Math.min(100, 100 - penalites));
+  let niveau, message;
+  if (score >= 85) { niveau = 'élevée'; message = 'Le profil est très cohérent : les réponses concordent et se confirment mutuellement.'; }
+  else if (score >= 70) { niveau = 'bonne'; message = 'Le profil est cohérent dans l\'ensemble. Résultats fiables.'; }
+  else if (score >= 50) { niveau = 'moyenne'; message = 'Le profil présente des tensions internes. Les résultats donnent une tendance, à confirmer par un échange.'; }
+  else { niveau = 'faible'; message = 'Les réponses manquent de cohérence. À interpréter avec prudence.'; }
+
+  return { score, niveau, message, signaux };
 }
 
 // ---- Dimensions spé (management ou commercial) ----
@@ -286,5 +437,5 @@ function scorerNaturelAdapte(repMini, repAdapte) {
 }
 
 // Export
-const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte };
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte };
 

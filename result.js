@@ -144,6 +144,49 @@ const Result = (() => {
     changement: { titre: 'Face au changement', profils: { moteur:'Moteur', adaptable:'Adaptable', pragmatique:'Pragmatique', ancre:'Ancré' } },
     conflit: { titre: 'Face au conflit', profils: { affrontement:'Direct', mediation:'Médiateur', compromis:'Compromis', evitement:'Évitant' } }
   };
+  // Les 4 dimensions de pilotage (ancrées SDT / modèle SMART)
+  const DIM_PLUS_LABELS = {
+    energie: { titre: 'Énergie & rythme', modele: 'Modèle SMART', profils: { sprinteur:'Sprinteur', endurant:'Endurant', cyclique:'Cyclique', deepworker:'Deep-worker' } },
+    collaboration: { titre: 'Collaboration', modele: 'Modèle SMART', profils: { autonome:'Autonome', cooperatif:'Coopératif', interdependant:'Interdépendant', federateur:'Fédérateur' } },
+    autorite: { titre: 'Rapport au cadre', modele: 'Self-Determination Theory', profils: { cadre:'Besoin de cadre', sens:'Besoin de sens', liberte:'Besoin de liberté', contributeur:'Contributeur' } },
+    reconnaissance: { titre: 'Reconnaissance', modele: 'Self-Determination Theory', profils: { resultats:'Résultats', effort:'Effort', relation:'Relation', autonomie:'Autonomie' } }
+  };
+  // Textes de repli (par règles) si l'IA est indisponible pour les dimensions de pilotage
+  const DIM_PLUS_FALLBACK = {
+    energie: { sprinteur:"Votre énergie fonctionne par pics. Vous donnez le meilleur sur des séquences courtes et intenses, puis vous avez besoin de relâcher pour recharger. Protégez de vrais temps de récupération après vos sprints.", endurant:"Votre énergie est régulière et fiable. Vous tenez un effort constant dans la durée, ce qui fait de vous un point d'appui sur les projets longs. Votre rythme est une force, pas un retard.", cyclique:"Votre énergie alterne phases intenses et phases de récupération. Bien gérée, cette alternance vous protège de l'épuisement tout en délivrant de forts moments. Expliquez ce fonctionnement à votre entourage.", deepworker:"Vous performez dans la concentration longue et ininterrompue. Le morcellement est votre principal ennemi. Protégez vos plages de concentration comme une ressource précieuse." },
+    collaboration: { autonome:"Vous donnez le meilleur en pilotant votre périmètre de façon indépendante. La clarté de votre responsabilité est votre carburant. Maintenez des points de synchronisation pour rester connecté au collectif.", cooperatif:"Vous avancez mieux dans l'échange et le faire-ensemble. Cette ouverture est un liant pour l'équipe. Préservez aussi des temps de production individuelle.", interdependant:"Vous articulez naturellement votre travail avec celui des autres. Cette vision systémique fluidifie les projets transverses et évite les silos.", federateur:"Vous tirez votre énergie de l'animation du collectif. Ce rôle moteur est précieux pour la dynamique d'équipe. Laissez de la place aux autres pour contribuer." },
+    autorite: { cadre:"Vous avancez mieux avec des règles et des attentes claires. Cette structure est un repère qui vous libère. Quand le cadre manque, demandez-le explicitement.", sens:"Vous adhérez quand la direction est justifiée et porteuse de sens. Comprendre le pourquoi transforme une consigne en engagement. Face à une décision imposée, demandez le sens plutôt que de vous résigner.", liberte:"Vous donnez le meilleur avec une large marge de manœuvre. La confiance et l'autonomie sont vos carburants. Donnez de la visibilité à votre manager pour que votre liberté repose sur la confiance.", contributeur:"Vous cherchez à influencer les décisions, pas seulement à les suivre. Être associé à ce qui vous concerne est essentiel à votre engagement. Choisissez vos combats pour renforcer votre voix." },
+    reconnaissance: { resultats:"Vous avez besoin que vos résultats soient vus et nommés. Pour rester engagé, vos réussites doivent être explicitement soulignées.", effort:"Vous avez besoin que l'investissement, et pas seulement le résultat, soit reconnu. Un manager attentif au chemin parcouru nourrit votre engagement.", relation:"Vous vous nourrissez de la qualité du lien et de la considération. Une attention sincère vaut pour vous plus qu'une récompense formelle.", autonomie:"Pour vous, la plus belle reconnaissance est la confiance qu'on vous accorde : plus d'autonomie, plus de responsabilités." }
+  };
+  function carteDimensionsPlus(res){
+    const ctx = res.contextuelPlus || {};
+    if (!Object.keys(ctx).length) return '';
+    const ordre = ['energie','collaboration','autorite','reconnaissance'];
+    const blocs = ordre.filter(d => ctx[d] && DIM_PLUS_LABELS[d]).map(d => {
+      const conf = DIM_PLUS_LABELS[d];
+      const choisi = ctx[d];
+      const pastilles = Object.entries(conf.profils).map(([key, label]) =>
+        `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`
+      ).join('');
+      return `
+        <div class="dimc-row">
+          <div class="dimc-titre">${conf.titre} <span class="dimc-modele">${conf.modele}</span></div>
+          <div class="dimc-opts">${pastilles}</div>
+        </div>`;
+    }).join('');
+    return blocs ? `<div class="dimc-card">${blocs}</div>` : '';
+  }
+  // Badge de fiabilité du profil (cohérence des réponses)
+  function badgeFiabilite(res){
+    const f = res.fiabilite;
+    if (!f || f.score === undefined) return '';
+    const couleur = f.score >= 85 ? '#3EAD8B' : (f.score >= 70 ? '#F9A876' : '#F98272');
+    return `
+      <div class="r-fiab" style="border-color:${couleur}40;background:${couleur}0d">
+        <div class="r-fiab-txt"><div class="r-fiab-lab">Fiabilité de votre profil</div><div class="r-fiab-msg">${f.message || ''}</div></div>
+        <div class="r-fiab-score" style="color:${couleur}">${f.score}%</div>
+      </div>`;
+  }
   function carteDimensions(res){
     const ctx = res.contextuel || {};
     if (!Object.keys(ctx).length) return '';
@@ -420,7 +463,7 @@ const Result = (() => {
           <div class="r-cmp r-cmp-a"><div class="r-cmp-t">DISC, Process Com</div>reposent sur des typologies en cases, souvent moins validées.</div>
           <div class="r-cmp r-cmp-b"><div class="r-cmp-t">Sinéa Profile</div>mesure des dimensions continues, puis les combine en un profil nuancé et unique.</div>
         </div>
-        <div class="r-card"><p style="margin:0"><b>Pourquoi vos réponses sont fiables.</b> Nos questions utilisent un choix forcé, sans réponse neutre, ce qui limite le biais de complaisance. Votre profil mêle plusieurs archétypes, car une personne réelle ne tient jamais dans une seule case.</p></div>
+        <div class="r-card">${badgeFiabilite(res)}<p style="margin:0"><b>Pourquoi vos réponses sont fiables.</b> Nos questions utilisent un choix forcé, sans réponse neutre, ce qui limite le biais de complaisance. Votre profil mêle plusieurs archétypes, car une personne réelle ne tient jamais dans une seule case.</p></div>
       </div>
 
       <div class="r-bloc" id="b-familles">
@@ -476,6 +519,19 @@ const Result = (() => {
         <div class="r-ia" id="ia-dim_changement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre posture face au conflit</div>
         <div class="r-ia" id="ia-dim_conflit"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        ${Object.keys(res.contextuelPlus || {}).length ? `
+        <div class="r-bloc-head" style="margin-top:34px"><span class="r-bloc-tag">Pilotage</span><h2>Vos dimensions de pilotage</h2></div>
+        <p class="r-bloc-intro">Quatre dimensions, fondées sur la Self-Determination Theory et le modèle SMART, révèlent comment vous piloter et travailler avec vous au quotidien.</p>
+        <div class="r-section-tag">Vos dimensions en un coup d'œil</div>
+        ${carteDimensionsPlus(res)}
+        <div class="r-section-tag">Votre énergie et votre rythme</div>
+        <div class="r-ia" id="ia-dim_energie"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Votre mode de collaboration</div>
+        <div class="r-ia" id="ia-dim_collaboration"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Votre rapport au cadre</div>
+        <div class="r-ia" id="ia-dim_autorite"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Ce qui nourrit votre engagement</div>
+        <div class="r-ia" id="ia-dim_reconnaissance"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>` : ''}
       </div>
 
       <div class="r-bloc" id="b2">
@@ -666,6 +722,7 @@ const Result = (() => {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         archetype: dom.nom, famille: dom.famille, bigFive: res.scoresBigFive,
+        contextuel: res.contextuel || {}, contextuelPlus: res.contextuelPlus || {},
         question, historique: chatHistorique,
       }),
     })
@@ -768,6 +825,8 @@ const Result = (() => {
       style_dominant: res.speStyle || null,
       // Dimensions enrichies calculées par l'app
       contextuel: res.contextuel || {},
+      contextuel_plus: res.contextuelPlus || {},
+      fiabilite: res.fiabilite || null,
       spe_dims: res.speDims || {}
     };
     const r = await fetch(BACKEND_URL, {
@@ -1143,6 +1202,8 @@ const Result = (() => {
             blend: res.blend,
             naturelAdapte: res.naturelAdapte,
             contextuel: res.contextuel,
+            contextuelPlus: res.contextuelPlus,
+            fiabilite: res.fiabilite,
             speStyle: res.speStyle,
             speStyleScores: res.speStyleScores,
             speDims: res.speDims,
@@ -1248,6 +1309,15 @@ const Result = (() => {
       poseSection('ia-dim_risque','Analyse personnalisée', c.dim_risque, `<p>Votre rapport au risque éclaire vos décisions.</p>`);
       poseSection('ia-dim_changement','Analyse personnalisée', c.dim_changement, `<p>Votre rapport au changement façonne votre adaptabilité.</p>`);
       poseSection('ia-dim_conflit','Analyse personnalisée', c.dim_conflit, `<p>Votre posture face au conflit révèle votre style relationnel.</p>`);
+      // Dimensions de pilotage (énergie, collaboration, autorité, reconnaissance)
+      if (res.contextuelPlus) {
+        const cp = res.contextuelPlus;
+        const fb = (dim) => `<p>${(DIM_PLUS_FALLBACK[dim] && DIM_PLUS_FALLBACK[dim][cp[dim]]) || ''}</p>`;
+        if (cp.energie) poseSection('ia-dim_energie','Analyse personnalisée', c.dim_energie, fb('energie'));
+        if (cp.collaboration) poseSection('ia-dim_collaboration','Analyse personnalisée', c.dim_collaboration, fb('collaboration'));
+        if (cp.autorite) poseSection('ia-dim_autorite','Analyse personnalisée', c.dim_autorite, fb('autorite'));
+        if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Analyse personnalisée', c.dim_reconnaissance, fb('reconnaissance'));
+      }
 
       // Bloc spé (manager OU commercial)
       poseSection('ia-mgmt_croisement','Analyse personnalisée', c.mgmt_croisement, `<p>Votre personnalité nourrit directement votre posture professionnelle.</p>`);
@@ -1282,6 +1352,21 @@ const Result = (() => {
       poseSection('ia-bigfive','Votre tempérament', null, `<p>Le croisement de vos dimensions dessine un tempérament cohérent avec votre profil.</p>`);
       poseSection('ia-situation','Votre profil en action', null, `<p>${situ.reunion||''}</p><p>${situ.pression||''}</p>`);
       poseSection('ia-angles','Analyse personnalisée', null, `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
+      // Dimensions contextuelles : repli générique
+      poseSection('ia-dim_stress','Analyse personnalisée', null, `<p>Votre rapport au stress reflète votre tempérament.</p>`);
+      poseSection('ia-dim_motivation','Analyse personnalisée', null, `<p>Vos moteurs profonds guident vos choix.</p>`);
+      poseSection('ia-dim_risque','Analyse personnalisée', null, `<p>Votre rapport au risque éclaire vos décisions.</p>`);
+      poseSection('ia-dim_changement','Analyse personnalisée', null, `<p>Votre rapport au changement façonne votre adaptabilité.</p>`);
+      poseSection('ia-dim_conflit','Analyse personnalisée', null, `<p>Votre posture face au conflit révèle votre style relationnel.</p>`);
+      // Dimensions de pilotage : repli par règles (personnalisé selon le profil mesuré)
+      if (res.contextuelPlus) {
+        const cp = res.contextuelPlus;
+        const fb = (dim) => `<p>${(DIM_PLUS_FALLBACK[dim] && DIM_PLUS_FALLBACK[dim][cp[dim]]) || ''}</p>`;
+        if (cp.energie) poseSection('ia-dim_energie','Analyse personnalisée', null, fb('energie'));
+        if (cp.collaboration) poseSection('ia-dim_collaboration','Analyse personnalisée', null, fb('collaboration'));
+        if (cp.autorite) poseSection('ia-dim_autorite','Analyse personnalisée', null, fb('autorite'));
+        if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Analyse personnalisée', null, fb('reconnaissance'));
+      }
       posefallbackActions(dc);
     }
   }
