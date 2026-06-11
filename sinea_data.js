@@ -832,34 +832,34 @@ const SINEA_DATA = {
       {
         "id": "SINEA_STR_02",
         "angle": "moteur_interieur",
-        "situation": "Ce qui vous procure une vraie satisfaction professionnelle :",
+        "situation": "Parmi ces satisfactions professionnelles, laquelle vous parle le plus ?",
         "options": [
           {
-            "texte": "Bâtir un système cohérent où tout s'emboîte",
+            "texte": "Construire quelque chose de cohérent, où chaque pièce trouve sa place",
             "ponderation": {
               "architecte": 3
             }
           },
           {
-            "texte": "Détecter un signal discret avant tout le monde",
+            "texte": "Repérer un détail ou un risque que personne n'avait vu",
             "ponderation": {
               "sentinelle": 3
             }
           },
           {
-            "texte": "Préserver ce qui compte sur le long terme",
+            "texte": "Protéger et faire durer ce qui a de la valeur",
             "ponderation": {
               "gardien": 3
             }
           },
           {
-            "texte": "Atteindre une finition parfaite sur un livrable",
+            "texte": "Soigner un travail jusqu'à en être vraiment fier",
             "ponderation": {
               "orfevre": 3
             }
           },
           {
-            "texte": "Dérouler un plan pensé longtemps à l'avance",
+            "texte": "Voir un plan préparé de longue date se dérouler comme prévu",
             "ponderation": {
               "stratege": 3
             }
@@ -908,34 +908,34 @@ const SINEA_DATA = {
       {
         "id": "SINEA_STR_04",
         "angle": "face_au_changement",
-        "situation": "De nouvelles règles viennent tout chambouler. Votre première action :",
+        "situation": "Votre organisation impose un nouveau cadre de travail (outil, process, règles). Concrètement, vous commencez par :",
         "options": [
           {
-            "texte": "Repenser l'architecture pour intégrer ces règles",
+            "texte": "Réorganiser votre façon de travailler pour y intégrer proprement le nouveau cadre",
             "ponderation": {
               "architecte": 3
             }
           },
           {
-            "texte": "Surveiller les effets de bord que personne n'anticipe",
+            "texte": "Repérer les effets de bord que personne n'a anticipés",
             "ponderation": {
               "sentinelle": 3
             }
           },
           {
-            "texte": "Protéger ce qui doit rester intact dans la transition",
+            "texte": "Identifier ce qui doit rester intact pendant la transition",
             "ponderation": {
               "gardien": 3
             }
           },
           {
-            "texte": "Reprendre chaque détail pour rester impeccable",
+            "texte": "Reprendre vos méthodes point par point pour rester impeccable",
             "ponderation": {
               "orfevre": 3
             }
           },
           {
-            "texte": "Recalculer la stratégie en fonction du nouveau cadre",
+            "texte": "Réévaluer votre plan d'ensemble à la lumière du nouveau cadre",
             "ponderation": {
               "stratege": 3
             }

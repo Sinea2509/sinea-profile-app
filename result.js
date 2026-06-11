@@ -3,7 +3,7 @@
 // 3 blocs + questions ouvertes + validation + 5 moments IA
 // ============================================================
 const Result = (() => {
-  const FAM = { RELATION:'#F98272', ACTION:'#F9A876', STRUCTURE:'#5474F5', VISION:'#8884F0' };
+  const FAM = { RELATION:'#F98272', ACTION:'#F5A623', STRUCTURE:'#3EADFF', VISION:'#5E59C7' };
   const BF_INFO = {
     E:['Extraversion','Réservé','Expansif'], A:['Agréabilité','Affirmé','Conciliant'],
     C:['Conscience','Spontané','Méthodique'], N:['Stabilité','Sensible','Imperturbable'],
@@ -418,7 +418,8 @@ const Result = (() => {
           <div><div class="r-sec-name">${s.nom}</div><div class="r-sec-fam" style="color:${col}">${s.famille}</div></div></div>
         <p class="r-sec-ess">${sc.essence||''}</p></div>`;}).join('');
 
-    const forcesVal=(dc.forces||[]).map((f,i)=>validItem('force',i,f)).join('');
+    const forcesProposees=[...(dc.forces||[]), ...forcesSituationnelles(res)];
+    const forcesVal=forcesProposees.map((f,i)=>validItem('force',i,f)).join('');
     const vigVal=(dc.vigilance||[]).map((v,i)=>validItem('vig',i,v)).join('');
 
     const cles=SINEA_DATA.cles_familles||{};
@@ -497,7 +498,7 @@ const Result = (() => {
         <div class="r-section-tag">Vous en situation</div>
         <div class="r-ia" id="ia-situation"><div class="r-ia-tag">Votre profil en action</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos forces, à valider</div>
-        <p class="r-hint">Ce qui résonne le plus avec vous ?</p>
+        <p class="r-hint">Cochez ce qui résonne le plus chez vous : <b>vos choix orientent les plans d'action et les défis</b> que nous vous proposerons ensuite.</p>
         <div class="r-validables-grid">${forcesVal}</div>
         <div class="r-section-tag">La matrice de votre personnalité</div>
         <p class="r-hint">Une vue d'ensemble de vos forces, vigilances, leviers de développement et points de friction.</p>
@@ -665,19 +666,33 @@ const Result = (() => {
   function lireToken(){
     try { return new URLSearchParams(location.search).get('token') || null; } catch(e){ return null; }
   }
+  let emailCourant = '';
+  function setEmail(e){ emailCourant = e || ''; }
   function initPortraitPdf(){
+    const dispo = lireToken() || emailCourant;
     const btn = document.getElementById('portrait-pdf-btn');
-    if (btn && lireToken()) btn.style.display = '';
+    if (btn && dispo) btn.style.display = '';
+    // bouton compact en HAUT de la restitution (dans le hero)
+    const hero = document.getElementById('r-hero');
+    if (hero && dispo && !document.getElementById('portrait-pdf-haut')) {
+      const b = document.createElement('button');
+      b.id = 'portrait-pdf-haut';
+      b.className = 'r-hero-pdf';
+      b.type = 'button';
+      b.textContent = 'Mon portrait PDF';
+      b.onclick = () => telechargerPortrait('portrait-pdf-haut');
+      hero.appendChild(b);
+    }
   }
-  async function telechargerPortrait(){
-    const btn = document.getElementById('portrait-pdf-btn');
+  async function telechargerPortrait(btnId){
+    const btn = document.getElementById(btnId || 'portrait-pdf-btn');
     const token = lireToken();
-    if (!token || !btn) return;
+    if ((!token && !emailCourant) || !btn) return;
     const texte = btn.textContent;
     btn.textContent = 'Génération de votre portrait…';
     btn.disabled = true;
     try {
-      const rep = await fetch(PDF_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) });
+      const rep = await fetch(PDF_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(token ? { token } : { email: emailCourant }) });
       if (!rep.ok) throw new Error('génération indisponible');
       const blob = await rep.blob();
       const url = URL.createObjectURL(blob);
@@ -777,8 +792,29 @@ const Result = (() => {
   }
 
   function validItem(type, i, txt){
+    validLabels[`${type}_${i}`]=txt;
     return `<div class="r-validable" id="v-${type}-${i}" onclick="Result.toggleValid('${type}',${i})"><div class="r-val-check">✓</div><p>${txt}</p></div>`;
   }
+  // Forces situationnelles : formulées depuis les registres et le pilotage de la personne
+  const FORCES_SITU = {
+    stress: { accelerateur: 'Monter en intensité quand la pression arrive', methodique: 'Garder une méthode claire sous pression', retrait: 'Prendre du recul pour analyser avant d\'agir', appui: 'Être un point d\'appui pour les autres sous pression' },
+    motivation: { accomplissement: 'Aller au bout de ce que vous commencez', reconnaissance: 'Tirer le meilleur de vous quand votre travail est vu', sens: 'Vous engager à fond quand le projet a du sens', maitrise: 'Creuser un sujet jusqu\'à le maîtriser vraiment' },
+    risque: { audacieux: 'Oser quand les autres hésitent', calcule: 'Évaluer finement avant de vous engager', prudent: 'Sécuriser ce qui doit l\'être', securitaire: 'Protéger le collectif des paris hasardeux' },
+    changement: { moteur: 'Impulser le changement autour de vous', adaptable: 'Vous ajuster vite quand tout bouge', pragmatique: 'Trier ce qui mérite de changer de ce qui marche', ancre: 'Rester un repère stable quand tout bouge' },
+    conflit: { affrontement: 'Nommer les désaccords sans détour', mediation: 'Apaiser et trouver le terrain d\'entente', compromis: 'Construire des solutions acceptables par tous', evitement: 'Choisir vos combats avec discernement' },
+    energie: { sprinteur: 'Délivrer fort sur des séquences intenses', endurant: 'Tenir la distance sur les projets longs', cyclique: 'Alterner intensité et récupération avec justesse', deepworker: 'Produire en profondeur, loin du bruit' },
+    collaboration: { autonome: 'Piloter votre périmètre en toute autonomie', cooperatif: 'Faire grandir les idées par l\'échange', interdependant: 'Connecter votre travail à celui des autres', federateur: 'Animer et entraîner le collectif' },
+  };
+  function forcesSituationnelles(res){
+    const out=[];
+    const ctx=Object.assign({}, res.contextuel||{}, res.contextuelPlus||{});
+    Object.entries(FORCES_SITU).forEach(([dim,map])=>{
+      const choisi=ctx[dim];
+      if(choisi && map[choisi]) out.push(map[choisi]);
+    });
+    return out.slice(0,5); // au plus 5 propositions personnalisées en plus des forces d'archétype
+  }
+  const validLabels={};
   function toggleValid(type,i){
     const key=`${type}_${i}`; validations[key]=!validations[key];
     document.getElementById(`v-${type}-${i}`).classList.toggle('sel',validations[key]);
@@ -794,6 +830,7 @@ const Result = (() => {
     interTimer = setTimeout(() => {
       const inter = {
         forces_validees: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]),
+        forces_libelles: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
         vigilances_validees: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]),
         moteur_valide: !!validations['moteur_0'],
         reponses_ouvertes: Object.assign({}, openAnswers),
@@ -852,6 +889,7 @@ const Result = (() => {
       },
       tensions: res.tensions || [],
       reponses_ouvertes: Object.assign({}, res.reponsesOuvertes || {}, openAnswers),
+      forces_validees: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
       naturel_adapte: (res.naturelAdapte ? { naturel: res.naturelAdapte.naturel, adapte: res.naturelAdapte.adapte, ecarts: res.naturelAdapte.ecarts } : {}),
       cout_adaptation: (res.naturelAdapte ? res.naturelAdapte.cout : 'modéré'),
       // Spé déterminée par le lien (manager / commercial / classic)
@@ -977,9 +1015,9 @@ const Result = (() => {
   // ============================================================
   const COULEURS_FAMILLE = {
     RELATION: { c1: '#F98272', c2: '#F9A876', label: 'Relation' },
-    ACTION:   { c1: '#F9A876', c2: '#F98272', label: 'Action' },
-    STRUCTURE:{ c1: '#5474F5', c2: '#8884F0', label: 'Structure' },
-    VISION:   { c1: '#8884F0', c2: '#5E59C7', label: 'Vision' },
+    ACTION:   { c1: '#F5A623', c2: '#FAC56E', label: 'Action' },
+    STRUCTURE:{ c1: '#3EADFF', c2: '#7CC8FF', label: 'Structure' },
+    VISION:   { c1: '#5E59C7', c2: '#8E89E8', label: 'Vision' },
   };
   const PHRASES_CARTE = {
     "La Tisseuse": "Je relie les personnes et fais tenir les liens.",
@@ -1215,8 +1253,31 @@ const Result = (() => {
     }
   }
 
+  // Au second passage (module commercial/manager), on oriente directement
+  // la personne vers SA nouvelle analyse plutôt que de la laisser en haut du socle.
+  function orienterVersModule(res){
+    const type = (res.diagType || 'classic').toLowerCase();
+    if (type === 'classic') return;
+    const bloc = document.getElementById('b-spe');
+    if (!bloc) return;
+    const libelle = type === 'commercial' ? 'commerciale' : 'managériale';
+    // bannière en haut de la restitution
+    const hero = document.getElementById('r-hero');
+    if (hero && !document.getElementById('r-bandeau-module')) {
+      const b = document.createElement('div');
+      b.id = 'r-bandeau-module';
+      b.className = 'r-bandeau-module';
+      b.innerHTML = `<span>Votre analyse ${libelle} est prête.</span><button type="button">La découvrir ↓</button>`;
+      b.querySelector('button').onclick = () => bloc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      hero.parentNode.insertBefore(b, hero.nextSibling);
+    }
+    // défilement automatique après le rendu
+    setTimeout(() => { bloc.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 1400);
+  }
+
   async function generateIA(res){
     initPortraitPdf();
+    orienterVersModule(res);
     const dom=res.dominante;
     const dc=contenu(dom.nom);
     const sec=res.secondaires.map(s=>s.nom).join(' et ');
@@ -1568,7 +1629,7 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { telechargerPortrait, render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
+  return { telechargerPortrait, setEmail, render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

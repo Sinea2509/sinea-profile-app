@@ -30,7 +30,7 @@ const App = (() => {
   function saveProgress() {
     // 1) sauvegarde locale immédiate (secours rapide)
     try {
-      const data = { v: 1, ts: Date.now(), diagType, idx, answers };
+      const data = { v: 1, ts: Date.now(), diagType, idx, answers, magicCode, nomCampagne, estAjoutModule, droits };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch (e) { /* localStorage indisponible : on continue */ }
     // 2) sauvegarde serveur (différée pour ne pas spammer : 1 appel max / 2s)
@@ -521,6 +521,25 @@ const App = (() => {
     manager: { titre: 'Votre style de management', sub: 'Comment votre personnalité façonne votre leadership.' },
   };
 
+  const PDF_PORTRAIT_URL = "https://sinea-profile-ia.vercel.app/api/pdf_portrait";
+  async function telechargerPortraitEspace() {
+    const btn = document.getElementById('espace-pdf-btn');
+    if (!identite.email || !btn) return;
+    const texte = btn.textContent;
+    btn.textContent = 'Génération de votre portrait…'; btn.disabled = true;
+    try {
+      const rep = await fetch(PDF_PORTRAIT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: identite.email }) });
+      if (!rep.ok) throw new Error('indisponible');
+      const blob = await rep.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'Portrait_Sinea.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      btn.textContent = 'Portrait téléchargé ✓';
+      setTimeout(() => { btn.textContent = texte; btn.disabled = false; }, 3500);
+    } catch (e) { btn.textContent = 'Réessayer le téléchargement'; btn.disabled = false; }
+  }
+
   function goToEspace() {
     // masquer les autres écrans
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
@@ -661,6 +680,9 @@ const App = (() => {
     if (faits.length) {
       resultatsHtml = '<div class="espace-label">Mes résultats</div>';
       faits.forEach(m => { resultatsHtml += carteResultat(m, (analyses[m] && analyses[m].date) || '', archetype); });
+    }
+    if (analyses.socle) {
+      resultatsHtml += `<button class="espace-pdf-btn" id="espace-pdf-btn" onclick="App.telechargerPortraitEspace()">Télécharger mon portrait complet (PDF)</button>`;
     }
     document.getElementById('espace-resultats').innerHTML = resultatsHtml;
 
@@ -822,6 +844,7 @@ const App = (() => {
         document.getElementById('screen-espace').classList.remove('active');
         document.getElementById('screen-result').classList.add('active');
         Result.render(res);
+        if (Result.setEmail) Result.setEmail(identite.email || '');
       })
       .catch(() => alert('Impossible de charger votre analyse pour le moment.'));
   }
@@ -956,6 +979,11 @@ const App = (() => {
       // restaurer l'état
       Object.assign(answers, saved.answers);
       idx = Math.min(saved.idx || 0, queue.length - 1);
+      // restaurer le contexte de campagne (le quota se décompte bien même après une reprise)
+      if (saved.magicCode) magicCode = saved.magicCode;
+      if (saved.nomCampagne) nomCampagne = saved.nomCampagne;
+      if (typeof saved.estAjoutModule === 'boolean') estAjoutModule = saved.estAjoutModule;
+      if (saved.droits && (!droits || droits === 'classic')) droits = saved.droits;
       scr.classList.remove('active');
       document.getElementById('screen-question').classList.add('active');
       render();
@@ -987,13 +1015,33 @@ const App = (() => {
       const host = document.querySelector('.app') || document.body;
       host.appendChild(scr);
     }
+    // À partir du 2e chapitre : célébration du chemin parcouru + invitation à affiner
+    const firstIdx = queue.findIndex(q => q.chap === chapId);
+    const pct = (queue.length && firstIdx > 0) ? Math.min(99, Math.round((firstIdx / queue.length) * 100)) : (queue.length ? Math.min(99, Math.round((idx / queue.length) * 100)) : 0);
+    const C = 2 * Math.PI * 34; // circonférence de l'anneau (r=34)
+    const encouragements = {
+      contexte: { bravo: 'Première partie terminée', phrase: 'Le plus long est derrière vous. Encore quelques questions courtes pour affiner votre profil avec précision.' },
+      spe: { bravo: 'Votre socle est complet', phrase: diagType === 'commercial' ? 'Place à la dernière étape : votre façon de vendre et de convaincre.' : 'Place à la dernière étape : votre posture de manager au quotidien.' },
+    };
+    const enc = numero > 1 ? encouragements[chapId] : null;
+    const celebration = enc ? `
+        <div class="chap-bravo chap-a1"><span class="chap-bravo-check">✓</span>${enc.bravo}</div>
+        <div class="chap-ring chap-a2">
+          <svg viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="34" class="chap-ring-bg"/>
+            <circle cx="40" cy="40" r="34" class="chap-ring-fill" style="stroke-dasharray:${C};stroke-dashoffset:${C * (1 - pct / 100)}"/>
+          </svg>
+          <div class="chap-ring-pct">${pct}%</div>
+        </div>
+        <div class="chap-encourage chap-a3">${enc.phrase}</div>` : '';
     scr.innerHTML = `
       <div class="chap-halo"></div>
       <div class="chap-in">
-        <div class="chap-step">Étape ${numero} sur ${totalChap}</div>
-        <h2 class="chap-title">${chap.titre}</h2>
-        <div class="chap-sub">${chap.sous}</div>
-        <button class="chap-btn" id="chap-go">Commencer</button>
+        <div class="chap-step ${enc ? 'chap-a1' : ''}">Étape ${numero} sur ${totalChap}</div>
+        ${celebration}
+        <h2 class="chap-title ${enc ? 'chap-a3' : ''}">${chap.titre}</h2>
+        <div class="chap-sub ${enc ? 'chap-a4' : ''}">${chap.sous}</div>
+        <button class="chap-btn ${enc ? 'chap-a4' : ''}" id="chap-go">${numero > 1 ? 'Continuer' : 'Commencer'}</button>
       </div>`;
     // masquer les autres écrans
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
@@ -1318,8 +1366,11 @@ const App = (() => {
           <div class="cp cp-left">${pg}</div>
           <div class="cp cp-right">${pd}</div>
         </div>
-        <input type="range" min="0" max="100" value="${val}" class="curseur-input"
-          oninput="App.answerCurseur('${cur.id}', this.value)" />
+        <div class="curseur-rail-zone">
+          <input type="range" min="0" max="100" value="${val}" class="curseur-input"
+            oninput="App.answerCurseur('${cur.id}', this.value)" />
+          ${answers['_touche_' + cur.id] ? '' : `<div class="curseur-demo" id="cd-${cur.id}"><span class="cd-bulle">Glissez</span><span class="cd-dot"></span></div>`}
+        </div>
         <div class="curseur-track-deco"><div class="curseur-fill" id="cf-${cur.id}" style="width:${val}%"></div></div>
         <div class="curseur-hint" id="ch-${cur.id}">${curseurLabel(val)}</div>
       </div>`;
@@ -1385,6 +1436,9 @@ const App = (() => {
 
   function answerCurseur(id, val) {
     answers[id] = +val;
+    answers['_touche_' + id] = 1; // la personne a compris : la démo disparaît
+    const demo = document.getElementById('cd-' + id);
+    if (demo) demo.remove();
     saveProgress();
     const fill = document.getElementById('cf-' + id);
     const hint = document.getElementById('ch-' + id);
@@ -1536,12 +1590,9 @@ const App = (() => {
         };
         // on sauvegarde d'abord le profil ; le contenu IA sera complété par result.js quand il arrive
         sauverAnalyse(typeAnalyse, { contenu: null, profil: profilLeger });
-        // consommer une utilisation du magic code à la fin du parcours,
-        // quel que soit le type de campagne (classic, manager, commercial).
-        // Règle : le quota compte des PERSONNES. Un module ajouté sur un socle
-        // existant (parcours en deux étapes) ne re-consomme pas.
-        // On vide le code après usage pour garantir une seule consommation.
-        if (magicCode && !estAjoutModule) { consommerMagicCode(); }
+        // Le quota se décompte désormais CÔTÉ SERVEUR (progression.js, action
+        // save_analyse) : une utilisation par personne, à sa première analyse.
+        // Le front ne consomme plus rien (zéro risque de double décompte ou d'oubli).
         magicCode = '';
       } catch (e) {}
 
@@ -1549,6 +1600,7 @@ const App = (() => {
       document.getElementById('screen-loader').classList.remove('active');
       // Préparer la restitution en arrière-plan, puis lancer la révélation animée
       Result.render(result);
+      if (Result.setEmail) Result.setEmail(identite.email || '');
       lancerRevelation(result);
       window.scrollTo(0, 0);
       document.getElementById('phone-scroll')?.scrollTo(0, 0);
@@ -1604,10 +1656,10 @@ const App = (() => {
     const ctx = canvas.getContext('2d');
     const couleurs = {
       RELATION: ['#F98272', '#F9A876', '#FFFFFF'],
-      ACTION: ['#F9A876', '#F98272', '#FFD9A0'],
-      STRUCTURE: ['#5474F5', '#8884F0', '#FFFFFF'],
-      VISION: ['#8884F0', '#5E59C7', '#FFFFFF'],
-    }[(famille || '').toUpperCase()] || ['#8884F0', '#FFFFFF', '#F9A876'];
+      ACTION: ['#F5A623', '#FAC56E', '#FFE3B3'],
+      STRUCTURE: ['#3EADFF', '#7CC8FF', '#FFFFFF'],
+      VISION: ['#5E59C7', '#8E89E8', '#FFFFFF'],
+    }[(famille || '').toUpperCase()] || ['#5E59C7', '#FFFFFF', '#F5A623'];
 
     const cx = canvas.width / 2, cy = canvas.height * 0.36;
     const particules = [];
@@ -1675,7 +1727,7 @@ const App = (() => {
     }, 75);
   }
 
-  return { start, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

@@ -7,7 +7,7 @@ const BONUS_SINEA_MAX = 18;
 const POINTS_REF = 3.0;
 
 const FAMILY_COLORS = {
-  RELATION: '#F98272', ACTION: '#F9A876', STRUCTURE: '#5474F5', VISION: '#8884F0'
+  RELATION: '#F98272', ACTION: '#F5A623', STRUCTURE: '#3EADFF', VISION: '#5E59C7'
 };
 
 function scorerBigFive(repMini) {

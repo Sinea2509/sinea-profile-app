@@ -995,3 +995,42 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-fiab-score{font-size:28px;font-weight:800;flex-shrink:0;}
 /* Mention du modèle scientifique dans les dimensions de pilotage */
 .dimc-modele{font-size:10.5px;font-weight:600;color:#A89FC4;font-style:italic;margin-left:8px;text-transform:none;letter-spacing:0;}
+
+/* ===== Bannière d'orientation vers l'analyse module (2e passage) ===== */
+.r-bandeau-module{position:sticky;top:10px;z-index:40;margin:14px 16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#1A1A2E;color:#fff;border-radius:14px;padding:12px 16px;font-size:13.5px;font-weight:700;box-shadow:0 8px 24px rgba(26,26,46,0.25);animation:bandeauIn 0.5s ease;}
+.r-bandeau-module button{border:none;background:linear-gradient(90deg,#F98272,#E290EC);color:#fff;border-radius:99px;padding:8px 14px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;flex-shrink:0;}
+@keyframes bandeauIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== Transition de phase enrichie (célébration + anneau de progression) ===== */
+#screen-chapter .chap-bravo{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.28);color:#fff;border-radius:99px;padding:8px 16px;font-size:13px;font-weight:800;letter-spacing:0.04em;margin-bottom:18px;}
+#screen-chapter .chap-bravo-check{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:99px;background:linear-gradient(135deg,#F98272,#E290EC);font-size:12px;}
+#screen-chapter .chap-ring{position:relative;width:96px;height:96px;margin:0 auto 16px;}
+#screen-chapter .chap-ring svg{width:96px;height:96px;transform:rotate(-90deg);}
+#screen-chapter .chap-ring-bg{fill:none;stroke:rgba(255,255,255,0.18);stroke-width:7;}
+#screen-chapter .chap-ring-fill{fill:none;stroke:url(#none),#fff;stroke:#fff;stroke-width:7;stroke-linecap:round;animation:ringDraw 1.2s ease 0.25s backwards;}
+#screen-chapter .chap-ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:21px;font-weight:800;}
+#screen-chapter .chap-encourage{color:rgba(255,255,255,0.95);font-size:15.5px;line-height:1.55;font-weight:600;max-width:300px;margin:0 auto 22px;}
+@keyframes ringDraw{from{stroke-dashoffset:213.6}}
+#screen-chapter .chap-a1{animation:chapUp 0.5s ease 0.05s backwards;}
+#screen-chapter .chap-a2{animation:chapUp 0.5s ease 0.2s backwards;}
+#screen-chapter .chap-a3{animation:chapUp 0.5s ease 0.38s backwards;}
+#screen-chapter .chap-a4{animation:chapUp 0.5s ease 0.55s backwards;}
+@keyframes chapUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+#screen-chapter .chap-btn{animation-fill-mode:backwards;}
+
+/* ===== Démo animée du curseur (disparaît au premier geste) ===== */
+.curseur-rail-zone{position:relative;}
+.curseur-demo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:demoSlide 1.8s ease-in-out infinite;}
+.curseur-demo .cd-dot{display:block;width:32px;height:32px;border-radius:99px;background:rgba(94,89,199,0.18);border:2px solid rgba(94,89,199,0.5);}
+.curseur-demo .cd-bulle{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1A1A2E;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;letter-spacing:0.04em;white-space:nowrap;}
+@keyframes demoSlide{0%,100%{transform:translate(calc(-50% - 34px),-50%)}50%{transform:translate(calc(-50% + 34px),-50%)}}
+
+/* ===== Bouton PDF en haut de la restitution ===== */
+.r-hero-pdf{position:absolute;top:16px;right:16px;z-index:5;border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.16);backdrop-filter:blur(6px);color:#fff;border-radius:99px;padding:9px 15px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:0.03em;cursor:pointer;transition:background 0.15s;}
+.r-hero-pdf:hover{background:rgba(255,255,255,0.28);}
+.r-hero-pdf:disabled{opacity:0.6;cursor:default;}
+
+/* ===== Bouton PDF dans l'espace personnel ===== */
+.espace-pdf-btn{display:block;width:100%;margin-top:12px;border:none;background:#1A1A2E;color:#fff;border-radius:14px;padding:15px 18px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:opacity 0.15s;}
+.espace-pdf-btn:hover{opacity:0.88;}
+.espace-pdf-btn:disabled{opacity:0.55;cursor:default;}
