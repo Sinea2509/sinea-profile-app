@@ -9,6 +9,21 @@ const Result = (() => {
     C:['Conscience','Spontané','Méthodique'], N:['Stabilité','Sensible','Imperturbable'],
     O:['Ouverture','Pragmatique','Inventif']
   };
+  // Lecture en clair de chaque dimension selon la zone du score
+  const BF_ZONES = {
+    E: { low: "Vous puisez votre énergie dans le calme et les échanges choisis : la profondeur plutôt que le volume.", mid: "Vous alternez avec aisance entre moments d'échange et temps pour vous.", high: "Le contact des autres vous dynamise : vous pensez et avancez en interagissant." },
+    A: { low: "Vous dites les choses et défendez votre position : la franchise prime sur la diplomatie.", mid: "Vous savez être direct quand il le faut et conciliant quand c'est utile.", high: "Vous privilégiez l'harmonie et la coopération : le lien passe avant le rapport de force." },
+    C: { low: "Vous fonctionnez à l'élan et à la souplesse, en ajustant au fil de l'eau.", mid: "Vous structurez quand l'enjeu le demande, avec une vraie souplesse le reste du temps.", high: "Organisation, fiabilité, suivi : vous menez les choses au bout, avec méthode." },
+    N: { low: "Vous ressentez fort : cette sensibilité est un radar précieux, à ménager sous pression.", mid: "Vous encaissez la plupart des secousses tout en restant à l'écoute de vos signaux.", high: "Peu de choses vous ébranlent : vous gardez un calme rare, même dans la tempête." },
+    O: { low: "Vous préférez l'éprouvé et le concret : ce qui marche vous intéresse plus que ce qui brille.", mid: "Curieux sans être dispersé : vous explorez le neuf quand il a du sens.", high: "Les idées, l'inédit et l'imaginaire vous attirent : vous explorez naturellement." },
+  };
+  const POLE_TIPS = {
+    'Réservé':"Énergie tournée vers l'intérieur : réflexion, calme, petits comités", 'Expansif':"Énergie tournée vers les autres : échange, spontanéité, dynamisme",
+    'Affirmé':"Direct et franc : dit les choses, défend sa position", 'Conciliant':"Coopératif et chaleureux : cherche l'harmonie et l'accord",
+    'Spontané':"Souple et réactif : avance à l'élan, s'adapte en chemin", 'Méthodique':"Organisé et fiable : planifie, suit, termine",
+    'Sensible':"Ressent intensément : capte les signaux et les tensions", 'Imperturbable':"Stable émotionnellement : garde son calme sous pression",
+    'Pragmatique':"Ancré dans le concret : privilégie ce qui a fait ses preuves", 'Inventif':"Attiré par le neuf : idées, imagination, exploration",
+  };
   const validations = {};
   const openAnswers = {};
   const selectedActions = new Set();
@@ -165,9 +180,11 @@ const Result = (() => {
     const blocs = ordre.filter(d => ctx[d] && DIM_PLUS_LABELS[d]).map(d => {
       const conf = DIM_PLUS_LABELS[d];
       const choisi = ctx[d];
-      const pastilles = Object.entries(conf.profils).map(([key, label]) =>
-        `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`
-      ).join('');
+      const defs = (((SINEA_DATA.contextuelles_plus || {}).dimensions || {})[d] || {}).description_profils || {};
+      const pastilles = Object.entries(conf.profils).map(([key, label]) => {
+        const tip = (defs[key] || '').replace(/"/g, '&quot;');
+        return `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}"${tip ? ` data-tip="${tip}"` : ''}>${label}</span>`;
+      }).join('');
       return `
         <div class="dimc-row">
           <div class="dimc-titre">${conf.titre} <span class="dimc-modele">${conf.modele}</span></div>
@@ -194,9 +211,11 @@ const Result = (() => {
     const blocs = ordre.filter(d => ctx[d] && DIM_LABELS[d]).map(d => {
       const conf = DIM_LABELS[d];
       const choisi = ctx[d];
-      const pastilles = Object.entries(conf.profils).map(([key, label]) =>
-        `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`
-      ).join('');
+      const defs = (((SINEA_DATA.contextuelles || {}).dimensions || {})[d] || {}).description_profils || {};
+      const pastilles = Object.entries(conf.profils).map(([key, label]) => {
+        const tip = (defs[key] || '').replace(/"/g, '&quot;');
+        return `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}"${tip ? ` data-tip="${tip}"` : ''}>${label}</span>`;
+      }).join('');
       return `
         <div class="dimc-row">
           <div class="dimc-titre">${conf.titre}</div>
@@ -299,9 +318,11 @@ const Result = (() => {
     return ['E','A','C','N','O'].map(d=>{
       const val=d==='N'?100-bf[d]:bf[d]; const [name,low,high]=BF_INFO[d];
       const q = qualif(val, low, high);
+      const desc = (BF_ZONES[d] && (val >= 60 ? BF_ZONES[d].high : (val <= 40 ? BF_ZONES[d].low : BF_ZONES[d].mid))) || '';
       return `<div class="spectre-row">
         <div class="spectre-top"><span class="spectre-name">${name}</span><span class="spectre-qualif">${q}</span></div>
-        <div class="spectre-ends"><span>${low}</span><span>${high}</span></div>
+        <p class="spectre-desc">${desc}</p>
+        <div class="spectre-ends"><span data-tip="${(POLE_TIPS[low]||'').replace(/"/g,'&quot;')}">${low}</span><span data-tip="${(POLE_TIPS[high]||'').replace(/"/g,'&quot;')}">${high}</span></div>
         <div class="spectre-track">
           <div class="spectre-grad"></div>
           <div class="spectre-fill" style="width:${val}%"></div>
@@ -339,19 +360,19 @@ const Result = (() => {
         <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
         ${carteDimensionsSpe(res)}
         <div class="r-section-tag">Comment votre personnalité nourrit votre management</div>
-        <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Votre ADN de manager</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport à la délégation</div>
-        <div class="r-ia" id="ia-dim_delegation"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_delegation"><div class="r-ia-tag">Votre délégation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre style de feedback</div>
-        <div class="r-ia" id="ia-dim_feedback"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_feedback"><div class="r-ia-tag">Votre feedback</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Exigence et bienveillance</div>
-        <div class="r-ia" id="ia-dim_exigence"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_exigence"><div class="r-ia-tag">Votre curseur d'exigence</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos moments clés de manager</div>
         <div class="r-ia" id="ia-mgmt_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos leviers de motivation d'équipe</div>
-        <div class="r-ia" id="ia-mgmt_motivation_equipe"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-mgmt_motivation_equipe"><div class="r-ia-tag">Motiver votre équipe</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos contextes de réussite</div>
-        <div class="r-ia" id="ia-mgmt_contextes_reussite"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-mgmt_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Le manager que vous êtes</div>
         <div class="r-ia" id="ia-mgmt_synthese_leadership"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
       </div>`;
@@ -365,19 +386,19 @@ const Result = (() => {
         <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
         ${carteDimensionsSpe(res)}
         <div class="r-section-tag">Comment votre personnalité nourrit votre vente</div>
-        <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Votre ADN de manager</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport au closing</div>
-        <div class="r-ia" id="ia-dim_closing"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_closing"><div class="r-ia-tag">Votre closing</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre posture face à l'objection</div>
-        <div class="r-ia" id="ia-dim_objection"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_objection"><div class="r-ia-tag">Face aux objections</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre tempérament commercial</div>
-        <div class="r-ia" id="ia-dim_chasseur"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_chasseur"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos moments clés de vente</div>
         <div class="r-ia" id="ia-com_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre style de relation client</div>
-        <div class="r-ia" id="ia-com_relation_client"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-com_relation_client"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos contextes de réussite commerciale</div>
-        <div class="r-ia" id="ia-com_contextes_reussite"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-com_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Le commercial que vous êtes</div>
         <div class="r-ia" id="ia-com_synthese_vendeur"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
       </div>`;
@@ -476,14 +497,15 @@ const Result = (() => {
       <div class="r-bloc" id="b1">
         <div class="r-bloc-head"><span class="r-bloc-tag">Bloc 1</span><h2>Vous connaître en profondeur</h2></div>
         <div class="r-section-tag">Qui vous êtes</div>
-        <div class="r-ia" id="ia-ouverture"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-ouverture"><div class="r-ia-tag">Votre portrait</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">L'alchimie de vos forces</div>
-        <div class="r-ia" id="ia-alchimie"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-alchimie"><div class="r-ia-tag">Lecture croisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre combinaison</div>
         <div class="r-card"><div class="r-blend">${blendSegs}</div><div class="r-chips">${chips}</div></div>
+        ${(res.classement && res.classement.length) ? `
         <div class="r-section-tag">Votre affinité avec les 20 archétypes</div>
         <p class="r-hint">Votre profil est une signature unique. Voici votre proximité avec chacun des 20 archétypes.</p>
-        <div class="r-card">${classementComplet(res)}</div>
+        <div class="r-card">${classementComplet(res)}</div>` : ''}
         <div class="r-section-tag">Les dynamiques entre vos forces</div>
         <p class="r-hint">Vos trois archétypes ne coexistent pas, ils interagissent deux à deux.</p>
         <div id="ia-dynamiques"><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
@@ -511,28 +533,28 @@ const Result = (() => {
         <div class="r-section-tag">Votre profil en un coup d'œil</div>
         ${carteDimensions(res)}
         <div class="r-section-tag">Votre rapport au stress</div>
-        <div class="r-ia" id="ia-dim_stress"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_stress"><div class="r-ia-tag">Sous tension</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos moteurs profonds</div>
-        <div class="r-ia" id="ia-dim_motivation"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_motivation"><div class="r-ia-tag">Vos moteurs</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport au risque</div>
-        <div class="r-ia" id="ia-dim_risque"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_risque"><div class="r-ia-tag">Votre boussole</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport au changement</div>
-        <div class="r-ia" id="ia-dim_changement"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_changement"><div class="r-ia-tag">Face au mouvement</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre posture face au conflit</div>
-        <div class="r-ia" id="ia-dim_conflit"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_conflit"><div class="r-ia-tag">Dans la friction</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         ${Object.keys(res.contextuelPlus || {}).length ? `
         <div class="r-bloc-head" style="margin-top:34px"><span class="r-bloc-tag">Pilotage</span><h2>Vos dimensions de pilotage</h2></div>
         <p class="r-bloc-intro">Quatre dimensions, fondées sur la Self-Determination Theory et le modèle SMART, révèlent comment vous piloter et travailler avec vous au quotidien.</p>
         <div class="r-section-tag">Vos dimensions en un coup d'œil</div>
         ${carteDimensionsPlus(res)}
         <div class="r-section-tag">Votre énergie et votre rythme</div>
-        <div class="r-ia" id="ia-dim_energie"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_energie"><div class="r-ia-tag">Votre tempo</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre mode de collaboration</div>
-        <div class="r-ia" id="ia-dim_collaboration"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_collaboration"><div class="r-ia-tag">Avec les autres</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport au cadre</div>
-        <div class="r-ia" id="ia-dim_autorite"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-dim_autorite"><div class="r-ia-tag">Vous et le cadre</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Ce qui nourrit votre engagement</div>
-        <div class="r-ia" id="ia-dim_reconnaissance"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>` : ''}
+        <div class="r-ia" id="ia-dim_reconnaissance"><div class="r-ia-tag">Votre carburant</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>` : ''}
       </div>
 
       <div class="r-bloc" id="b2">
@@ -547,7 +569,7 @@ const Result = (() => {
         <p class="r-hint">Désamorcer selon le profil d'en face :</p>
         <div class="r-cf-grid">${conflitRows}</div>
         <div class="r-section-tag">Vos angles morts relationnels</div>
-        <div class="r-ia" id="ia-angles"><div class="r-ia-tag">Analyse personnalisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-angles"><div class="r-ia-tag">Vos angles morts</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
       </div>
 
       <div class="r-bloc" id="b3">
@@ -679,7 +701,7 @@ const Result = (() => {
       b.id = 'portrait-pdf-haut';
       b.className = 'r-hero-pdf';
       b.type = 'button';
-      b.textContent = 'Mon portrait PDF';
+      b.textContent = 'Télécharger mon portrait PDF';
       b.onclick = () => telechargerPortrait('portrait-pdf-haut');
       hero.appendChild(b);
     }
@@ -715,6 +737,24 @@ const Result = (() => {
     "Quelle est ma plus grande force au travail ?",
     "Comment me ressourcer après une journée difficile ?",
   ];
+  // Questions d'amorce personnalisées selon les dimensions mesurées de la personne
+  const SUGG_CTX = {
+    stress: { accelerateur: "Comment canaliser mon énergie quand la pression monte ?", methodique: "Pourquoi j'ai besoin de tout restructurer sous pression ?", retrait: "Pourquoi j'ai besoin de recul avant d'agir sous pression ?", appui: "Pourquoi je cherche du soutien quand la pression monte ?" },
+    motivation: { accomplissement: "Comment me fixer des objectifs qui me portent vraiment ?", reconnaissance: "Comment rendre mon travail plus visible sans forcer ?", sens: "Comment nourrir mon besoin de sens au quotidien ?", maitrise: "Comment progresser plus vite dans ce qui me passionne ?" },
+    conflit: { affrontement: "Comment dire les choses sans braquer les autres ?", mediation: "Comment apaiser un conflit sans m'oublier ?", compromis: "Quand le compromis devient-il un piège pour moi ?", evitement: "Comment oser aborder les sujets qui fâchent ?" },
+    changement: { moteur: "Comment embarquer ceux qui freinent face au changement ?", adaptable: "Comment garder mon cap quand tout bouge ?", pragmatique: "Comment trier les changements qui valent le coup ?", ancre: "Comment mieux vivre les changements imposés ?" },
+    risque: { audacieux: "Comment sécuriser mes paris sans perdre mon audace ?", calcule: "Comment décider plus vite sans tout recalculer ?", prudent: "Comment oser davantage sans me mettre en danger ?", securitaire: "Comment sortir de ma zone de confort en sécurité ?" },
+  };
+  function suggestionsPersonnalisees(res, dom) {
+    const ctx = res.contextuel || {};
+    const liste = [];
+    ['stress','motivation','conflit','changement','risque'].forEach((dd) => {
+      const q = SUGG_CTX[dd] && SUGG_CTX[dd][ctx[dd]];
+      if (q && liste.length < 3) liste.push(q);
+    });
+    liste.push(`Quelle est ma plus grande force en tant que ${dom.nom} ?`);
+    return liste.length > 1 ? liste.slice(0, 4) : QUESTIONS_SUGGEREES;
+  }
 
   function initChat(dom, res) {
     chatHistorique = [];
@@ -726,11 +766,12 @@ const Result = (() => {
 
     // message d'accueil
     win.querySelectorAll('.r-chat-msg').forEach(e => e.remove());
-    ajouterMessageChat('assistant', `Bonjour, je suis votre ${dom.nom}. Posez-moi une question sur votre façon de fonctionner, vos forces, vos relations au travail.`);
+    const prenomChat = (window.App && App.getPrenom) ? App.getPrenom() : '';
+    ajouterMessageChat('assistant', `Bonjour${prenomChat ? ' ' + prenomChat : ''}, je suis votre coach Sinéa. J'ai votre profil ${dom.nom} sous les yeux : posez-moi vos questions sur votre fonctionnement, vos forces, vos relations.`);
 
     // suggestions cliquables
     if (sugg) {
-      sugg.innerHTML = QUESTIONS_SUGGEREES.map(q => `<button class="r-chat-sugg">${q}</button>`).join('');
+      sugg.innerHTML = suggestionsPersonnalisees(res, dom).map(q => `<button class="r-chat-sugg">${q}</button>`).join('');
       sugg.querySelectorAll('.r-chat-sugg').forEach(btn => {
         btn.onclick = () => { input.value = btn.textContent; envoyerMessageChat(dom, res); };
       });
@@ -1308,14 +1349,14 @@ const Result = (() => {
           if (window.App && App.sauverAnalyse) App.sauverAnalyse(typeAnalyse, { contenu: c, profil: profilLeger });
         } catch (e) {}
       }
-      poseSection('ia-ouverture','Analyse personnalisée', c.ouverture, `<p>${dc.essence||''}</p>`);
-      poseSection('ia-alchimie','Analyse personnalisée', c.alchimie,
+      poseSection('ia-ouverture','Votre portrait', c.ouverture, `<p>${dc.essence||''}</p>`);
+      poseSection('ia-alchimie','Lecture croisée', c.alchimie,
         `<p>Votre combinaison de ${dom.nom} et de ${sec} compose une signature singulière.</p>`);
       poseSection('ia-bigfive','Ce que révèle le croisement de vos dimensions', c.temperament,
         `<p>Le croisement de vos dimensions dessine un tempérament cohérent avec votre profil ${dom.nom}.</p>`);
       poseSection('ia-situation','Votre profil en action', c.situation,
         `<p>${situ.reunion||''}</p><p>${situ.pression||''}</p>`);
-      poseSection('ia-angles','Analyse personnalisée', c.angles_relationnels,
+      poseSection('ia-angles','Vos angles morts', c.angles_relationnels,
         `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
 
       // Le mode d'emploi de moi-même (fiche partageable, 2 parties : collègues + manager)
@@ -1386,7 +1427,13 @@ const Result = (() => {
       // Les 3 dynamiques entre les forces (format JSON : paires)
       const dynEl = document.getElementById('ia-dynamiques');
       if (dynEl) {
-        const dyn = c.combo_dynamiques;
+        let dyn = c.combo_dynamiques;
+        // tolérance : contenu sauvegardé en chaîne JSON (anciennes analyses) → on le parse
+        if (typeof dyn === 'string') {
+          const propre = dyn.trim().replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+          try { dyn = JSON.parse(propre); } catch (e) { dyn = null; }
+        }
+        if (dyn && !Array.isArray(dyn) && Array.isArray(dyn.paires)) dyn = dyn.paires;
         if (dyn && Array.isArray(dyn) && dyn.length) {
           dynEl.innerHTML = dyn.map(d => `
             <div class="dyn-card">
@@ -1400,38 +1447,38 @@ const Result = (() => {
       }
 
       // Dimensions profondes (socle)
-      poseSection('ia-dim_stress','Analyse personnalisée', c.dim_stress, `<p>Votre rapport au stress reflète votre tempérament.</p>`);
-      poseSection('ia-dim_motivation','Analyse personnalisée', c.dim_motivation, `<p>Vos moteurs profonds guident vos choix.</p>`);
-      poseSection('ia-dim_risque','Analyse personnalisée', c.dim_risque, `<p>Votre rapport au risque éclaire vos décisions.</p>`);
-      poseSection('ia-dim_changement','Analyse personnalisée', c.dim_changement, `<p>Votre rapport au changement façonne votre adaptabilité.</p>`);
-      poseSection('ia-dim_conflit','Analyse personnalisée', c.dim_conflit, `<p>Votre posture face au conflit révèle votre style relationnel.</p>`);
+      poseSection('ia-dim_stress','Sous tension', c.dim_stress, `<p>Votre rapport au stress reflète votre tempérament.</p>`);
+      poseSection('ia-dim_motivation','Vos moteurs', c.dim_motivation, `<p>Vos moteurs profonds guident vos choix.</p>`);
+      poseSection('ia-dim_risque','Votre boussole', c.dim_risque, `<p>Votre rapport au risque éclaire vos décisions.</p>`);
+      poseSection('ia-dim_changement','Face au mouvement', c.dim_changement, `<p>Votre rapport au changement façonne votre adaptabilité.</p>`);
+      poseSection('ia-dim_conflit','Dans la friction', c.dim_conflit, `<p>Votre posture face au conflit révèle votre style relationnel.</p>`);
       // Dimensions de pilotage (énergie, collaboration, autorité, reconnaissance)
       if (res.contextuelPlus) {
         const cp = res.contextuelPlus;
         const fb = (dim) => `<p>${(DIM_PLUS_FALLBACK[dim] && DIM_PLUS_FALLBACK[dim][cp[dim]]) || ''}</p>`;
-        if (cp.energie) poseSection('ia-dim_energie','Analyse personnalisée', c.dim_energie, fb('energie'));
-        if (cp.collaboration) poseSection('ia-dim_collaboration','Analyse personnalisée', c.dim_collaboration, fb('collaboration'));
-        if (cp.autorite) poseSection('ia-dim_autorite','Analyse personnalisée', c.dim_autorite, fb('autorite'));
-        if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Analyse personnalisée', c.dim_reconnaissance, fb('reconnaissance'));
+        if (cp.energie) poseSection('ia-dim_energie','Votre tempo', c.dim_energie, fb('energie'));
+        if (cp.collaboration) poseSection('ia-dim_collaboration','Avec les autres', c.dim_collaboration, fb('collaboration'));
+        if (cp.autorite) poseSection('ia-dim_autorite','Vous et le cadre', c.dim_autorite, fb('autorite'));
+        if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Votre carburant', c.dim_reconnaissance, fb('reconnaissance'));
       }
 
       // Bloc spé (manager OU commercial)
-      poseSection('ia-mgmt_croisement','Analyse personnalisée', c.mgmt_croisement, `<p>Votre personnalité nourrit directement votre posture professionnelle.</p>`);
+      poseSection('ia-mgmt_croisement','Votre ADN de manager', c.mgmt_croisement, `<p>Votre personnalité nourrit directement votre posture professionnelle.</p>`);
       // Manager
-      poseSection('ia-dim_delegation','Analyse personnalisée', c.dim_delegation, `<p>Votre rapport à la délégation structure votre management.</p>`);
-      poseSection('ia-dim_feedback','Analyse personnalisée', c.dim_feedback, `<p>Votre style de feedback influence votre équipe.</p>`);
-      poseSection('ia-dim_exigence','Analyse personnalisée', c.dim_exigence, `<p>Votre équilibre exigence et bienveillance définit votre leadership.</p>`);
+      poseSection('ia-dim_delegation','Votre délégation', c.dim_delegation, `<p>Votre rapport à la délégation structure votre management.</p>`);
+      poseSection('ia-dim_feedback','Votre feedback', c.dim_feedback, `<p>Votre style de feedback influence votre équipe.</p>`);
+      poseSection('ia-dim_exigence',"Votre curseur d'exigence", c.dim_exigence, `<p>Votre équilibre exigence et bienveillance définit votre leadership.</p>`);
       poseSection('ia-mgmt_moments_cles','Votre posture en situation', c.mgmt_moments_cles, `<p>Vos moments clés de manager révèlent votre style.</p>`);
-      poseSection('ia-mgmt_motivation_equipe','Analyse personnalisée', c.mgmt_motivation_equipe, `<p>Vous motivez votre équipe à votre manière.</p>`);
-      poseSection('ia-mgmt_contextes_reussite','Analyse personnalisée', c.mgmt_contextes_reussite, `<p>Certains contextes révèlent le meilleur de votre management.</p>`);
+      poseSection('ia-mgmt_motivation_equipe','Motiver votre équipe', c.mgmt_motivation_equipe, `<p>Vous motivez votre équipe à votre manière.</p>`);
+      poseSection('ia-mgmt_contextes_reussite','Analyse Sinéa', c.mgmt_contextes_reussite, `<p>Certains contextes révèlent le meilleur de votre management.</p>`);
       poseSection('ia-mgmt_synthese_leadership','En synthèse', c.mgmt_synthese_leadership, `<p>Votre signature de leadership est unique.</p>`);
       // Commercial
-      poseSection('ia-dim_closing','Analyse personnalisée', c.dim_closing, `<p>Votre rapport au closing structure votre vente.</p>`);
-      poseSection('ia-dim_objection','Analyse personnalisée', c.dim_objection, `<p>Votre posture face à l'objection révèle votre aisance.</p>`);
-      poseSection('ia-dim_chasseur','Analyse personnalisée', c.dim_chasseur, `<p>Votre tempérament commercial oriente votre approche.</p>`);
+      poseSection('ia-dim_closing','Votre closing', c.dim_closing, `<p>Votre rapport au closing structure votre vente.</p>`);
+      poseSection('ia-dim_objection','Face aux objections', c.dim_objection, `<p>Votre posture face à l'objection révèle votre aisance.</p>`);
+      poseSection('ia-dim_chasseur','Analyse Sinéa', c.dim_chasseur, `<p>Votre tempérament commercial oriente votre approche.</p>`);
       poseSection('ia-com_moments_cles','Votre posture en situation', c.com_moments_cles, `<p>Vos moments clés de vente révèlent votre style.</p>`);
-      poseSection('ia-com_relation_client','Analyse personnalisée', c.com_relation_client, `<p>Vous construisez la relation client à votre manière.</p>`);
-      poseSection('ia-com_contextes_reussite','Analyse personnalisée', c.com_contextes_reussite, `<p>Certains contextes révèlent le meilleur de votre vente.</p>`);
+      poseSection('ia-com_relation_client','Analyse Sinéa', c.com_relation_client, `<p>Vous construisez la relation client à votre manière.</p>`);
+      poseSection('ia-com_contextes_reussite','Analyse Sinéa', c.com_contextes_reussite, `<p>Certains contextes révèlent le meilleur de votre vente.</p>`);
       poseSection('ia-com_synthese_vendeur','En synthèse', c.com_synthese_vendeur, `<p>Votre signature commerciale est unique.</p>`);
 
       // Actions (depuis le plan de la spé si présent, sinon leviers)
@@ -1443,25 +1490,25 @@ const Result = (() => {
       } else { posefallbackActions(dc); }
     }catch(e){
       // Repli complet : tout le contenu d'exemple s'affiche
-      poseSection('ia-ouverture','Analyse personnalisée', null, `<p>${dc.essence||''}</p>`);
-      poseSection('ia-alchimie','Analyse personnalisée', null, `<p>Votre combinaison de ${dom.nom} et de ${sec} compose une signature singulière.</p>`);
+      poseSection('ia-ouverture','Votre portrait', null, `<p>${dc.essence||''}</p>`);
+      poseSection('ia-alchimie','Lecture croisée', null, `<p>Votre combinaison de ${dom.nom} et de ${sec} compose une signature singulière.</p>`);
       poseSection('ia-bigfive','Votre tempérament', null, `<p>Le croisement de vos dimensions dessine un tempérament cohérent avec votre profil.</p>`);
       poseSection('ia-situation','Votre profil en action', null, `<p>${situ.reunion||''}</p><p>${situ.pression||''}</p>`);
-      poseSection('ia-angles','Analyse personnalisée', null, `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
+      poseSection('ia-angles','Vos angles morts', null, `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
       // Dimensions contextuelles : repli générique
-      poseSection('ia-dim_stress','Analyse personnalisée', null, `<p>Votre rapport au stress reflète votre tempérament.</p>`);
-      poseSection('ia-dim_motivation','Analyse personnalisée', null, `<p>Vos moteurs profonds guident vos choix.</p>`);
-      poseSection('ia-dim_risque','Analyse personnalisée', null, `<p>Votre rapport au risque éclaire vos décisions.</p>`);
-      poseSection('ia-dim_changement','Analyse personnalisée', null, `<p>Votre rapport au changement façonne votre adaptabilité.</p>`);
-      poseSection('ia-dim_conflit','Analyse personnalisée', null, `<p>Votre posture face au conflit révèle votre style relationnel.</p>`);
+      poseSection('ia-dim_stress','Sous tension', null, `<p>Votre rapport au stress reflète votre tempérament.</p>`);
+      poseSection('ia-dim_motivation','Vos moteurs', null, `<p>Vos moteurs profonds guident vos choix.</p>`);
+      poseSection('ia-dim_risque','Votre boussole', null, `<p>Votre rapport au risque éclaire vos décisions.</p>`);
+      poseSection('ia-dim_changement','Face au mouvement', null, `<p>Votre rapport au changement façonne votre adaptabilité.</p>`);
+      poseSection('ia-dim_conflit','Dans la friction', null, `<p>Votre posture face au conflit révèle votre style relationnel.</p>`);
       // Dimensions de pilotage : repli par règles (personnalisé selon le profil mesuré)
       if (res.contextuelPlus) {
         const cp = res.contextuelPlus;
         const fb = (dim) => `<p>${(DIM_PLUS_FALLBACK[dim] && DIM_PLUS_FALLBACK[dim][cp[dim]]) || ''}</p>`;
-        if (cp.energie) poseSection('ia-dim_energie','Analyse personnalisée', null, fb('energie'));
-        if (cp.collaboration) poseSection('ia-dim_collaboration','Analyse personnalisée', null, fb('collaboration'));
-        if (cp.autorite) poseSection('ia-dim_autorite','Analyse personnalisée', null, fb('autorite'));
-        if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Analyse personnalisée', null, fb('reconnaissance'));
+        if (cp.energie) poseSection('ia-dim_energie','Votre tempo', null, fb('energie'));
+        if (cp.collaboration) poseSection('ia-dim_collaboration','Avec les autres', null, fb('collaboration'));
+        if (cp.autorite) poseSection('ia-dim_autorite','Vous et le cadre', null, fb('autorite'));
+        if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Votre carburant', null, fb('reconnaissance'));
       }
       posefallbackActions(dc);
     }

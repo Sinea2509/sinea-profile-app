@@ -1199,7 +1199,7 @@ function axesFormation(membres, famillesStats){
     const err = document.getElementById('login-err');
     if(!key){ err.textContent='Entrez votre clé d\'accès.'; return; }
     err.textContent='Vérification...';
-    fetch(BACKEND+'?cle='+encodeURIComponent(key)+'&liste=ensemble')
+    fetch(BACKEND+'?liste=ensemble',{headers:{'X-Dashboard-Key':key}})
       .then(r=>{ if(r.status===401) throw new Error('cle'); return r.json(); })
       .then(data=>{
         cleAcces=key;
@@ -1214,7 +1214,7 @@ function axesFormation(membres, famillesStats){
   function rechargerEnsemble(){
     const content=document.getElementById('content');
     content.innerHTML=`<div class="loading"><div class="spinner"></div><div>Chargement...</div></div>`;
-    fetch(BACKEND+'?cle='+encodeURIComponent(cleAcces)+'&liste=ensemble').then(r=>r.json()).then(afficherEnsemble);
+    fetch(BACKEND+'?liste=ensemble',{headers:{'X-Dashboard-Key':cleAcces}}).then(r=>r.json()).then(afficherEnsemble);
   }
 
   // ====== VUE D'ENSEMBLE ======
@@ -1268,7 +1268,7 @@ function axesFormation(membres, famillesStats){
     detruireCharts();
     const content=document.getElementById('content');
     content.innerHTML=`<div class="loading"><div class="spinner"></div><div>Chargement de la campagne...</div></div>`;
-    fetch(BACKEND+'?cle='+encodeURIComponent(cleAcces)+'&campagne='+encodeURIComponent(code))
+    fetch(BACKEND+'?campagne='+encodeURIComponent(code),{headers:{'X-Dashboard-Key':cleAcces}})
       .then(r=>r.json()).then(afficherCampagne)
       .catch(()=>{ content.innerHTML=`<div class="empty">Erreur de chargement. <a onclick="rechargerEnsemble()" style="color:var(--c-purple-text);cursor:pointer">Retour</a></div>`; });
   }

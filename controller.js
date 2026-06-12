@@ -75,7 +75,7 @@ const App = (() => {
   // Sauvegarde l'analyse IA générée (texte figé) pour pouvoir la revoir plus tard
   function sauverAnalyse(typeAnalyse, contenu) {
     if (!identite.email) return;
-    fetch(PROGRESSION_URL, {
+    const corps = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -87,7 +87,11 @@ const App = (() => {
         nom: identite.nom,
         droits: droits,
       }),
-    }).catch(() => {});
+    };
+    // une analyse mérite une seconde chance : nouvel essai unique 3 s après un échec
+    const envoyer = () => fetch(PROGRESSION_URL, corps);
+    envoyer().then((r) => { if (!r.ok) throw new Error("statut " + r.status); })
+      .catch(() => { setTimeout(() => { envoyer().catch(() => {}); }, 3000); });
   }
 
   function loadProgress() {
@@ -1587,6 +1591,7 @@ const App = (() => {
           contextuelPlus: result.contextuelPlus, fiabilite: result.fiabilite,
           speStyle: result.speStyle, speStyleScores: result.speStyleScores, speDims: result.speDims,
           diagType: result.diagType,
+          classement: result.classement,
         };
         // on sauvegarde d'abord le profil ; le contenu IA sera complété par result.js quand il arrive
         sauverAnalyse(typeAnalyse, { contenu: null, profil: profilLeger });
