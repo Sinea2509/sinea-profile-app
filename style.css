@@ -87,8 +87,10 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .cp{flex:1;font-size:15px;font-weight:600;color:var(--c-dark-grey);line-height:1.35;padding:16px;background:var(--c-white);border:1.5px solid #E6E3DC;border-radius:16px;}
 .cp-right{text-align:right;}
 .curseur-input{-webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;cursor:pointer;margin:0;position:relative;z-index:3;}
-.curseur-input::-webkit-slider-thumb{-webkit-appearance:none;width:38px;height:38px;border-radius:50%;background:var(--c-white);border:3px solid var(--c-purple);box-shadow:0 4px 14px rgba(136,132,240,0.35);cursor:grab;}
-.curseur-input::-moz-range-thumb{width:38px;height:38px;border-radius:50%;background:var(--c-white);border:3px solid var(--c-purple);box-shadow:0 4px 14px rgba(136,132,240,0.35);cursor:grab;}
+.curseur-input::-webkit-slider-runnable-track{height:44px;background:transparent;border:none;}
+.curseur-input::-webkit-slider-thumb{-webkit-appearance:none;width:38px;height:38px;margin-top:3px;border-radius:50%;background:var(--c-white);border:3px solid var(--c-purple);box-shadow:0 4px 14px rgba(136,132,240,0.35);cursor:grab;}
+.curseur-input::-moz-range-track{height:44px;background:transparent;border:none;}
+.curseur-input::-moz-range-thumb{width:38px;height:38px;border-radius:50%;background:var(--c-white);border:3px solid var(--c-purple);box-shadow:0 4px 14px rgba(136,132,240,0.35);cursor:grab;box-sizing:border-box;}
 .curseur-track-deco{height:8px;background:#E4E2DC;border-radius:4px;margin-top:-26px;position:relative;z-index:1;overflow:hidden;}
 .curseur-fill{height:100%;background:var(--g-pinkpurple);border-radius:4px;}
 .curseur-hint{text-align:center;font-size:14px;font-weight:600;color:var(--c-purple-text);margin-top:18px;}
@@ -998,7 +1000,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .dimc-modele{font-size:10.5px;font-weight:600;color:#A89FC4;font-style:italic;margin-left:8px;text-transform:none;letter-spacing:0;}
 
 /* ===== Bannière d'orientation vers l'analyse module (2e passage) ===== */
-.r-bandeau-module{position:sticky;top:10px;z-index:40;margin:14px 16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#1A1A2E;color:#fff;border-radius:14px;padding:12px 16px;font-size:13.5px;font-weight:700;box-shadow:0 8px 24px rgba(26,26,46,0.25);animation:bandeauIn 0.5s ease;}
+.r-bandeau-module{margin:14px 16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(136,132,240,0.10);color:var(--c-dark);border:1px solid rgba(136,132,240,0.25);border-radius:12px;padding:10px 14px;font-size:13px;font-weight:600;animation:bandeauIn 0.5s ease;}
 .r-bandeau-module button{border:none;background:linear-gradient(90deg,#F98272,#E290EC);color:#fff;border-radius:99px;padding:8px 14px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;flex-shrink:0;}
 @keyframes bandeauIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 
@@ -1084,3 +1086,39 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* compteur de questions restantes dans le chat */
 .r-chat-compteur{display:inline-block;margin-top:4px;font-weight:700;color:var(--c-violet,#5E59C7);}
 .r-chat-input:disabled,.r-chat-send:disabled{opacity:0.5;cursor:not-allowed;}
+
+
+/* ---- écran d'information candidat (mode recrutement) ---- */
+.cand-info-overlay{position:fixed;inset:0;z-index:9500;background:rgba(20,18,40,0.88);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:22px;}
+.cand-info-card{background:#fff;border-radius:20px;max-width:480px;width:100%;padding:30px 28px;box-shadow:0 24px 70px rgba(0,0,0,0.35);}
+.cand-info-kicker{font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#8E89E8;margin-bottom:8px;}
+.cand-info-titre{font-size:21px;font-weight:800;color:#1A1A2E;margin:0 0 14px;line-height:1.25;}
+.cand-info-card p{font-size:14px;line-height:1.6;color:#3A3A4E;margin:0 0 11px;}
+.cand-info-note{font-size:13px;color:#6A6A80;font-style:italic;}
+.cand-info-go{width:100%;margin-top:10px;border:none;border-radius:13px;padding:15px 18px;background:#1A1A2E;color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:transform 0.12s;}
+.cand-info-go:active{transform:scale(0.98);}
+
+/* ---- bandeau module : bouton discret ---- */
+.r-bandeau-module button{background:transparent;border:none;color:var(--c-purple-text);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;padding:4px 6px;white-space:nowrap;}
+/* ---- CTA de découverte dans le hero ---- */
+.r-hero-go{display:block;margin:18px auto 0;background:var(--c-dark);color:#fff;border:none;border-radius:100px;padding:15px 30px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(26,26,46,0.3);transition:transform 0.15s;}
+.r-hero-go:active{transform:scale(0.97);}
+/* ---- description de la dimension spé (la valeur de la personne, expliquée) ---- */
+.dimc-desc{margin-top:9px;font-size:13px;line-height:1.55;color:#4A4A60;}
+/* ---- plan de progression spé ---- */
+.spe-angles{font-size:14px;line-height:1.6;color:var(--c-dark);margin-bottom:14px;}
+.spe-plan-card{background:var(--c-white);border:1px solid #E8E3F5;border-radius:14px;padding:16px 18px;margin-bottom:10px;}
+.spe-plan-num{display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:6px;}
+.spe-plan-titre{font-size:14.5px;font-weight:800;margin-bottom:6px;}
+.spe-plan-desc{font-size:13.5px;line-height:1.55;color:#4A4A60;}
+
+/* ---- le pari sur soi ---- */
+.dimc-opt-btn{cursor:pointer;border:1.5px solid #E4E0F2;background:var(--c-white);font-family:var(--font);}
+.dimc-opt-btn:active{transform:scale(0.95);}
+.dimc-question{font-size:12.5px;font-weight:700;color:var(--c-purple-text);margin:2px 0 0;}
+.dimc-skip{display:block;background:none;border:none;font-family:var(--font);font-size:11.5px;color:#9A96B8;text-decoration:underline;cursor:pointer;margin-top:2px;padding:0;text-align:left;}
+.dimc-pari{border:1.5px dashed var(--c-purple);color:var(--c-purple-text);background:rgba(136,132,240,0.07);}
+.dimc-verdict{margin-top:2px;font-size:12.5px;font-weight:600;color:var(--c-purple-text);background:rgba(136,132,240,0.08);border-radius:8px;padding:7px 10px;}
+.dimc-accord{color:#2E7D5B;background:rgba(74,222,128,0.14);}
+/* ---- fiche réflexe ---- */
+.spe-fiche-btn{display:block;margin:16px auto 0;background:var(--c-white);color:var(--c-dark);border:1.5px solid var(--c-dark);border-radius:100px;padding:12px 24px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;}

@@ -14,6 +14,7 @@ const App = (() => {
   }
   let result = null;
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
+  let modeCampagne = '';    // 'recrutement' → parcours candidat : écran d'information + restitution allégée
   let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
   let magicCode = '';       // magic code de campagne saisi par la personne (pour consommer le quota à la fin)
   let nomCampagne = '';     // nom de la campagne (renvoyé par la vérification du code, écrit sur le répondant)
@@ -30,7 +31,7 @@ const App = (() => {
   function saveProgress() {
     // 1) sauvegarde locale immédiate (secours rapide)
     try {
-      const data = { v: 1, ts: Date.now(), diagType, idx, answers, magicCode, nomCampagne, estAjoutModule, droits };
+      const data = { v: 1, ts: Date.now(), diagType, idx, answers, magicCode, nomCampagne, estAjoutModule, droits, modeCampagne };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch (e) { /* localStorage indisponible : on continue */ }
     // 2) sauvegarde serveur (différée pour ne pas spammer : 1 appel max / 2s)
@@ -141,10 +142,13 @@ const App = (() => {
       famille: result.dominante ? result.dominante.famille : "",
       bigFive: result.scoresBigFive || {},
     };
+    // Les réponses brutes et les temps de réponse partent avec le résultat :
+    // c'est la matière première de la future validation psychométrique (Phase 2).
+    const complet = Object.assign({}, result, { reponsesBrutes: answers, tempsReponses: answersTime });
     fetch(ENREGISTRER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, profil, resultatComplet: result, campagne: nomCampagne }),
+      body: JSON.stringify({ token, profil, resultatComplet: complet, campagne: nomCampagne }),
     }).catch(() => {}); // silencieux : ne bloque pas l'expérience
   }
 
@@ -384,6 +388,24 @@ const App = (() => {
     };
   }
 
+  // Écran d'information candidat (contexte recrutement) : transparence sur la méthode,
+  // la confidentialité et la place de l'humain dans la décision. Affiché avant le test.
+  function afficherInfoCandidat(suite) {
+    const ov = document.createElement('div');
+    ov.className = 'cand-info-overlay';
+    ov.innerHTML = '<div class="cand-info-card">'
+      + '<div class="cand-info-kicker">Avant de commencer</div>'
+      + '<h2 class="cand-info-titre">Ce test éclaire, il ne décide pas</h2>'
+      + '<p>Ce questionnaire évalue vos <b>soft skills</b> et votre façon naturelle de fonctionner au travail. Il porte sur le comportement, jamais sur vos compétences techniques.</p>'
+      + '<p>Vos résultats servent à <b>préparer un échange de qualité</b> avec l\'entreprise. Ils restent confidentiels et la décision de recrutement appartient toujours à des humains.</p>'
+      + '<p>Vous recevrez votre <b>portrait de personnalité</b>, qui reste le vôtre, quelle que soit la suite du processus.</p>'
+      + '<p class="cand-info-note">Répondez spontanément : il n\'existe aucune bonne ou mauvaise réponse, et le test détecte mieux la sincérité que la perfection.</p>'
+      + '<button class="cand-info-go" id="cand-info-go">J\'ai compris, commencer</button>'
+      + '</div>';
+    document.body.appendChild(ov);
+    document.getElementById('cand-info-go').onclick = () => { ov.remove(); if (typeof suite === 'function') suite(); };
+  }
+
   function consommerMagicCode() {
     if (!magicCode) return;
     fetch(VERIFIER_CODE_URL, {
@@ -411,6 +433,7 @@ const App = (() => {
           magicCode = code;
           nomCampagne = data.campagne || '';
           droits = data.type || 'classic';
+          modeCampagne = (data.mode || '').toLowerCase();
           err.textContent = '';
           document.getElementById('screen-magic').classList.remove('active');
           if (data.ajout_module && data.deja_socle) {
@@ -423,7 +446,8 @@ const App = (() => {
             // le module manager/commercial se débloque ensuite (droits = data.type).
             estAjoutModule = false;
             droits = data.type || 'classic';
-            start();
+            if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
+            else start();
           }
         } else {
           const raison = data ? data.raison : '';
@@ -849,6 +873,7 @@ const App = (() => {
         // reconstruire l'objet résultat
         const res = Object.assign({}, a.profil);
         res.diagType = a.profil.diagType || mod;
+        res.modeCampagne = a.profil.modeCampagne || '';
         // si le contenu IA a été sauvegardé, on le réaffiche à l'identique (figé) ;
         // sinon, on laisse generateIA le régénérer.
         if (a.contenu && typeof a.contenu === 'object' && Object.keys(a.contenu).length > 0) {
@@ -1567,7 +1592,7 @@ const App = (() => {
         result.diagType = diagType;
         // réponses ouvertes du socle (rechargées) pour nourrir le fil rouge
         result.reponsesOuvertes = (interactionsSocleSauve && interactionsSocleSauve.reponses_ouvertes) ? interactionsSocleSauve.reponses_ouvertes : {};
-        result.speDims = Engine.scorerSpeDims(repSpeDims, diagType);
+        result.speDims = Engine.scorerSpeDims(repSpeDims, diagType, result.scoresBigFive);
         result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
         result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);
       } else {
@@ -1580,7 +1605,7 @@ const App = (() => {
         result.reponsesOuvertes = openAnswers;
         result.naturelAdapte = Engine.scorerNaturelAdapte(repMini, repAdapte);
         if (diagType !== 'classic') {
-          result.speDims = Engine.scorerSpeDims(repSpeDims, diagType);
+          result.speDims = Engine.scorerSpeDims(repSpeDims, diagType, result.scoresBigFive);
           result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
           result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);
         }
@@ -1601,6 +1626,7 @@ const App = (() => {
           speStyle: result.speStyle, speStyleScores: result.speStyleScores, speDims: result.speDims,
           diagType: result.diagType,
           classement: result.classement,
+          modeCampagne: modeCampagne || undefined,
         };
         // on sauvegarde d'abord le profil ; le contenu IA sera complété par result.js quand il arrive
         sauverAnalyse(typeAnalyse, { contenu: null, profil: profilLeger });
@@ -1613,6 +1639,7 @@ const App = (() => {
       clearInterval(msgTimer);
       document.getElementById('screen-loader').classList.remove('active');
       // Préparer la restitution en arrière-plan, puis lancer la révélation animée
+      result.modeCampagne = modeCampagne;
       Result.render(result);
       if (Result.setEmail) Result.setEmail(identite.email || '');
       lancerRevelation(result);

@@ -118,6 +118,44 @@ const Result = (() => {
     objection:{ titre:'Face à l\'objection', profils:{ frontal:'Frontal', recadrage:'Recadrage', contournement:'Contournement', ecoute:'Écoute' } },
     chasseur_eleveur:{ titre:'Chasseur ou éleveur', profils:{ chasseur:'Chasseur', mixte:'Mixte', eleveur:'Éleveur' } }
   };
+  // Description courte de CHAQUE position : toujours affichée sous les pastilles,
+  // et utilisée en repli quand l'analyse IA de la dimension est absente du contenu figé.
+  const SPE_DIM_DESC = {
+    delegation:{
+      controle:"Vous gardez la main sur l'exécution et vérifiez les détails qui comptent. Cette présence rassure sur la qualité, et votre progression passe par des zones de confiance déléguées explicitement.",
+      cadre:"Vous déléguez volontiers à l'intérieur d'un cadre clair : objectif, jalons, points de contrôle. Vos équipes savent où elles vont et ce qui leur appartient.",
+      autonomie:"Vous confiez des missions entières et laissez vos collaborateurs choisir leur chemin. Cette confiance fait grandir, et elle gagne à s'accompagner de points de synchronisation réguliers.",
+      lacher_prise:"Vous déléguez en profondeur, résultats compris, et intervenez à la demande. Ce lâcher-prise libère les profils matures et demande un cadre minimal pour sécuriser les plus juniors."
+    },
+    feedback:{
+      direct:"Vous dites les choses vite et sans détour. Cette franchise fait gagner du temps à tout le monde, et elle porte d'autant mieux qu'elle s'ouvre sur une question.",
+      factuel:"Vous appuyez vos retours sur des faits observables et des exemples datés. Cette objectivité rend votre feedback solide et facile à recevoir.",
+      enveloppe:"Vous soignez la forme autant que le fond : le moment, le ton, l'angle. Vos retours préservent la relation et gagnent à rester précis sur l'attendu.",
+      questionnant:"Vous faites émerger le constat par vos questions plutôt que de l'asséner. Cette approche responsabilise, et un message clair en conclusion ancre le changement."
+    },
+    exigence_bienveillance:{
+      exigence:"Votre curseur penche vers l'exigence : la barre est haute et visible. Cela tire l'équipe vers le haut, et la reconnaissance explicite des efforts entretient l'élan.",
+      equilibre:"Vous tenez les deux : un niveau d'attente élevé et une vraie attention aux personnes. Cet équilibre crée une sécurité exigeante où l'on ose et où l'on progresse.",
+      bienveillance:"Votre curseur penche vers la bienveillance : la relation et la confiance d'abord. Ce climat fait parler vrai, et des attendus chiffrés protègent votre niveau d'exigence."
+    },
+    closing:{
+      pousseur:"Vous créez l'élan final : vous posez la question qui engage et assumez la tension du moment. Redoutable sur les cycles courts, ce style gagne à laisser respirer les décideurs prudents.",
+      guide:"Vous amenez la signature par étapes : chaque oui intermédiaire prépare le suivant. Le client se sent accompagné, et votre rythme sécurise les ventes engageantes.",
+      patient:"Vous laissez la décision mûrir et concluez quand le client est prêt. Cette patience fidélise, et un jalon daté posé tôt protège vos cycles de l'enlisement.",
+      facilitateur:"Vous levez les obstacles un à un jusqu'à rendre la décision évidente. Le client signe parce que tout est fluide : votre force tient dans la préparation du terrain."
+    },
+    objection:{
+      frontal:"Vous prenez l'objection de face et y répondez pied à pied. Cette assurance rassure les profils directs, et une reformulation préalable montre que vous avez vraiment entendu.",
+      recadrage:"Vous replacez l'objection dans le tableau d'ensemble : l'enjeu global relativise le point de friction. Vous transformez un blocage en arbitrage favorable.",
+      contournement:"Vous évitez l'affrontement et revenez sur le sujet sous un autre angle, au bon moment. Cette souplesse préserve la relation et gagne à toujours traiter le fond.",
+      ecoute:"Vous creusez l'objection avant d'y répondre : derrière la première phrase se cache souvent la vraie réserve. Cette écoute désamorce et nourrit votre proposition."
+    },
+    chasseur_eleveur:{
+      chasseur:"Votre énergie va à la conquête : ouvrir des portes, créer des opportunités, signer de nouveaux comptes. Le neuf vous stimule, et un relais de suivi sécurise la durée.",
+      mixte:"Vous alternez conquête et culture de votre portefeuille selon les périodes. Cette polyvalence vous rend précieux, et des plages dédiées à chaque mode protègent votre efficacité.",
+      eleveur:"Votre force est dans la durée : développer vos comptes, approfondir la confiance, faire grandir le chiffre existant. La régularité de votre présence devient votre meilleur argument."
+    }
+  };
   // Tous les styles d'un référentiel (pour situer le dominant)
   const STYLES_PAR_TYPE = {
     manager:['visionnaire','chef_de_file','democratique','directif','coaching','affiliatif'],
@@ -135,6 +173,23 @@ const Result = (() => {
     return `<div class="dimc-card"><div class="dimc-row"><div class="dimc-titre">${titre}</div><div class="dimc-opts">${pastilles}</div></div></div>`;
   }
 
+  // Le plan de progression métier affiché, transmis ensuite aux défis SeedUp
+  let planSpeCourant = null;
+
+  // ---- Le pari sur soi : la personne se positionne d'instinct avant la révélation ----
+  let parisSpe = {};
+  function chargerParis(diagType){
+    try { parisSpe = JSON.parse(localStorage.getItem('sinea_paris_' + diagType) || '{}') || {}; }
+    catch(e){ parisSpe = {}; }
+  }
+  function parierDim(axe, valeur){
+    parisSpe[axe] = valeur;
+    try { localStorage.setItem('sinea_paris_' + ((RES && RES.diagType) || 'spe'), JSON.stringify(parisSpe)); } catch(e){}
+    const zone = document.getElementById('dimc-zone');
+    if (zone && RES) zone.innerHTML = carteDimensionsSpe(RES);
+    sauvegarderInteractions();
+  }
+
   function carteDimensionsSpe(res){
     const dims = res.speDims || {};
     if (!Object.keys(dims).length) return '';
@@ -144,10 +199,27 @@ const Result = (() => {
     const blocs = ordre.filter(d => dims[d] && SPE_DIM_LABELS[d]).map(d => {
       const conf = SPE_DIM_LABELS[d];
       const choisi = dims[d];
-      const pastilles = Object.entries(conf.profils).map(([key, label]) =>
-        `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`
-      ).join('');
-      return `<div class="dimc-row"><div class="dimc-titre">${conf.titre}</div><div class="dimc-opts">${pastilles}</div></div>`;
+      const pari = parisSpe[d];
+      // État 1 · le pari : la personne se positionne d'instinct, la mesure reste cachée
+      if (!pari){
+        const boutons = Object.entries(conf.profils).map(([key, label]) =>
+          `<button type="button" class="dimc-opt dimc-opt-btn" onclick="Result.parierDim('${d}','${key}')">${label}</button>`
+        ).join('');
+        return `<div class="dimc-row"><div class="dimc-titre">${conf.titre}</div><p class="dimc-question">D'instinct, vous vous voyez plutôt...</p><div class="dimc-opts">${boutons}</div><button type="button" class="dimc-skip" onclick="Result.parierDim('${d}','_skip')">Voir ma mesure directement</button></div>`;
+      }
+      // État 2 · la révélation : la mesure s'affiche, l'intuition reste visible si elle diverge
+      const pastilles = Object.entries(conf.profils).map(([key, label]) => {
+        const cls = key === choisi ? ' dimc-sel' : (key === pari ? ' dimc-pari' : '');
+        return `<span class="dimc-opt${cls}">${label}</span>`;
+      }).join('');
+      let verdict = '';
+      if (pari !== '_skip'){
+        verdict = pari === choisi
+          ? `<p class="dimc-verdict dimc-accord">Votre intuition rejoint la mesure : belle lucidité sur vous-même.</p>`
+          : `<p class="dimc-verdict">Votre intuition disait ${conf.profils[pari] || ''}. La mesure vous situe ${conf.profils[choisi] || ''} : un écart précieux à explorer.</p>`;
+      }
+      const desc = (SPE_DIM_DESC[d] || {})[choisi] || '';
+      return `<div class="dimc-row"><div class="dimc-titre">${conf.titre}</div><div class="dimc-opts">${pastilles}</div>${verdict}${desc ? `<p class="dimc-desc">${desc}</p>` : ''}</div>`;
     }).join('');
     return blocs ? `<div class="dimc-card">${blocs}</div>` : '';
   }
@@ -383,6 +455,7 @@ const Result = (() => {
 
     // ---- Bloc spé (management ou commercial), affiché si le diagnostic en a une ----
     const dt = res.diagType || 'classic';
+    if (dt !== 'classic') chargerParis(dt);
     let speBlocHtml = '';
     if (dt === 'manager') {
       speBlocHtml = `
@@ -392,7 +465,7 @@ const Result = (() => {
         <div class="r-section-tag">Votre style en un coup d'œil</div>
         ${carteStyle(res)}
         <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
-        ${carteDimensionsSpe(res)}
+        <div id="dimc-zone">${carteDimensionsSpe(res)}</div>
         <div class="r-section-tag">Comment votre personnalité nourrit votre management</div>
         <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Votre ADN de manager</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport à la délégation</div>
@@ -403,12 +476,17 @@ const Result = (() => {
         <div class="r-ia" id="ia-dim_exigence"><div class="r-ia-tag">Votre curseur d'exigence</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos moments clés de manager</div>
         <div class="r-ia" id="ia-mgmt_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Vos formulations en situation</div>
+        <div class="r-ia" id="ia-mgmt_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos leviers de motivation d'équipe</div>
         <div class="r-ia" id="ia-mgmt_motivation_equipe"><div class="r-ia-tag">Motiver votre équipe</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos contextes de réussite</div>
         <div class="r-ia" id="ia-mgmt_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Le manager que vous êtes</div>
         <div class="r-ia" id="ia-mgmt_synthese_leadership"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
+        <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <button type="button" class="spe-fiche-btn" id="fiche-btn" onclick="Result.telechargerFiche('fiche-btn')">Ma fiche réflexe (1 page PDF)</button>
       </div>`;
     } else if (dt === 'commercial') {
       speBlocHtml = `
@@ -418,9 +496,9 @@ const Result = (() => {
         <div class="r-section-tag">Votre style en un coup d'œil</div>
         ${carteStyle(res)}
         <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
-        ${carteDimensionsSpe(res)}
+        <div id="dimc-zone">${carteDimensionsSpe(res)}</div>
         <div class="r-section-tag">Comment votre personnalité nourrit votre vente</div>
-        <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Votre ADN de manager</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-com_croisement"><div class="r-ia-tag">Votre ADN de commercial</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre rapport au closing</div>
         <div class="r-ia" id="ia-dim_closing"><div class="r-ia-tag">Votre closing</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre posture face à l'objection</div>
@@ -429,17 +507,27 @@ const Result = (() => {
         <div class="r-ia" id="ia-dim_chasseur"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos moments clés de vente</div>
         <div class="r-ia" id="ia-com_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Vos formulations en situation</div>
+        <div class="r-ia" id="ia-com_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre style de relation client</div>
         <div class="r-ia" id="ia-com_relation_client"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos contextes de réussite commerciale</div>
         <div class="r-ia" id="ia-com_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Le commercial que vous êtes</div>
         <div class="r-ia" id="ia-com_synthese_vendeur"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
+        <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <button type="button" class="spe-fiche-btn" id="fiche-btn" onclick="Result.telechargerFiche('fiche-btn')">Ma fiche réflexe (1 page PDF)</button>
       </div>`;
     }
 
     // ---- Sommaire dynamique (reflète les blocs réellement présents) ----
-    const tocItems = [
+    const modeCandidat = res.modeCampagne === 'recrutement';
+    const tocItems = modeCandidat ? [
+      { href: 'b0', label: 'Comprendre la méthode' },
+      { href: 'b-familles', label: 'Les 4 familles' },
+      { href: 'b1', label: 'Vous connaître' },
+    ] : [
       { href: 'b0', label: 'Comprendre la méthode' },
       { href: 'b-familles', label: 'Les 4 familles' },
       { href: 'b1', label: 'Vous connaître' },
@@ -447,8 +535,8 @@ const Result = (() => {
       { href: 'b2', label: 'Lire les autres' },
       { href: 'b3', label: 'Passer à l\'action' },
     ];
-    if (dt === 'manager') tocItems.push({ href: 'b-spe', label: 'Votre management' });
-    else if (dt === 'commercial') tocItems.push({ href: 'b-spe', label: 'Votre approche commerciale' });
+    if (!modeCandidat && dt === 'manager') tocItems.push({ href: 'b-spe', label: 'Votre management' });
+    else if (!modeCandidat && dt === 'commercial') tocItems.push({ href: 'b-spe', label: 'Votre approche commerciale' });
     const tocHtml = tocItems.map((it, i) =>
       `<a href="#${it.href}" class="r-toc-i"><span class="r-toc-n">${String(i).padStart(2, '0')}</span><span>${it.label}</span></a>`
     ).join('');
@@ -684,8 +772,9 @@ const Result = (() => {
     `;
     document.getElementById('r-body').innerHTML=html;
 
-    // ---- Animation d'accueil : le coach se présente et annonce les 3 questions ----
-    jouerIntroCoach(dom);
+    // ---- Découverte guidée : le personnage d'abord, le coach au clic ----
+    if (res.modeCampagne === 'recrutement') appliquerModeCandidat();
+    installerCtaDecouverte(dom, res);
 
     // Câbler la carte partageable (aperçu + bouton de téléchargement)
     const carteSlug = img(dom.nom).replace('.webp', '');
@@ -766,6 +855,29 @@ const Result = (() => {
     return false; // téléchargé
   }
 
+  const FICHE_URL = "https://sinea-profile-ia.vercel.app/api/fiche_reflexe";
+  async function telechargerFiche(btnId){
+    const btn = document.getElementById(btnId || 'fiche-btn');
+    const token = lireToken();
+    if ((!token && !emailCourant) || !btn) return;
+    const texte = btn.textContent;
+    const preFenetre = estMobile() ? window.open('', '_blank') : null;
+    btn.textContent = 'Génération de votre fiche…';
+    btn.disabled = true;
+    try {
+      const rep = await fetch(FICHE_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(token ? { token } : { email: emailCourant }) });
+      if (!rep.ok) throw new Error('génération indisponible');
+      const blob = await rep.blob();
+      const ouvert = remettreFichier(blob, 'Fiche_Reflexe_Sinea.pdf', preFenetre);
+      btn.textContent = ouvert ? 'Fiche ouverte ✓' : 'Fiche téléchargée ✓';
+      setTimeout(()=>{ btn.textContent = texte; btn.disabled = false; }, 3500);
+    } catch(e){
+      if (preFenetre && !preFenetre.closed) preFenetre.close();
+      btn.textContent = 'Réessayer le téléchargement';
+      btn.disabled = false;
+    }
+  }
+
   async function telechargerPortrait(btnId){
     const btn = document.getElementById(btnId || 'portrait-pdf-btn');
     const token = lireToken();
@@ -817,6 +929,53 @@ const Result = (() => {
 
   // L'intro ne se joue qu'une fois par session de lecture (pas à chaque reprise).
   let introDejaJouee = false;
+  // Mode candidat (campagne de recrutement) : restitution allégée à l'essentiel valorisant.
+  // On retire les blocs profonds, le mode d'emploi, le chat et les défis ; le portrait,
+  // l'alchimie, le Big Five, les pépites et la signature restent : c'est le cadeau du candidat.
+  function appliquerModeCandidat(){
+    // la signature rareté ("vous êtes 1 sur N") vit dans b3 : on la déplace dans
+    // "Vous connaître" avant de retirer le bloc, c'est un des cadeaux du candidat.
+    const rare = document.querySelector('#b3 .r-rare');
+    const b1 = document.getElementById('b1');
+    if (rare && b1) {
+      const tag = rare.previousElementSibling && rare.previousElementSibling.classList.contains('r-section-tag')
+        ? rare.previousElementSibling : null;
+      if (tag) b1.appendChild(tag);
+      b1.appendChild(rare);
+    }
+    ['b-dims', 'b2', 'b3', 'b-spe', 'mode-emploi-bloc'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    });
+    // essentiel valorisant : on garde forces et leviers, on retire vigilances et frictions
+    document.querySelectorAll('#b1 .swot-v, #b1 .swot-r').forEach((el) => el.remove());
+    // toute trace du chat ou des défis hors blocs retirés
+    document.querySelectorAll('[id^="chat-"], [class*="chat-coach"], #screen-defis .defi, .r-defis-cta').forEach((el) => {
+      const bloc = el.closest('.r-bloc');
+      if (bloc) bloc.remove(); else el.remove();
+    });
+  }
+
+  // Le personnage se découvre en premier : le coach attend le clic, sans voler la révélation.
+  function installerCtaDecouverte(dom, res){
+    const hero = document.getElementById('r-hero');
+    if (!hero || document.getElementById('cta-decouvrir')) return;
+    const b = document.createElement('button');
+    b.id = 'cta-decouvrir';
+    b.className = 'r-hero-go';
+    b.type = 'button';
+    b.textContent = 'Découvrir mon analyse ↓';
+    b.onclick = () => {
+      if (res.modeCampagne === 'recrutement') {
+        const cible = document.querySelector('.r-toc') || document.getElementById('b0');
+        if (cible) cible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        jouerIntroCoach(dom);
+      }
+    };
+    hero.appendChild(b);
+  }
+
   function jouerIntroCoach(dom){
     if (introDejaJouee) return;
     introDejaJouee = true;
@@ -853,6 +1012,9 @@ const Result = (() => {
       clearTimeout(t1); clearTimeout(t2);
       ov.classList.remove('on');
       setTimeout(() => ov.remove(), 500);
+      const toc = document.querySelector('.r-toc');
+      const cible = toc || document.getElementById('b0');
+      if (cible) setTimeout(() => cible.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
     };
     // bouton de fin (apparaît à l'étape 3) + clic n'importe où après la dernière étape
     ov.addEventListener('click', (e) => {
@@ -1012,6 +1174,13 @@ const Result = (() => {
         moteur_valide: !!validations['moteur_0'],
         reponses_ouvertes: Object.assign({}, openAnswers),
         pistes_choisies: Array.from(selectedActions),
+        auto_perception: (RES && RES.speDims) ? Object.keys(parisSpe).filter(a => parisSpe[a] && parisSpe[a] !== '_skip' && SPE_DIM_LABELS[a]).map(a => ({
+          axe: a,
+          titre: SPE_DIM_LABELS[a].titre,
+          pari: SPE_DIM_LABELS[a].profils[parisSpe[a]] || parisSpe[a],
+          mesure: SPE_DIM_LABELS[a].profils[RES.speDims[a]] || RES.speDims[a] || '',
+          accord: parisSpe[a] === RES.speDims[a]
+        })) : [],
         diagType: RES ? RES.diagType : 'classic',
       };
       App.envoyerInteractions(inter);
@@ -1116,6 +1285,8 @@ const Result = (() => {
       cout_adaptation: (res.naturelAdapte ? res.naturelAdapte.cout : 'modéré'),
       // Spé déterminée par le lien (manager / commercial / classic)
       spe: (res.diagType && res.diagType !== 'classic') ? res.diagType : null,
+      // Mode recrutement : le back génère la restitution candidat allégée
+      mode: res.modeCampagne === 'recrutement' ? 'recrutement' : null,
       style_dominant: res.speStyle || null,
       // Dimensions enrichies calculées par l'app
       contextuel: res.contextuel || {},
@@ -1493,8 +1664,7 @@ const Result = (() => {
       b.querySelector('button').onclick = () => bloc.scrollIntoView({ behavior: 'smooth', block: 'start' });
       hero.parentNode.insertBefore(b, hero.nextSibling);
     }
-    // défilement automatique après le rendu
-    setTimeout(() => { bloc.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 1400);
+    // La personne découvre d'abord son personnage : le bandeau signale le module, sans forcer le défilement.
   }
 
   async function generateIA(res){
@@ -1658,23 +1828,43 @@ const Result = (() => {
       }
 
       // Bloc spé (manager OU commercial)
-      poseSection('ia-mgmt_croisement','Votre ADN de manager', c.mgmt_croisement, `<p>Votre personnalité nourrit directement votre posture professionnelle.</p>`);
+      // En repli, chaque dimension affiche la description de la position de la personne (jamais une phrase creuse).
+      const fbSpe = (axe, txt) => { const v=(res.speDims||{})[axe]; const t=(SPE_DIM_DESC[axe]||{})[v]; return `<p>${t||txt}</p>`; };
+      poseSection('ia-mgmt_croisement','Votre ADN de manager', c.mgmt_croisement, `<p>Votre personnalité nourrit directement votre posture de manager.</p>`);
+      poseSection('ia-com_croisement','Votre ADN de commercial', c.com_croisement, `<p>Votre personnalité nourrit directement votre posture commerciale.</p>`);
       // Manager
-      poseSection('ia-dim_delegation','Votre délégation', c.dim_delegation, `<p>Votre rapport à la délégation structure votre management.</p>`);
-      poseSection('ia-dim_feedback','Votre feedback', c.dim_feedback, `<p>Votre style de feedback influence votre équipe.</p>`);
-      poseSection('ia-dim_exigence',"Votre curseur d'exigence", c.dim_exigence, `<p>Votre équilibre exigence et bienveillance définit votre leadership.</p>`);
+      poseSection('ia-dim_delegation','Votre délégation', c.dim_delegation, fbSpe('delegation','Votre rapport à la délégation structure votre management.'));
+      poseSection('ia-dim_feedback','Votre feedback', c.dim_feedback, fbSpe('feedback','Votre style de feedback influence votre équipe.'));
+      poseSection('ia-dim_exigence',"Votre curseur d'exigence", c.dim_exigence, fbSpe('exigence_bienveillance','Votre équilibre exigence et bienveillance définit votre leadership.'));
       poseSection('ia-mgmt_moments_cles','Votre posture en situation', c.mgmt_moments_cles, `<p>Vos moments clés de manager révèlent votre style.</p>`);
+      poseSection('ia-mgmt_formulations','Vos mots à vous', c.mgmt_formulations, `<p>Vos formulations personnalisées apparaissent à la génération de votre analyse.</p>`);
       poseSection('ia-mgmt_motivation_equipe','Motiver votre équipe', c.mgmt_motivation_equipe, `<p>Vous motivez votre équipe à votre manière.</p>`);
       poseSection('ia-mgmt_contextes_reussite','Analyse Sinéa', c.mgmt_contextes_reussite, `<p>Certains contextes révèlent le meilleur de votre management.</p>`);
       poseSection('ia-mgmt_synthese_leadership','En synthèse', c.mgmt_synthese_leadership, `<p>Votre signature de leadership est unique.</p>`);
       // Commercial
-      poseSection('ia-dim_closing','Votre closing', c.dim_closing, `<p>Votre rapport au closing structure votre vente.</p>`);
-      poseSection('ia-dim_objection','Face aux objections', c.dim_objection, `<p>Votre posture face à l'objection révèle votre aisance.</p>`);
-      poseSection('ia-dim_chasseur','Analyse Sinéa', c.dim_chasseur, `<p>Votre tempérament commercial oriente votre approche.</p>`);
+      poseSection('ia-dim_closing','Votre closing', c.dim_closing, fbSpe('closing','Votre rapport au closing structure votre vente.'));
+      poseSection('ia-dim_objection','Face aux objections', c.dim_objection, fbSpe('objection',"Votre posture face à l'objection révèle votre aisance."));
+      poseSection('ia-dim_chasseur','Analyse Sinéa', c.dim_chasseur, fbSpe('chasseur_eleveur','Votre tempérament commercial oriente votre approche.'));
       poseSection('ia-com_moments_cles','Votre posture en situation', c.com_moments_cles, `<p>Vos moments clés de vente révèlent votre style.</p>`);
+      poseSection('ia-com_formulations','Vos mots à vous', c.com_formulations, `<p>Vos formulations personnalisées apparaissent à la génération de votre analyse.</p>`);
       poseSection('ia-com_relation_client','Analyse Sinéa', c.com_relation_client, `<p>Vous construisez la relation client à votre manière.</p>`);
       poseSection('ia-com_contextes_reussite','Analyse Sinéa', c.com_contextes_reussite, `<p>Certains contextes révèlent le meilleur de votre vente.</p>`);
       poseSection('ia-com_synthese_vendeur','En synthèse', c.com_synthese_vendeur, `<p>Votre signature commerciale est unique.</p>`);
+
+      // Plan de progression dans le bloc métier : angles morts + 3 axes concrets
+      const ap = c.mgmt_angles_plan || c.com_angles_plan;
+      planSpeCourant = (ap && Array.isArray(ap.plan)) ? ap.plan : null;
+      const elPlan = document.getElementById('ia-spe_plan');
+      if (elPlan){
+        if (ap && (ap.angles || (Array.isArray(ap.plan) && ap.plan.length))){
+          let ph = `<div class="r-ia-tag">Votre plan de progression</div>`;
+          if (ap.angles) ph += `<p class="spe-angles">${mdInline(String(ap.angles))}</p>`;
+          if (Array.isArray(ap.plan)) ph += ap.plan.map((a,i)=>`<div class="spe-plan-card"><span class="spe-plan-num">Axe ${i+1}</span><div class="spe-plan-titre">${a.titre||''}</div><p class="spe-plan-desc">${a.desc||''}</p></div>`).join('');
+          elPlan.innerHTML = ph;
+        } else {
+          elPlan.innerHTML = `<div class="r-ia-tag">Votre plan de progression</div><p>Vos axes de progression personnalisés apparaissent à la génération de votre analyse.</p>`;
+        }
+      }
 
       // Actions (depuis le plan de la spé si présent, sinon leviers)
       const plan = (c.mgmt_angles_plan && c.mgmt_angles_plan.plan) || (c.com_angles_plan && c.com_angles_plan.plan);
@@ -1710,8 +1900,10 @@ const Result = (() => {
   }
 
   function posefallbackActions(dc){
+    const zone = document.getElementById('ia-actions');
+    if(!zone) return; // bloc retiré (mode candidat)
     const fb=(dc.leviers||['Affirmer vos besoins avec assurance','Oser le désaccord constructif']);
-    document.getElementById('ia-actions').innerHTML=`<div class="r-ia-tag">Vos pistes d'action</div><div class="r-actions-grid">`+
+    zone.innerHTML=`<div class="r-ia-tag">Vos pistes d'action</div><div class="r-actions-grid">`+
       fb.map((l,i)=>`<div class="r-action" id="act-${i}" onclick="Result.toggleAction(${i})"><div class="r-action-check">✓</div><p>${l}</p></div>`).join('')+`</div>`;
   }
 
@@ -1824,7 +2016,8 @@ const Result = (() => {
         resonance: avis.AVIS_RESONANCE || '',
         priorite: avis.AVIS_PRIORITE || '',
         defi_pro: avis.AVIS_DEFI_PRO || ''
-      }
+      },
+      plan_progression: (planSpeCourant || []).map(a => a.titre).filter(Boolean)
     };
 
     try {
@@ -1871,7 +2064,7 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { telechargerPortrait, setEmail, render, toggleValid, saveOpen, toggleAction, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
+  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

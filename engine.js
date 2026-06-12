@@ -317,7 +317,55 @@ function scorerFiabilite(repMini, tempsReponses) {
 }
 
 // ---- Dimensions spé (management ou commercial) ----
-function scorerSpeDims(repSpe, type) {
+// En cas d'égalité de votes entre deux positions, le tempérament Big Five de la
+// personne départage (affinités documentées ci-dessous) : déterministe et informé,
+// au lieu d'un départage par ordre d'itération. À défaut, l'ordre canonique tranche.
+const AFFINITES_DEPARTAGE = {
+  delegation: {
+    controle: (bf) => bf.C - bf.O * 0.4,
+    cadre: (bf) => bf.C * 0.8 + bf.A * 0.3,
+    autonomie: (bf) => bf.O * 0.7 + bf.A * 0.5,
+    lacher_prise: (bf) => bf.O * 0.5 + (100 - bf.N) * 0.5 - bf.C * 0.3,
+  },
+  feedback: {
+    direct: (bf) => bf.E * 0.7 - bf.A * 0.5,
+    factuel: (bf) => bf.C,
+    enveloppe: (bf) => bf.A,
+    questionnant: (bf) => bf.O * 0.6 + bf.A * 0.4,
+  },
+  exigence_bienveillance: {
+    exigence: (bf) => bf.C * 0.7 - bf.A * 0.4,
+    equilibre: (bf) => 100 - Math.abs(bf.A - bf.C),
+    bienveillance: (bf) => bf.A * 0.8 - bf.C * 0.2,
+  },
+  closing: {
+    pousseur: (bf) => bf.E * 0.7 - bf.A * 0.4,
+    guide: (bf) => bf.C * 0.6 + bf.A * 0.3,
+    patient: (bf) => bf.A * 0.6 + (100 - bf.N) * 0.3,
+    facilitateur: (bf) => bf.C * 0.4 + bf.A * 0.3 + bf.O * 0.3,
+  },
+  objection: {
+    frontal: (bf) => bf.E * 0.7 - bf.A * 0.4,
+    recadrage: (bf) => bf.C * 0.6 + bf.O * 0.3,
+    contournement: (bf) => bf.A * 0.4 + bf.O * 0.5,
+    ecoute: (bf) => bf.A * 0.8,
+  },
+  chasseur_eleveur: {
+    chasseur: (bf) => bf.E * 0.7 + (100 - bf.N) * 0.3,
+    eleveur: (bf) => bf.A * 0.6 + bf.C * 0.4,
+    mixte: (bf) => 100 - Math.abs(bf.E - bf.A) * 0.8,
+  },
+};
+const ORDRE_CANONIQUE_DIMS = {
+  delegation: ['controle','cadre','autonomie','lacher_prise'],
+  feedback: ['direct','factuel','enveloppe','questionnant'],
+  exigence_bienveillance: ['exigence','equilibre','bienveillance'],
+  closing: ['pousseur','guide','patient','facilitateur'],
+  objection: ['frontal','recadrage','contournement','ecoute'],
+  chasseur_eleveur: ['chasseur','mixte','eleveur'],
+};
+
+function scorerSpeDims(repSpe, type, bigFive) {
   const bloc = type === 'manager' ? SINEA_DATA.spe_management : (type === 'commercial' ? SINEA_DATA.spe_commercial : null);
   if (!bloc) return {};
   const parDim = {};
@@ -333,7 +381,20 @@ function scorerSpeDims(repSpe, type) {
   }
   const res = {};
   for (const [dim, compte] of Object.entries(parDim)) {
-    res[dim] = Object.entries(compte).sort((a,b)=>b[1]-a[1])[0][0];
+    const tri = Object.entries(compte).sort((a, b) => b[1] - a[1]);
+    const max = tri[0][1];
+    const exaequo = tri.filter(([, n]) => n === max).map(([p]) => p);
+    if (exaequo.length === 1) { res[dim] = exaequo[0]; continue; }
+    const aff = AFFINITES_DEPARTAGE[dim];
+    if (bigFive && aff) {
+      const bf = { E: +bigFive.E || 50, A: +bigFive.A || 50, C: +bigFive.C || 50, N: +bigFive.N || 50, O: +bigFive.O || 50 };
+      res[dim] = exaequo
+        .map((p) => [p, aff[p] ? aff[p](bf) : -Infinity])
+        .sort((a, b) => b[1] - a[1])[0][0];
+    } else {
+      const ordre = ORDRE_CANONIQUE_DIMS[dim] || [];
+      res[dim] = exaequo.slice().sort((a, b) => ordre.indexOf(a) - ordre.indexOf(b))[0];
+    }
   }
   return res;
 }

@@ -148,6 +148,132 @@
   .analyse-result{background:#fff;border-radius:20px;padding:28px;box-shadow:var(--shadow-sm);border:1px solid rgba(236,230,245,0.6);margin-bottom:20px;}
   .analyse-badge{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;background:rgba(94,89,199,0.12);color:var(--c-purple-text);padding:5px 12px;border-radius:20px;margin-bottom:16px;}
   .analyse-synthese{font-size:16px;line-height:1.6;font-weight:500;margin-bottom:24px;}
+  .reco-recrut{background:linear-gradient(135deg,#F7F4FF,#EEF0FF);border:1px solid #E3DEF5;border-radius:16px;padding:22px 24px;margin-top:8px;}
+  .reco-diag{font-size:14.5px;line-height:1.6;margin-bottom:14px;}
+  .reco-cible{font-size:14px;margin-bottom:18px;padding:10px 14px;background:#fff;border-radius:11px;border:1px solid #E3DEF5;}
+  .reco-cible-lab{font-weight:800;color:var(--c-purple-text,#5E59C7);text-transform:uppercase;font-size:11.5px;letter-spacing:0.05em;margin-right:6px;}
+  .reco-fiche{background:#fff;border-radius:14px;padding:20px 22px;border:1px solid #E8E3F5;}
+  .reco-fiche-titre{font-size:16px;font-weight:800;color:#1A1A2E;margin-bottom:8px;}
+  .reco-fiche-pourquoi{font-size:14px;line-height:1.55;color:#444;margin-bottom:16px;}
+  .reco-deux-niveaux{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .reco-niv{background:#F7F4FF;border-radius:10px;padding:11px 13px;}
+  .reco-niv-lab{display:block;font-size:10.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#8E89C7;margin-bottom:4px;}
+  .reco-niv-val{font-size:13px;line-height:1.4;color:#333;}
+  /* ---- compatibilité manager / collaborateur ---- */
+  .compat-box{background:#fff;border:1px solid var(--c-border,#E6E6F0);border-radius:18px;padding:24px;margin-bottom:24px;}
+  .compat-intro{font-size:13.5px;line-height:1.55;color:var(--c-grey,#6A6A80);margin-bottom:18px;}
+  .compat-selects{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+  .compat-field{flex:1;min-width:180px;}
+  .compat-field label{display:block;font-size:12px;font-weight:700;color:#8E89C7;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
+  .compat-field select{width:100%;border:1.5px solid var(--c-border,#E6E6F0);border-radius:12px;padding:12px 13px;font-family:var(--font);font-size:14px;background:#fff;outline:none;cursor:pointer;}
+  .compat-field select:focus{border-color:#8E89E8;}
+  .compat-btn{background:var(--c-dark,#1A1A2E);color:#fff;border:none;border-radius:12px;padding:13px 22px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:transform 0.12s;}
+  .compat-btn:active{transform:scale(0.97);} .compat-btn:disabled{opacity:0.55;cursor:default;}
+  .compat-msg{font-size:13.5px;color:var(--c-grey,#6A6A80);padding:16px 0 4px;} .compat-err{color:#C8503F;}
+  .compat-result{margin-top:22px;}
+  .compat-entete{margin-bottom:16px;}
+  .compat-duo{font-size:15px;line-height:1.5;} .compat-role{font-size:12.5px;color:#8E89C7;} .compat-amp{color:#B8B8C8;margin:0 4px;}
+  .compat-rh-bloc{background:linear-gradient(135deg,#FBF7FF,#F2F0FF);border:1px solid #E3DEF5;border-radius:15px;padding:20px;position:relative;margin-bottom:18px;}
+  .compat-rh-badge,.compat-partage-badge{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;padding:4px 10px;border-radius:7px;margin-bottom:14px;}
+  .compat-rh-badge{background:#1A1A2E;color:#fff;}
+  .compat-partage-badge{background:#3Fae6e;color:#fff;}
+  .compat-global{display:flex;align-items:center;gap:18px;margin-bottom:20px;}
+  .compat-global-num{font-size:48px;font-weight:800;line-height:1;} .compat-global-num span{font-size:20px;color:#B8B8C8;font-weight:600;}
+  .compat-global-lab{font-size:14px;line-height:1.4;color:#555;}
+  .compat-dims{display:flex;flex-direction:column;gap:11px;}
+  .compat-dim-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;} .compat-dim-val{font-weight:800;}
+  .compat-dim-track{height:7px;background:#EAEAF2;border-radius:5px;overflow:hidden;}
+  .compat-dim-fill{height:100%;border-radius:5px;transition:width 0.5s ease;}
+  .compat-signaux{margin-top:18px;padding:14px 16px;background:rgba(249,130,114,0.09);border:1px solid rgba(249,130,114,0.25);border-radius:11px;}
+  .compat-signaux-tit{font-size:11.5px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#C8503F;margin-bottom:9px;}
+  .compat-signaux ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
+  .compat-signaux li{font-size:13px;line-height:1.45;color:#8A3528;padding-left:15px;position:relative;}
+  .compat-signaux li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:#F98272;}
+  .compat-partage{background:#fff;border:1px solid #E6E6F0;border-radius:15px;padding:20px;}
+  .compat-synthese{font-size:14.5px;line-height:1.6;font-weight:500;margin-bottom:18px;}
+  .compat-sec{margin-bottom:16px;} .compat-sec h5{font-size:12.5px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#5E59C7;margin-bottom:9px;}
+  .compat-sec ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
+  .compat-sec li{font-size:13.5px;line-height:1.45;padding-left:16px;position:relative;}
+  .compat-sec li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:#8E89E8;}
+  .compat-fluide li::before{background:#3Fae6e;} .compat-attn li::before{background:#F9A876;}
+  .compat-cle{margin-top:6px;padding:14px 18px;background:linear-gradient(135deg,#1A1A2E,#2D2D4A);color:#fff;border-radius:12px;font-size:14.5px;font-weight:600;line-height:1.45;font-style:italic;}
+  /* ---- cadrage du discours ---- */
+  .cadrage-note{font-style:italic;color:#8E89C7;font-size:12.5px;}
+  .fm-inter-type{font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#8E89C7;margin:12px 0 6px;}
+  .fm-inter-row{margin-bottom:9px;}
+  .fm-inter-lab{display:block;font-size:11.5px;font-weight:700;color:#6A6A80;margin-bottom:2px;}
+  .fm-inter-row p{font-size:13px;line-height:1.5;margin:0;}
+  .fm-inter-libre{background:#F7F4FF;border-radius:8px;padding:8px 11px;font-style:italic;}
+  .cadrage-bloc{display:block;margin:0 0 16px;}
+  /* ---- boutons d'export ---- */
+  .compat-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+  .exp-btn{border:1.5px solid var(--c-dark,#1A1A2E);background:var(--c-dark,#1A1A2E);color:#fff;border-radius:11px;padding:11px 16px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.15s;}
+  .exp-btn:hover{opacity:0.85;} .exp-btn:disabled{opacity:0.5;cursor:default;}
+  .exp-vert{background:#3Fae6e;border-color:#3Fae6e;}
+  .exp-mini{padding:8px 13px;font-size:12px;}
+  .analyse-head-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+  /* ---- grille d'entretien ---- */
+  .grille-cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid #E8E3F5;}
+  .grille-cta-txt{font-size:12.5px;color:var(--c-grey,#6A6A80);flex:1;min-width:220px;}
+  .grille-result{margin-top:18px;background:#fff;border:1px solid #E8E3F5;border-radius:14px;padding:20px 22px;}
+  .grille-tit{font-size:15px;font-weight:800;margin-bottom:8px;}
+  .grille-intro{font-size:13.5px;line-height:1.55;color:#444;margin-bottom:16px;}
+  .grille-crit{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid #F0EDF8;}
+  .grille-crit:last-of-type{border-bottom:none;}
+  .grille-crit-tit{font-size:14px;font-weight:800;color:#1A1A2E;margin-bottom:9px;}
+  .grille-lab{font-size:11px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#8E89C7;margin:9px 0 6px;}
+  .grille-lab.grille-pos{color:#2E9359;} .grille-lab.grille-neg{color:#C8503F;}
+  .grille-result ul{list-style:none;display:flex;flex-direction:column;gap:6px;margin:0;padding:0;}
+  .grille-result li{font-size:13px;line-height:1.45;padding-left:15px;position:relative;}
+  .grille-result li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:#8E89E8;}
+  .grille-ul-pos li::before{background:#3Fae6e;} .grille-ul-neg li::before{background:#F98272;}
+  .grille-note{margin-top:6px;padding:12px 15px;background:#F7F4FF;border-radius:10px;font-size:13px;line-height:1.5;color:#444;}
+  /* ---- vue recrutement ---- */
+  .recrut-activer{margin:6px 0 22px;}
+  .recrut-box{background:#fff;border:1px solid var(--c-border,#E6E6F0);border-radius:18px;padding:24px;margin-bottom:24px;}
+  .recrut-textarea{width:100%;border:1.5px solid var(--c-border,#E6E6F0);border-radius:12px;padding:13px 14px;font-family:var(--font);font-size:13.5px;line-height:1.5;resize:vertical;outline:none;box-sizing:border-box;}
+  .recrut-textarea:focus{border-color:#8E89E8;}
+  .recrut-cible{background:linear-gradient(135deg,#F7F4FF,#EEF0FF);border:1px solid #E3DEF5;border-radius:15px;padding:20px;margin-top:14px;}
+  .recrut-cible-tit{font-size:15px;font-weight:800;margin-bottom:7px;}
+  .recrut-cible-resume{font-size:13.5px;line-height:1.55;color:#444;margin-bottom:13px;}
+  .recrut-cible-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;}
+  .recrut-tag{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:8px;background:#fff;border:1px solid #E3DEF5;color:#444;}
+  .recrut-tag-fam{background:var(--c-dark,#1A1A2E);color:#fff;border-color:var(--c-dark,#1A1A2E);}
+  .recrut-tag-soft{background:rgba(63,174,110,0.1);border-color:rgba(63,174,110,0.3);color:#2E9359;}
+  .recrut-cible-bf{margin-top:12px;}
+  .recrut-bf-ligne{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(227,222,245,0.6);}
+  .recrut-bf-val{font-weight:800;color:#5E59C7;}
+  .recrut-imp{font-size:10px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#C77A35;margin-left:5px;}
+  .recrut-justif{font-size:12px;font-style:italic;color:#8E89C7;margin-top:12px;}
+  .recrut-cands{margin-top:20px;}
+  .recrut-cands-tit{font-size:14px;font-weight:800;margin-bottom:12px;}
+  .recrut-mgr{margin-bottom:16px;}
+  .recrut-mgr label{display:block;font-size:12px;font-weight:700;color:#8E89C7;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
+  .recrut-mgr input{width:100%;max-width:340px;border:1.5px solid var(--c-border,#E6E6F0);border-radius:11px;padding:11px 13px;font-family:var(--font);font-size:13.5px;outline:none;box-sizing:border-box;}
+  .recrut-mgr input:focus{border-color:#8E89E8;}
+  .recrut-cand{border:1px solid var(--c-border,#E6E6F0);border-radius:13px;margin-bottom:10px;overflow:hidden;}
+  .recrut-cand-ligne{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;flex-wrap:wrap;}
+  .recrut-cand-ligne:hover{background:#FAFAFE;}
+  .recrut-cand-id{display:flex;flex-direction:column;gap:2px;}
+  .recrut-cand-id b{font-size:14px;}
+  .recrut-cand-arch{font-size:12px;color:#8E89C7;}
+  .recrut-cand-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .recrut-badge{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:7px;letter-spacing:0.02em;}
+  .fiab-ok{background:rgba(63,174,110,0.12);color:#2E9359;}
+  .fiab-mid{background:rgba(249,168,118,0.15);color:#C77A35;}
+  .fiab-low{background:rgba(249,130,114,0.13);color:#C8503F;}
+  .recrut-adq{font-size:22px;font-weight:800;} .recrut-adq small{font-size:12px;color:#B8B8C8;font-weight:600;}
+  .recrut-cand-detail{padding:4px 16px 16px;border-top:1px solid #F0EDF8;}
+  .recrut-cand-zone{padding:0 16px 8px;}
+  .reco-fiche-bloc{margin-bottom:14px;}
+  .reco-fiche-lab{display:block;font-size:11.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#8E89C7;margin-bottom:7px;}
+  .reco-fiche-bloc ul{list-style:none;display:flex;flex-direction:column;gap:7px;}
+  .reco-fiche-bloc li{font-size:13.5px;line-height:1.45;padding-left:16px;position:relative;}
+  .reco-fiche-bloc li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:#8E89E8;}
+  .reco-fiche-vig{background:rgba(249,168,118,0.1);border-radius:10px;padding:11px 14px;}
+  .reco-fiche-vig p{font-size:13px;line-height:1.45;color:#9A5A1F;margin:0;}
+  .reco-secondaire{margin-top:14px;padding:13px 16px;background:#F7F4FF;border-radius:11px;}
+  .reco-secondaire p{font-size:13px;line-height:1.5;color:#444;margin:0;}
   .swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
   .swot-card{border-radius:15px;padding:18px 20px;}
   .swot-card-title{font-size:13px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:11px;}
@@ -355,6 +481,14 @@
 <script>
   const BACKEND = "https://sinea-profile-ia.vercel.app/api/dashboard";
   const ANALYSE_URL = "https://sinea-profile-ia.vercel.app/api/analyse_equipe";
+  const COMPAT_URL = "https://sinea-profile-ia.vercel.app/api/compatibilite";
+  const GRILLE_URL = "https://sinea-profile-ia.vercel.app/api/grille_entretien";
+  const PROFIL_CIBLE_URL = "https://sinea-profile-ia.vercel.app/api/profil_cible";
+  const ENTRETIEN_URL = "https://sinea-profile-ia.vercel.app/api/entretien_candidat";
+  let vueRecrutementForcee = false;  // section recrutement ouverte manuellement sur une campagne standard
+  let derniereCompat = null;     // dernière compatibilité affichée (pour l'export)
+  let derniereAnalyseEq = null;  // dernière analyse d'équipe affichée (pour l'export et la grille)
+  let derniereGrille = null;     // dernière grille d'entretien générée
   let cleAcces = "";
   let codeCampagneCourant = "";
   let charts = {};
@@ -1083,6 +1217,30 @@ function axesFormation(membres, famillesStats){
     }
   };
 
+  // Ce que la personne a coché et écrit dans sa restitution (par type d'analyse)
+  function blocInteractions(inter){
+    if(!inter || typeof inter!=='object') return '';
+    var libType={socle:'Portrait socle', manager:'Module manager', commercial:'Module commercial'};
+    var h='';
+    Object.keys(inter).forEach(function(type){
+      var it=inter[type]||{}; var morceaux='';
+      if(it.auto_perception&&it.auto_perception.length){
+        var ap='';
+        it.auto_perception.forEach(function(x){ ap+='<p>'+esc(x.titre||x.axe)+' : intuition <b>'+esc(x.pari)+'</b>, mesure <b>'+esc(x.mesure)+'</b>'+(x.accord?' · en accord':' · écart à explorer en débrief')+'</p>'; });
+        morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Auto-perception avant révélation</span>'+ap+'</div>';
+      }
+      var forces=(it.forces_libelles&&it.forces_libelles.length)?it.forces_libelles:(it.forces_validees||[]);
+      if(forces.length) morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Forces où elle se reconnaît</span><p>'+forces.map(esc).join(' · ')+'</p></div>';
+      if(it.vigilances_validees&&it.vigilances_validees.length) morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Vigilances reconnues</span><p>'+it.vigilances_validees.length+' point(s) validé(s)</p></div>';
+      var ro=it.reponses_ouvertes||{};
+      Object.keys(ro).forEach(function(k){ if(ro[k]&&String(ro[k]).trim()) morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Réponse libre</span><p class="fm-inter-libre">'+esc(ro[k])+'</p></div>'; });
+      if(it.pistes_choisies&&it.pistes_choisies.length) morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Pistes d\'action choisies</span><p>'+it.pistes_choisies.map(esc).join(' · ')+'</p></div>';
+      if(morceaux) h+='<div class="fm-inter-type">'+esc(libType[type]||type)+'</div>'+morceaux;
+    });
+    if(!h) return '';
+    return '<div class="fm-section"><div class="fm-section-titre">Ses réponses dans la restitution</div>'+h+'</div>';
+  }
+
   function ouvrirMembre(idx){
     const m = repsCourants[idx];
     if(!m) return;
@@ -1144,6 +1302,7 @@ function axesFormation(membres, famillesStats){
       const fs=m.fiabilite.score; const fc=fs>=85?'#3EAD8B':(fs>=70?'#F9A876':'#F98272');
       fiabHtml=`<div class="fm-fiab" style="border-color:${fc}33;background:${fc}0d"><div><div class="fm-fiab-lab">Fiabilité du profil</div><div class="fm-fiab-msg">${esc(m.fiabilite.message||'')}</div></div><div class="fm-fiab-score" style="color:${fc}">${fs}%</div></div>`;
     }
+    const interHtml = blocInteractions(m.interactions);
     const html=`
       <div class="fm-overlay" onclick="if(event.target===this)fermerMembre()">
         <div class="fm-card">
@@ -1160,6 +1319,7 @@ function axesFormation(membres, famillesStats){
           ${pilotageHtml}
           <div class="fm-section"><div class="fm-section-titre">Tempérament</div>${bfRows}</div>
           ${speHtml}
+          ${interHtml}
         </div>
       </div>`;
     const div=document.createElement('div'); div.id='fiche-membre'; div.innerHTML=html;
@@ -1586,6 +1746,14 @@ function axesFormation(membres, famillesStats){
     }
     html += `</div></div>`;
 
+    // ==== Mode recrutement : profil cible + adéquation des candidats ====
+    const modeRecrut = (camp.mode==='recrutement') || !!camp.profilCible || vueRecrutementForcee;
+    if(modeRecrut){
+      html += sectionRecrutementHtml(camp, repsTous);
+    } else if(idxTerm.length>=1){
+      html += '<div class="recrut-activer"><button class="sel-btn" onclick="vueRecrutementForcee=true;renderCampagneVue()">Activer la vue recrutement (profil cible et adéquation des candidats)</button></div>';
+    }
+
     // Analyse stratégique IA
     if(idxTerm.length>=2){
       html += `
@@ -1599,6 +1767,23 @@ function axesFormation(membres, famillesStats){
       </div>`;
     }
     html += `<div id="analyse-zone"></div>`;
+
+    // ==== Compatibilité manager / collaborateur ====
+    if(idxTerm.length>=2){
+      const opts = repsTous.map((r,ri)=> String(r.statut||'').toLowerCase().startsWith('termin') && r.email ? `<option value="${esc(r.email)}">${esc(r.nom||r.email)}</option>` : '').join('');
+      html += `
+      <div class="section-label">Compatibilité manager / collaborateur</div>
+      <div class="compat-box">
+        <div class="compat-intro">Sélectionnez un manager et l'un de ses collaborateurs. Sinéa calcule leur compatibilité de travail (fluidités naturelles et points à anticiper). Le score chiffré reste réservé à votre vue RH, l'analyse qualitative est conçue pour être partagée aux deux personnes. <span class="cadrage-note">Cet éclairage nourrit la réflexion et le dialogue. La décision finale reste humaine.</span></div>
+        <div class="compat-selects">
+          <div class="compat-field"><label>Manager</label><select id="compat-mgr"><option value="">Choisir…</option>${opts}</select></div>
+          <div class="compat-field"><label>Collaborateur</label><select id="compat-col"><option value="">Choisir…</option>${opts}</select></div>
+          <button class="compat-btn" id="compat-btn" onclick="lancerCompatibilite()">Analyser le binôme</button>
+        </div>
+        <div id="compat-zone"></div>
+      </div>`;
+    }
+    html += `<div id="analyse-zone-2"></div>`;
 
     document.getElementById('content').innerHTML=html;
 
@@ -1662,15 +1847,454 @@ function axesFormation(membres, famillesStats){
       .catch(()=>{ if(btn){btn.disabled=false;btn.textContent='Générer l\'analyse';} if(zone)zone.innerHTML=`<div class="empty">Erreur de génération.</div>`; });
   }
 
+  // ===== Export PDF : fenêtre d'impression dédiée (le navigateur propose Enregistrer en PDF) =====
+  function ouvrirImpression(titre, corps){
+    var w = window.open('', '_blank');
+    if(!w){ alert('Autorisez les fenêtres pop-up pour exporter en PDF.'); return; }
+    var styles = 'body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#1A1A2E;max-width:760px;margin:0 auto;padding:34px 28px;line-height:1.55;}'+
+      'h1{font-size:21px;margin:0 0 4px;} .exp-sous{font-size:12.5px;color:#777;margin-bottom:24px;}'+
+      '.exp-logo{font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#5E59C7;margin-bottom:14px;}'+
+      'h2{font-size:13px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#5E59C7;margin:22px 0 8px;}'+
+      'p{font-size:13.5px;margin:0 0 10px;} ul{margin:0 0 12px;padding-left:18px;} li{font-size:13.5px;margin-bottom:6px;}'+
+      '.exp-cle{margin-top:18px;padding:13px 16px;background:#F2F0FA;border-radius:10px;font-style:italic;font-weight:600;font-size:13.5px;}'+
+      '.exp-score{font-size:30px;font-weight:800;margin:4px 0 12px;} .exp-dim{display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid #EEE;padding:6px 0;}'+
+      '.exp-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;padding:3px 9px;border-radius:6px;background:#1A1A2E;color:#fff;margin-bottom:14px;}'+
+      '.exp-foot{margin-top:30px;padding-top:14px;border-top:1px solid #EEE;font-size:11px;color:#999;}'+
+      '@media print{ body{padding:10px;} }';
+    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+titre+'</title><style>'+styles+'</style></head><body>'+
+      '<div class="exp-logo">Sinéa Profile</div>'+corps+
+      '<div class="exp-foot">Document généré par Sinéa Profile · sineaformation.fr · Cet éclairage nourrit la réflexion et le dialogue, la décision finale reste humaine.</div>'+
+      '<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},350);};</scr'+'ipt></body></html>');
+    w.document.close();
+  }
+  function expListe(arr){ return Array.isArray(arr)&&arr.length ? '<ul>'+arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>' : ''; }
+  function dateFr(){ try{ return new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } }
+
+  // Version PARTAGEABLE : aucune trace des scores ni des signaux RH, par construction.
+  function exporterCompat(mode){
+    var data = derniereCompat; if(!data){ return; }
+    var a = data.analyse || {};
+    var titre = 'Mieux travailler ensemble · '+data.manager.nom+' et '+data.collaborateur.nom;
+    var corps = '<h1>'+esc(titre)+'</h1><div class="exp-sous">'+esc(data.manager.nom)+' ('+esc(data.manager.archetype)+') et '+esc(data.collaborateur.nom)+' ('+esc(data.collaborateur.archetype)+') · '+dateFr()+'</div>';
+    if(mode==='complet'){
+      corps += '<div class="exp-badge">Document interne RH</div>';
+      var sc = data.scores||{}; var dims = sc.dimensions||{};
+      corps += '<h2>Compatibilité globale</h2><div class="exp-score">'+(sc.global!=null?sc.global+'/100 · '+libScore(sc.global):'non calculée')+'</div>';
+      corps += Object.keys(dims).map(function(k){ return '<div class="exp-dim"><span>'+esc(dims[k].label)+'</span><b>'+dims[k].score+'</b></div>'; }).join('');
+      if(Array.isArray(a.signaux_rh)&&a.signaux_rh.length){ corps += '<h2>Signaux RH à surveiller</h2>'+expListe(a.signaux_rh); }
+    }
+    if(a.synthese) corps += '<h2>La dynamique du binôme</h2><p>'+esc(a.synthese)+'</p>';
+    if(Array.isArray(a.points_fluides)) corps += '<h2>Ce qui fonctionne naturellement</h2>'+expListe(a.points_fluides);
+    if(Array.isArray(a.points_attention)) corps += '<h2>Points à anticiper ensemble</h2>'+expListe(a.points_attention);
+    if(Array.isArray(a.conseils_manager)) corps += '<h2>Conseils au manager</h2>'+expListe(a.conseils_manager);
+    if(Array.isArray(a.conseils_collaborateur)) corps += '<h2>Conseils au collaborateur</h2>'+expListe(a.conseils_collaborateur);
+    if(a.cle_de_voute) corps += '<div class="exp-cle">'+esc(a.cle_de_voute)+'</div>';
+    ouvrirImpression(titre, corps);
+  }
+
+  function exporterAnalyseEq(){
+    var a = derniereAnalyseEq; if(!a){ return; }
+    var titre = 'Analyse stratégique d\'équipe';
+    var corps = '<h1>'+esc(titre)+'</h1><div class="exp-sous">'+dateFr()+'</div><div class="exp-badge">Document interne RH</div>';
+    if(a.synthese) corps += '<h2>Synthèse</h2><p>'+esc(a.synthese)+'</p>';
+    var sw = a.swot||{};
+    if(Array.isArray(sw.forces)) corps += '<h2>Forces</h2>'+expListe(sw.forces);
+    if(Array.isArray(sw.faiblesses)) corps += '<h2>Points de vigilance</h2>'+expListe(sw.faiblesses);
+    if(Array.isArray(sw.opportunites)) corps += '<h2>Opportunités</h2>'+expListe(sw.opportunites);
+    if(Array.isArray(sw.risques)) corps += '<h2>Risques</h2>'+expListe(sw.risques);
+    if(a.dynamiques) corps += '<h2>Dynamiques d\'équipe</h2><p>'+esc(a.dynamiques)+'</p>';
+    if(Array.isArray(a.risques_rh)) corps += '<h2>Points d\'attention RH</h2>'+expListe(a.risques_rh);
+    if(Array.isArray(a.plan_action)) corps += '<h2>Plan d\'action</h2>'+expListe(a.plan_action.map(function(p){return (p.titre?p.titre+' · ':'')+(p.desc||'');}));
+    var r = a.recrutement;
+    if(r){
+      corps += '<h2>Recrutement</h2>';
+      if(r.diagnostic) corps += '<p>'+esc(r.diagnostic)+'</p>';
+      if(r.profil_cible) corps += '<p><b>Profil à viser :</b> '+esc(r.profil_cible)+'</p>';
+      var fp = r.fiche_poste||{};
+      if(fp.intitule) corps += '<p><b>'+esc(fp.intitule)+'</b></p>';
+      if(fp.pourquoi) corps += '<p>'+esc(fp.pourquoi)+'</p>';
+      if(Array.isArray(fp.traits_recherches)) corps += '<p><b>À rechercher :</b></p>'+expListe(fp.traits_recherches);
+      if(Array.isArray(fp.signaux_entretien)) corps += '<p><b>À observer en entretien :</b></p>'+expListe(fp.signaux_entretien);
+      if(fp.vigilance) corps += '<p><b>Vigilance d\'intégration :</b> '+esc(fp.vigilance)+'</p>';
+      if(r.besoin_secondaire) corps += '<p><b>Second besoin :</b> '+esc(r.besoin_secondaire)+'</p>';
+    }
+    if(derniereGrille){
+      corps += '<h2>Grille d\'entretien</h2>';
+      if(derniereGrille.intro) corps += '<p>'+esc(derniereGrille.intro)+'</p>';
+      (derniereGrille.criteres||[]).forEach(function(c){
+        corps += '<p><b>'+esc(c.critere||'')+'</b></p>'+expListe(c.questions)+
+          '<p>Signaux positifs :</p>'+expListe(c.signaux_positifs)+
+          '<p>Signaux d\'alerte :</p>'+expListe(c.signaux_alerte);
+      });
+      var ms = derniereGrille.mise_en_situation;
+      if(ms){ corps += '<p><b>Mise en situation :</b> '+esc(ms.consigne||'')+'</p>'+expListe(ms.attendus); }
+      if(derniereGrille.question_integration) corps += '<p><b>Question d\'intégration :</b> '+esc(derniereGrille.question_integration)+'</p>';
+      if(derniereGrille.conseil_notation) corps += '<p><b>Notation :</b> '+esc(derniereGrille.conseil_notation)+'</p>';
+    }
+    ouvrirImpression(titre, corps);
+  }
+
+  // ============================================================
+  // VUE RECRUTEMENT : profil cible + adéquation des candidats
+  // ============================================================
+
+  function sectionRecrutementHtml(camp, repsTous){
+    var cible = camp.profilCible || profilCibleCourant;
+    var h = '<div class="section-label">Recrutement</div><div class="recrut-box">';
+    h += '<div class="compat-intro">Collez la fiche de poste : Sinéa en extrait le profil comportemental cible (soft skills), puis mesure l\'adéquation de chaque candidat. '
+      + 'L\'adéquation porte sur le comportement et les soft skills, jamais sur les compétences techniques. '
+      + '<span class="cadrage-note">Aucun candidat n\'est écarté automatiquement. Cet éclairage structure vos entretiens, la décision finale reste humaine.</span></div>';
+    if(!cible){
+      h += '<textarea id="recrut-fiche" class="recrut-textarea" rows="7" placeholder="Collez ici le texte de votre fiche de poste (missions, contexte, qualités attendues)…"></textarea>';
+      h += '<div class="compat-actions"><button class="compat-btn" id="recrut-btn" onclick="genererProfilCible()">Définir le profil cible depuis la fiche</button></div>';
+      h += '<div id="recrut-cible-zone"></div>';
+    } else {
+      h += '<div id="recrut-cible-zone">'+profilCibleHtml(cible)+'</div>';
+      h += '<div class="compat-actions"><button class="sel-btn" onclick="redefinirProfilCible()">Redéfinir depuis une autre fiche</button></div>';
+      h += vueCandidatsHtml(cible, repsTous);
+    }
+    h += '</div>';
+    return h;
+  }
+
+  let profilCibleCourant = null;
+
+  function redefinirProfilCible(){
+    profilCibleCourant = null;
+    if(campagneData && campagneData.campagne) campagneData.campagne.profilCible = null;
+    vueRecrutementForcee = true;
+    renderCampagneVue();
+  }
+
+  function genererProfilCible(){
+    var ta=document.getElementById('recrut-fiche'), btn=document.getElementById('recrut-btn'), zone=document.getElementById('recrut-cible-zone');
+    if(!ta||!zone) return;
+    var fiche=(ta.value||'').trim();
+    if(fiche.length<60){ zone.innerHTML='<div class="compat-msg compat-err">Collez une fiche de poste un peu plus complète (60 caractères minimum).</div>'; return; }
+    if(btn){ btn.disabled=true; btn.textContent='Lecture de la fiche…'; }
+    zone.innerHTML='<div class="compat-msg">Extraction du profil comportemental cible…</div>';
+    fetch(PROFIL_CIBLE_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Dashboard-Key':cleAcces},body:JSON.stringify({code:codeCampagneCourant,fichePoste:fiche})})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(btn){ btn.disabled=false; btn.textContent='Définir le profil cible depuis la fiche'; }
+        if(data&&data.ok&&data.cible){
+          profilCibleCourant=data.cible;
+          if(campagneData&&campagneData.campagne) campagneData.campagne.profilCible=data.cible;
+          renderCampagneVue();
+        } else {
+          zone.innerHTML='<div class="compat-msg compat-err">'+esc(data&&data.error?data.error:'Lecture impossible, réessayez.')+'</div>';
+        }
+      })
+      .catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Définir le profil cible depuis la fiche'; } zone.innerHTML='<div class="compat-msg compat-err">Connexion impossible. Réessayez.</div>'; });
+  }
+
+  var LIB_CIBLE = {
+    energie:{sprinteur:'Sprinteur',endurant:'Endurant',cyclique:'Cyclique',deepworker:'Deep-worker'},
+    autorite:{cadre:'Besoin de cadre',sens:'Besoin de sens',liberte:'Besoin de liberté',contributeur:'Associé aux décisions'},
+    collaboration:{autonome:'Autonome',cooperatif:'Coopératif',interdependant:'Interdépendant',federateur:'Fédérateur'},
+    reconnaissance:{resultats:'Par les résultats',effort:'De l\'effort',relation:'Par la considération',autonomie:'Par la confiance'},
+    stress:{accelerateur:'Accélère sous stress',methodique:'Se structure sous stress',retrait:'Prend du recul',appui:'Cherche l\'appui'},
+    conflit:{affrontement:'Aborde de front',mediation:'Médiateur',compromis:'Cherche le compromis',evitement:'Temporise'},
+    risque:{audacieux:'Audacieux',calcule:'Risque calculé',prudent:'Prudent',securitaire:'Sécuritaire'},
+    changement:{moteur:'Moteur du changement',adaptable:'Adaptable',pragmatique:'Pragmatique',ancre:'Ancré'}
+  };
+  function libCible(dim,val){ return (val&&LIB_CIBLE[dim]&&LIB_CIBLE[dim][val])?LIB_CIBLE[dim][val]:val; }
+
+  function profilCibleHtml(c){
+    var h='<div class="recrut-cible">';
+    h+='<div class="recrut-cible-tit">Profil cible · '+esc(c.intitule_poste||'')+'</div>';
+    if(c.resume) h+='<p class="recrut-cible-resume">'+esc(c.resume)+'</p>';
+    h+='<div class="recrut-cible-tags">';
+    if(c.famille_principale) h+='<span class="recrut-tag recrut-tag-fam">'+esc(c.famille_principale)+'</span>';
+    if(c.famille_secondaire) h+='<span class="recrut-tag">'+esc(c.famille_secondaire)+'</span>';
+    (c.soft_skills||[]).forEach(function(s){ h+='<span class="recrut-tag recrut-tag-soft">'+esc(s)+'</span>'; });
+    h+='</div>';
+    var bf=c.bigFive_cible||{}, imp=c.bigFive_importance||{};
+    var noms={E:'Extraversion',A:'Agréabilité',C:'Conscience',N:'Gestion du stress',O:'Ouverture'};
+    var lignes='';
+    ['E','A','C','N','O'].forEach(function(k){
+      if(bf[k]==null||!(imp[k]>0)) return;
+      var v = k==='N' ? (100-bf[k]) : bf[k];
+      lignes+='<div class="recrut-bf-ligne"><span>'+noms[k]+(imp[k]>=2?' <b class="recrut-imp">central</b>':'')+'</span><span class="recrut-bf-val">'+v+'</span></div>';
+    });
+    if(lignes) h+='<div class="recrut-cible-bf"><div class="grille-lab">Tempérament attendu</div>'+lignes+'</div>';
+    var pils='';
+    ['energie','autorite','collaboration','reconnaissance'].forEach(function(k){ var v=c.pilotage_cible&&c.pilotage_cible[k]; if(v) pils+='<span class="recrut-tag">'+esc(libCible(k,v))+'</span>'; });
+    ['stress','conflit','risque','changement'].forEach(function(k){ var v=c.contextuel_cible&&c.contextuel_cible[k]; if(v) pils+='<span class="recrut-tag">'+esc(libCible(k,v))+'</span>'; });
+    if(pils) h+='<div class="recrut-cible-bf"><div class="grille-lab">Fonctionnement attendu</div><div class="recrut-cible-tags">'+pils+'</div></div>';
+    if(c.justification) h+='<p class="recrut-justif">'+esc(c.justification)+'</p>';
+    h+='</div>';
+    return h;
+  }
+
+  // ---- adéquation d'un candidat au profil cible (calcul déterministe, côté dashboard) ----
+  function calculerAdequation(m, c){
+    if(!m||!c) return null;
+    var total=0, somme=0;
+    var detail=[];
+    // Big Five pondéré par l'importance du trait pour le poste
+    var bf=c.bigFive_cible||{}, imp=c.bigFive_importance||{};
+    var noms={E:'Extraversion',A:'Agréabilité',C:'Conscience',N:'Gestion du stress',O:'Ouverture'};
+    ['E','A','C','N','O'].forEach(function(k){
+      var cibleV=bf[k], p=Number(imp[k]||0), v=m.bigFive?Number(m.bigFive[k]):null;
+      if(cibleV==null||p<=0||v==null||isNaN(v)) return;
+      var ecart=Math.abs(v-cibleV);
+      var s=Math.max(0, Math.round(100-Math.pow(ecart/10,1.6)*5.5));
+      total+=s*p; somme+=p;
+      detail.push({label:noms[k],score:s});
+    });
+    // famille (poids 1)
+    if(c.famille_principale && m.famille){
+      var f=(m.famille||'').toUpperCase();
+      var s=(f===c.famille_principale)?100:(c.famille_secondaire&&f===c.famille_secondaire?85:55);
+      total+=s; somme+=1; detail.push({label:'Famille de profil',score:s});
+    }
+    // pilotage (poids 0.8 par dimension définie)
+    ['energie','autorite','collaboration','reconnaissance'].forEach(function(k){
+      var cv=c.pilotage_cible&&c.pilotage_cible[k]; if(!cv) return;
+      var mv=m[k]&&m[k].profil; if(!mv) return;
+      var s=(mv===cv)?100:60;
+      total+=s*0.8; somme+=0.8; detail.push({label:libCible(k,cv),score:s});
+    });
+    // contextuel (poids 0.8)
+    ['stress','conflit','risque','changement'].forEach(function(k){
+      var cv=c.contextuel_cible&&c.contextuel_cible[k]; if(!cv) return;
+      var mv=m.contextuel&&m.contextuel[k]; if(!mv) return;
+      var s=(mv===cv)?100:60;
+      total+=s*0.8; somme+=0.8; detail.push({label:libCible(k,cv),score:s});
+    });
+    if(!somme) return null;
+    return { global: Math.round(total/somme), detail: detail };
+  }
+
+  function vueCandidatsHtml(cible, repsTous){
+    var cands=[];
+    (repsTous||[]).forEach(function(r,ri){
+      if(!String(r.statut||'').toLowerCase().startsWith('termin')) return;
+      var adq=calculerAdequation(r,cible);
+      cands.push({r:r,ri:ri,adq:adq});
+    });
+    cands.sort(function(a,b){ return ((b.adq&&b.adq.global)||0)-((a.adq&&a.adq.global)||0); });
+    var h='<div class="recrut-cands">';
+    h+='<div class="recrut-cands-tit">Candidats ('+cands.length+')</div>';
+    h+='<div class="recrut-mgr"><label>Futur manager (email, doit avoir passé le test)</label><input type="email" id="recrut-mgr-email" placeholder="manager@entreprise.fr"></div>';
+    if(!cands.length){ h+='<div class="compat-msg">Aucun candidat n\'a encore terminé le test sur cette campagne.</div></div>'; return h; }
+    cands.forEach(function(x){
+      var r=x.r, g=x.adq?x.adq.global:null;
+      var col=g!=null?couleurScore(g):'#B8B8C8';
+      var fiab=r.fiabilite&&r.fiabilite.score!=null?r.fiabilite.score:null;
+      var fiabCl=fiab==null?'':(fiab>=75?'fiab-ok':(fiab>=60?'fiab-mid':'fiab-low'));
+      h+='<div class="recrut-cand">';
+      h+='<div class="recrut-cand-ligne" onclick="toggleDetailCand('+x.ri+')">';
+      h+='<div class="recrut-cand-id"><b>'+esc(r.nom||r.email||'Anonyme')+'</b><span class="recrut-cand-arch">'+esc(r.dominante||'')+'</span></div>';
+      h+='<div class="recrut-cand-badges">';
+      if(fiab!=null) h+='<span class="recrut-badge '+fiabCl+'">Fiabilité '+fiab+'%</span>';
+      if(r.naturelAdapte&&r.naturelAdapte.cout==='élevé') h+='<span class="recrut-badge fiab-low">Coût d\'adaptation élevé</span>';
+      h+='<span class="recrut-adq" style="color:'+col+'">'+(g!=null?g:'·')+'<small>/100</small></span>';
+      h+='</div></div>';
+      h+='<div class="recrut-cand-detail" id="cand-detail-'+x.ri+'" style="display:none">';
+      if(x.adq&&x.adq.detail&&x.adq.detail.length){
+        h+='<div class="compat-dims">';
+        x.adq.detail.forEach(function(dd){
+          var c2=couleurScore(dd.score);
+          h+='<div class="compat-dim"><div class="compat-dim-top"><span>'+esc(dd.label)+'</span><span class="compat-dim-val" style="color:'+c2+'">'+dd.score+'</span></div><div class="compat-dim-track"><div class="compat-dim-fill" style="width:'+dd.score+'%;background:'+c2+'"></div></div></div>';
+        });
+        h+='</div>';
+      }
+      h+='<div class="compat-actions">';
+      h+='<button class="exp-btn exp-mini" onclick="event.stopPropagation();compatCandidat(\''+esc(r.email||'')+'\','+x.ri+')">Compatibilité avec le futur manager</button>';
+      h+='<button class="exp-btn exp-mini" onclick="event.stopPropagation();entretienCandidat(\''+esc(r.email||'')+'\','+x.ri+')">Questions d\'entretien personnalisées</button>';
+      h+='</div>';
+      h+='<div class="recrut-cand-zone" id="cand-zone-'+x.ri+'"></div>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+    return h;
+  }
+
+  function toggleDetailCand(ri){
+    var el=document.getElementById('cand-detail-'+ri); if(!el)return;
+    el.style.display = el.style.display==='none' ? 'block' : 'none';
+  }
+
+  function compatCandidat(email, ri){
+    var mgrInput=document.getElementById('recrut-mgr-email');
+    var zone=document.getElementById('cand-zone-'+ri); if(!zone)return;
+    var em=(mgrInput&&mgrInput.value||'').trim();
+    if(!em){ zone.innerHTML='<div class="compat-msg compat-err">Renseignez d\'abord l\'email du futur manager (champ en haut de la liste).</div>'; return; }
+    if(!email){ zone.innerHTML='<div class="compat-msg compat-err">Ce candidat n\'a pas d\'email enregistré.</div>'; return; }
+    zone.innerHTML='<div class="compat-msg">Calcul de la compatibilité candidat et futur manager…</div>';
+    fetch(COMPAT_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Dashboard-Key':cleAcces},body:JSON.stringify({emailManager:em,emailCollaborateur:email})})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.ok) afficherCompatibilite(data,'cand-zone-'+ri);
+        else zone.innerHTML='<div class="compat-msg compat-err">'+esc(data&&data.error?data.error:'Analyse impossible.')+'</div>';
+      })
+      .catch(function(){ zone.innerHTML='<div class="compat-msg compat-err">Connexion impossible. Réessayez.</div>'; });
+  }
+
+  function entretienCandidat(email, ri){
+    var zone=document.getElementById('cand-zone-'+ri); if(!zone)return;
+    var cible=(campagneData&&campagneData.campagne&&campagneData.campagne.profilCible)||profilCibleCourant;
+    if(!cible){ zone.innerHTML='<div class="compat-msg compat-err">Définissez d\'abord le profil cible.</div>'; return; }
+    if(!email){ zone.innerHTML='<div class="compat-msg compat-err">Ce candidat n\'a pas d\'email enregistré.</div>'; return; }
+    zone.innerHTML='<div class="compat-msg">Préparation des questions d\'entretien pour ce candidat…</div>';
+    fetch(ENTRETIEN_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Dashboard-Key':cleAcces},body:JSON.stringify({email:email,profilCible:cible})})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.ok&&data.entretien) afficherEntretienCandidat(data.entretien,'cand-zone-'+ri,data.candidat);
+        else zone.innerHTML='<div class="compat-msg compat-err">'+esc(data&&data.error?data.error:'Génération impossible.')+'</div>';
+      })
+      .catch(function(){ zone.innerHTML='<div class="compat-msg compat-err">Connexion impossible. Réessayez.</div>'; });
+  }
+
+  var dernierEntretien = null;
+  function afficherEntretienCandidat(g, zoneId, candidat){
+    var zone=document.getElementById(zoneId); if(!zone)return;
+    dernierEntretien = { g:g, candidat:candidat };
+    var li=function(arr){ return Array.isArray(arr)?arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join(''):''; };
+    var h='<div class="grille-result">';
+    h+='<div class="grille-tit">Entretien personnalisé · '+esc((candidat&&candidat.nom)||'')+'</div>';
+    if(g.lecture) h+='<p class="grille-intro">'+esc(g.lecture)+'</p>';
+    if(Array.isArray(g.points_forts)&&g.points_forts.length){ h+='<div class="grille-lab grille-pos">Points d\'appui du candidat</div><ul class="grille-ul-pos">'+li(g.points_forts)+'</ul>'; }
+    (g.ecarts||[]).forEach(function(e,i){
+      h+='<div class="grille-crit"><div class="grille-crit-tit">'+(i+1)+'. '+esc(e.dimension||'')+'</div>';
+      if(e.constat) h+='<p>'+esc(e.constat)+'</p>';
+      if(Array.isArray(e.questions)) h+='<div class="grille-lab">Questions à poser</div><ul>'+li(e.questions)+'</ul>';
+      h+='</div>';
+    });
+    if(Array.isArray(g.validation_fiabilite)&&g.validation_fiabilite.length){
+      h+='<div class="grille-crit"><div class="grille-crit-tit">Validation du profil</div><p class="cadrage-note">La cohérence des réponses au test invite à confirmer ces points de vive voix.</p><ul>'+li(g.validation_fiabilite)+'</ul></div>';
+    }
+    if(g.conseil_integration) h+='<div class="grille-note">'+esc(g.conseil_integration)+'</div>';
+    h+='<div class="compat-actions"><button class="exp-btn exp-mini" onclick="exporterEntretienCandidat()">Exporter en PDF</button></div>';
+    h+='</div>';
+    zone.innerHTML=h;
+  }
+
+  function exporterEntretienCandidat(){
+    var e=dernierEntretien; if(!e)return;
+    var g=e.g; var nom=(e.candidat&&e.candidat.nom)||'Candidat';
+    var titre='Entretien personnalisé · '+nom;
+    var corps='<h1>'+esc(titre)+'</h1><div class="exp-sous">'+dateFr()+'</div><div class="exp-badge">Document interne RH</div>';
+    if(g.lecture) corps+='<p>'+esc(g.lecture)+'</p>';
+    if(Array.isArray(g.points_forts)) corps+='<h2>Points d\'appui</h2>'+expListe(g.points_forts);
+    (g.ecarts||[]).forEach(function(x){ corps+='<h2>'+esc(x.dimension||'')+'</h2>'+(x.constat?'<p>'+esc(x.constat)+'</p>':'')+expListe(x.questions); });
+    if(Array.isArray(g.validation_fiabilite)&&g.validation_fiabilite.length) corps+='<h2>Validation du profil</h2>'+expListe(g.validation_fiabilite);
+    if(g.conseil_integration) corps+='<div class="exp-cle">'+esc(g.conseil_integration)+'</div>';
+    ouvrirImpression(titre, corps);
+  }
+
+  function lancerCompatibilite(){
+    const mgr=document.getElementById('compat-mgr'), col=document.getElementById('compat-col');
+    const zone=document.getElementById('compat-zone'), btn=document.getElementById('compat-btn');
+    if(!mgr||!col||!zone)return;
+    const em=mgr.value, ec=col.value;
+    if(!em||!ec){ zone.innerHTML='<div class="compat-msg">Choisissez un manager et un collaborateur.</div>'; return; }
+    if(em===ec){ zone.innerHTML='<div class="compat-msg">Le manager et le collaborateur doivent être deux personnes différentes.</div>'; return; }
+    btn.disabled=true; btn.textContent='Analyse en cours…';
+    zone.innerHTML='<div class="compat-msg">Calcul de la compatibilité…</div>';
+    fetch(COMPAT_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Dashboard-Key':cleAcces},body:JSON.stringify({emailManager:em,emailCollaborateur:ec})})
+      .then(r=>r.json())
+      .then(data=>{
+        btn.disabled=false; btn.textContent='Analyser le binôme';
+        if(data&&data.ok) afficherCompatibilite(data);
+        else zone.innerHTML=`<div class="compat-msg compat-err">${esc(data&&data.error?data.error:'Analyse impossible.')}</div>`;
+      })
+      .catch(()=>{ btn.disabled=false; btn.textContent='Analyser le binôme'; zone.innerHTML='<div class="compat-msg compat-err">Connexion impossible. Réessayez.</div>'; });
+  }
+
+  function couleurScore(s){ if(s>=80)return '#3Fae6e'; if(s>=65)return '#5474F5'; if(s>=50)return '#F9A876'; return '#F98272'; }
+  function libScore(s){ if(s>=80)return 'Très fluide'; if(s>=65)return 'Fluide'; if(s>=50)return 'À ajuster'; return 'Demande attention'; }
+
+  function afficherCompatibilite(data, zoneId){
+    var zone=document.getElementById(zoneId||'compat-zone'); if(!zone)return;
+    derniereCompat = data;
+    var sc=data.scores||{}; var a=data.analyse||{};
+    var g=sc.global; var dims=sc.dimensions||{};
+    var li=function(arr){ return Array.isArray(arr)?arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join(''):''; };
+    var barres=Object.keys(dims).map(function(k){
+      var dd=dims[k]; var c=couleurScore(dd.score);
+      return '<div class="compat-dim"><div class="compat-dim-top"><span>'+esc(dd.label)+'</span><span class="compat-dim-val" style="color:'+c+'">'+dd.score+'</span></div><div class="compat-dim-track"><div class="compat-dim-fill" style="width:'+dd.score+'%;background:'+c+'"></div></div></div>';
+    }).join('');
+    var gc=couleurScore(g);
+    var h='<div class="compat-result">';
+    h+='<div class="compat-entete"><div class="compat-duo"><b>'+esc(data.manager.nom)+'</b> <span class="compat-role">manager · '+esc(data.manager.archetype)+'</span> <span class="compat-amp">avec</span> <b>'+esc(data.collaborateur.nom)+'</b> <span class="compat-role">'+esc(data.collaborateur.archetype)+'</span></div></div>';
+    h+='<div class="compat-rh-bloc"><div class="compat-rh-badge">Réservé à votre vue RH</div>';
+    h+='<div class="compat-global"><div class="compat-global-num" style="color:'+gc+'">'+(g!=null?g:'—')+'<span>/100</span></div><div class="compat-global-lab">Compatibilité globale<br><b style="color:'+gc+'">'+(g!=null?libScore(g):'')+'</b></div></div>';
+    h+='<div class="compat-dims">'+barres+'</div>';
+    if(Array.isArray(a.signaux_rh) && a.signaux_rh.length){
+      h+='<div class="compat-signaux"><div class="compat-signaux-tit">Signaux RH à surveiller</div><ul>'+li(a.signaux_rh)+'</ul></div>';
+    }
+    h+='</div>';
+    if(a.synthese){
+      h+='<div class="compat-partage"><div class="compat-partage-badge">À partager aux deux personnes</div>';
+      h+='<p class="compat-synthese">'+esc(a.synthese)+'</p>';
+      if(Array.isArray(a.points_fluides)) h+='<div class="compat-sec compat-fluide"><h5>Ce qui fonctionne naturellement</h5><ul>'+li(a.points_fluides)+'</ul></div>';
+      if(Array.isArray(a.points_attention)) h+='<div class="compat-sec compat-attn"><h5>Points à anticiper ensemble</h5><ul>'+li(a.points_attention)+'</ul></div>';
+      if(Array.isArray(a.conseils_manager)) h+='<div class="compat-sec"><h5>Conseils au manager</h5><ul>'+li(a.conseils_manager)+'</ul></div>';
+      if(Array.isArray(a.conseils_collaborateur)) h+='<div class="compat-sec"><h5>Conseils au collaborateur</h5><ul>'+li(a.conseils_collaborateur)+'</ul></div>';
+      if(a.cle_de_voute) h+='<div class="compat-cle">'+esc(a.cle_de_voute)+'</div>';
+      h+='</div>';
+    } else {
+      h+='<div class="compat-msg">Les scores sont calculés. L\'analyse qualitative n\'a pas pu être générée, réessayez.</div>';
+    }
+    h+='<div class="compat-actions">'+
+      '<button class="exp-btn exp-vert" onclick="exporterCompat(\'partage\')">PDF à partager (sans les scores)</button>'+
+      '<button class="exp-btn" onclick="exporterCompat(\'complet\')">PDF complet (usage RH)</button>'+
+      '</div>';
+    h+='</div>';
+    zone.innerHTML=h;
+  }
+
+  function genererGrille(){
+    var r = derniereAnalyseEq && derniereAnalyseEq.recrutement; var zone=document.getElementById('grille-zone'); var btn=document.getElementById('btn-grille');
+    if(!r || !zone) return;
+    if(btn){ btn.disabled=true; btn.textContent='Génération en cours…'; }
+    zone.innerHTML='<div class="compat-msg">Construction de la grille d\'entretien…</div>';
+    fetch(GRILLE_URL,{method:'POST',headers:{'Content-Type':'application/json','X-Dashboard-Key':cleAcces},body:JSON.stringify({fiche:r})})
+      .then(function(rep){return rep.json();})
+      .then(function(data){
+        if(btn){ btn.disabled=false; btn.textContent='Régénérer la grille'; }
+        if(data&&data.ok&&data.grille){ derniereGrille=data.grille; afficherGrille(data.grille); }
+        else zone.innerHTML='<div class="compat-msg compat-err">'+esc(data&&data.error?data.error:'Génération impossible, réessayez.')+'</div>';
+      })
+      .catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Générer la grille d\'entretien'; } zone.innerHTML='<div class="compat-msg compat-err">Connexion impossible. Réessayez.</div>'; });
+  }
+
+  function afficherGrille(g){
+    var zone=document.getElementById('grille-zone'); if(!zone)return;
+    var li=function(arr){ return Array.isArray(arr)?arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join(''):''; };
+    var h='<div class="grille-result">';
+    h+='<div class="grille-tit">Grille d\'entretien structurée</div>';
+    if(g.intro) h+='<p class="grille-intro">'+esc(g.intro)+'</p>';
+    (g.criteres||[]).forEach(function(c,i){
+      h+='<div class="grille-crit"><div class="grille-crit-tit">'+(i+1)+'. '+esc(c.critere||'')+'</div>';
+      if(Array.isArray(c.questions)) h+='<div class="grille-lab">Questions à poser</div><ul>'+li(c.questions)+'</ul>';
+      if(Array.isArray(c.signaux_positifs)) h+='<div class="grille-lab grille-pos">Signaux positifs</div><ul class="grille-ul-pos">'+li(c.signaux_positifs)+'</ul>';
+      if(Array.isArray(c.signaux_alerte)) h+='<div class="grille-lab grille-neg">Signaux d\'alerte</div><ul class="grille-ul-neg">'+li(c.signaux_alerte)+'</ul>';
+      h+='</div>';
+    });
+    var ms=g.mise_en_situation;
+    if(ms){ h+='<div class="grille-crit"><div class="grille-crit-tit">Mise en situation</div><p>'+esc(ms.consigne||'')+'</p>'; if(Array.isArray(ms.attendus)) h+='<div class="grille-lab">À observer</div><ul>'+li(ms.attendus)+'</ul>'; h+='</div>'; }
+    if(g.question_integration) h+='<div class="grille-crit"><div class="grille-crit-tit">Question d\'intégration</div><p>'+esc(g.question_integration)+'</p></div>';
+    if(g.conseil_notation) h+='<div class="grille-note">'+esc(g.conseil_notation)+'</div>';
+    h+='<div class="compat-actions"><button class="exp-btn" onclick="exporterAnalyseEq()">Exporter analyse et grille en PDF</button></div>';
+    h+='</div>';
+    zone.innerHTML=h;
+  }
+
   function afficherAnalyse(a, cache){
     const zone=document.getElementById('analyse-zone'); if(!zone)return;
+    derniereAnalyseEq = a; derniereGrille = null;
     const sw=a.swot||{};
     const li=arr=>Array.isArray(arr)?arr.map(x=>`<li>${esc(x)}</li>`).join(''):'';
     const plan=Array.isArray(a.plan_action)?a.plan_action.map(p=>`<div class="plan-item"><div class="plan-titre">${esc(p.titre||'')}</div><p class="plan-desc">${esc(p.desc||'')}</p></div>`).join(''):'';
     const focus=Array.isArray(a.focus_individuel)?a.focus_individuel.map(f=>`<div class="focus-item"><div class="focus-nom">${esc(f.nom||'')}</div><p class="focus-conseil">${esc(f.conseil||'')}</p></div>`).join(''):'';
     zone.innerHTML=`
       <div class="analyse-result">
-        <div class="analyse-badge">Analyse stratégique${cache?' · enregistrée':' · nouvelle'}</div>
+        <div class="analyse-head-row"><div class="analyse-badge">Analyse stratégique${cache?' · enregistrée':' · nouvelle'}</div><button class="exp-btn exp-mini" onclick="exporterAnalyseEq()">Exporter en PDF</button></div>
+        <div class="cadrage-note cadrage-bloc">Cet éclairage nourrit la réflexion et le dialogue. La décision finale reste humaine.</div>
         ${a.synthese?`<p class="analyse-synthese">${esc(a.synthese)}</p>`:''}
         <div class="swot-grid">
           <div class="swot-card swot-f"><div class="swot-card-title">Forces</div><ul>${li(sw.forces)}</ul></div>
@@ -1682,6 +2306,37 @@ function axesFormation(membres, famillesStats){
         ${Array.isArray(a.risques_rh)?`<div class="analyse-sec"><h4>Points d'attention RH</h4><ul class="liste-rh">${li(a.risques_rh)}</ul></div>`:''}
         ${plan?`<div class="analyse-sec"><h4>Plan d'action de pilotage</h4><div class="plan-grid">${plan}</div></div>`:''}
         ${focus?`<div class="analyse-sec"><h4>Focus individuel</h4><div class="focus-grid">${focus}</div></div>`:''}
+        ${blocRecrutement(a.recrutement)}
+      </div>`;
+  }
+
+  // Bloc recrutement : diagnostic honnête + fiche de poste actionnable.
+  function blocRecrutement(r){
+    if(!r || typeof r!=='object') return '';
+    const fp = r.fiche_poste || {};
+    const li = arr => Array.isArray(arr)?arr.map(x=>`<li>${esc(x)}</li>`).join(''):'';
+    const ficheHtml = (fp.intitule || fp.pourquoi) ? `
+      <div class="reco-fiche">
+        ${fp.intitule?`<div class="reco-fiche-titre">${esc(fp.intitule)}</div>`:''}
+        ${fp.pourquoi?`<p class="reco-fiche-pourquoi">${esc(fp.pourquoi)}</p>`:''}
+        ${(fp.profil_archetype||fp.profil_pilotage)?`<div class="reco-deux-niveaux">
+          ${fp.profil_archetype?`<div class="reco-niv"><span class="reco-niv-lab">Côté archétype</span><span class="reco-niv-val">${esc(fp.profil_archetype)}</span></div>`:''}
+          ${fp.profil_pilotage?`<div class="reco-niv"><span class="reco-niv-lab">Côté pilotage</span><span class="reco-niv-val">${esc(fp.profil_pilotage)}</span></div>`:''}
+        </div>`:''}
+        ${Array.isArray(fp.traits_recherches)?`<div class="reco-fiche-bloc"><span class="reco-fiche-lab">Ce qu'il faut rechercher</span><ul>${li(fp.traits_recherches)}</ul></div>`:''}
+        ${Array.isArray(fp.signaux_entretien)?`<div class="reco-fiche-bloc"><span class="reco-fiche-lab">À observer en entretien</span><ul>${li(fp.signaux_entretien)}</ul></div>`:''}
+        ${fp.vigilance?`<div class="reco-fiche-vig"><span class="reco-fiche-lab">Point de vigilance à l'intégration</span><p>${esc(fp.vigilance)}</p></div>`:''}
+      </div>` : '';
+    const secondaireHtml = r.besoin_secondaire ? `<div class="reco-secondaire"><span class="reco-fiche-lab">Second besoin, moins prioritaire</span><p>${esc(r.besoin_secondaire)}</p></div>` : '';
+    const boutonGrille = (fp.intitule || r.profil_cible) ? `<div class="grille-cta"><button class="exp-btn" id="btn-grille" onclick="genererGrille()">Générer la grille d'entretien</button><span class="grille-cta-txt">Questions comportementales, signaux à observer, mise en situation et notation : le prolongement direct de cette fiche.</span></div><div id="grille-zone"></div>` : '';
+    return `
+      <div class="analyse-sec reco-recrut">
+        <h4>Recrutement : quel profil compléterait l'équipe</h4>
+        ${r.diagnostic?`<p class="reco-diag">${esc(r.diagnostic)}</p>`:''}
+        ${r.profil_cible?`<div class="reco-cible"><span class="reco-cible-lab">Profil à viser</span> ${esc(r.profil_cible)}</div>`:''}
+        ${ficheHtml}
+        ${secondaireHtml}
+        ${boutonGrille}
       </div>`;
   }
 </script>
