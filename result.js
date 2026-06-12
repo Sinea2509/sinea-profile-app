@@ -100,6 +100,7 @@ const Result = (() => {
         </div>
         ${lignes}
         <div class="na-cout">Coût d'adaptation global : <strong>${coutTxt}</strong></div>
+        ${pepite(FAITS_COUT[na.cout] || FAITS_COUT['modéré'], 'pepite-energie')}
       </div>`;
   }
 
@@ -256,21 +257,17 @@ const Result = (() => {
     const dom = res.dominante;
     const sec = (res.secondaires && res.secondaires[0]) ? res.secondaires[0] : null;
     const rd = rarete(dom.nom);
-    if (!sec || !rd.pct) return rd; // repli sur le dominant seul
+    const surNDom = (rd && rd.pct) ? Math.max(2, Math.round(100 / rd.pct)) : null;
+    if (!sec || !rd.pct) return Object.assign({}, rd, surNDom ? { surN: surNDom, affichage: '1 sur ' + surNDom.toLocaleString('fr-FR') } : {});
     const rs = rarete(sec.nom);
-    if (!rs.pct) return rd;
+    if (!rs.pct) return Object.assign({}, rd, surNDom ? { surN: surNDom, affichage: '1 sur ' + surNDom.toLocaleString('fr-FR') } : {});
     // probabilité d'avoir cette paire (en %) : produit des deux proportions
     let pctCombi = (rd.pct * rs.pct) / 100;
-    // formater : si très petit, exprimer en "1 personne sur N"
-    let affichage, niveau;
-    if (pctCombi >= 0.1) {
-      affichage = pctCombi.toFixed(1) + '%';
-    } else {
-      const surN = Math.round(100 / pctCombi);
-      affichage = '1 sur ' + surN.toLocaleString('fr-FR');
-    }
-    niveau = 'combinaison';
-    return { pct: null, affichage, niveau, combi: true };
+    if (pctCombi <= 0) pctCombi = 0.01;
+    // toujours exprimé en "1 sur N" : plus parlant qu'un pourcentage
+    const surN = Math.max(2, Math.round(100 / pctCombi));
+    const affichage = '1 sur ' + surN.toLocaleString('fr-FR');
+    return { pct: null, affichage, surN, niveau: 'combinaison', combi: true };
   }
   function verbe(nom){ const l=Object.values(SINEA_DATA.personnages||{}); const p=l.find(x=>x.nom===nom); return p?(p.verbe_signature||p.role||p.axe||''):''; }
   function initiale(nom){ return nom.replace(/^(La |Le |L')/,'').charAt(0); }
@@ -305,6 +302,43 @@ const Result = (() => {
     styles.forEach((st,i)=>{ const lr=R+24,x=cx+Math.cos(ang(i))*lr,y=cy+Math.sin(ang(i))*lr; const a=Math.abs(Math.cos(ang(i)))<0.3?'middle':(Math.cos(ang(i))>0?'start':'end'); p+=`<text x="${x}" y="${y+4}" text-anchor="${a}" font-size="11" font-weight="600" font-family="Manrope" fill="#747474">${STYLE_LABELS[st]||st}</text>`; });
     return `<svg viewBox="-20 0 320 260" width="100%" style="max-width:340px">${p}</svg>`;
   }
+
+  // Petite pépite décalée : un fait surprenant et vrai, glissé pour faire sourire et apprendre.
+  function pepite(texte, id){
+    if (!texte) return '';
+    return `<div class="r-pepite"${id ? ` id="${id}"` : ''}><span class="r-pepite-ico">✦</span><span class="r-pepite-txt">${texte}</span></div>`;
+  }
+  // Faits liés à la dimension Big Five la plus marquante du profil (pôle haut ou bas).
+  const FAITS_BIGFIVE = {
+    E: { high: "Le saviez-vous ? Parler en public arrive en tête des peurs humaines, devant la mort elle-même. Les profils expansifs comme vous font figure d'exception.",
+         low:  "Le saviez-vous ? Le cerveau d'un introverti montre une activité plus intense face à la nouveauté. Votre quête de calme a une vraie base biologique." },
+    A: { high: "Le saviez-vous ? Bâiller est contagieux surtout chez les personnes très empathiques. Votre attention aux autres se lit jusque dans ces petits réflexes.",
+         low:  "Le saviez-vous ? Les personnes les plus directes négocient en moyenne de meilleurs salaires. Votre franc-parler est un atout mesurable." },
+    C: { high: "Le saviez-vous ? Une étude célèbre montre que les enfants capables d'attendre une guimauve réussissaient mieux plus tard. Votre discipline est de cette trempe.",
+         low:  "Le saviez-vous ? Beaucoup de grandes inventions sont nées d'un esprit qui suit ses impulsions. Votre spontanéité est un terrain fertile." },
+    N: { high: "Le saviez-vous ? Garder son calme sous stress fait baisser le rythme cardiaque de l'entourage. Votre sang-froid agit littéralement sur les autres.",
+         low:  "Le saviez-vous ? Une forte sensibilité émotionnelle va de pair avec une mémoire plus vive des détails. Votre radar intérieur est un don, pas un défaut." },
+    O: { high: "Le saviez-vous ? Les cerveaux très ouverts à la nouveauté établissent davantage de connexions inattendues entre les idées. La vôtre carbure à ça.",
+         low:  "Le saviez-vous ? S'appuyer sur l'éprouvé est la stratégie qui fait gagner le plus souvent au poker. Votre pragmatisme a ses lettres de noblesse." },
+  };
+  // Choisit le trait le plus extrême (le plus loin du centre 50) et renvoie le fait adapté.
+  function faitBigFive(bf){
+    let best = null, ecartMax = -1;
+    ['E','A','C','N','O'].forEach(d => {
+      const val = d === 'N' ? 100 - bf[d] : bf[d];
+      const ecart = Math.abs(val - 50);
+      if (ecart > ecartMax) { ecartMax = ecart; best = { d, val }; }
+    });
+    if (!best || ecartMax < 12) return ''; // profil trop central : pas de pépite forcée
+    const f = FAITS_BIGFIVE[best.d];
+    return best.val >= 50 ? f.high : f.low;
+  }
+  // Fait lié au coût d'adaptation (écart entre naturel et comportement au travail).
+  const FAITS_COUT = {
+    'faible': "Le saviez-vous ? Travailler proche de sa vraie nature réduit la fatigue mentale de fin de journée. Votre énergie vous remercie.",
+    'modéré': "Le saviez-vous ? Le cerveau dépense de l'énergie réelle à jouer un rôle, comme un muscle qui force. Votre équilibre reste tout à fait tenable.",
+    'élevé':  "Le saviez-vous ? Les acteurs de théâtre récupèrent après une représentation comme après un effort physique. Jouer un rôle au travail coûte vraiment de l'énergie.",
+  };
 
   function spectres(bf){
     // qualificatif selon la position sur l'axe
@@ -512,7 +546,7 @@ const Result = (() => {
         <div class="r-section-tag">Vos forces secondaires</div>
         <div class="r-secs-grid">${secHtml}</div>
         <div class="r-section-tag">Votre tempérament</div>
-        <div class="r-card"><div class="r-temperament"><div class="r-radar">${radarSvg(res.radarFamilles,color)}</div><div class="r-spectres">${spectres(res.scoresBigFive)}</div></div></div>
+        <div class="r-card"><div class="r-temperament"><div class="r-radar">${radarSvg(res.radarFamilles,color)}</div><div class="r-spectres">${spectres(res.scoresBigFive)}</div></div>${pepite(faitBigFive(res.scoresBigFive), 'pepite-trait')}</div>
         <div class="r-ia" id="ia-bigfive"><div class="r-ia-tag">Ce que révèle le croisement de vos dimensions</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre naturel et votre adaptation au travail</div>
         <p class="r-hint">L'écart entre qui vous êtes spontanément et comment vous agissez au travail révèle où vous fournissez un effort.</p>
@@ -593,7 +627,7 @@ const Result = (() => {
         <div class="r-section-tag">Vos pistes d'action</div>
         <div class="r-ia" id="ia-actions"><div class="r-ia-tag">L'IA propose, vous choisissez</div><p class="r-hint" style="margin-top:0">Sélectionnez les habitudes à développer.</p><div class="r-ia-loading"><span class="mini-spin"></span>Génération...</div></div>
         <div class="r-section-tag">Votre signature</div>
-        <div class="r-rare"><div class="r-rare-num">${rar.affichage || (rar.pct?rar.pct+'%':'')}</div><div class="r-rare-txt">${phraseSignature(res, rar)}</div></div>
+        <div class="r-rare"><div class="r-rare-num">${rar.affichage || (rar.pct?rar.pct+'%':'')}</div><div class="r-rare-txt" id="pepite-rarete">${phraseSignature(res, rar)}</div></div>
       </div>
 
       ${speBlocHtml}
@@ -620,9 +654,9 @@ const Result = (() => {
 
       <div class="r-chat-bloc" id="chat-bloc">
         <div class="r-me-head">
-          <div class="r-me-kicker">Hors norme</div>
-          <h2 class="r-me-title">Échangez avec votre profil</h2>
-          <p class="r-me-sub">Posez vos questions, votre archétype vous répond.</p>
+          <div class="r-me-kicker">Vos 3 questions</div>
+          <h2 class="r-me-title">Vos questions à votre coach</h2>
+          <p class="r-me-sub">Votre coach Sinéa a lu votre portrait. Posez-lui jusqu'à trois questions pour aller plus loin. <span class="r-chat-compteur" id="chat-compteur"></span></p>
         </div>
         <div class="r-chat-window" id="chat-window">
           <div class="r-chat-suggestions" id="chat-suggestions"></div>
@@ -649,6 +683,9 @@ const Result = (() => {
       </div>
     `;
     document.getElementById('r-body').innerHTML=html;
+
+    // ---- Animation d'accueil : le coach se présente et annonce les 3 questions ----
+    jouerIntroCoach(dom);
 
     // Câbler la carte partageable (aperçu + bouton de téléchargement)
     const carteSlug = img(dom.nom).replace('.webp', '');
@@ -706,25 +743,47 @@ const Result = (() => {
       hero.appendChild(b);
     }
   }
+  // Détection mobile : iOS/Android ignorent l'attribut download sur un blob.
+  // Sur mobile on ouvre le PDF dans un onglet (lecture + partage/enregistrement natif),
+  // sur desktop on déclenche un vrai téléchargement.
+  function estMobile(){
+    return /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent || '') ||
+           (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || ''));
+  }
+  function remettreFichier(blob, nomFichier, fenetrePreouverte){
+    const url = URL.createObjectURL(blob);
+    if (estMobile()){
+      // une fenêtre pré-ouverte au clic évite le blocage de pop-up ; sinon on tente l'ouverture
+      if (fenetrePreouverte && !fenetrePreouverte.closed){ fenetrePreouverte.location = url; }
+      else { const w = window.open(url, '_blank'); if (!w) location.href = url; }
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+      return true; // ouvert en onglet
+    }
+    const a = document.createElement('a');
+    a.href = url; a.download = nomFichier;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    return false; // téléchargé
+  }
+
   async function telechargerPortrait(btnId){
     const btn = document.getElementById(btnId || 'portrait-pdf-btn');
     const token = lireToken();
     if ((!token && !emailCourant) || !btn) return;
     const texte = btn.textContent;
+    // pré-ouvrir l'onglet AU CLIC sur mobile (un open() après await serait bloqué)
+    const preFenetre = estMobile() ? window.open('', '_blank') : null;
     btn.textContent = 'Génération de votre portrait…';
     btn.disabled = true;
     try {
       const rep = await fetch(PDF_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(token ? { token } : { email: emailCourant }) });
       if (!rep.ok) throw new Error('génération indisponible');
       const blob = await rep.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'Portrait_Sinea.pdf';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url), 4000);
-      btn.textContent = 'Portrait téléchargé ✓';
+      const ouvert = remettreFichier(blob, 'Portrait_Sinea.pdf', preFenetre);
+      btn.textContent = ouvert ? 'Portrait ouvert ✓' : 'Portrait téléchargé ✓';
       setTimeout(()=>{ btn.textContent = texte; btn.disabled = false; }, 3500);
     } catch(e){
+      if (preFenetre && !preFenetre.closed) preFenetre.close();
       btn.textContent = 'Réessayer le téléchargement';
       btn.disabled = false;
     }
@@ -756,6 +815,55 @@ const Result = (() => {
     return liste.length > 1 ? liste.slice(0, 4) : QUESTIONS_SUGGEREES;
   }
 
+  // L'intro ne se joue qu'une fois par session de lecture (pas à chaque reprise).
+  let introDejaJouee = false;
+  function jouerIntroCoach(dom){
+    if (introDejaJouee) return;
+    introDejaJouee = true;
+    const prenom = (window.App && App.getPrenom) ? App.getPrenom() : '';
+    // si l'utilisateur a déjà épuisé ses questions (reprise tardive), on n'impose pas l'intro longue
+    const ov = document.createElement('div');
+    ov.className = 'coach-intro';
+    ov.innerHTML = `
+      <div class="coach-intro-card">
+        <div class="coach-intro-orb"><span class="coach-intro-orb-core"></span></div>
+        <div class="coach-intro-step" data-step="1">
+          <p class="coach-intro-hi">Bonjour${prenom ? ' ' + prenom : ''}.</p>
+          <p class="coach-intro-line">Je suis votre coach Sinéa.</p>
+        </div>
+        <div class="coach-intro-step" data-step="2">
+          <p class="coach-intro-line">Voici votre portrait, fondé sur vos réponses.<br>Prenez le temps de le lire attentivement.</p>
+        </div>
+        <div class="coach-intro-step" data-step="3">
+          <p class="coach-intro-line"><strong>Et comme un génie sorti de sa lampe</strong>, je réalise ensuite vos <strong>trois questions</strong>.</p>
+          <p class="coach-intro-hint">Trois, pas une de plus. Choisissez-les bien.</p>
+          <button class="coach-intro-go" id="coach-intro-go">Découvrir mon portrait</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('on'));
+
+    const steps = ov.querySelectorAll('.coach-intro-step');
+    let i = 0;
+    const montrer = (n) => steps.forEach((s, k) => s.classList.toggle('show', k === n));
+    montrer(0);
+    const t1 = setTimeout(() => montrer(1), 2300);
+    const t2 = setTimeout(() => montrer(2), 4800);
+    const fermer = () => {
+      clearTimeout(t1); clearTimeout(t2);
+      ov.classList.remove('on');
+      setTimeout(() => ov.remove(), 500);
+    };
+    // bouton de fin (apparaît à l'étape 3) + clic n'importe où après la dernière étape
+    ov.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'coach-intro-go') { fermer(); return; }
+      // si on est déjà à la dernière étape, un clic ferme aussi
+      if (steps[2] && steps[2].classList.contains('show')) fermer();
+    });
+    // sécurité : fermeture auto si la personne ne fait rien
+    setTimeout(() => { if (document.body.contains(ov)) fermer(); }, 14000);
+  }
+
   function initChat(dom, res) {
     chatHistorique = [];
     const win = document.getElementById('chat-window');
@@ -767,7 +875,8 @@ const Result = (() => {
     // message d'accueil
     win.querySelectorAll('.r-chat-msg').forEach(e => e.remove());
     const prenomChat = (window.App && App.getPrenom) ? App.getPrenom() : '';
-    ajouterMessageChat('assistant', `Bonjour${prenomChat ? ' ' + prenomChat : ''}, je suis votre coach Sinéa. J'ai votre profil ${dom.nom} sous les yeux : posez-moi vos questions sur votre fonctionnement, vos forces, vos relations.`);
+    ajouterMessageChat('assistant', `Bonjour${prenomChat ? ' ' + prenomChat : ''}, je suis votre coach Sinéa. J'ai lu votre portrait ${dom.nom} en entier. Posez-moi jusqu'à trois questions pour creuser ce qui vous intrigue.`);
+    majCompteurChat(3);
 
     // suggestions cliquables
     if (sugg) {
@@ -792,6 +901,23 @@ const Result = (() => {
     return div;
   }
 
+  // Met à jour l'affichage "il vous reste N question(s)".
+  function majCompteurChat(restant){
+    const el = document.getElementById('chat-compteur');
+    if (!el) return;
+    if (restant > 0) el.textContent = `Il vous reste ${restant} question${restant > 1 ? 's' : ''}.`;
+    else el.textContent = 'Vous avez utilisé vos trois questions.';
+  }
+  // Désactive la saisie quand les 3 questions sont consommées.
+  function verrouillerChat(){
+    const input = document.getElementById('chat-input');
+    const send = document.getElementById('chat-send');
+    const sugg = document.getElementById('chat-suggestions');
+    if (input) { input.disabled = true; input.placeholder = 'Vos trois questions ont été posées'; }
+    if (send) send.disabled = true;
+    if (sugg) sugg.style.display = 'none';
+  }
+
   function envoyerMessageChat(dom, res) {
     const input = document.getElementById('chat-input');
     const sugg = document.getElementById('chat-suggestions');
@@ -814,14 +940,24 @@ const Result = (() => {
         archetype: dom.nom, famille: dom.famille, bigFive: res.scoresBigFive,
         contextuel: res.contextuel || {}, contextuelPlus: res.contextuelPlus || {},
         question, historique: chatHistorique,
+        email: emailCourant || undefined, token: lireToken() || undefined,
       }),
     })
       .then(r => r.json())
       .then(data => {
         if (loader) loader.remove();
-        if (data && data.ok && data.reponse) {
+        if (data && data.limite) {
+          // quota de 3 questions atteint
+          ajouterMessageChat('assistant', data.message || "Vous avez utilisé vos trois questions.");
+          majCompteurChat(0);
+          verrouillerChat();
+        } else if (data && data.ok && data.reponse) {
           ajouterMessageChat('assistant', data.reponse);
           chatHistorique.push({ role: 'assistant', content: data.reponse });
+          if (typeof data.restant === 'number') {
+            majCompteurChat(data.restant);
+            if (data.restant <= 0) verrouillerChat();
+          }
         } else {
           ajouterMessageChat('assistant', "Je ne peux pas répondre pour le moment. Réessayez dans un instant.");
         }
@@ -884,14 +1020,59 @@ const Result = (() => {
   function toggleAction(i){ const el=document.getElementById('act-'+i); el.classList.toggle('sel'); if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i); sauvegarderInteractions(); }
   function niveauTxt(niv){ return {'répandu':'Vous avez un profil répandu','courant':'Vous avez un profil courant','peu commun':'Vous avez un profil peu commun','rare':'Vous avez un profil rare'}[niv]||'Votre profil est unique'; }
 
-  // Phrase signature marquante (ton "à la Alan" : direct, valorisant, mémorable)
+  // Comparaisons amusantes calibrées sur la rareté (1 sur N).
+  // Chaque palier propose plusieurs images : on en choisit une de façon stable
+  // (déterministe selon le profil, pour ne pas changer à chaque rafraîchissement).
+  const STATS_RARETE = [
+    { max: 20, images: [
+      "Le saviez-vous ? Environ 1 personne sur 10 est gauchère (source : Statista). Votre profil joue dans le même ordre de rareté.",
+      "Pour situer : à peu près 1 personne sur 25 a les yeux bleus hors d'Europe. Une singularité du même genre que la vôtre.",
+      "Repère chiffré : près d'1 personne sur 13 est daltonienne chez les hommes. Votre profil est une exception comparable." ] },
+    { max: 80, images: [
+      "Le saviez-vous ? Seulement 1 personne sur 50 a les yeux verts, la couleur la plus rare au monde (source : Wikipédia). Votre profil tutoie cette rareté.",
+      "Pour situer : environ 1 personne sur 100 a les yeux gris. Vous êtes dans cette catégorie des profils peu communs.",
+      "Repère chiffré : à peu près 1 chat domestique sur 3 000 est roux et femelle. La nature aime ces exceptions, vous en êtes une." ] },
+    { max: 300, images: [
+      "Le saviez-vous ? La rousseur naturelle concerne 1 personne sur 50 à sur 100 dans le monde. Votre profil est encore un cran au-dessus.",
+      "Pour situer : être ambidextre vrai concerne environ 1 personne sur 100. Votre rareté dépasse même la sienne.",
+      "Repère chiffré : naître avec une fossette au menton touche moins d'1 personne sur 5, mais votre combinaison est bien plus rare encore." ] },
+    { max: 2000, images: [
+      "Le saviez-vous ? Naître un 29 février arrive 1 fois sur 1 461 (probabilité mathématique). Votre profil est à peu près aussi inattendu.",
+      "Pour situer : l'hétérochromie, ces yeux de deux couleurs, concerne moins d'1 personne sur 1 000. Vous partagez ce niveau de singularité.",
+      "Repère chiffré : un trèfle à quatre feuilles, c'est 1 sur 5 000 (étude Share the Luck, 5,7 millions de trèfles analysés). Vous en approchez la rareté." ] },
+    { max: Infinity, images: [
+      "Le saviez-vous ? Un trèfle à quatre feuilles, c'est déjà 1 sur 5 000 (étude Share the Luck). Votre profil va encore au-delà.",
+      "Pour situer : réussir un trou en un au golf, c'est environ 1 sur 12 500 pour un amateur (source : National Hole-in-One Registry). Votre rareté dépasse ce coup de maître.",
+      "Repère chiffré : pêcher un homard bleu, c'est environ 1 sur 2 millions (estimation des biologistes marins). Une vraie pièce de collection, comme vous." ] },
+  ];
+  function statRarete(surN, graine){
+    const palier = STATS_RARETE.find(p => surN <= p.max) || STATS_RARETE[STATS_RARETE.length - 1];
+    const i = Math.abs(graine) % palier.images.length;
+    return palier.images[i];
+  }
+  // graine stable : longueur cumulée des noms (ne bouge pas d'un chargement à l'autre)
+  function graineProfil(res){
+    const a = (res.dominante && res.dominante.nom) || '';
+    const b = (res.secondaires && res.secondaires[0] && res.secondaires[0].nom) || '';
+    let g = 0; for (const c of (a + b)) g += c.charCodeAt(0); return g;
+  }
+
+  // Phrase signature : la rareté en "1 sur N" + une stat amusante qui change selon le palier
   function phraseSignature(res, rar){
     const dom = res.dominante;
     const sec = (res.secondaires && res.secondaires[0]) ? res.secondaires[0] : null;
-    if (sec && rar && rar.combi) {
-      return `Vous combinez ${dom.nom} et ${sec.nom}. Cette alliance de forces est la vôtre, et elle ne ressemble à aucune autre.`;
+    if (rar && rar.surN) {
+      const stat = statRarete(rar.surN, graineProfil(res));
+      const qui = (sec && rar.combi)
+        ? `Votre duo ${dom.nom} et ${sec.nom}`
+        : `Votre profil ${dom.nom}`;
+      return `${qui} se rencontre chez environ 1 personne sur ${rar.surN.toLocaleString('fr-FR')}. ${stat}`;
     }
-    return `Vous êtes ${dom.nom}. Cette signature est la vôtre, et elle ne ressemble à aucune autre.`;
+    // repli si la rareté n'est pas calculable
+    if (sec && rar && rar.combi) {
+      return `Votre duo ${dom.nom} et ${sec.nom} dessine une signature peu commune.`;
+    }
+    return `Votre profil ${dom.nom} dessine une signature peu commune.`;
   }
 
   // Backend IA (Vercel) : génère toutes les sections du portrait en parallèle.
@@ -1444,6 +1625,20 @@ const Result = (() => {
         } else {
           dynEl.innerHTML = `<div class="r-card"><p>Vos trois forces s'équilibrent et se renforcent mutuellement.</p></div>`;
         }
+      }
+
+      // Pépites générées par IA (faits vérifiables, calés sur le profil) : remplacent le fallback
+      if (c.pepites && typeof c.pepites === 'object') {
+        const majPepite = (id, txt) => {
+          if (!txt) return;
+          const el = document.getElementById(id);
+          if (!el) return;
+          const cible = el.querySelector('.r-pepite-txt') || el;
+          cible.textContent = txt;
+        };
+        majPepite('pepite-rarete', c.pepites.rarete);
+        majPepite('pepite-trait', c.pepites.trait);
+        majPepite('pepite-energie', c.pepites.energie);
       }
 
       // Dimensions profondes (socle)

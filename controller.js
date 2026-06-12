@@ -530,14 +530,23 @@ const App = (() => {
     const btn = document.getElementById('espace-pdf-btn');
     if (!identite.email || !btn) return;
     const texte = btn.textContent;
+    const estMob0 = /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || ''));
+    const preFenetre = estMob0 ? window.open('', '_blank') : null;
     btn.textContent = 'Génération de votre portrait…'; btn.disabled = true;
     try {
       const rep = await fetch(PDF_PORTRAIT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: identite.email }) });
       if (!rep.ok) throw new Error('indisponible');
       const blob = await rep.blob();
+      const estMob = /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || ''));
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'Portrait_Sinea.pdf';
-      document.body.appendChild(a); a.click(); a.remove();
+      if (estMob) {
+        if (preFenetre && !preFenetre.closed) { preFenetre.location = url; } else { const w = window.open(url, '_blank'); if (!w) location.href = url; }
+        setTimeout(()=>URL.revokeObjectURL(url), 60000);
+      } else {
+        const a = document.createElement('a'); a.href = url; a.download = 'Portrait_Sinea.pdf';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      }
       setTimeout(() => URL.revokeObjectURL(url), 4000);
       btn.textContent = 'Portrait téléchargé ✓';
       setTimeout(() => { btn.textContent = texte; btn.disabled = false; }, 3500);
