@@ -974,6 +974,15 @@ const Result = (() => {
       }
     };
     hero.appendChild(b);
+
+    // Le génie surgit de lui-même après que le personnage a eu le temps d'être découvert.
+    // Garde-fous : pas en mode candidat, une seule fois (introDejaJouee), et jamais
+    // par-dessus le contenu si la personne a déjà commencé à descendre vers son analyse.
+    if (res.modeCampagne !== 'recrutement') {
+      setTimeout(() => {
+        if (!introDejaJouee && window.scrollY < 120) jouerIntroCoach(dom);
+      }, 2500);
+    }
   }
 
   function jouerIntroCoach(dom){
