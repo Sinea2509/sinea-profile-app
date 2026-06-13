@@ -1122,3 +1122,36 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .dimc-accord{color:#2E7D5B;background:rgba(74,222,128,0.14);}
 /* ---- fiche réflexe ---- */
 .spe-fiche-btn{display:block;margin:16px auto 0;background:var(--c-white);color:var(--c-dark);border:1.5px solid var(--c-dark);border-radius:100px;padding:12px 24px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;}
+
+/* ---- intro pédagogique naturel/travail ---- */
+.na-intro{margin-bottom:18px;}
+.na-intro p{font-size:14.5px;line-height:1.6;color:#4A4A60;margin:0 0 10px;}
+.na-intro strong{color:var(--c-dark);font-weight:700;}
+.na-cout-explik{font-size:13.5px;line-height:1.6;color:#6A6A80;margin:10px 0 0;font-style:italic;}
+/* ---- badge profil précisé ---- */
+.r-fiab-precise{display:inline-block;margin-left:8px;font-size:11px;font-weight:800;color:#3EAD8B;background:rgba(62,173,139,0.14);border-radius:99px;padding:2px 9px;vertical-align:middle;}
+/* ---- question de clarification (sur mesure, en cas de doute) ---- */
+.clarif-intro{font-size:14px;line-height:1.6;color:#4A4A60;margin-bottom:14px;}
+.clarif-go{display:block;margin-top:14px;background:var(--c-dark);color:#fff;border:none;border-radius:100px;padding:15px 28px;min-height:48px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;}
+.clarif-go:active{transform:scale(0.97);}
+.clarif-go:disabled{opacity:0.6;cursor:default;transform:none;}
+.clarif-merci{margin-top:16px;background:rgba(136,132,240,0.08);border:1px solid rgba(136,132,240,0.22);border-radius:12px;padding:14px 16px;}
+.clarif-merci-lab{display:block;font-size:11.5px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:6px;}
+.clarif-merci-txt{font-size:13.5px;line-height:1.55;font-style:italic;color:var(--c-dark);margin:0 0 10px;}
+.clarif-nuance{font-size:13.5px;line-height:1.6;color:#4A4A60;margin:0;}
+.clarif-skip-msg{margin-top:14px;font-size:13px;color:#9A96B8;font-style:italic;}
+/* ---- miroir des réponses ouvertes ---- */
+.r-miroir{background:linear-gradient(135deg, rgba(136,132,240,0.08), rgba(136,132,240,0.03));border-left:3px solid var(--c-purple);border-radius:10px;padding:14px 16px;margin:0 0 18px;}
+.r-miroir-lab{display:block;font-size:11.5px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:6px;}
+.r-miroir-txt{font-size:14px;line-height:1.55;font-style:italic;color:var(--c-dark);margin:0 0 8px;}
+.r-miroir-note{font-size:12.5px;line-height:1.5;color:#6A6A80;margin:0;}
+/* ---- clôture (rappel de l'intention) ---- */
+.r-cloture{padding:0 16px 28px;}
+.r-cloture-in{background:var(--g-halo, linear-gradient(135deg,#5E59C7,#8884F0));color:#fff;border-radius:16px;padding:22px 20px;text-align:center;}
+.r-cloture-lab{display:block;font-size:11.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;opacity:0.85;margin-bottom:8px;}
+.r-cloture-txt{font-size:15px;line-height:1.55;font-style:italic;margin:0 0 10px;}
+.r-cloture-note{font-size:13px;line-height:1.5;opacity:0.9;margin:0;}
+
+/* ---- bouton discret pour passer l'accueil ---- */
+.coach-intro-skip{display:block;margin:22px auto 0;background:transparent;border:none;color:#A9A2D6;font-family:var(--font);font-size:13px;cursor:pointer;opacity:0.75;transition:opacity 0.2s;}
+.coach-intro-skip:hover{opacity:1;text-decoration:underline;}

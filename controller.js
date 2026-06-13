@@ -1,11 +1,12 @@
 // ============================================================
-// CONTRÔLEUR D'AFFICHAGE — App v2 mobile-first premium
+// CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
 // ============================================================
 const App = (() => {
   let queue = [];          // séquence des questions
   let idx = 0;             // index courant
   let answers = {};      // réponses {id: valeur}
   let answersTime = {};  // temps de réponse {id: ms} pour le score de fiabilité
+  const openAnswers = {};  // réponses ouvertes (intention avant test + q1/q2 en restitution)
   let renderTimeStart = 0;
   function enregistrerTemps(id) {
     if (answersTime[id] !== undefined) return; // on garde le premier temps (pas les corrections)
@@ -18,20 +19,22 @@ const App = (() => {
   let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
   let magicCode = '';       // magic code de campagne saisi par la personne (pour consommer le quota à la fin)
   let nomCampagne = '';     // nom de la campagne (renvoyé par la vérification du code, écrit sur le répondant)
+  let thematiqueCampagne = ''; // cap de la formation/campagne (optionnel) : alimente la révélation et les défis
   let estAjoutModule = false; // true si ce parcours est un module ajouté sur un socle existant (ne re-consomme pas le quota)
 
   // ---- Sauvegarde de progression (localStorage + serveur Airtable) ----
   // Protège contre la perte de réponses si l'onglet se ferme pendant le test.
   const SAVE_KEY = 'sinea_profile_progress';
-  const PROGRESSION_URL = "https://sinea-profile-ia.vercel.app/api/progression";
-  const AUTH_URL = "https://sinea-profile-ia.vercel.app/api/auth";
-  const VERIFIER_CODE_URL = "https://sinea-profile-ia.vercel.app/api/verifier_code";
+  const API_BASE = "https://sinea-profile-ia.vercel.app/api";
+  const PROGRESSION_URL = API_BASE + "/progression";
+  const AUTH_URL = API_BASE + "/auth";
+  const VERIFIER_CODE_URL = API_BASE + "/verifier_code";
   let saveTimer = null;
 
   function saveProgress() {
     // 1) sauvegarde locale immédiate (secours rapide)
     try {
-      const data = { v: 1, ts: Date.now(), diagType, idx, answers, magicCode, nomCampagne, estAjoutModule, droits, modeCampagne };
+      const data = { v: 1, ts: Date.now(), diagType, idx, answers, openAnswers, magicCode, nomCampagne, estAjoutModule, droits, modeCampagne };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch (e) { /* localStorage indisponible : on continue */ }
     // 2) sauvegarde serveur (différée pour ne pas spammer : 1 appel max / 2s)
@@ -135,7 +138,7 @@ const App = (() => {
   function enregistrerResultat(result) {
     const token = readToken();
     if (!token) return; // pas de token = test libre, on n'enregistre pas
-    const ENREGISTRER_URL = "https://sinea-profile-ia.vercel.app/api/enregistrer";
+    const ENREGISTRER_URL = API_BASE + "/enregistrer";
     const profil = {
       dominante: result.dominante ? result.dominante.nom : "",
       secondaires: (result.secondaires || []).map(s => s.nom),
@@ -434,6 +437,8 @@ const App = (() => {
           nomCampagne = data.campagne || '';
           droits = data.type || 'classic';
           modeCampagne = (data.mode || '').toLowerCase();
+          thematiqueCampagne = data.thematique || '';
+          try { window.SINEA_THEME = thematiqueCampagne; } catch(e){} // expose la thématique à la séquence de révélation
           err.textContent = '';
           document.getElementById('screen-magic').classList.remove('active');
           if (data.ajout_module && data.deja_socle) {
@@ -549,7 +554,7 @@ const App = (() => {
     manager: { titre: 'Votre style de management', sub: 'Comment votre personnalité façonne votre leadership.' },
   };
 
-  const PDF_PORTRAIT_URL = "https://sinea-profile-ia.vercel.app/api/pdf_portrait";
+  const PDF_PORTRAIT_URL = API_BASE + "/pdf_portrait";
   async function telechargerPortraitEspace() {
     const btn = document.getElementById('espace-pdf-btn');
     if (!identite.email || !btn) return;
@@ -985,10 +990,121 @@ const App = (() => {
     idx = 0;
     document.getElementById('screen-cover').classList.remove('active');
     document.getElementById('screen-identif').classList.remove('active');
-    showChapterIntro('socle', () => {
-      document.getElementById('screen-question').classList.add('active');
-      render();
+    // Accueil animé (même univers que le coach) : donne du sens et installe le sérieux,
+    // puis enchaîne sur la question d'intention, puis le test.
+    jouerAccueil(() => {
+      afficherIntention(() => {
+        showChapterIntro('socle', () => {
+          document.getElementById('screen-question').classList.add('active');
+          render();
+        });
+      });
     });
+  }
+
+  // Accueil séquencé façon coach. Contenu adapté au parcours :
+  // complet au socle (installe la crédibilité), court et ciblé pour les modules.
+  function jouerAccueil(suite) {
+    const estModule = estAjoutModule && diagType !== 'classic';
+    let steps;
+    if (!estModule) {
+      steps = [
+        { hi: 'Votre bilan commence', line: 'Votre personnalité tient en cinq dimensions.<br>Leur combinaison fait de vous quelqu\'un d\'unique.' },
+        { line: 'Ce bilan repose sur le modèle des <strong>Big Five</strong>, la référence scientifique en psychologie de la personnalité, et transforme ces cinq dimensions en un portrait vivant.' },
+        { line: 'Une seule chose compte ici : <strong>votre sincérité</strong>.', hint: 'Il existe autant de profils justes que de personnes. Le vôtre se dessine au fil de vos réponses spontanées.' },
+        { line: 'Vous repartez avec une lecture fine de vos forces et de ce qui vous rend précieux au travail.', hint: 'Prenez ce temps pour vous.', bouton: 'Commencer' },
+      ];
+    } else if (diagType === 'manager') {
+      steps = [
+        { hi: 'Module management', line: 'Vous connaissez maintenant votre personnalité de fond.<br>Voyons comment elle façonne votre manière de <strong>manager</strong>.' },
+        { line: 'Ce module éclaire votre posture de leader, vos réflexes face à une équipe, et les leviers qui vous rendront encore plus juste dans votre rôle.', hint: 'Répondez avec la même sincérité.', bouton: 'Commencer' },
+      ];
+    } else {
+      steps = [
+        { hi: 'Module commercial', line: 'Vous connaissez maintenant votre personnalité de fond.<br>Voyons comment elle s\'exprime dans votre façon de <strong>vendre</strong>.' },
+        { line: 'Ce module révèle votre style commercial, vos réflexes en rendez-vous, et les leviers qui feront de vous un partenaire encore plus convaincant.', hint: 'Répondez avec la même sincérité.', bouton: 'Commencer' },
+      ];
+    }
+
+    const ov = document.createElement('div');
+    ov.className = 'coach-intro';
+    const stepsHtml = steps.map((s, k) =>
+      '<div class="coach-intro-step" data-step="' + (k + 1) + '">'
+      + (s.hi ? '<p class="coach-intro-hi">' + s.hi + '</p>' : '')
+      + '<p class="coach-intro-line">' + s.line + '</p>'
+      + (s.hint ? '<p class="coach-intro-hint">' + s.hint + '</p>' : '')
+      + (s.bouton ? '<button class="coach-intro-go" id="accueil-go">' + s.bouton + '</button>' : '')
+      + '</div>'
+    ).join('');
+    ov.innerHTML = '<div class="coach-intro-card"><div class="coach-intro-orb"><span class="coach-intro-orb-core"></span></div>' + stepsHtml + '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('on'));
+
+    const stepEls = ov.querySelectorAll('.coach-intro-step');
+    const montrer = (n) => stepEls.forEach((s, k) => s.classList.toggle('show', k === n));
+    montrer(0);
+    // cadence : ~2,5 s par message, sauf le dernier qui attend le clic
+    const timers = [];
+    for (let n = 1; n < steps.length; n++) {
+      timers.push(setTimeout(() => montrer(n), n * 2500));
+    }
+    let fini = false;
+    const fermer = () => {
+      if (fini) return; fini = true;
+      timers.forEach(clearTimeout);
+      ov.classList.remove('on');
+      setTimeout(() => { ov.remove(); suite(); }, 500);
+    };
+    ov.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'accueil-go') { fermer(); return; }
+      // un clic sur le dernier message (déjà affiché) permet aussi de passer
+      if (stepEls[steps.length - 1] && stepEls[steps.length - 1].classList.contains('show')) fermer();
+    });
+    // filet : bouton "passer" discret pour les pressés, dès le départ
+    const skip = document.createElement('button');
+    skip.className = 'coach-intro-skip';
+    skip.textContent = 'Passer l\'introduction';
+    skip.onclick = fermer;
+    ov.querySelector('.coach-intro-card').appendChild(skip);
+  }
+
+  // Écran d'intention : une seule question ouverte, légère, optionnelle.
+  function afficherIntention(suite) {
+    if (estAjoutModule) { suite(); return; } // un module spé ne redemande pas l'intention
+    const qo = (SINEA_DATA.questions_ouvertes && SINEA_DATA.questions_ouvertes.intention) || null;
+    if (!qo) { suite(); return; }
+    let scr = document.getElementById('screen-intention');
+    if (!scr) {
+      scr = document.createElement('section');
+      scr.id = 'screen-intention';
+      scr.className = 'screen';
+      (document.querySelector('.app') || document.body).appendChild(scr);
+    }
+    scr.innerHTML =
+      '<div class="qo-scroll">' +
+        '<div class="qo-head">' +
+          '<div class="qo-kicker">Avant de commencer</div>' +
+          '<h2 class="qo-title">Une question pour vous</h2>' +
+          '<p class="qo-sub">Votre réponse nous accompagne, et nous vous la rappellerons à la fin de votre bilan.</p>' +
+        '</div>' +
+        '<div class="qo-field">' +
+          '<label class="qo-q">' + qo.question + '</label>' +
+          '<textarea class="qo-input" id="intention-input" rows="3" placeholder="' + (qo.placeholder || '') + '">' + (openAnswers.intention || '') + '</textarea>' +
+        '</div>' +
+        '<button class="btn-primary qo-submit" id="intention-go">Commencer le test</button>' +
+        '<button class="btn-ghost" id="intention-skip">Passer</button>' +
+      '</div>';
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    scr.classList.add('active');
+    window.scrollTo(0, 0);
+    const valider = () => {
+      const v = document.getElementById('intention-input');
+      if (v) { openAnswers.intention = (v.value || '').trim(); saveProgress(); }
+      scr.classList.remove('active');
+      suite();
+    };
+    document.getElementById('intention-go').onclick = valider;
+    document.getElementById('intention-skip').onclick = () => { scr.classList.remove('active'); suite(); };
   }
 
   // ---- Écran de reprise de session ----
@@ -1016,6 +1132,7 @@ const App = (() => {
     document.getElementById('resume-go').onclick = () => {
       // restaurer l'état
       Object.assign(answers, saved.answers);
+      if (saved.openAnswers) Object.assign(openAnswers, saved.openAnswers);
       idx = Math.min(saved.idx || 0, queue.length - 1);
       // restaurer le contexte de campagne (le quota se décompte bien même après une reprise)
       if (saved.magicCode) magicCode = saved.magicCode;
@@ -1107,60 +1224,13 @@ const App = (() => {
         animateTransition('forward');
       }
     } else {
-      // Fin du test : poser les questions ouvertes avant le calcul
-      showQuestionsOuvertes();
+      // Fin du test : on va directement au calcul. Les questions ouvertes (projective
+      // et difficulté) sont désormais posées au début de la restitution, au pic de motivation.
+      finish();
     }
-  }
-
-  // ---- Écran des questions ouvertes (analysées par l'IA) ----
-  const openAnswers = {};
-
-  function showQuestionsOuvertes() {
-    const qo = SINEA_DATA.questions_ouvertes;
-    let scr = document.getElementById('screen-open');
-    if (!scr) {
-      scr = document.createElement('section');
-      scr.id = 'screen-open';
-      scr.className = 'screen';
-      (document.querySelector('.app') || document.body).appendChild(scr);
-    }
-    const champs = qo.questions.map(q => `
-      <div class="qo-field">
-        <label class="qo-q">${q.question}</label>
-        <textarea class="qo-input" rows="3" placeholder="${q.placeholder}" oninput="App.saveOpen('${q.id}', this.value)">${openAnswers[q.id] || ''}</textarea>
-      </div>`).join('');
-    scr.innerHTML = `
-      <div class="qo-scroll">
-        <button class="qo-back" onclick="App.backFromOpen()">← Retour aux questions</button>
-        <div class="qo-head">
-          <div class="qo-kicker">Presque terminé</div>
-          <h2 class="qo-title">Vos mots comptent</h2>
-          <p class="qo-sub">${qo.intro}</p>
-        </div>
-        ${champs}
-        <button class="btn-primary qo-submit" onclick="App.submitOpen()">Découvrir mon portrait</button>
-        <button class="btn-ghost" onclick="App.skipOpen()">Passer cette étape</button>
-      </div>`;
-    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
-    scr.classList.add('active');
-    window.scrollTo(0, 0);
   }
 
   function saveOpen(id, val) { openAnswers[id] = val; saveProgress(); }
-  function backFromOpen() {
-    // Revenir à la dernière question du test
-    document.getElementById('screen-open').classList.remove('active');
-    document.getElementById('screen-question').classList.add('active');
-    render();
-  }
-  function submitOpen() {
-    document.getElementById('screen-open').classList.remove('active');
-    finish();
-  }
-  function skipOpen() {
-    document.getElementById('screen-open').classList.remove('active');
-    finish();
-  }
 
   function prev() {
     if (idx > 0) {
@@ -1768,7 +1838,7 @@ const App = (() => {
     }, 75);
   }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, submitOpen, skipOpen, backFromOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

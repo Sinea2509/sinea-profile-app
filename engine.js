@@ -148,9 +148,17 @@ function calculerResultat(scoresBf, affinites, pointsSinea) {
     const membres = noms.filter(n=> familles[n]===fam);
     radarBrut[fam] = membres.reduce((s,n)=> s+score[n],0)/membres.length;
   }
-  const rmax = Math.max(...Object.values(radarBrut)), rmin = Math.min(...Object.values(radarBrut));
+  // Échelle absolue : on cale sur la plage réelle des scores (0-100), pas sur un
+  // min-max entre familles qui écraserait mécaniquement la plus faible à 0.
+  // La famille la moins marquée garde ainsi un niveau lisible, jamais nul.
+  const radarVals = Object.values(radarBrut);
+  const vMin = Math.min(...radarVals), vMax = Math.max(...radarVals);
   const radar = {};
-  for (const [f,v] of Object.entries(radarBrut)) radar[f] = rmax>rmin ? Math.round((v-rmin)/(rmax-rmin)*100) : 50;
+  for (const [f,v] of Object.entries(radarBrut)) {
+    // étirement doux autour de la plage observée, borné entre 28 et 100 pour rester visible
+    const norm = vMax > vMin ? (v - vMin) / (vMax - vMin) : 0.5;
+    radar[f] = Math.round(28 + norm * 72);
+  }
 
   // blend sur écarts (4e comme plancher)
   const top4 = classement.slice(0,4).map(c=>score[c]);
@@ -166,7 +174,10 @@ function calculerResultat(scoresBf, affinites, pointsSinea) {
     radarFamilles: radar,
     scoresBigFive: scoresBf,
     blend: blend,
-    classement: classement.map(n=>({nom:n, score: Math.round(score[n]*10)/10, famille: familles[n]}))
+    classement: classement.map(n=>({nom:n, score: Math.round(score[n]*10)/10, famille: familles[n]})),
+    // Écart relatif entre l'archétype 1 et 2 : sert à détecter un résultat serré
+    // (deux profils au coude-à-coude) qui mérite une question de clarification.
+    ecartDominant: Math.round((score[classement[0]] - score[classement[1]]) * 10) / 10
   };
 }
 
@@ -269,8 +280,10 @@ function scorerFiabilite(repMini, tempsReponses) {
     const ecart = Math.sqrt(vals.reduce((s,v)=>s+Math.pow(v-moy,2),0) / vals.length);
     if (ecart > dispMax) { dispMax = ecart; traitIncoherent = t; }
   }
-  if (dispMax > 45) { penalites += 18; signaux.push({ type:'incoherence', niveau:'fort', detail:'Réponses contradictoires sur un même trait' }); }
-  else if (dispMax > 33) { penalites += 9; signaux.push({ type:'incoherence', niveau:'modéré', detail:'Légères contradictions internes' }); }
+  // Une dispersion modérée est NORMALE chez quelqu'un de sincère (les facettes d'un
+  // même trait ne sont pas identiques). On ne pénalise que les vraies contradictions.
+  if (dispMax > 58) { penalites += 12; signaux.push({ type:'incoherence', niveau:'fort', detail:'Réponses contradictoires sur un même trait' }); }
+  else if (dispMax > 47) { penalites += 5; signaux.push({ type:'incoherence', niveau:'modéré', detail:'Légères contradictions internes' }); }
 
   // SIGNAL 2 : concordance swipe vs choix forcé
   let nbDesaccords = 0;
@@ -281,10 +294,12 @@ function scorerFiabilite(repMini, tempsReponses) {
     const moySwipe = vals.reduce((a,b)=>a+b,0) / vals.length;
     const v = (c === 'a') ? q.a.valeur : q.b.valeur;
     const valCF = conv[v];
-    if (Math.abs(moySwipe - valCF) > 55) nbDesaccords++;
+    if (Math.abs(moySwipe - valCF) > 62) nbDesaccords++;
   });
-  if (nbDesaccords >= 2) { penalites += 20; signaux.push({ type:'desaccord', niveau:'fort', detail:'Plusieurs divergences entre auto-description et choix tranchés' }); }
-  else if (nbDesaccords === 1) { penalites += 8; signaux.push({ type:'desaccord', niveau:'modéré', detail:'Une divergence entre auto-description et choix tranchés' }); }
+  // Un seul désaccord ne compte plus : se décrire autrement qu'on ne tranche dans
+  // l'instant est humain. Seuls des désaccords répétés signalent une incohérence.
+  if (nbDesaccords >= 3) { penalites += 22; signaux.push({ type:'desaccord', niveau:'fort', detail:'Plusieurs divergences entre auto-description et choix tranchés' }); }
+  else if (nbDesaccords === 2) { penalites += 11; signaux.push({ type:'desaccord', niveau:'modéré', detail:'Quelques divergences entre auto-description et choix tranchés' }); }
 
   // SIGNAL 3 : réponses au hasard / patterns suspects
   const valeursBrutes = SINEA_DATA.mini_items.map(it => repMini[it.id]).filter(v => v !== undefined && v !== null);
@@ -292,19 +307,28 @@ function scorerFiabilite(repMini, tempsReponses) {
     const uniques = new Set(valeursBrutes);
     if (uniques.size === 1) { penalites += 30; signaux.push({ type:'uniforme', niveau:'fort', detail:'Toutes les réponses identiques' }); }
     else if (uniques.size === 2) { penalites += 10; signaux.push({ type:'faible_variance', niveau:'modéré', detail:'Très peu de variété dans les réponses' }); }
-    const extremes = valeursBrutes.filter(v => v === 1 || v === 4).length;
-    if (extremes === valeursBrutes.length && uniques.size > 1) { penalites += 6; signaux.push({ type:'extremes', niveau:'léger', detail:'Réponses toujours tranchées, jamais nuancées' }); }
+    // Trancher systématiquement n'est plus pénalisé : beaucoup de profils sincères
+    // ont des avis nets. Seule l'uniformité totale (signe de remplissage machinal) compte.
+
   }
 
   // SIGNAL 4 : vitesse de réponse (si mesurée)
   if (tempsReponses) {
     const temps = SINEA_DATA.mini_items.map(it => tempsReponses[it.id]).filter(t => typeof t === 'number');
     if (temps.length >= 8) {
-      const ratio = temps.filter(t => t < 800).length / temps.length;
-      if (ratio > 0.5) { penalites += 18; signaux.push({ type:'vitesse', niveau:'fort', detail:'Plus de la moitié des réponses très rapides' }); }
-      else if (ratio > 0.3) { penalites += 7; signaux.push({ type:'vitesse', niveau:'modéré', detail:'Plusieurs réponses très rapides' }); }
+      // Des réponses physiquement trop rapides pour avoir été lues sont le signal le
+      // plus fiable de remplissage machinal : pénalité forte. Répondre vite par aisance
+      // (au-dessus de 500 ms) ne pénalise toujours pas.
+      const ratio = temps.filter(t => t < 500).length / temps.length;
+      if (ratio > 0.6) { penalites += 32; signaux.push({ type:'vitesse', niveau:'fort', detail:'Réponses trop rapides pour avoir été lues' }); }
+      else if (ratio > 0.35) { penalites += 16; signaux.push({ type:'vitesse', niveau:'modéré', detail:'Beaucoup de réponses très rapides' }); }
     }
   }
+
+  // Cumul : quand plusieurs signaux FORTS se combinent (typique d'un remplissage
+  // bâclé qui rate plusieurs contrôles à la fois), on ajoute une pénalité de convergence.
+  const nbForts = signaux.filter(s => s.niveau === 'fort').length;
+  if (nbForts >= 2) penalites += 12;
 
   const score = Math.max(0, Math.min(100, 100 - penalites));
   let niveau, message;
@@ -313,7 +337,7 @@ function scorerFiabilite(repMini, tempsReponses) {
   else if (score >= 50) { niveau = 'moyenne'; message = 'Le profil présente des tensions internes. Les résultats donnent une tendance, à confirmer par un échange.'; }
   else { niveau = 'faible'; message = 'Les réponses manquent de cohérence. À interpréter avec prudence.'; }
 
-  return { score, niveau, message, signaux };
+  return { score, niveau, message, signaux, traitTension: traitIncoherent };
 }
 
 // ---- Dimensions spé (management ou commercial) ----

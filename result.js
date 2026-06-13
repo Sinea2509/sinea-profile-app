@@ -1,5 +1,5 @@
 // ============================================================
-// MODULE RESULT — Restitution premium COMPLÈTE
+// MODULE RESULT · Restitution premium COMPLÈTE
 // 3 blocs + questions ouvertes + validation + 5 moments IA
 // ============================================================
 const Result = (() => {
@@ -11,11 +11,31 @@ const Result = (() => {
   };
   // Lecture en clair de chaque dimension selon la zone du score
   const BF_ZONES = {
-    E: { low: "Vous puisez votre énergie dans le calme et les échanges choisis : la profondeur plutôt que le volume.", mid: "Vous alternez avec aisance entre moments d'échange et temps pour vous.", high: "Le contact des autres vous dynamise : vous pensez et avancez en interagissant." },
-    A: { low: "Vous dites les choses et défendez votre position : la franchise prime sur la diplomatie.", mid: "Vous savez être direct quand il le faut et conciliant quand c'est utile.", high: "Vous privilégiez l'harmonie et la coopération : le lien passe avant le rapport de force." },
-    C: { low: "Vous fonctionnez à l'élan et à la souplesse, en ajustant au fil de l'eau.", mid: "Vous structurez quand l'enjeu le demande, avec une vraie souplesse le reste du temps.", high: "Organisation, fiabilité, suivi : vous menez les choses au bout, avec méthode." },
-    N: { low: "Vous ressentez fort : cette sensibilité est un radar précieux, à ménager sous pression.", mid: "Vous encaissez la plupart des secousses tout en restant à l'écoute de vos signaux.", high: "Peu de choses vous ébranlent : vous gardez un calme rare, même dans la tempête." },
-    O: { low: "Vous préférez l'éprouvé et le concret : ce qui marche vous intéresse plus que ce qui brille.", mid: "Curieux sans être dispersé : vous explorez le neuf quand il a du sens.", high: "Les idées, l'inédit et l'imaginaire vous attirent : vous explorez naturellement." },
+    E: {
+      low: "Vous puisez votre énergie dans le calme et les échanges choisis. Là où certains ont besoin de monde pour se recharger, vous vous ressourcez dans la concentration et les conversations qui comptent. En réunion, vous parlez peu mais juste, et vos collègues ont appris que vos prises de parole méritent qu'on les écoute. Cette profondeur est une force tranquille : vous pesez avant de dire, vous écoutez vraiment, et vous tenez la distance quand l'agitation retombe.",
+      mid: "Vous naviguez avec aisance entre les deux rives. Certains jours, l'échange et le collectif vous portent ; d'autres, vous avez besoin de vous retirer pour réfléchir au calme, et vous savez basculer de l'un à l'autre sans y penser. Cette souplesse est précieuse : vous tenez votre place dans un grand groupe comme dans un tête-à-tête, et vous ressentez assez finement le moment où il faut prendre la parole ou la laisser.",
+      high: "Le contact des autres vous met en mouvement. Vous pensez en parlant, vos idées se précisent à voix haute, et un open space animé vous stimule là où il épuiserait d'autres. On vous remarque vite dans un groupe : vous lancez les conversations, vous créez l'énergie, vous embarquez. Cette vitalité relationnelle est un moteur d'équipe, et elle gagne en profondeur quand vous laissez aussi de l'espace aux voix plus discrètes autour de vous."
+    },
+    A: {
+      low: "Vous avez le courage du désaccord. Là où d'autres lissent pour préserver l'ambiance, vous posez ce que vous pensez, même quand cela dérange. En réunion, c'est souvent vous qui nommez le problème que tout le monde évite. Cette franchise est une ressource rare pour une équipe, car elle évite les non-dits qui pourrissent les projets. Elle gagne en impact quand vous y ajoutez la forme, car une vérité bien amenée s'entend mieux qu'une vérité lancée.",
+      mid: "Vous tenez l'équilibre entre le franc-parler et le tact. Vous savez dire non quand il le faut et arrondir quand cela sert la relation, et vous sentez assez bien lequel des deux registres la situation appelle. Cet équilibre vous rend précieux dans les moments de tension : vous pouvez porter un désaccord sans casser le lien, défendre une position sans braquer. Vous êtes souvent celui vers qui on se tourne quand il faut dire les choses sans tout abîmer.",
+      high: "Vous placez le lien et la coopération au cœur de votre façon d'être. Vous cherchez spontanément l'accord, vous prêtez attention à ce que vit l'autre, et une équipe où chacun se sent respecté compte plus pour vous qu'une victoire arrachée. Cette bienveillance crée la confiance autour de vous : on se confie, on ose, on revient vers vous. Elle devient une force complète quand vous vous autorisez aussi le désaccord franc, car protéger une relation passe parfois par une vérité dite avec soin."
+    },
+    C: {
+      low: "Vous fonctionnez à l'élan, à l'intuition et à la souplesse. Les plans trop rigides vous pèsent, et vous donnez le meilleur quand vous pouvez ajuster en cours de route, saisir l'occasion, improviser avec talent. Cette spontanéité vous rend agile là où d'autres se figent : vous rebondissez vite, vous ne vous laissez pas enfermer par une procédure. Elle porte le plus de fruits quand vous vous appuyez sur quelques repères simples qui sécurisent l'essentiel sans brider votre liberté.",
+      mid: "Vous dosez la structure selon l'enjeu. Quand le sujet est important, vous organisez, vous planifiez, vous suivez ; le reste du temps, vous gardez de la souplesse et vous ne vous encombrez pas de rigueur inutile. Ce discernement est une vraie qualité professionnelle : vous mettez de la méthode là où elle compte vraiment, sans transformer chaque tâche en protocole. Vos collègues savent qu'ils peuvent compter sur vous pour les sujets sérieux, sans vous sentir corsetés au quotidien.",
+      high: "L'organisation, la fiabilité et le sens du fini sont votre signature. Vous menez les choses jusqu'au bout, vous tenez vos engagements, et on vous confie les dossiers sensibles parce qu'on sait qu'ils seront traités avec sérieux. Cette rigueur est un socle pour toute équipe : avec vous, les délais sont des promesses et les détails ne passent pas à la trappe. Elle s'épanouit pleinement quand vous vous accordez aussi le droit à l'imperfection sur ce qui n'est pas critique, pour garder de l'énergie sur l'essentiel."
+    },
+    N: {
+      low: "Vous ressentez les choses avec intensité, et c'est une forme de lucidité. Vous percevez les tensions avant les autres, vous captez ce qui se joue sous la surface, et cette sensibilité fait de vous quelqu'un de profondément à l'écoute. C'est un radar précieux, pour vous comme pour votre entourage. Elle demande simplement d'être ménagée sous pression : connaître vos signaux, vous accorder des temps de récupération, et vous rappeler que cette finesse émotionnelle est un atout autant qu'une exigence.",
+      mid: "Vous encaissez la plupart des secousses tout en restant connecté à ce que vous ressentez. Les imprévus vous touchent sans vous renverser, et vous gardez accès à vos émotions sans qu'elles prennent les commandes. Cet équilibre est un vrai confort de fonctionnement : vous traversez les moments tendus avec assez de stabilité pour tenir le cap, et assez de sensibilité pour rester humain et juste dans vos relations. Vous êtes souvent un point d'ancrage discret pour ceux qui vous entourent.",
+      high: "Peu de choses parviennent à vous ébranler. Dans la tempête, vous gardez la tête froide, vous relativisez vite, et votre calme rassure tout le monde autour de vous. C'est une force immense dans les moments de crise ou de forte pression : pendant que d'autres s'affolent, vous tenez. Cette solidité émotionnelle est un cadeau pour une équipe. Elle devient encore plus puissante quand vous restez attentif aux signaux plus fragiles des autres, que votre propre calme pourrait vous faire sous-estimer."
+    },
+    O: {
+      low: "Vous faites confiance à l'éprouvé et au concret. Ce qui marche vous intéresse davantage que ce qui brille, et vous vous méfiez à juste titre des idées séduisantes mais non testées. Cette solidité est un ancrage précieux : pendant que certains s'emballent pour la nouveauté, vous ramenez tout le monde au réel, à ce qui tient la route. Elle s'enrichit quand vous laissez de temps en temps une idée neuve vous surprendre, car certaines ruptures valent le détour une fois qu'on les a éprouvées.",
+      mid: "Vous êtes curieux sans être dispersé. Le neuf vous attire quand il a du sens, mais vous gardez les pieds sur terre et vous ne courez pas après chaque idée brillante. Cet équilibre vous rend particulièrement utile dans les phases de changement : vous accueillez l'innovation sans naïveté, vous savez distinguer la vraie bonne idée de la mode passagère. Vous faites le pont entre ceux qui rêvent et ceux qui exécutent, et c'est une position rare et précieuse.",
+      high: "Les idées, l'inédit et l'imaginaire vous attirent irrésistiblement. Vous voyez des possibilités là où d'autres voient des contraintes, vous reliez des choses qui semblaient sans rapport, et un problème nouveau vous stimule plus qu'il ne vous inquiète. Cette ouverture est un moteur d'innovation pour votre entourage : vous ouvrez des portes, vous proposez des chemins de traverse. Elle donne le meilleur quand vous la posez sur quelques fondations concrètes, pour transformer vos intuitions foisonnantes en réalisations qui durent."
+    }
   };
   const POLE_TIPS = {
     'Réservé':"Énergie tournée vers l'intérieur : réflexion, calme, petits comités", 'Expansif':"Énergie tournée vers les autres : échange, spontanéité, dynamisme",
@@ -92,14 +112,24 @@ const Result = (() => {
         </div>`;
     }).join('');
     const coutTxt = { 'faible':'faible', 'modéré':'modéré', 'élevé':'élevé' }[na.cout] || 'modéré';
+    const coutExplik = {
+      'faible': "Votre écart global est faible : vous êtes globalement vous-même au travail. C'est une situation confortable et durable, où votre poste vous laisse fonctionner selon votre nature, sans effort permanent à fournir.",
+      'modéré': "Votre écart global est modéré : vous ajustez votre comportement sur certains points, sans vous travestir. C'est le signe d'une adaptation saine et maîtrisée, celle de quelqu'un qui sait moduler sa posture selon le contexte tout en restant fidèle à lui-même.",
+      'élevé': "Votre écart global est élevé : vous fournissez au quotidien un effort d'adaptation réel et coûteux. Cet effort est précieux à connaître, car c'est souvent là que se loge une fatigue invisible. La question utile à se poser : cet ajustement vous nourrit-il, ou vous épuise-t-il à la longue ?"
+    };
     return `
       <div class="na-card">
+        <div class="na-intro">
+          <p>Vous avez deux visages, et c'est parfaitement sain. <strong>Votre naturel</strong>, c'est qui vous êtes quand rien ne vous contraint, le week-end, en confiance, sans regard extérieur. <strong>Votre comportement au travail</strong>, c'est la version que vous activez en contexte professionnel, face aux attentes et aux enjeux.</p>
+          <p>L'écart entre les deux exprime votre capacité d'adaptation. Un écart faible sur une dimension veut dire que vous restez vous-même sur ce terrain, et c'est reposant. Un écart marqué révèle un effort quotidien, utile à repérer, car c'est là que se cache votre dépense d'énergie la moins visible.</p>
+        </div>
         <div class="na-legend">
           <span><span class="na-leg-dot na-nat"></span>Votre naturel</span>
           <span><span class="na-leg-dot na-adp"></span>Au travail</span>
         </div>
         ${lignes}
         <div class="na-cout">Coût d'adaptation global : <strong>${coutTxt}</strong></div>
+        <p class="na-cout-explik">${coutExplik[na.cout] || coutExplik['modéré']}</p>
         ${pepite(FAITS_COUT[na.cout] || FAITS_COUT['modéré'], 'pepite-energie')}
       </div>`;
   }
@@ -267,13 +297,17 @@ const Result = (() => {
     return blocs ? `<div class="dimc-card">${blocs}</div>` : '';
   }
   // Badge de fiabilité du profil (cohérence des réponses)
+  let profilPrecise = false; // passe à true quand la personne a répondu à la question de clarification
   function badgeFiabilite(res){
     const f = res.fiabilite;
     if (!f || f.score === undefined) return '';
     const couleur = f.score >= 85 ? '#3EAD8B' : (f.score >= 70 ? '#F9A876' : '#F98272');
+    const tagPrecise = profilPrecise
+      ? `<span class="r-fiab-precise">✓ Profil précisé</span>`
+      : '';
     return `
       <div class="r-fiab" style="border-color:${couleur}40;background:${couleur}0d">
-        <div class="r-fiab-txt"><div class="r-fiab-lab">Fiabilité de votre profil</div><div class="r-fiab-msg">${f.message || ''}</div></div>
+        <div class="r-fiab-txt"><div class="r-fiab-lab">Fiabilité de votre profil${tagPrecise}</div><div class="r-fiab-msg">${f.message || ''}</div></div>
         <div class="r-fiab-score" style="color:${couleur}">${f.score}%</div>
       </div>`;
   }
@@ -300,19 +334,21 @@ const Result = (() => {
 
   // Visuel : classement complet des 20 archétypes avec barres de score par famille
   function classementComplet(res){
-    const cl = res.classement || [];
-    if (!cl.length) return '';
+    const clTous = res.classement || [];
+    if (!clTous.length) return '';
+    // On n'affiche que les profils réellement commentés : les 3 dominants.
+    // Lister les 20 sans les expliquer crée de la confusion plus que de la valeur.
+    const cl = clTous.slice(0, 3);
     const scoreMax = cl[0].score || 1;
     const scoreMin = cl[cl.length - 1].score || 0;
     const amplitude = (scoreMax - scoreMin) || 1;
     const lignes = cl.map((item, i) => {
       const color = FAM[item.famille] || '#999';
-      // largeur relative : du plus fort (100%) au plus faible (~22%)
-      const pct = 22 + ((item.score - scoreMin) / amplitude) * 78;
-      const isTop = i < 3;
+      // largeur relative : le dominant à 100%, les suivants proportionnellement
+      const pct = 60 + ((item.score - scoreMin) / amplitude) * 40;
       const rang = i + 1;
       return `
-        <div class="rk-row ${isTop ? 'rk-top' : ''}">
+        <div class="rk-row rk-top">
           <div class="rk-rang">${rang}</div>
           <div class="rk-body">
             <div class="rk-nom">${item.nom}</div>
@@ -604,7 +640,7 @@ const Result = (() => {
         ${schemaScience(dt === 'classic' ? 55 : 91)}
         <div class="r-card"><p>Votre profil repose sur le <b>Big Five</b>, le modèle de personnalité le plus validé scientifiquement. Vos réponses se traduisent en cinq dimensions, puis en archétypes qui les rendent vivantes.</p></div>
         <div class="r-compare">
-          <div class="r-cmp r-cmp-a"><div class="r-cmp-t">DISC, Process Com</div>reposent sur des typologies en cases, souvent moins validées.</div>
+          <div class="r-cmp r-cmp-a"><div class="r-cmp-t">Les tests en cases</div>rangent chaque personne dans une catégorie figée, et perdent les nuances qui font les vraies personnes.</div>
           <div class="r-cmp r-cmp-b"><div class="r-cmp-t">Sinéa Profile</div>mesure des dimensions continues, puis les combine en un profil nuancé et unique.</div>
         </div>
         <div class="r-card">${badgeFiabilite(res)}<p style="margin:0"><b>Pourquoi vos réponses sont fiables.</b> Nos questions utilisent un choix forcé, sans réponse neutre, ce qui limite le biais de complaisance. Votre profil mêle plusieurs archétypes, car une personne réelle ne tient jamais dans une seule case.</p></div>
@@ -701,17 +737,6 @@ const Result = (() => {
         <div class="r-validables-grid">${vigVal}</div>
         <div class="r-section-tag">Votre moteur</div>
         <div class="r-validable r-val-moteur" id="v-moteur-0" onclick="Result.toggleValid('moteur',0)"><div class="r-val-check">✓</div><p>${dc.moteur||''}</p></div>
-        <div class="r-section-tag">Deux questions pour vous</div>
-        <div class="r-opens-grid">
-        <div class="r-open">
-          <label class="r-open-q">Si vous deviez retenir une seule phrase de ce portrait, laquelle garderiez-vous, et pourquoi celle-là maintenant ?</label>
-          <textarea class="r-open-input" id="open-1" rows="3" placeholder="Votre réponse..." oninput="Result.saveOpen('q1', this.value)"></textarea>
-        </div>
-        <div class="r-open">
-          <label class="r-open-q">Imaginez votre version la plus accomplie au travail. Que fait-elle naturellement que vous aimeriez faire avec plus d'aisance ?</label>
-          <textarea class="r-open-input" id="open-2" rows="3" placeholder="Votre réponse..." oninput="Result.saveOpen('q2', this.value)"></textarea>
-        </div>
-        </div>
         <div class="r-section-tag">Vos pistes d'action</div>
         <div class="r-ia" id="ia-actions"><div class="r-ia-tag">L'IA propose, vous choisissez</div><p class="r-hint" style="margin-top:0">Sélectionnez les habitudes à développer.</p><div class="r-ia-loading"><span class="mini-spin"></span>Génération...</div></div>
         <div class="r-section-tag">Votre signature</div>
@@ -776,6 +801,16 @@ const Result = (() => {
     if (res.modeCampagne === 'recrutement') appliquerModeCandidat();
     installerCtaDecouverte(dom, res);
 
+    // ---- Question de clarification : seulement en cas de doute, jamais en recrutement ----
+    if (res.modeCampagne !== 'recrutement') preparerClarification(res);
+
+    // ---- Questions ouvertes au DÉBUT de la restitution (pic de motivation) + miroir ----
+    if (res.modeCampagne !== 'recrutement') {
+      // récupérer l'intention saisie avant le test pour le pré-remplissage et le miroir
+      if (res.reponsesOuvertes && res.reponsesOuvertes.intention && !openAnswers.intention) openAnswers.intention = res.reponsesOuvertes.intention;
+      installerQuestionsRestitution(res);
+    }
+
     // Câbler la carte partageable (aperçu + bouton de téléchargement)
     const carteSlug = img(dom.nom).replace('.webp', '');
     const cartePreview = document.getElementById('carte-preview');
@@ -807,8 +842,10 @@ const Result = (() => {
   // ============================================================
   // LE CHAT AVEC SON ARCHÉTYPE
   // ============================================================
-  const CHAT_URL = "https://sinea-profile-ia.vercel.app/api/chat";
-  const PDF_URL = "https://sinea-profile-ia.vercel.app/api/pdf_portrait";
+  // Base unique du backend : un seul endroit à changer en cas de migration de domaine.
+  const API_BASE = "https://sinea-profile-ia.vercel.app/api";
+  const CHAT_URL = API_BASE + "/chat";
+  const PDF_URL = API_BASE + "/pdf_portrait";
 
   // ----- Portrait PDF premium (visible si un token individuel est présent dans l'URL) -----
   function lireToken(){
@@ -855,7 +892,7 @@ const Result = (() => {
     return false; // téléchargé
   }
 
-  const FICHE_URL = "https://sinea-profile-ia.vercel.app/api/fiche_reflexe";
+  const FICHE_URL = API_BASE + "/fiche_reflexe";
   async function telechargerFiche(btnId){
     const btn = document.getElementById(btnId || 'fiche-btn');
     const token = lireToken();
@@ -1172,6 +1209,172 @@ const Result = (() => {
 
   // Collecte les choix de l'utilisateur (forces validées, vigilances, réponses ouvertes, pistes) et les envoie
   let interTimer = null;
+  // ============================================================
+  // QUESTION DE CLARIFICATION (la question sur mesure, en cas de doute)
+  //   Deux déclencheurs : résultat serré entre les 2 archétypes, ou fiabilité 70-85 %.
+  //   La réponse précise le portrait. Elle ne remonte jamais le score de fiabilité.
+  //   Sur un cas serré, elle peut faire pencher la nuance, de façon transparente.
+  // ============================================================
+  const CLARIF_URL = API_BASE + "/question_clarification";
+  let clarif = null; // { cas, question, reponse, archetype1, archetype2 }
+
+  function detecterDoute(res){
+    const f = res.fiabilite || {};
+    const cl = res.classement || [];
+    // Cas 1 : deux premiers archétypes au coude-à-coude (écart faible et fiabilité pas mauvaise)
+    if (cl.length >= 2 && typeof res.ecartDominant === 'number' && res.ecartDominant < 6 && (f.score === undefined || f.score >= 60)) {
+      return { cas: 'serre', archetype1: cl[0].nom, archetype2: cl[1].nom };
+    }
+    // Cas 2 : fiabilité dans la zone 70-85 (une tension interne, profil nuancé)
+    if (f.score !== undefined && f.score >= 70 && f.score < 85) {
+      return { cas: 'fiabilite', archetype1: (res.dominante || {}).nom || '', traitTension: f.traitTension || null };
+    }
+    return null;
+  }
+
+  async function preparerClarification(res){
+    const doute = detecterDoute(res);
+    if (!doute) return;
+    try {
+      const rep = await fetch(CLARIF_URL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cas: doute.cas, archetype1: doute.archetype1, archetype2: doute.archetype2 || null,
+          famille: (res.dominante || {}).famille || '', bigFive: res.scoresBigFive || null,
+          traitTension: doute.traitTension || null
+        })
+      });
+      if (!rep.ok) return; // en silence : la restitution reste complète sans la question
+      const data = await rep.json();
+      if (!data.question) return;
+      clarif = Object.assign({}, doute, { question: data.question, reponse: '' });
+      injecterClarification();
+    } catch (e) { /* dégradé gracieux : pas de question, rien de cassé */ }
+  }
+
+  function injecterClarification(){
+    if (!clarif) return;
+    const ancre = document.getElementById('b1') || document.getElementById('r-body');
+    if (!ancre || document.getElementById('clarif-bloc')) return;
+    const intro = clarif.cas === 'serre'
+      ? "Deux profils vous correspondent de très près. Une précision pour affiner lequel vous ressemble le plus au quotidien."
+      : "Une dernière question pour préciser votre portrait, là où vos réponses méritent une nuance.";
+    const bloc = document.createElement('div');
+    bloc.className = 'r-bloc';
+    bloc.id = 'clarif-bloc';
+    bloc.innerHTML =
+      '<div class="r-bloc-head"><span class="r-bloc-tag">Pour affiner</span><h2>Une question sur mesure</h2></div>'
+      + '<p class="clarif-intro">' + intro + '</p>'
+      + '<div class="r-open">'
+      + '<label class="r-open-q">' + clarif.question + '</label>'
+      + '<textarea class="r-open-input" id="clarif-input" rows="3" placeholder="Votre réponse (optionnelle)..."></textarea>'
+      + '<button type="button" class="clarif-go" id="clarif-go">Valider ma précision</button>'
+      + '</div>'
+      + '<div id="clarif-retour"></div>';
+    ancre.parentNode.insertBefore(bloc, ancre.nextSibling);
+    document.getElementById('clarif-go').onclick = validerClarification;
+  }
+
+  function validerClarification(){
+    const input = document.getElementById('clarif-input');
+    const btn = document.getElementById('clarif-go');
+    if (!input || !clarif) return;
+    const txt = (input.value || '').trim();
+    clarif.reponse = txt;
+    profilPrecise = true;
+    sauvegarderInteractions();
+
+    // miroir transparent : on renvoie sa réponse, et sur un cas serré on nomme la nuance
+    const retour = document.getElementById('clarif-retour');
+    let msg = '';
+    if (txt){
+      msg = '<div class="clarif-merci"><span class="clarif-merci-lab">Votre précision est prise en compte</span>'
+        + '<p class="clarif-merci-txt">' + echapHtml(txt) + '</p>';
+      if (clarif.cas === 'serre'){
+        msg += '<p class="clarif-nuance">Vos deux profils proches, <strong>' + echapHtml(clarif.archetype1) + '</strong> et <strong>' + echapHtml(clarif.archetype2) + "</strong>, vous décrivent tous les deux. Votre réponse éclaire la nuance entre eux : la décision finale vous appartient, et c'est vous qui savez lequel vous ressemble le plus aujourd'hui.</p>";
+      }
+      msg += '</div>';
+    } else {
+      msg = '<p class="clarif-skip-msg">Pas de souci, votre portrait reste complet tel quel.</p>';
+    }
+    if (retour) retour.innerHTML = msg;
+    if (input) input.disabled = true;
+    if (btn){ btn.disabled = true; btn.textContent = 'Précision enregistrée ✓'; }
+
+    // rafraîchir le badge de fiabilité pour afficher « Profil précisé »
+    const carteFiab = document.querySelector('.r-fiab');
+    if (carteFiab && RES){
+      const wrap = document.createElement('div');
+      wrap.innerHTML = badgeFiabilite(RES);
+      const neuf = wrap.firstElementChild;
+      if (neuf) carteFiab.replaceWith(neuf);
+    }
+  }
+
+  function echapHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ============================================================
+  // QUESTIONS OUVERTES EN RESTITUTION (au pic de motivation) + MIROIR
+  //   Posées juste après la révélation de l'archétype, avant le détail.
+  //   Réaffichées ensuite en écho : la projective près des forces, l'intention en clôture.
+  // ============================================================
+  function installerQuestionsRestitution(res){
+    const qo = (SINEA_DATA.questions_ouvertes && SINEA_DATA.questions_ouvertes.restitution) || null;
+    if (!qo || !qo.questions || !qo.questions.length) return;
+    const ancre = document.querySelector('.r-toc');
+    if (!ancre || document.getElementById('qr-bloc')) return;
+    // pré-remplir avec ce qui a déjà été saisi (reprise, ou aller-retour)
+    const champs = qo.questions.map(q =>
+      '<div class="r-open">' +
+      '<label class="r-open-q">' + q.question + '</label>' +
+      '<textarea class="r-open-input qr-input" data-q="' + q.id + '" rows="3" placeholder="' + (q.placeholder || '') + '">' + echapHtml(openAnswers[q.id] || '') + '</textarea>' +
+      '</div>'
+    ).join('');
+    const bloc = document.createElement('div');
+    bloc.className = 'r-bloc';
+    bloc.id = 'qr-bloc';
+    bloc.innerHTML =
+      '<div class="r-bloc-head"><span class="r-bloc-tag">Vos mots</span><h2>Deux questions, avant d\'entrer dans le détail</h2></div>' +
+      '<p class="clarif-intro">' + (qo.intro || '') + '</p>' +
+      champs +
+      '<button type="button" class="clarif-go" id="qr-go">Continuer vers mon analyse</button>';
+    ancre.parentNode.insertBefore(bloc, ancre);
+    bloc.querySelectorAll('.qr-input').forEach(t => {
+      t.addEventListener('input', () => { openAnswers[t.getAttribute('data-q')] = t.value; sauvegarderInteractions(); });
+    });
+    document.getElementById('qr-go').onclick = () => {
+      poserMiroirs();
+      const toc = document.querySelector('.r-toc') || document.getElementById('b0');
+      if (toc) toc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  }
+
+  // Le miroir : réafficher les réponses de la personne aux endroits qui résonnent.
+  function poserMiroirs(){
+    // projective (q1) : en écho près des forces, dans le bloc "vous connaître"
+    const q1 = (openAnswers.q1 || '').trim();
+    const cibleQ1 = document.getElementById('b1');
+    if (q1 && cibleQ1 && !document.getElementById('miroir-q1')){
+      const m = document.createElement('div');
+      m.id = 'miroir-q1';
+      m.className = 'r-miroir';
+      m.innerHTML = '<span class="r-miroir-lab">Vos mots, au moment où vous vous sentez vous-même</span><p class="r-miroir-txt">' + echapHtml(q1) + '</p><p class="r-miroir-note">Gardez cette image en tête en lisant vos forces : voilà votre nature à l\'œuvre.</p>';
+      cibleQ1.insertBefore(m, cibleQ1.firstChild ? cibleQ1.firstChild.nextSibling : null);
+    }
+    // intention : en clôture, tout en bas de la restitution
+    const intention = ((RES && RES.reponsesOuvertes && RES.reponsesOuvertes.intention) || openAnswers.intention || '').trim();
+    if (intention && !document.getElementById('miroir-intention')){
+      const body = document.getElementById('r-body');
+      if (body){
+        const m = document.createElement('div');
+        m.id = 'miroir-intention';
+        m.className = 'r-cloture';
+        m.innerHTML = '<div class="r-cloture-in"><span class="r-cloture-lab">Au début, vous attendiez ceci</span><p class="r-cloture-txt">' + echapHtml(intention) + '</p><p class="r-cloture-note">Nous espérons que votre portrait y a répondu, et vous a ouvert quelques pistes nouvelles.</p></div>';
+        body.appendChild(m);
+      }
+    }
+  }
+
   function sauvegarderInteractions(){
     if (!window.App || !App.envoyerInteractions) return;
     if (interTimer) clearTimeout(interTimer);
@@ -1191,6 +1394,13 @@ const Result = (() => {
           accord: parisSpe[a] === RES.speDims[a]
         })) : [],
         diagType: RES ? RES.diagType : 'classic',
+        clarification: clarif && clarif.reponse ? {
+          cas: clarif.cas,
+          question: clarif.question,
+          reponse: clarif.reponse,
+          archetype1: clarif.archetype1 || '',
+          archetype2: clarif.archetype2 || ''
+        } : null,
       };
       App.envoyerInteractions(inter);
     }, 1500);
@@ -1254,7 +1464,7 @@ const Result = (() => {
   }
 
   // Backend IA (Vercel) : génère toutes les sections du portrait en parallèle.
-  const BACKEND_URL = "https://sinea-profile-ia.vercel.app/api/generer";
+  const BACKEND_URL = API_BASE + "/generer";
 
   // Convertit le gras markdown **texte** en <strong>
   function mdInline(t){
@@ -1318,10 +1528,10 @@ const Result = (() => {
   function htmlFamilles(familleActive) {
     const famKey = (familleActive || '').toUpperCase();
     const familles = [
-      { key: 'RELATION', nom: 'Relation', essence: 'Tisser les liens, créer l\'harmonie, prendre soin du collectif.' },
-      { key: 'ACTION', nom: 'Action', essence: 'Avancer, décider, transformer l\'énergie en résultats.' },
-      { key: 'STRUCTURE', nom: 'Structure', essence: 'Organiser, fiabiliser, bâtir des fondations solides.' },
-      { key: 'VISION', nom: 'Vision', essence: 'Imaginer, explorer, ouvrir des horizons nouveaux.' },
+      { key: 'RELATION', nom: 'Relation', essence: 'Ce qui l\'anime : la qualité du lien. Au quotidien : ce sont les personnes vers qui on va quand ça ne va pas, celles qui sentent les tensions, accueillent, réconcilient. Leur attention aux autres soude les équipes. Dans un collectif, elles sont le ciment humain sur lequel tout le reste tient.' },
+      { key: 'ACTION', nom: 'Action', essence: 'Ce qui l\'anime : avancer et obtenir des résultats. Au quotidien : ce sont les personnes qui décident vite, lancent le mouvement et n\'ont pas peur de l\'obstacle. Leur énergie débloque les situations enlisées. Dans un collectif, elles sont le moteur qui empêche les choses de stagner.' },
+      { key: 'STRUCTURE', nom: 'Structure', essence: 'Ce qui l\'anime : transformer le flou en clarté. Au quotidien : ce sont les personnes qui posent les process, tiennent les délais et repèrent l\'erreur avant qu\'elle coûte. Leur cadre n\'enferme pas, il rassure et fait avancer. Dans un collectif, elles sont le socle sur lequel les autres osent.' },
+      { key: 'VISION', nom: 'Vision', essence: 'Ce qui l\'anime : imaginer ce qui n\'existe pas encore. Au quotidien : ce sont les personnes qui voient plus loin, relient les idées et ouvrent des chemins de traverse. Leur regard neuf empêche l\'équipe de tourner en rond. Dans un collectif, elles sont la boussole qui montre l\'horizon.' },
     ];
     return familles.map(f => {
       const c = COULEURS_FAMILLE[f.key] || COULEURS_FAMILLE.VISION;
@@ -1356,25 +1566,9 @@ const Result = (() => {
           </div>
         </div>`;
     };
-    // carte "avec votre propre famille"
-    const mf = MEME_FAMILLE[famKey];
-    const famCouleur = COULEURS_FAMILLE[famKey] || COULEURS_FAMILLE.VISION;
-    let carteMemeFamille = '';
-    if (mf) {
-      carteMemeFamille = `
-        <div class="r-compat-card r-compat-card-soi">
-          <div class="r-compat-bar" style="background:linear-gradient(180deg, ${famCouleur.c1}, ${famCouleur.c2});"></div>
-          <div class="r-compat-in">
-            <div class="r-compat-badge r-compat-soi">Votre famille</div>
-            <div class="r-compat-titre">${mf.titre}</div>
-            <p class="r-compat-txt">${mf.txt}</p>
-            ${mf.conseil ? `<div class="r-compat-conseil"><span class="r-compat-conseil-label">Le conseil</span>${mf.conseil}</div>` : ''}
-          </div>
-        </div>`;
-    }
     // rappel de sa famille en intro
     const rappel = labelFam ? `<p class="r-compat-rappel">Vous appartenez à la famille <strong>${labelFam}</strong>. Voici comment vous vous accordez avec chaque profil.</p>` : '';
-    return rappel + carteMemeFamille + carte(c.forte, 'forte') + carte(c.belle, 'belle') + carte(c.attention, 'attention');
+    return rappel + carte(c.forte, 'forte') + carte(c.belle, 'belle') + carte(c.attention, 'attention');
   }
 
   // ============================================================
@@ -1990,7 +2184,7 @@ const Result = (() => {
   }
 
   // ---- Écran des défis SeedUp ----
-  const DEFIS_URL = "https://sinea-profile-ia.vercel.app/api/defis";
+  const DEFIS_URL = API_BASE + "/defis";
 
   async function showDefis(){
     let scr = document.getElementById('screen-defis');
@@ -2021,6 +2215,7 @@ const Result = (() => {
         bigFive: RES.scoresBigFive
       },
       spe: (RES.diagType && RES.diagType !== 'classic') ? RES.diagType : null,
+      thematique: (typeof window !== 'undefined' && window.SINEA_THEME) ? window.SINEA_THEME : (RES.thematique || null),
       avis: {
         resonance: avis.AVIS_RESONANCE || '',
         priorite: avis.AVIS_PRIORITE || '',

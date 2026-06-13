@@ -479,12 +479,13 @@
 </div>
 
 <script>
-  const BACKEND = "https://sinea-profile-ia.vercel.app/api/dashboard";
-  const ANALYSE_URL = "https://sinea-profile-ia.vercel.app/api/analyse_equipe";
-  const COMPAT_URL = "https://sinea-profile-ia.vercel.app/api/compatibilite";
-  const GRILLE_URL = "https://sinea-profile-ia.vercel.app/api/grille_entretien";
-  const PROFIL_CIBLE_URL = "https://sinea-profile-ia.vercel.app/api/profil_cible";
-  const ENTRETIEN_URL = "https://sinea-profile-ia.vercel.app/api/entretien_candidat";
+  const API_BASE = "https://sinea-profile-ia.vercel.app/api";
+  const BACKEND = API_BASE + "/dashboard";
+  const ANALYSE_URL = API_BASE + "/analyse_equipe";
+  const COMPAT_URL = API_BASE + "/compatibilite";
+  const GRILLE_URL = API_BASE + "/grille_entretien";
+  const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
+  const ENTRETIEN_URL = API_BASE + "/entretien_candidat";
   let vueRecrutementForcee = false;  // section recrutement ouverte manuellement sur une campagne standard
   let derniereCompat = null;     // dernière compatibilité affichée (pour l'export)
   let derniereAnalyseEq = null;  // dernière analyse d'équipe affichée (pour l'export et la grille)
@@ -1235,6 +1236,11 @@ function axesFormation(membres, famillesStats){
       var ro=it.reponses_ouvertes||{};
       Object.keys(ro).forEach(function(k){ if(ro[k]&&String(ro[k]).trim()) morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Réponse libre</span><p class="fm-inter-libre">'+esc(ro[k])+'</p></div>'; });
       if(it.pistes_choisies&&it.pistes_choisies.length) morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Pistes d\'action choisies</span><p>'+it.pistes_choisies.map(esc).join(' · ')+'</p></div>';
+      if(it.clarification&&it.clarification.reponse){
+        var cl=it.clarification;
+        var ctx=cl.cas==='serre' ? ('Profil serré entre '+esc(cl.archetype1)+' et '+esc(cl.archetype2)) : 'Précision sur un point de nuance';
+        morceaux+='<div class="fm-inter-row"><span class="fm-inter-lab">Question de clarification · '+ctx+'</span><p style="font-size:12px;color:#8A8AA0;margin-bottom:3px">'+esc(cl.question)+'</p><p class="fm-inter-libre">'+esc(cl.reponse)+'</p></div>';
+      }
       if(morceaux) h+='<div class="fm-inter-type">'+esc(libType[type]||type)+'</div>'+morceaux;
     });
     if(!h) return '';
@@ -1327,7 +1333,7 @@ function axesFormation(membres, famillesStats){
   }
   function fermerMembre(){ const d=document.getElementById('fiche-membre'); if(d) d.remove(); }
 
-  const PDF_PORTRAIT_URL = "https://sinea-profile-ia.vercel.app/api/pdf_portrait";
+  const PDF_PORTRAIT_URL = API_BASE + "/pdf_portrait";
   async function telechargerPortraitMembre(idx){
     const m = repsCourants[idx];
     const btn = document.getElementById('fm-pdf-btn');

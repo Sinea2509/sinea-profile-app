@@ -83,6 +83,12 @@ const SINEA_DATA = {
    "dimension": "ouverture",
    "sens": "negatif",
    "texte": "Les grandes théories me lassent vite, je préfère le concret."
+  },
+  {
+   "id": "MINI_15",
+   "dimension": "ouverture",
+   "sens": "positif",
+   "texte": "J'aime explorer des approches inhabituelles, même sans garantie de résultat."
   }
  ],
  "mini_choix_force": [
@@ -184,7 +190,8 @@ const SINEA_DATA = {
   "ouverture": {
    "items": [
     "MINI_13",
-    "MINI_14"
+    "MINI_14",
+    "MINI_15"
    ]
   }
  },
@@ -3953,6 +3960,25 @@ const SINEA_DATA = {
        "profil": "bienveillance"
       }
      ]
+    },
+    {
+     "id": "MGMT_EXIG_02",
+     "dimension": "exigence_bienveillance",
+     "situation": "Quand un collaborateur n'atteint pas ses objectifs, votre réflexe :",
+     "options": [
+      {
+       "texte": "Je remets la barre clairement et je demande un plan de rattrapage",
+       "profil": "exigence"
+      },
+      {
+       "texte": "Je comprends ce qui bloque, puis je redéfinis ensemble une attente exigeante",
+       "profil": "equilibre"
+      },
+      {
+       "texte": "Je m'assure d'abord qu'il va bien et je le rassure",
+       "profil": "bienveillance"
+      }
+     ]
     }
    ]
   }
@@ -5047,6 +5073,25 @@ const SINEA_DATA = {
        "profil": "eleveur"
       }
      ]
+    },
+    {
+     "id": "COM_CHASSE_02",
+     "dimension": "chasseur_eleveur",
+     "situation": "Une semaine type qui vous motive le plus :",
+     "options": [
+      {
+       "texte": "Décrocher des rendez-vous avec de nouveaux prospects",
+       "profil": "chasseur"
+      },
+      {
+       "texte": "Un mélange de prospection et de suivi de mes comptes",
+       "profil": "mixte"
+      },
+      {
+       "texte": "Approfondir mes comptes et faire grandir leur potentiel",
+       "profil": "eleveur"
+      }
+     ]
     }
    ]
   }
@@ -5091,7 +5136,13 @@ const SINEA_DATA = {
   ]
  },
  "questions_ouvertes": {
-  "intro": "Deux questions pour enrichir votre portrait. Vos mots seront analysés avec soin.",
+ "intention": {
+  "id": "intention",
+  "question": "En une phrase, qu'attendez-vous de ce bilan ?",
+  "placeholder": "Ce que vous aimeriez en retirer..."
+ },
+ "restitution": {
+  "intro": "Avant de découvrir votre portrait en détail, deux questions. Vos mots enrichissent votre lecture et vous seront restitués au fil de l'analyse.",
   "questions": [
    {
     "id": "q1",
@@ -5104,7 +5155,8 @@ const SINEA_DATA = {
     "placeholder": "Votre réponse..."
    }
   ]
- },
+ }
+},
  "adapte": {
   "intro": "Ces situations concernent votre comportement réel au travail.",
   "questions": [
