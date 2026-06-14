@@ -5141,20 +5141,54 @@ const SINEA_DATA = {
   "question": "En une phrase, qu'attendez-vous de ce bilan ?",
   "placeholder": "Ce que vous aimeriez en retirer..."
  },
- "restitution": {
-  "intro": "Avant de découvrir votre portrait en détail, deux questions. Vos mots enrichissent votre lecture et vous seront restitués au fil de l'analyse.",
+ "avant_bilan": {
+  "intro": "Avant de commencer, quelques mots sur vous. Vos réponses enrichissent votre portrait.",
   "questions": [
    {
     "id": "q1",
-    "question": "Si vous pensez à un moment récent où vous vous êtes senti pleinement vous-même au travail, que faisiez-vous ?",
-    "placeholder": "Décrivez ce moment..."
+    "question": "Dans quel type de situation vous sentez-vous le plus à l'aise au travail ?",
+    "placeholder": "Quelques mots suffisent..."
    },
    {
     "id": "q2",
-    "question": "Qu'est-ce qui vous met le plus en difficulté dans votre quotidien professionnel actuel ?",
+    "question": "Qu'est-ce qui vous met le plus en difficulté dans votre quotidien professionnel ?",
     "placeholder": "Votre réponse..."
    }
   ]
+ },
+ "fin_seedup": {
+  "intro": "Une dernière question, pour personnaliser vos défis.",
+  "questions": [
+   {
+    "id": "q3",
+    "question": "Maintenant que vous découvrez votre profil, qu'aimeriez-vous développer ou faire évoluer ?",
+    "placeholder": "Ce que vous aimeriez changer..."
+   }
+  ]
+ },
+ "avant_module_manager": {
+  "intro": "Avant ce module management, quelques mots sur votre réalité de manager.",
+  "questions": [
+   {
+    "id": "qm1",
+    "question": "Quel est votre plus grand défi en tant que manager aujourd'hui ?",
+    "placeholder": "Quelques mots suffisent..."
+   }
+  ]
+ },
+ "avant_module_commercial": {
+  "intro": "Avant ce module commercial, quelques mots sur votre réalité de terrain.",
+  "questions": [
+   {
+    "id": "qc1",
+    "question": "Quel est l'aspect le plus difficile de votre métier commercial en ce moment ?",
+    "placeholder": "Quelques mots suffisent..."
+   }
+  ]
+ },
+ "restitution": {
+  "intro": "",
+  "questions": []
  }
 },
  "adapte": {

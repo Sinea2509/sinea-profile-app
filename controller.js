@@ -423,7 +423,7 @@ const App = (() => {
     const err = document.getElementById('magic-error');
     const code = (input.value || '').trim();
     if (!code) { err.textContent = 'Merci d\'entrer votre code d\'accès.'; return; }
-    err.textContent = 'Vérification...';
+    err.textContent = 'Nous réveillons votre coach et préparons votre espace...';
     if (submit) submit.disabled = true;
     fetch(VERIFIER_CODE_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -516,7 +516,7 @@ const App = (() => {
     const code = (document.getElementById('code-saisie').value || '').trim();
     const err = document.getElementById('code-error');
     if (code.length !== 6) { err.textContent = 'Entrez les 6 chiffres du code.'; return; }
-    err.textContent = 'Vérification...';
+    err.textContent = 'Nous réveillons votre coach et préparons votre espace...';
     fetch(AUTH_URL, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "verify_code", email: identite.email, code }),
@@ -761,6 +761,7 @@ const App = (() => {
 
     // câbler les boutons
     document.querySelectorAll('[data-revoir]').forEach(b => { b.onclick = () => revoirAnalyse(b.getAttribute('data-revoir')); });
+    document.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => ouvrirPlanAction(b.getAttribute('data-plan')); });
     document.querySelectorAll('[data-commencer]').forEach(b => {
       b.onclick = () => {
         const mod = b.getAttribute('data-commencer');
@@ -820,7 +821,7 @@ const App = (() => {
           ${dateLigne}
           <div class="esp-res-actions">
             <button class="esp-res-btn" data-revoir="${mod}">Consulter mon analyse</button>
-            <button class="esp-res-btn esp-res-btn-soon" disabled>Mon plan d'action · bientôt</button>
+            <button class="esp-res-btn esp-res-btn-plan" data-plan="${mod}">Mon plan d'action</button>
           </div>
         </div>
         ${persoHtml}
@@ -859,6 +860,194 @@ const App = (() => {
       <div class="esp-body"><span class="esp-status esp-st-lock">Verrouillé</span><div class="esp-title">${l.titre}</div><div class="esp-lock-note">Ce module n'est pas inclus dans votre accès.</div></div>
     </div>`;
   }
+
+  // ---- PLAN D'ACTION : page dédiée dans l'espace perso ----
+  // Recharge le profil (pour personnaliser) + les interactions (ce que la personne a coché),
+  // puis met en page une feuille de route motivante, du socle vers l'action.
+  function ouvrirPlanAction(mod) {
+    if (!identite.email) return;
+    // on charge en parallèle l'analyse (profil) et les interactions (choix)
+    Promise.all([
+      fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'load_analyse', email: identite.email }) }).then(r => r.json()).catch(() => ({})),
+      fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'load_interactions', email: identite.email }) }).then(r => r.json()).catch(() => ({}))
+    ]).then(function (res) {
+      const analyses = (res[0] && res[0].analyses) || {};
+      const interactionsTout = (res[1] && res[1].interactions) || {};
+      const profil = (analyses[mod] && analyses[mod].profil) || (analyses.socle && analyses.socle.profil) || {};
+      const inter = interactionsTout[mod] || interactionsTout.socle || {};
+      afficherPagePlan(mod, profil, inter);
+    }).catch(function () { alert('Impossible de charger votre plan d\'action pour le moment.'); });
+  }
+
+  function afficherPagePlan(mod, profil, inter) {
+    let scr = document.getElementById('screen-plan');
+    if (!scr) {
+      scr = document.createElement('section');
+      scr.id = 'screen-plan';
+      scr.className = 'screen';
+      (document.querySelector('.app') || document.body).appendChild(scr);
+    }
+    const archetype = (profil.dominante && profil.dominante.nom) || '';
+    const famille = (profil.dominante && profil.dominante.famille) || 'VISION';
+    const slug = (archetype && SINEA_DATA.images && SINEA_DATA.images[archetype]) ? SINEA_DATA.images[archetype] : '';
+
+    // données issues des choix de la personne
+    const forces = (inter.forces_libelles && inter.forces_libelles.length) ? inter.forces_libelles : (inter.forces_validees || []);
+    const vigilances = (inter.vigilances_libelles && inter.vigilances_libelles.length) ? inter.vigilances_libelles : [];
+    const ouvertes = inter.reponses_ouvertes || {};
+    const projection = (ouvertes.q3 || '').trim();
+    const defiPro = (ouvertes.qm1 || ouvertes.qc1 || '').trim();
+    const objectifs = [];
+    if (projection) objectifs.push(projection);
+    if (defiPro) objectifs.push(defiPro);
+
+    const couleurFam = (famille === 'RELATION' ? '#F98272' : famille === 'ACTION' ? '#F5A623' : famille === 'STRUCTURE' ? '#3EADFF' : '#5E59C7');
+
+    // en-tête (toujours affiché)
+    const heroHtml =
+      '<button class="plan-retour" id="plan-retour">← Mon espace</button>' +
+      '<div class="plan-hero" style="--pf1:' + couleurFam + ';">' +
+        (slug ? '<div class="plan-hero-img"><img src="' + slug + '.webp" alt="' + echapValeur(archetype) + '"/></div>' : '') +
+        '<div class="plan-hero-kicker">Votre feuille de route</div>' +
+        '<h1 class="plan-hero-titre">Votre plan d\'action</h1>' +
+        (archetype ? '<p class="plan-hero-sub">Taillé pour ' + echapValeur(archetype) + ' que vous êtes. Voici par où commencer.</p>' : '<p class="plan-hero-sub">Voici par où commencer.</p>') +
+      '</div>';
+
+    // si rien coché : message d'invitation, pas d'appel IA
+    const rien = !forces.length && !vigilances.length && !objectifs.length;
+    if (rien) {
+      scr.innerHTML = '<div class="plan-scroll">' + heroHtml +
+        '<div class="plan-vide-card"><p>Votre plan d\'action se construit au fil de votre lecture. Retournez à votre analyse, cochez les forces qui vous parlent, les points à travailler et les pistes d\'action : ils se rassembleront ici, prêts à vous accompagner.</p>' +
+        '<button class="btn-primary" data-revoir="' + mod + '">Revenir à mon analyse</button></div></div>';
+      activerScreenPlan(scr, mod);
+      return;
+    }
+
+    // état de chargement pendant la génération IA
+    scr.innerHTML = '<div class="plan-scroll">' + heroHtml +
+      '<div class="plan-loading" id="plan-loading">' +
+        '<div class="plan-loading-spin"></div>' +
+        '<p>Votre coach prépare votre feuille de route, des objectifs concrets taillés pour vous...</p>' +
+      '</div></div>';
+    activerScreenPlan(scr, mod);
+
+    // appel à l'IA pour générer les objectifs SMART
+    const thematique = (window.SINEA_THEME || '');
+    fetch(API_BASE + '/plan_action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profil: profil, forces: forces, vigilances: vigilances, objectifs: objectifs, thematique: thematique }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        const actions = (data && data.actions) || [];
+        rendrePlanActions(scr, mod, heroHtml, actions);
+      })
+      .catch(() => {
+        // repli : si l'IA échoue, on affiche au moins les éléments cochés en tableau simple
+        const repli = construireReplisPlan(forces, vigilances, objectifs);
+        rendrePlanActions(scr, mod, heroHtml, repli);
+      });
+  }
+
+  // repli local si l'IA est indisponible : objectifs simples sans SMART généré
+  function construireReplisPlan(forces, vigilances, objectifs) {
+    const out = [];
+    forces.forEach(f => out.push({ thematique: 'Force', type: 'Capitaliser', verbe_bloom: 'Mobiliser', niveau_bloom: 'Appliquer', objectif_smart: f, priorite: 'Moyenne' }));
+    vigilances.forEach(v => out.push({ thematique: 'Progression', type: 'Progresser', verbe_bloom: 'Ajuster', niveau_bloom: 'Analyser', objectif_smart: v, priorite: 'Haute' }));
+    objectifs.forEach(o => out.push({ thematique: 'Développement', type: 'Explorer', verbe_bloom: 'Expérimenter', niveau_bloom: 'Créer', objectif_smart: o, priorite: 'Basse' }));
+    return out;
+  }
+
+  // construit le tableau (desktop) + cartes (mobile) des actions, avec priorité modifiable
+  function rendrePlanActions(scr, mod, heroHtml, actions) {
+    const ordrePrio = { 'Haute': 0, 'Moyenne': 1, 'Basse': 2 };
+    actions.sort((a, b) => (ordrePrio[a.priorite] ?? 1) - (ordrePrio[b.priorite] ?? 1));
+
+    function classeType(t) {
+      const x = (t || '').toLowerCase();
+      if (x.indexOf('capital') === 0) return 'pt-cap';
+      if (x.indexOf('progress') === 0) return 'pt-pro';
+      return 'pt-exp';
+    }
+    function classePrio(p) {
+      const x = (p || '').toLowerCase();
+      if (x.indexOf('haut') === 0) return 'pp-haute';
+      if (x.indexOf('bass') === 0) return 'pp-basse';
+      return 'pp-moyenne';
+    }
+
+    // version TABLEAU (desktop)
+    let lignes = actions.map((a, i) =>
+      '<tr data-i="' + i + '">' +
+        '<td><span class="plan-them">' + echapValeur(a.thematique) + '</span></td>' +
+        '<td><span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span></td>' +
+        '<td class="plan-obj"><span class="plan-verbe">' + echapValeur(a.verbe_bloom) + '</span><span class="plan-niv">' + echapValeur(a.niveau_bloom) + '</span><p>' + echapValeur(a.objectif_smart) + '</p></td>' +
+        '<td><button class="plan-prio ' + classePrio(a.priorite) + '" data-prio="' + i + '">' + echapValeur(a.priorite) + '</button></td>' +
+      '</tr>'
+    ).join('');
+
+    const tableau =
+      '<div class="plan-table-wrap">' +
+        '<table class="plan-table">' +
+          '<thead><tr><th>Thématique</th><th>Type</th><th>Objectif</th><th>Priorité</th></tr></thead>' +
+          '<tbody>' + lignes + '</tbody>' +
+        '</table>' +
+      '</div>';
+
+    // version CARTES (mobile)
+    let cartes = actions.map((a, i) =>
+      '<div class="plan-mcard" data-i="' + i + '">' +
+        '<div class="plan-mcard-top"><span class="plan-them">' + echapValeur(a.thematique) + '</span><button class="plan-prio ' + classePrio(a.priorite) + '" data-prio-m="' + i + '">' + echapValeur(a.priorite) + '</button></div>' +
+        '<div class="plan-mcard-type"><span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span><span class="plan-verbe">' + echapValeur(a.verbe_bloom) + '</span><span class="plan-niv">' + echapValeur(a.niveau_bloom) + '</span></div>' +
+        '<p class="plan-mcard-obj">' + echapValeur(a.objectif_smart) + '</p>' +
+      '</div>'
+    ).join('');
+
+    const seedup =
+      '<div class="plan-seedup">' +
+        '<div class="plan-seedup-ic">⚡</div>' +
+        '<div class="plan-seedup-txt"><div class="plan-seedup-t">Passez à l\'action avec SeedUp</div>' +
+        '<p>Ces objectifs deviennent des défis concrets, pensés pour votre profil. Quelques minutes par semaine pour ancrer durablement vos progrès.</p></div>' +
+        '<button class="plan-seedup-btn" id="plan-go-seedup">Découvrir mes défis</button>' +
+      '</div>';
+
+    scr.innerHTML = '<div class="plan-scroll">' + heroHtml +
+      '<p class="plan-intro-tab">Voici vos objectifs, formulés pour être clairs et atteignables. La priorité est proposée, vous pouvez l\'ajuster en cliquant dessus.</p>' +
+      tableau +
+      '<div class="plan-cards-mobile">' + cartes + '</div>' +
+      seedup +
+    '</div>';
+    activerScreenPlan(scr, mod);
+
+    // priorité modifiable : clic fait défiler Haute → Moyenne → Basse
+    const cyclePrio = (btn) => {
+      const cur = (btn.textContent || '').trim().toLowerCase();
+      let next, cls;
+      if (cur.indexOf('haut') === 0) { next = 'Moyenne'; cls = 'pp-moyenne'; }
+      else if (cur.indexOf('moy') === 0) { next = 'Basse'; cls = 'pp-basse'; }
+      else { next = 'Haute'; cls = 'pp-haute'; }
+      btn.textContent = next;
+      btn.className = 'plan-prio ' + cls;
+    };
+    scr.querySelectorAll('[data-prio], [data-prio-m]').forEach(btn => {
+      btn.onclick = () => cyclePrio(btn);
+    });
+  }
+
+  // active l'écran plan et branche les boutons communs (retour, revoir, seedup)
+  function activerScreenPlan(scr, mod) {
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    scr.classList.add('active');
+    window.scrollTo(0, 0);
+    const r = document.getElementById('plan-retour');
+    if (r) r.onclick = () => { scr.classList.remove('active'); goToEspace(); };
+    const btnRevoir = scr.querySelector('[data-revoir]');
+    if (btnRevoir) btnRevoir.onclick = () => { scr.classList.remove('active'); revoirAnalyse(btnRevoir.getAttribute('data-revoir')); };
+    const btnSeed = document.getElementById('plan-go-seedup');
+    if (btnSeed) btnSeed.onclick = () => { scr.classList.remove('active'); revoirAnalyse(mod); };
+  }
+
 
   function revoirAnalyse(mod) {
     if (!identite.email) return;
@@ -931,10 +1120,58 @@ const App = (() => {
     queue = buildQueue(mod);
     idx = 0;
     document.getElementById('screen-espace').classList.remove('active');
-    showChapterIntro('spe', () => {
-      document.getElementById('screen-question').classList.add('active');
-      render();
+    // questions de contexte du métier AVANT le module (elles nourrissent la restitution spécialisée),
+    // puis l'intro de chapitre, puis le module.
+    afficherContexteModule(mod, () => {
+      showChapterIntro('spe', () => {
+        document.getElementById('screen-question').classList.add('active');
+        render();
+      });
     });
+  }
+
+  // Écran de questions de contexte propre au module (manager / commercial), posé AVANT le module.
+  function afficherContexteModule(mod, suite) {
+    const cle = (mod === 'manager') ? 'avant_module_manager' : (mod === 'commercial') ? 'avant_module_commercial' : null;
+    const ctx = cle && SINEA_DATA.questions_ouvertes && SINEA_DATA.questions_ouvertes[cle];
+    if (!ctx || !ctx.questions || !ctx.questions.length) { suite(); return; }
+    let scr = document.getElementById('screen-ctx-module');
+    if (!scr) {
+      scr = document.createElement('section');
+      scr.id = 'screen-ctx-module';
+      scr.className = 'screen';
+      (document.querySelector('.app') || document.body).appendChild(scr);
+    }
+    const champs = ctx.questions.map(function (q) {
+      return '<div class="qo-field">' +
+        '<label class="qo-q">' + q.question + '</label>' +
+        '<textarea class="qo-input qo-ctxm" data-q="' + q.id + '" rows="3" placeholder="' + (q.placeholder || '') + '">' + echapValeur(openAnswers[q.id] || '') + '</textarea>' +
+      '</div>';
+    }).join('');
+    scr.innerHTML =
+      '<div class="qo-scroll">' +
+        '<div class="qo-head">' +
+          '<div class="qo-kicker">Avant ce module</div>' +
+          '<h2 class="qo-title">Votre réalité de terrain</h2>' +
+          '<p class="qo-sub">' + (ctx.intro || 'Vos réponses enrichissent votre portrait spécialisé.') + '</p>' +
+        '</div>' +
+        champs +
+        '<button class="btn-primary qo-submit" id="ctxm-go">Commencer le module</button>' +
+        '<button class="btn-ghost" id="ctxm-skip">Passer</button>' +
+      '</div>';
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    scr.classList.add('active');
+    window.scrollTo(0, 0);
+    const valider = () => {
+      scr.querySelectorAll('.qo-ctxm').forEach(function (t) {
+        openAnswers[t.getAttribute('data-q')] = (t.value || '').trim();
+      });
+      saveProgress();
+      scr.classList.remove('active');
+      suite();
+    };
+    document.getElementById('ctxm-go').onclick = valider;
+    document.getElementById('ctxm-skip').onclick = () => { scr.classList.remove('active'); suite(); };
   }
 
   // ---- MODE DEV : remplir automatiquement le parcours pour tester sans répondre ----
@@ -1069,10 +1306,18 @@ const App = (() => {
   }
 
   // Écran d'intention : une seule question ouverte, légère, optionnelle.
+  // échappe le texte inséré dans un textarea (évite toute casse si la réponse contient des caractères spéciaux)
+  function echapValeur(s) {
+    return String(s == null ? '' : s).replace(/[&<>]/g, function (m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m];
+    });
+  }
+
   function afficherIntention(suite) {
     if (estAjoutModule) { suite(); return; } // un module spé ne redemande pas l'intention
     const qo = (SINEA_DATA.questions_ouvertes && SINEA_DATA.questions_ouvertes.intention) || null;
-    if (!qo) { suite(); return; }
+    const ctx = (SINEA_DATA.questions_ouvertes && SINEA_DATA.questions_ouvertes.avant_bilan) || null;
+    if (!qo && !ctx) { suite(); return; }
     let scr = document.getElementById('screen-intention');
     if (!scr) {
       scr = document.createElement('section');
@@ -1080,26 +1325,45 @@ const App = (() => {
       scr.className = 'screen';
       (document.querySelector('.app') || document.body).appendChild(scr);
     }
+    // questions de contexte (nourrissent la restitution) + intention
+    let champsCtx = '';
+    if (ctx && ctx.questions) {
+      champsCtx = ctx.questions.map(function (q) {
+        return '<div class="qo-field">' +
+          '<label class="qo-q">' + q.question + '</label>' +
+          '<textarea class="qo-input qo-ctx" data-q="' + q.id + '" rows="3" placeholder="' + (q.placeholder || '') + '">' + echapValeur(openAnswers[q.id] || '') + '</textarea>' +
+        '</div>';
+      }).join('');
+    }
+    const champIntention = qo ?
+      '<div class="qo-field">' +
+        '<label class="qo-q">' + qo.question + '</label>' +
+        '<textarea class="qo-input" id="intention-input" rows="3" placeholder="' + (qo.placeholder || '') + '">' + echapValeur(openAnswers.intention || '') + '</textarea>' +
+      '</div>' : '';
+
     scr.innerHTML =
       '<div class="qo-scroll">' +
         '<div class="qo-head">' +
           '<div class="qo-kicker">Avant de commencer</div>' +
-          '<h2 class="qo-title">Une question pour vous</h2>' +
-          '<p class="qo-sub">Votre réponse nous accompagne, et nous vous la rappellerons à la fin de votre bilan.</p>' +
+          '<h2 class="qo-title">Quelques mots sur vous</h2>' +
+          '<p class="qo-sub">' + ((ctx && ctx.intro) || 'Vos réponses enrichissent votre portrait.') + '</p>' +
         '</div>' +
-        '<div class="qo-field">' +
-          '<label class="qo-q">' + qo.question + '</label>' +
-          '<textarea class="qo-input" id="intention-input" rows="3" placeholder="' + (qo.placeholder || '') + '">' + (openAnswers.intention || '') + '</textarea>' +
-        '</div>' +
-        '<button class="btn-primary qo-submit" id="intention-go">Commencer le test</button>' +
+        champsCtx +
+        champIntention +
+        '<button class="btn-primary qo-submit" id="intention-go">Commencer mon bilan</button>' +
         '<button class="btn-ghost" id="intention-skip">Passer</button>' +
       '</div>';
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
     scr.classList.add('active');
     window.scrollTo(0, 0);
     const valider = () => {
+      // sauvegarder les questions de contexte
+      scr.querySelectorAll('.qo-ctx').forEach(function (t) {
+        openAnswers[t.getAttribute('data-q')] = (t.value || '').trim();
+      });
       const v = document.getElementById('intention-input');
-      if (v) { openAnswers.intention = (v.value || '').trim(); saveProgress(); }
+      if (v) { openAnswers.intention = (v.value || '').trim(); }
+      saveProgress();
       scr.classList.remove('active');
       suite();
     };
@@ -1660,8 +1924,9 @@ const App = (() => {
         // et on ajoute seulement le scoring du module par-dessus.
         result = Object.assign({}, profilSocleSauve);
         result.diagType = diagType;
-        // réponses ouvertes du socle (rechargées) pour nourrir le fil rouge
-        result.reponsesOuvertes = (interactionsSocleSauve && interactionsSocleSauve.reponses_ouvertes) ? interactionsSocleSauve.reponses_ouvertes : {};
+        // réponses ouvertes : celles du socle (fil rouge) + celles saisies AVANT ce module (contexte métier)
+        const ouvertesSocle = (interactionsSocleSauve && interactionsSocleSauve.reponses_ouvertes) ? interactionsSocleSauve.reponses_ouvertes : {};
+        result.reponsesOuvertes = Object.assign({}, ouvertesSocle, openAnswers);
         result.speDims = Engine.scorerSpeDims(repSpeDims, diagType, result.scoresBigFive);
         result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
         result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);

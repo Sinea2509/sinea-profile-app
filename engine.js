@@ -322,23 +322,31 @@ function scorerFiabilite(repMini, tempsReponses) {
   const valeursBrutes = SINEA_DATA.mini_items.map(it => repMini[it.id]).filter(v => v !== undefined && v !== null);
   if (valeursBrutes.length >= 8) {
     const uniques = new Set(valeursBrutes);
-    if (uniques.size === 1) { penalites += 30; signaux.push({ type:'uniforme', niveau:'fort', detail:'Toutes les réponses identiques' }); }
-    else if (uniques.size === 2) { penalites += 10; signaux.push({ type:'faible_variance', niveau:'modéré', detail:'Très peu de variété dans les réponses' }); }
-    // Trancher systématiquement n'est plus pénalisé : beaucoup de profils sincères
-    // ont des avis nets. Seule l'uniformité totale (signe de remplissage machinal) compte.
+    if (uniques.size === 1) { penalites += 40; signaux.push({ type:'uniforme', niveau:'fort', detail:'Toutes les réponses identiques' }); }
+    else if (uniques.size === 2) { penalites += 18; signaux.push({ type:'faible_variance', niveau:'modéré', detail:'Très peu de variété dans les réponses' }); }
 
+    // Détection "toujours le même sens" : répondre systématiquement à une extrémité
+    // (ex. "tout à fait d'accord" partout) est un signe fort de remplissage machinal.
+    // On regarde la proportion de réponses collées au minimum (1) ou au maximum (4).
+    const nbMax = valeursBrutes.filter(v => v === 4).length;
+    const nbMin = valeursBrutes.filter(v => v === 1).length;
+    const partExtreme = Math.max(nbMax, nbMin) / valeursBrutes.length;
+    if (partExtreme > 0.8) { penalites += 35; signaux.push({ type:'extreme', niveau:'fort', detail:'Réponses massivement à une seule extrémité' }); }
+    else if (partExtreme > 0.65) { penalites += 18; signaux.push({ type:'extreme', niveau:'modéré', detail:'Beaucoup de réponses à la même extrémité' }); }
   }
 
   // SIGNAL 4 : vitesse de réponse (si mesurée)
   if (tempsReponses) {
     const temps = SINEA_DATA.mini_items.map(it => tempsReponses[it.id]).filter(t => typeof t === 'number');
     if (temps.length >= 8) {
-      // Des réponses physiquement trop rapides pour avoir été lues sont le signal le
-      // plus fiable de remplissage machinal : pénalité forte. Répondre vite par aisance
-      // (au-dessus de 500 ms) ne pénalise toujours pas.
-      const ratio = temps.filter(t => t < 500).length / temps.length;
-      if (ratio > 0.6) { penalites += 26; signaux.push({ type:'vitesse', niveau:'fort', detail:'Réponses trop rapides pour avoir été lues' }); }
-      else if (ratio > 0.45) { penalites += 10; signaux.push({ type:'vitesse', niveau:'modéré', detail:'Beaucoup de réponses très rapides' }); }
+      // Lire un énoncé et répondre sérieusement prend au moins ~1 seconde. En dessous,
+      // la personne n'a pas lu : signal le plus fiable de remplissage machinal.
+      // < 900 ms = trop rapide pour avoir lu ; < 1500 ms = suspect.
+      const tropRapide = temps.filter(t => t < 900).length / temps.length;
+      const suspect = temps.filter(t => t < 1500).length / temps.length;
+      if (tropRapide > 0.5) { penalites += 40; signaux.push({ type:'vitesse', niveau:'fort', detail:'Réponses trop rapides pour avoir été lues' }); }
+      else if (tropRapide > 0.3) { penalites += 22; signaux.push({ type:'vitesse', niveau:'fort', detail:'Beaucoup de réponses trop rapides' }); }
+      else if (suspect > 0.6) { penalites += 12; signaux.push({ type:'vitesse', niveau:'modéré', detail:'Rythme de réponse très rapide' }); }
     }
   }
 

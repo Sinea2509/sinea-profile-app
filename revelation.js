@@ -103,9 +103,13 @@
       "#rev-overlay .rev-coach{max-width:540px;margin:0 auto 32px;}",
       "#rev-overlay .rev-coach-orb{width:70px;height:70px;margin:0 auto 16px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #FFE9C7, #FFA76E 40%, #FF7AD9 75%, #5474F5);position:relative;opacity:0;animation:revPop 0.9s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;box-shadow:0 0 50px -10px #FFA76E;}",
       "#rev-overlay .rev-coach-orb::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);animation:revRing 2.4s ease-in-out infinite;}",
+      "#rev-overlay .rev-coach-video{width:120px;height:120px;margin:0 auto 18px;border-radius:50%;overflow:hidden;position:relative;opacity:0;animation:revPop 0.9s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;box-shadow:0 0 60px -8px #FFA76E;}",
+      "#rev-overlay .rev-coach-video::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);animation:revRing 2.4s ease-in-out infinite;pointer-events:none;}",
+      "#rev-overlay .rev-nea-vid{width:100%;height:100%;object-fit:cover;display:block;}",
       "#rev-overlay .rev-coach-m{font-size:clamp(18px,3.4vw,24px);font-weight:700;line-height:1.4;opacity:0;animation:revUp 0.9s 0.35s both;}",
       "#rev-overlay .rev-coach-m .a{color:#FFC9A0;}",
       "#rev-overlay .rev-coach-s{font-size:12px;color:rgba(255,255,255,0.5);margin-top:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;opacity:0;animation:revUp 0.8s 0.7s both;}",
+      "#rev-overlay .rev-coach-label-na{font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#FFC9A0;margin-bottom:16px;opacity:0;animation:revUp 0.7s 0.3s both;}",
       "#rev-overlay .rev-flow{display:flex;align-items:stretch;justify-content:center;gap:13px;flex-wrap:wrap;max-width:600px;margin:0 auto;opacity:0;animation:revUp 0.8s 0.9s both;}",
       "#rev-overlay .rev-tf{flex:1;min-width:190px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:18px;padding:20px 18px;backdrop-filter:blur(10px);text-align:left;}",
       "#rev-overlay .rev-tf.hl{background:linear-gradient(135deg,rgba(249,130,114,0.2),rgba(84,116,245,0.14));border:1px solid rgba(255,158,125,0.35);}",
@@ -175,15 +179,23 @@
           '<div class="rev-pers-kick">Votre archétype</div>' +
           '<div class="rev-pers-n">' + escapeHtml(dom.nom) + '</div>' +
           '<div class="rev-pers-v">' + escapeHtml(verbeTxt) + '</div>' +
-          '<button class="rev-btn" data-go="4">Continuer →</button>' +
+          '<button class="rev-btn" data-go="4">Découvrir mon archétype →</button>' +
         '</div>' +
-        // 4 transition
+        // 4 · Néa prend la parole (écran à lui seul)
         '<div class="rev-phase" data-p="4">' +
           '<div class="rev-coach">' +
-            '<div class="rev-coach-orb"></div>' +
-            '<div class="rev-coach-m">« J\'ai lu votre portrait en entier. <span class="a">Découvrons-le ensemble.</span> »</div>' +
-            '<div class="rev-coach-s">Votre coach Sinéa</div>' +
+            '<div class="rev-coach-video">' +
+              '<video class="rev-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png">' +
+                '<source src="nea.mp4" type="video/mp4">' +
+              '</video>' +
+            '</div>' +
+            '<div class="rev-coach-label-na">Néa · votre coach</div>' +
+            '<div class="rev-coach-m">« Bonjour, je suis <span class="a">Néa</span>. J\'ai lu votre portrait en entier, et il dit de belles choses sur vous. Laissez-moi vous le présenter. »</div>' +
           '</div>' +
+          '<button class="rev-btn" data-go="5">Continuer →</button>' +
+        '</div>' +
+        // 5 · la suite : portrait + SeedUp
+        '<div class="rev-phase" data-p="5">' +
           '<div class="rev-flow">' +
             '<div class="rev-tf"><div class="rev-tf-ic">◈</div><div class="rev-tf-t">Votre portrait</div><div class="rev-tf-d">Vos forces, vos moteurs, votre façon d\'agir.</div></div>' +
             '<div class="rev-arrow">→</div>' +
