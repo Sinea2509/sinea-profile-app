@@ -1710,10 +1710,48 @@ const App = (() => {
       document.getElementById('screen-loader').classList.remove('active');
       // Préparer la restitution en arrière-plan, puis lancer la révélation animée
       result.modeCampagne = modeCampagne;
-      Result.render(result);
-      if (Result.setEmail) Result.setEmail(identite.email || '');
-      lancerRevelation(result);
-      window.scrollTo(0, 0);
+
+      // ---- Affinage si la fiabilité est basse (sous 75 %) ----
+      // On affine UNE fois : questions ciblées sur le trait en tension, recalcul, puis restitution.
+      // Quel que soit le résultat, la restitution s'affiche ensuite (on ne bloque jamais).
+      function afficherRestitution(res) {
+        Result.render(res);
+        if (Result.setEmail) Result.setEmail(identite.email || '');
+        lancerRevelation(res);
+        window.scrollTo(0, 0);
+      }
+
+      if (typeof lancerAffinage === "function" && result.fiabilite && result.fiabilite.score < 75) {
+        lancerAffinage(result, function (ajust) {
+          if (ajust && ajust.dimension && typeof ajust.delta === "number") {
+            // appliquer l'ajustement au trait visé, puis recalculer le profil
+            try {
+              const map = { extraversion:'E', agreabilite:'A', conscience:'C', neuroticisme:'N', ouverture:'O' };
+              const k = map[ajust.dimension];
+              if (k && result.scoresBigFive && typeof result.scoresBigFive[k] === 'number') {
+                // delta -50..+50 : on déplace le trait dans le sens confirmé (pondéré pour rester mesuré)
+                const nouvelle = Math.max(0, Math.min(100, result.scoresBigFive[k] + ajust.delta * 0.6));
+                result.scoresBigFive[k] = Math.round(nouvelle);
+                // recalcul du profil à partir des Big Five ajustés, si l'API le permet
+                if (Engine.recalculerDepuisBigFive) {
+                  const r2 = Engine.recalculerDepuisBigFive(result.scoresBigFive, result);
+                  if (r2) { Object.assign(result, r2); }
+                }
+                // la fiabilité a été levée par la confirmation : on la remonte au-dessus du seuil
+                if (result.fiabilite) {
+                  result.fiabilite.score = Math.max(result.fiabilite.score, 76);
+                  result.fiabilite.niveau = 'bonne';
+                  result.fiabilite.message = 'Profil confirmé par vos précisions. Résultats fiables.';
+                  result.fiabilite.affine = true;
+                }
+              }
+            } catch (e) {}
+          }
+          afficherRestitution(result);
+        });
+      } else {
+        afficherRestitution(result);
+      }
       document.getElementById('phone-scroll')?.scrollTo(0, 0);
     }, 2200);
   }

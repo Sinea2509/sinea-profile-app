@@ -222,6 +222,13 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-cmp-a{background:#EFEDE7;color:var(--c-dark-grey);}
 .r-cmp-b{background:var(--c-black);color:#fff;}
 .r-cmp-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-orange);margin-bottom:6px;}
+.r-sinea-but{background:var(--c-black);border-radius:18px;padding:24px 26px;margin:6px 0 12px;color:#fff;}
+.r-sinea-but-h{font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#FFC9A0;margin-bottom:18px;}
+.r-sinea-but-grid{display:flex;gap:18px;flex-wrap:wrap;}
+.r-sinea-but-it{flex:1;min-width:160px;}
+.r-sinea-but-ic{width:42px;height:42px;border-radius:12px;background:linear-gradient(90deg,#F98272 0%,#F9A876 35%,#E290EC 70%,#5474F5 100%);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;}
+.r-sinea-but-t{font-size:15px;font-weight:800;margin-bottom:7px;}
+.r-sinea-but-d{font-size:12.5px;color:rgba(255,255,255,0.75);line-height:1.5;}
 
 /* Secondaires */
 .r-sec{background:var(--c-white);border:1px solid #EAE7E0;border-left:4px solid var(--fam-color);border-radius:14px;padding:18px;margin-bottom:12px;box-shadow:var(--shadow-card);}

@@ -639,9 +639,13 @@ const Result = (() => {
         <div class="r-bloc-head"><span class="r-bloc-tag">Méthode</span><h2>Comment ce portrait est établi</h2></div>
         ${schemaScience(dt === 'classic' ? 55 : 91)}
         <div class="r-card"><p>Votre profil repose sur le <b>Big Five</b>, le modèle de personnalité le plus validé scientifiquement. Vos réponses se traduisent en cinq dimensions, puis en archétypes qui les rendent vivantes.</p></div>
-        <div class="r-compare">
-          <div class="r-cmp r-cmp-a"><div class="r-cmp-t">Les tests en cases</div>rangent chaque personne dans une catégorie figée, et perdent les nuances qui font les vraies personnes.</div>
-          <div class="r-cmp r-cmp-b"><div class="r-cmp-t">Sinéa Profile</div>mesure des dimensions continues, puis les combine en un profil nuancé et unique.</div>
+        <div class="r-sinea-but">
+          <div class="r-sinea-but-h">Ce que Sinéa Profile vous apporte</div>
+          <div class="r-sinea-but-grid">
+            <div class="r-sinea-but-it"><div class="r-sinea-but-ic">◈</div><div class="r-sinea-but-t">Mieux vous connaître</div><div class="r-sinea-but-d">Un portrait nuancé de vos forces, vos moteurs et votre façon de fonctionner.</div></div>
+            <div class="r-sinea-but-it"><div class="r-sinea-but-ic">❋</div><div class="r-sinea-but-t">Mieux interagir avec les autres</div><div class="r-sinea-but-d">Comprendre vos relations et adapter votre posture pour mieux collaborer.</div></div>
+            <div class="r-sinea-but-it"><div class="r-sinea-but-ic">⚡</div><div class="r-sinea-but-t">Passer à l'action</div><div class="r-sinea-but-d">Des pistes concrètes pour faire grandir vos talents au quotidien.</div></div>
+          </div>
         </div>
         <div class="r-card">${badgeFiabilite(res)}<p style="margin:0"><b>Pourquoi vos réponses sont fiables.</b> Nos questions utilisent un choix forcé, sans réponse neutre, ce qui limite le biais de complaisance. Votre profil mêle plusieurs archétypes, car une personne réelle ne tient jamais dans une seule case.</p></div>
       </div>
@@ -1321,32 +1325,74 @@ const Result = (() => {
   function installerQuestionsRestitution(res){
     const qo = (SINEA_DATA.questions_ouvertes && SINEA_DATA.questions_ouvertes.restitution) || null;
     if (!qo || !qo.questions || !qo.questions.length) return;
-    const ancre = document.querySelector('.r-toc');
-    if (!ancre || document.getElementById('qr-bloc')) return;
-    // pré-remplir avec ce qui a déjà été saisi (reprise, ou aller-retour)
-    const champs = qo.questions.map(q =>
-      '<div class="r-open">' +
-      '<label class="r-open-q">' + q.question + '</label>' +
-      '<textarea class="r-open-input qr-input" data-q="' + q.id + '" rows="3" placeholder="' + (q.placeholder || '') + '">' + echapHtml(openAnswers[q.id] || '') + '</textarea>' +
-      '</div>'
-    ).join('');
-    const bloc = document.createElement('div');
-    bloc.className = 'r-bloc';
-    bloc.id = 'qr-bloc';
-    bloc.innerHTML =
-      '<div class="r-bloc-head"><span class="r-bloc-tag">Vos mots</span><h2>Deux questions, avant d\'entrer dans le détail</h2></div>' +
-      '<p class="clarif-intro">' + (qo.intro || '') + '</p>' +
-      champs +
-      '<button type="button" class="clarif-go" id="qr-go">Continuer vers mon analyse</button>';
-    ancre.parentNode.insertBefore(bloc, ancre);
-    bloc.querySelectorAll('.qr-input').forEach(t => {
-      t.addEventListener('input', () => { openAnswers[t.getAttribute('data-q')] = t.value; sauvegarderInteractions(); });
-    });
-    document.getElementById('qr-go').onclick = () => {
-      poserMiroirs();
-      const toc = document.querySelector('.r-toc') || document.getElementById('b0');
-      if (toc) toc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (document.getElementById('qr-q1')) return; // déjà posées
+
+    // où poser chaque question selon sa position (début / milieu / fin du parcours)
+    const ancres = {
+      debut: document.getElementById('b1') || document.querySelector('.r-toc'),
+      milieu: document.getElementById('b2') || document.getElementById('b-dims'),
+      fin: document.getElementById('b3') || document.getElementById('b-fin')
     };
+
+    // construit le petit bloc d'une question isolée
+    function blocQuestion(q, idx){
+      const bloc = document.createElement('div');
+      bloc.className = 'r-bloc r-open-bloc';
+      bloc.id = 'qr-' + q.id;
+      const intro = (idx === 0)
+        ? '<p class="clarif-intro">' + (qo.intro || '') + ' Prenez le temps, quelques mots suffisent.</p>'
+        : '';
+      bloc.innerHTML =
+        '<div class="r-bloc-head"><span class="r-bloc-tag">Vos mots</span><h2>Un instant pour vous</h2></div>' +
+        intro +
+        '<div class="r-open">' +
+          '<label class="r-open-q">' + q.question + '</label>' +
+          '<textarea class="r-open-input qr-input" data-q="' + q.id + '" rows="3" placeholder="' + (q.placeholder || '') + '">' + echapHtml(openAnswers[q.id] || '') + '</textarea>' +
+        '</div>';
+      return bloc;
+    }
+
+    // poser chaque question à son ancre (insérée juste avant le bloc cible)
+    qo.questions.forEach(function(q, idx){
+      const pos = q.position || (idx === 0 ? 'debut' : (idx === 1 ? 'milieu' : 'fin'));
+      const ancre = ancres[pos] || ancres.debut;
+      if (!ancre || !ancre.parentNode) return;
+      const bloc = blocQuestion(q, idx);
+      ancre.parentNode.insertBefore(bloc, ancre);
+    });
+
+    // sauvegarde au fil de la frappe + miroir
+    document.querySelectorAll('.qr-input').forEach(function(t){
+      t.addEventListener('input', function(){ openAnswers[t.getAttribute('data-q')] = t.value; sauvegarderInteractions(); });
+      t.addEventListener('blur', function(){ poserMiroirs(); });
+    });
+
+    // ---- questions ouvertes du module métier (manager / commercial) ----
+    // une au début et une à la fin du bloc spécialisé "b-spe"
+    const dt = res && res.diagType;
+    let qm = null;
+    if (dt === 'manager') qm = SINEA_DATA.questions_ouvertes_manager;
+    else if (dt === 'commercial') qm = SINEA_DATA.questions_ouvertes_commercial;
+    const blocSpe = document.getElementById('b-spe');
+    if (qm && qm.questions && blocSpe && !document.getElementById('qr-' + qm.questions[0].id)) {
+      qm.questions.forEach(function(q){
+        const bloc = blocQuestion(q, 1); // idx=1 → pas de ré-intro
+        if (q.position === 'debut') {
+          // juste après le titre du module
+          const head = blocSpe.querySelector('.r-bloc-head');
+          if (head && head.nextSibling) blocSpe.insertBefore(bloc, head.nextSibling);
+          else blocSpe.appendChild(bloc);
+        } else {
+          // à la fin du module
+          blocSpe.appendChild(bloc);
+        }
+      });
+      // rebrancher la sauvegarde sur les nouveaux champs
+      blocSpe.querySelectorAll('.qr-input').forEach(function(t){
+        if (t._lie) return; t._lie = true;
+        t.addEventListener('input', function(){ openAnswers[t.getAttribute('data-q')] = t.value; sauvegarderInteractions(); });
+      });
+    }
   }
 
   // Le miroir : réafficher les réponses de la personne aux endroits qui résonnent.

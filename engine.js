@@ -175,6 +175,8 @@ function calculerResultat(scoresBf, affinites, pointsSinea) {
     scoresBigFive: scoresBf,
     blend: blend,
     classement: classement.map(n=>({nom:n, score: Math.round(score[n]*10)/10, famille: familles[n]})),
+    // points Sinéa bruts conservés : permettent un recalcul fidèle après affinage
+    _ptsSinea: pointsSinea,
     // Écart relatif entre l'archétype 1 et 2 : sert à détecter un résultat serré
     // (deux profils au coude-à-coude) qui mérite une question de clarification.
     ecartDominant: Math.round((score[classement[0]] - score[classement[1]]) * 10) / 10
@@ -206,6 +208,21 @@ function scorer(repMini, repSinea) {
   const aff = calculerAffinites(scoresBf);
   const pts = calculerPointsSinea(repSinea);
   return calculerResultat(scoresBf, aff, pts);
+}
+
+// Recalcule le profil après un ajustement manuel des scores Big Five (affinage).
+// On repart des scores ajustés et on recalcule les affinités, en conservant les
+// points Sinéa déjà obtenus (transmis dans l'ancien résultat via _ptsSinea).
+function recalculerDepuisBigFive(scoresBf, ancienResultat) {
+  try {
+    const aff = calculerAffinites(scoresBf);
+    const pts = (ancienResultat && ancienResultat._ptsSinea) || {};
+    // si on n'a pas les points Sinéa d'origine, on recalcule au mieux via les affinités seules
+    const profils = SINEA_DATA.profils;
+    const ptsSafe = {};
+    Object.keys(profils).forEach(function (n) { ptsSafe[n] = (pts && typeof pts[n] === 'number') ? pts[n] : 0; });
+    return calculerResultat(scoresBf, aff, ptsSafe);
+  } catch (e) { return null; }
 }
 
 // ---- Dimensions contextuelles (profil dominant par dimension) ----
@@ -281,9 +298,9 @@ function scorerFiabilite(repMini, tempsReponses) {
     if (ecart > dispMax) { dispMax = ecart; traitIncoherent = t; }
   }
   // Une dispersion modérée est NORMALE chez quelqu'un de sincère (les facettes d'un
-  // même trait ne sont pas identiques). On ne pénalise que les vraies contradictions.
-  if (dispMax > 58) { penalites += 12; signaux.push({ type:'incoherence', niveau:'fort', detail:'Réponses contradictoires sur un même trait' }); }
-  else if (dispMax > 47) { penalites += 5; signaux.push({ type:'incoherence', niveau:'modéré', detail:'Légères contradictions internes' }); }
+  // même trait ne sont pas identiques). On ne pénalise que les vraies contradictions fortes.
+  if (dispMax > 68) { penalites += 8; signaux.push({ type:'incoherence', niveau:'fort', detail:'Réponses contradictoires sur un même trait' }); }
+  else if (dispMax > 60) { penalites += 3; signaux.push({ type:'incoherence', niveau:'modéré', detail:'Légères contradictions internes' }); }
 
   // SIGNAL 2 : concordance swipe vs choix forcé
   let nbDesaccords = 0;
@@ -297,9 +314,9 @@ function scorerFiabilite(repMini, tempsReponses) {
     if (Math.abs(moySwipe - valCF) > 62) nbDesaccords++;
   });
   // Un seul désaccord ne compte plus : se décrire autrement qu'on ne tranche dans
-  // l'instant est humain. Seuls des désaccords répétés signalent une incohérence.
-  if (nbDesaccords >= 3) { penalites += 22; signaux.push({ type:'desaccord', niveau:'fort', detail:'Plusieurs divergences entre auto-description et choix tranchés' }); }
-  else if (nbDesaccords === 2) { penalites += 11; signaux.push({ type:'desaccord', niveau:'modéré', detail:'Quelques divergences entre auto-description et choix tranchés' }); }
+  // l'instant est humain. On allège : seuls des désaccords vraiment répétés pèsent.
+  if (nbDesaccords >= 4) { penalites += 16; signaux.push({ type:'desaccord', niveau:'fort', detail:'Plusieurs divergences entre auto-description et choix tranchés' }); }
+  else if (nbDesaccords === 3) { penalites += 8; signaux.push({ type:'desaccord', niveau:'modéré', detail:'Quelques divergences entre auto-description et choix tranchés' }); }
 
   // SIGNAL 3 : réponses au hasard / patterns suspects
   const valeursBrutes = SINEA_DATA.mini_items.map(it => repMini[it.id]).filter(v => v !== undefined && v !== null);
@@ -320,15 +337,15 @@ function scorerFiabilite(repMini, tempsReponses) {
       // plus fiable de remplissage machinal : pénalité forte. Répondre vite par aisance
       // (au-dessus de 500 ms) ne pénalise toujours pas.
       const ratio = temps.filter(t => t < 500).length / temps.length;
-      if (ratio > 0.6) { penalites += 32; signaux.push({ type:'vitesse', niveau:'fort', detail:'Réponses trop rapides pour avoir été lues' }); }
-      else if (ratio > 0.35) { penalites += 16; signaux.push({ type:'vitesse', niveau:'modéré', detail:'Beaucoup de réponses très rapides' }); }
+      if (ratio > 0.6) { penalites += 26; signaux.push({ type:'vitesse', niveau:'fort', detail:'Réponses trop rapides pour avoir été lues' }); }
+      else if (ratio > 0.45) { penalites += 10; signaux.push({ type:'vitesse', niveau:'modéré', detail:'Beaucoup de réponses très rapides' }); }
     }
   }
 
   // Cumul : quand plusieurs signaux FORTS se combinent (typique d'un remplissage
   // bâclé qui rate plusieurs contrôles à la fois), on ajoute une pénalité de convergence.
   const nbForts = signaux.filter(s => s.niveau === 'fort').length;
-  if (nbForts >= 2) penalites += 12;
+  if (nbForts >= 2) penalites += 6;
 
   const score = Math.max(0, Math.min(100, 100 - penalites));
   let niveau, message;
@@ -522,5 +539,5 @@ function scorerNaturelAdapte(repMini, repAdapte) {
 }
 
 // Export
-const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte };
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, recalculerDepuisBigFive, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte };
 

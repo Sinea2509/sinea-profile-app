@@ -84,7 +84,7 @@
       "#rev-overlay .rev-pre-t{font-size:clamp(24px,5vw,40px);font-weight:800;line-height:1.2;}",
       "#rev-overlay .rev-pre-t .a{color:#FFC9A0;}",
       "#rev-overlay .rev-bar{width:210px;height:4px;background:rgba(255,255,255,0.12);border-radius:99px;margin:34px auto 0;overflow:hidden;}",
-      "#rev-overlay .rev-bar-f{height:100%;width:0;background:linear-gradient(90deg,#F98272,#F9A876 35%,#E290EC 70%,#5474F5);border-radius:99px;transition:width 1.4s cubic-bezier(0.4,0,0.2,1);}",
+      "#rev-overlay .rev-bar-f{height:100%;width:0;background:linear-gradient(90deg,#F98272,#F9A876 35%,#E290EC 70%,#5474F5);border-radius:99px;transition:width 4.9s cubic-bezier(0.45,0.05,0.3,1);}",
       "#rev-overlay .rev-bar-t{font-size:11.5px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-top:14px;font-weight:700;}",
       // famille
       "#rev-overlay .rev-fam-k{font-size:12.5px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:18px;opacity:0;animation:revUp 0.7s 0.1s both;}",
@@ -225,11 +225,20 @@
       if (n === 1) {
         var fill = ov.querySelector("#rev-bar-f");
         var txt = ov.querySelector("#rev-bar-t");
+        // barre de chargement ~5s : donne l'impression que le système analyse en profondeur
         if (fill) { fill.style.width = "0"; setTimeout(function () { fill.style.width = "100%"; }, 100); }
-        var et = ["Analyse de vos réponses", "Lecture de vos dimensions", "Votre famille"];
+        var et = [
+          "Analyse de vos réponses",
+          "Lecture de vos cinq dimensions",
+          "Croisement de vos traits",
+          "Identification de votre famille",
+          "Révélation de votre archétype"
+        ];
         var i = 0;
-        var it = setInterval(function () { i++; if (txt && i < et.length) txt.textContent = et[i]; }, 480);
-        timer = setTimeout(function () { clearInterval(it); montrer(2); }, 1500);
+        // 5 messages sur ~5s => un message toutes les 1000ms
+        var it = setInterval(function () { i++; if (txt && i < et.length) txt.textContent = et[i]; }, 1000);
+        // bascule vers la découverte de la famille au bout de 5s, puis chaque écran attend le clic
+        timer = setTimeout(function () { clearInterval(it); montrer(2); }, 5000);
       }
     }
 
