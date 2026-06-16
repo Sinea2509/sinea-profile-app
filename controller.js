@@ -451,8 +451,26 @@ const App = (() => {
             // le module manager/commercial se débloque ensuite (droits = data.type).
             estAjoutModule = false;
             droits = data.type || 'classic';
-            if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
-            else start();
+            // Avant de (re)lancer le bilan : vérifier côté serveur si cette personne a déjà
+            // terminé son socle. Si oui, l'envoyer vers son espace plutôt que de tout relancer.
+            // (Robuste même si elle revient depuis un autre navigateur, localStorage vide.)
+            if (identite.email) {
+              fetch(PROGRESSION_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'load_analyse', email: identite.email }),
+              })
+                .then(r => r.json())
+                .then(a => {
+                  const analyses = (a && a.analyses) || {};
+                  if (analyses.socle) { goToEspace(); return; } // socle déjà fait : direction l'espace
+                  if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
+                  else start();
+                })
+                .catch(() => { if (modeCampagne === 'recrutement') afficherInfoCandidat(start); else start(); });
+            } else {
+              if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
+              else start();
+            }
           }
         } else {
           const raison = data ? data.raison : '';
@@ -1227,6 +1245,15 @@ const App = (() => {
     idx = 0;
     document.getElementById('screen-cover').classList.remove('active');
     document.getElementById('screen-identif').classList.remove('active');
+
+    // Reprise : si un parcours est déjà entamé (sauvegardé), proposer de reprendre
+    // au lieu de tout relancer (accueil + questions depuis le début).
+    const saved = loadProgress();
+    if (saved && saved.answers && Object.keys(saved.answers).length > 0) {
+      showResumePrompt(saved);
+      return;
+    }
+
     // Accueil animé (même univers que le coach) : donne du sens et installe le sérieux,
     // puis enchaîne sur la question d'intention, puis le test.
     jouerAccueil(() => {
