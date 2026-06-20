@@ -319,14 +319,17 @@ const Result = (() => {
       const conf = DIM_LABELS[d];
       const choisi = ctx[d];
       const defs = (((SINEA_DATA.contextuelles || {}).dimensions || {})[d] || {}).description_profils || {};
+      // Plus d'infobulle au survol (coupée sur mobile) : la description du profil retenu
+      // s'affiche directement sous les pastilles, toujours lisible quel que soit l'écran.
       const pastilles = Object.entries(conf.profils).map(([key, label]) => {
-        const tip = (defs[key] || '').replace(/"/g, '&quot;');
-        return `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}"${tip ? ` data-tip="${tip}"` : ''}>${label}</span>`;
+        return `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`;
       }).join('');
+      const desc = defs[choisi] || '';
       return `
         <div class="dimc-row">
           <div class="dimc-titre">${conf.titre}</div>
           <div class="dimc-opts">${pastilles}</div>
+          ${desc ? `<p class="dimc-desc">${desc}</p>` : ''}
         </div>`;
     }).join('');
     return blocs ? `<div class="dimc-card">${blocs}</div>` : '';
@@ -773,7 +776,7 @@ const Result = (() => {
         <div class="r-me-head">
           <div class="r-me-kicker">Vos 3 questions</div>
           <h2 class="r-me-title">Vos questions à votre coach</h2>
-          <p class="r-me-sub">Votre coach Sinéa a lu votre portrait. Posez-lui jusqu'à trois questions pour aller plus loin. <span class="r-chat-compteur" id="chat-compteur"></span></p>
+          <p class="r-me-sub">Néa a lu votre portrait. Posez-lui jusqu'à trois questions pour aller plus loin. <span class="r-chat-compteur" id="chat-compteur"></span></p>
         </div>
         <div class="r-chat-window" id="chat-window">
           <div class="r-chat-suggestions" id="chat-suggestions"></div>
@@ -813,6 +816,8 @@ const Result = (() => {
       // récupérer l'intention saisie avant le test pour le pré-remplissage et le miroir
       if (res.reponsesOuvertes && res.reponsesOuvertes.intention && !openAnswers.intention) openAnswers.intention = res.reponsesOuvertes.intention;
       installerQuestionsRestitution(res);
+      // Miroir : la restitution fait écho aux mots écrits par la personne (forces + clôture).
+      poserMiroirs();
     }
 
     // Câbler la carte partageable (aperçu + bouton de téléchargement)
@@ -1035,10 +1040,11 @@ const Result = (() => {
     ov.className = 'coach-intro';
     ov.innerHTML = `
       <div class="coach-intro-card">
-        <div class="coach-intro-orb"><span class="coach-intro-orb-core"></span></div>
+        <div class="coach-intro-nea"><video class="coach-intro-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div>
+        <div class="coach-intro-nea-label">Néa · votre coach</div>
         <div class="coach-intro-step" data-step="1">
           <p class="coach-intro-hi">Bonjour${prenom ? ' ' + prenom : ''}.</p>
-          <p class="coach-intro-line">Je suis votre coach Sinéa.</p>
+          <p class="coach-intro-line">Je suis Néa, votre coach.</p>
         </div>
         <div class="coach-intro-step" data-step="2">
           <p class="coach-intro-line">Voici votre portrait, fondé sur vos réponses.<br>Prenez le temps de le lire attentivement.</p>
@@ -1087,7 +1093,7 @@ const Result = (() => {
     // message d'accueil
     win.querySelectorAll('.r-chat-msg').forEach(e => e.remove());
     const prenomChat = (window.App && App.getPrenom) ? App.getPrenom() : '';
-    ajouterMessageChat('assistant', `Bonjour${prenomChat ? ' ' + prenomChat : ''}, je suis votre coach Sinéa. J'ai lu votre portrait ${dom.nom} en entier. Posez-moi jusqu'à trois questions pour creuser ce qui vous intrigue.`);
+    ajouterMessageChat('assistant', `Bonjour${prenomChat ? ' ' + prenomChat : ''}, je suis Néa, votre coach. J'ai lu votre portrait ${dom.nom} en entier. Posez-moi jusqu'à trois questions pour creuser ce qui vous intrigue.`);
     majCompteurChat(3);
 
     // suggestions cliquables
@@ -1225,8 +1231,11 @@ const Result = (() => {
   function detecterDoute(res){
     const f = res.fiabilite || {};
     const cl = res.classement || [];
-    // Cas 1 : deux premiers archétypes au coude-à-coude (écart faible et fiabilité pas mauvaise)
-    if (cl.length >= 2 && typeof res.ecartDominant === 'number' && res.ecartDominant < 6 && (f.score === undefined || f.score >= 60)) {
+    // Cas 1 : deux premiers archétypes au coude-à-coude (quasi ex aequo).
+    // Seuil calibré pour le dosage 75/25 : les scores étant plus resserrés qu'avant
+    // (l'affinité Big Five domine), un écart de 1.5 point traduit déjà une vraie
+    // proximité. Au-delà, la dominante est suffisamment nette.
+    if (cl.length >= 2 && typeof res.ecartDominant === 'number' && res.ecartDominant < 1.5 && (f.score === undefined || f.score >= 60)) {
       return { cas: 'serre', archetype1: cl[0].nom, archetype2: cl[1].nom };
     }
     // Cas 2 : fiabilité dans la zone 70-85 (une tension interne, profil nuancé)
@@ -1358,7 +1367,9 @@ const Result = (() => {
   // Le miroir : réafficher les réponses de la personne aux endroits qui résonnent.
   function poserMiroirs(){
     // projective (q1) : en écho près des forces, dans le bloc "vous connaître"
-    const q1 = (openAnswers.q1 || '').trim();
+    // q1 vient des réponses avant le bilan : on la lit depuis reponsesOuvertes en priorité
+    // (le openAnswers local ne contient que les réponses saisies dans la restitution).
+    const q1 = (((RES && RES.reponsesOuvertes && RES.reponsesOuvertes.q1) || openAnswers.q1 || '')).trim();
     const cibleQ1 = document.getElementById('b1');
     if (q1 && cibleQ1 && !document.getElementById('miroir-q1')){
       const m = document.createElement('div');
@@ -1413,7 +1424,6 @@ const Result = (() => {
     }, 1500);
   }
   function toggleAction(i){ const el=document.getElementById('act-'+i); el.classList.toggle('sel'); if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i); sauvegarderInteractions(); }
-  function niveauTxt(niv){ return {'répandu':'Vous avez un profil répandu','courant':'Vous avez un profil courant','peu commun':'Vous avez un profil peu commun','rare':'Vous avez un profil rare'}[niv]||'Votre profil est unique'; }
 
   // Comparaisons amusantes calibrées sur la rareté (1 sur N).
   // Chaque palier propose plusieurs images : on en choisit une de façon stable
@@ -1808,44 +1818,6 @@ const Result = (() => {
       }).catch(() => {});
     }
   }
-  function partagerModeEmploiOLD(me, archetype){
-    // construire un texte propre à partager
-    const lignes = [];
-    lignes.push(`Mon mode d'emploi · ${archetype}`);
-    lignes.push('');
-    if (me.intro) lignes.push(me.intro);
-    lignes.push('');
-    if (Array.isArray(me.pour_bien_travailler)) {
-      lignes.push('Pour bien travailler avec moi :');
-      me.pour_bien_travailler.forEach(x => lignes.push('· ' + x));
-      lignes.push('');
-    }
-    if (Array.isArray(me.ce_qui_me_motive)) {
-      lignes.push('Ce qui me motive :');
-      me.ce_qui_me_motive.forEach(x => lignes.push('· ' + x));
-      lignes.push('');
-    }
-    if (Array.isArray(me.ce_qui_me_freine)) {
-      lignes.push('Ce qui m\'aide à donner le meilleur :');
-      me.ce_qui_me_freine.forEach(x => lignes.push('· ' + x));
-      lignes.push('');
-    }
-    if (me.ma_communication) { lignes.push('Ma communication : ' + me.ma_communication); lignes.push(''); }
-    if (me.en_un_mot) lignes.push(me.en_un_mot);
-    lignes.push('');
-    lignes.push('Réalisé avec Sinéa Profile');
-    const texte = lignes.join('\n');
-    // partage natif si disponible (mobile), sinon copie presse-papier
-    if (navigator.share) {
-      navigator.share({ title: `Mon mode d'emploi · ${archetype}`, text: texte }).catch(() => {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(texte).then(() => {
-        const btn = document.getElementById('mode-emploi-share');
-        if (btn) { const old = btn.textContent; btn.textContent = 'Copié, prêt à partager'; setTimeout(() => { btn.textContent = old; }, 2200); }
-      }).catch(() => {});
-    }
-  }
-
   function poseSection(elId, tag, contenu, fallback){
     const el = document.getElementById(elId);
     if(!el) return;

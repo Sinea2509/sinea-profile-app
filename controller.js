@@ -175,6 +175,23 @@ const App = (() => {
   }
 
   // ---- Construction de la file de questions (avec chapitres) ----
+  // Entrelace une liste d'items pour que deux items de la même dimension ne se suivent pas.
+  // Méthode : on regroupe par dimension, puis on pioche à tour de rôle dans chaque groupe.
+  function entrelacerParDimension(items) {
+    const groupes = {};
+    items.forEach(it => { (groupes[it.dimension] = groupes[it.dimension] || []).push(it); });
+    const listes = Object.values(groupes);
+    const out = [];
+    let reste = true;
+    while (reste) {
+      reste = false;
+      for (const liste of listes) {
+        if (liste.length) { out.push(liste.shift()); reste = true; }
+      }
+    }
+    return out;
+  }
+
   function buildQueue(moduleSeulType) {
     const d = SINEA_DATA;
     const q = [];
@@ -192,7 +209,12 @@ const App = (() => {
     }
 
     // ===== CHAPITRE 1 : SOCLE =====
-    d.mini_items.forEach(it => q.push({ kind: 'swipe', id: it.id, item: it, chap: 'socle' }));
+    // On entremêle les items du mini-test pour que deux questions de la même dimension
+    // ne se suivent pas (sinon on enchaîne 5 questions d'extraversion d'affilée, d'où une
+    // impression de répétition, retour terrain). Alterner les dimensions rend le parcours
+    // plus varié et réduit aussi les biais de réponse en série.
+    const miniEntrelace = entrelacerParDimension(d.mini_items);
+    miniEntrelace.forEach(it => q.push({ kind: 'swipe', id: it.id, item: it, chap: 'socle' }));
     // Choix forcé Big Five (anti-désirabilité, alimente aussi le score de fiabilité)
     (d.mini_choix_force || []).forEach(it => q.push({ kind: 'choixforce', id: it.id, item: it, chap: 'socle' }));
     // Questions "adapté" (comportement au travail) pour mesurer le coût d'adaptation
@@ -233,17 +255,7 @@ const App = (() => {
   }
 
   // Index des questions par chapitre (pour la progression par chapitre)
-  function chapInfo() {
-    const info = {};
-    queue.forEach((item, i) => {
-      if (!info[item.chap]) info[item.chap] = { first: i, count: 0, answeredIdx: [] };
-      info[item.chap].count++;
-    });
-    return info;
-  }
-
   function total() { return queue.length; }
-  function answeredCount() { return Object.keys(answers).length; }
 
   // ---- Personnalisation de l'écran d'accueil selon le type ----
   function initCover() {
@@ -407,14 +419,6 @@ const App = (() => {
       + '</div>';
     document.body.appendChild(ov);
     document.getElementById('cand-info-go').onclick = () => { ov.remove(); if (typeof suite === 'function') suite(); };
-  }
-
-  function consommerMagicCode() {
-    if (!magicCode) return;
-    fetch(VERIFIER_CODE_URL, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'consommer', code: magicCode }),
-    }).catch(() => {});
   }
 
   function submitMagicCode() {
@@ -663,6 +667,9 @@ const App = (() => {
 
   function renderEspace(data) {
     const prenom = data.prenom || identite.prenom || '';
+    // Filet : si le serveur renvoie l'email, on le re-mémorise. Garantit que le plan
+    // d'action et les autres actions de l'espace ont toujours un email valide à utiliser.
+    if (data.email && !identite.email) identite.email = data.email;
     const analyses = data.analyses || {};
     // archétype : depuis le champ Airtable, ou à défaut depuis le profil de l'analyse socle
     let archetype = data.archetype || '';
@@ -673,7 +680,6 @@ const App = (() => {
     }
     const droitsTxt = (data.droits || droits || '').toLowerCase();
     const progression = data.progression || {};
-    const progType = data.diagTypeEnCours || ''; // type du module en cours si applicable
 
     document.getElementById('espace-name').textContent = 'Bonjour ' + prenom;
 
@@ -883,21 +889,57 @@ const App = (() => {
   // Recharge le profil (pour personnaliser) + les interactions (ce que la personne a coché),
   // puis met en page une feuille de route motivante, du socle vers l'action.
   function ouvrirPlanAction(mod) {
-    if (!identite.email) return;
-    // on charge en parallèle l'analyse (profil) et les interactions (choix)
+    // On prépare tout de suite l'écran pour ne JAMAIS laisser un écran vide, même en cas de souci.
+    let scr = document.getElementById('screen-plan');
+    if (!scr) {
+      scr = document.createElement('section');
+      scr.id = 'screen-plan';
+      scr.className = 'screen';
+      (document.querySelector('.app') || document.body).appendChild(scr);
+    }
+    // si on n'a pas d'email (session incomplète), on l'explique au lieu de ne rien afficher
+    if (!identite.email) {
+      scr.innerHTML = '<div class="plan-scroll">' +
+        '<button class="plan-retour" id="plan-retour">← Mon espace</button>' +
+        '<div class="plan-vide-card"><p>Pour préparer votre plan d\'action, reconnectez-vous à votre espace.</p>' +
+        '<button class="btn-primary" id="plan-go-espace">Retour à mon espace</button></div></div>';
+      activerScreenPlan(scr, mod);
+      const b = document.getElementById('plan-go-espace');
+      if (b) b.onclick = () => { scr.classList.remove('active'); goToEspace(); };
+      return;
+    }
+    // écran de chargement immédiat (la personne voit qu'il se passe quelque chose)
+    scr.innerHTML = '<div class="plan-scroll">' +
+      '<button class="plan-retour" id="plan-retour">← Mon espace</button>' +
+      '<div class="plan-loading" id="plan-loading"><div class="plan-loading-spin"></div>' +
+      '<p>Nous rassemblons votre profil et vos choix...</p></div></div>';
+    activerScreenPlan(scr, mod);
+    // on charge en parallèle l'analyse (profil), les interactions (choix) et le suivi sauvegardé
     Promise.all([
       fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'load_analyse', email: identite.email }) }).then(r => r.json()).catch(() => ({})),
-      fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'load_interactions', email: identite.email }) }).then(r => r.json()).catch(() => ({}))
+      fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'load_interactions', email: identite.email }) }).then(r => r.json()).catch(() => ({})),
+      fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'load_plan_suivi', email: identite.email }) }).then(r => r.json()).catch(() => ({}))
     ]).then(function (res) {
       const analyses = (res[0] && res[0].analyses) || {};
       const interactionsTout = (res[1] && res[1].interactions) || {};
+      const suiviTout = (res[2] && res[2].suivi_plan) || {};
       const profil = (analyses[mod] && analyses[mod].profil) || (analyses.socle && analyses.socle.profil) || {};
       const inter = interactionsTout[mod] || interactionsTout.socle || {};
-      afficherPagePlan(mod, profil, inter);
-    }).catch(function () { alert('Impossible de charger votre plan d\'action pour le moment.'); });
+      const suiviSauve = (suiviTout[mod] && suiviTout[mod].suivi) || [];
+      afficherPagePlan(mod, profil, inter, suiviSauve);
+    }).catch(function () {
+      // au lieu d'une alerte, message clair dans la page + bouton réessayer
+      scr.innerHTML = '<div class="plan-scroll">' +
+        '<button class="plan-retour" id="plan-retour">← Mon espace</button>' +
+        '<div class="plan-vide-card"><p>Le chargement de votre plan d\'action a échoué. Vérifiez votre connexion et réessayez.</p>' +
+        '<button class="btn-primary" id="plan-retry">Réessayer</button></div></div>';
+      activerScreenPlan(scr, mod);
+      const rt = document.getElementById('plan-retry');
+      if (rt) rt.onclick = () => ouvrirPlanAction(mod);
+    });
   }
 
-  function afficherPagePlan(mod, profil, inter) {
+  function afficherPagePlan(mod, profil, inter, suiviSauve) {
     let scr = document.getElementById('screen-plan');
     if (!scr) {
       scr = document.createElement('section');
@@ -959,13 +1001,29 @@ const App = (() => {
       .then(r => r.json())
       .then(data => {
         const actions = (data && data.actions) || [];
-        rendrePlanActions(scr, mod, heroHtml, actions);
+        rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(actions, suiviSauve));
       })
       .catch(() => {
         // repli : si l'IA échoue, on affiche au moins les éléments cochés en tableau simple
         const repli = construireReplisPlan(forces, vigilances, objectifs);
-        rendrePlanActions(scr, mod, heroHtml, repli);
+        rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(repli, suiviSauve));
       });
+  }
+
+  // Réinjecte le statut et le ressenti déjà saisis (par objectif) dans les actions affichées.
+  function fusionnerSuivi(actions, suiviSauve) {
+    if (!suiviSauve || !suiviSauve.length) return actions;
+    const parObjectif = {};
+    suiviSauve.forEach(s => { if (s && s.objectif) parObjectif[s.objectif] = s; });
+    actions.forEach(a => {
+      const s = parObjectif[a.objectif_smart];
+      if (s) {
+        if (s.statut) a.statut = s.statut;
+        if (s.ressenti) a.ressenti = s.ressenti;
+        if (s.priorite) a.priorite = s.priorite;
+      }
+    });
+    return actions;
   }
 
   // repli local si l'IA est indisponible : objectifs simples sans SMART généré
@@ -995,32 +1053,57 @@ const App = (() => {
       return 'pp-moyenne';
     }
 
-    // version TABLEAU (desktop)
-    let lignes = actions.map((a, i) =>
-      '<tr data-i="' + i + '">' +
+    function classeStatut(s) {
+      const x = (s || '').toLowerCase();
+      if (x.indexOf('fait') === 0) return 'ps-fait';
+      if (x.indexOf('cours') >= 0) return 'ps-cours';
+      return 'ps-afaire';
+    }
+    function libStatut(s) {
+      const x = (s || '').toLowerCase();
+      if (x.indexOf('fait') === 0) return 'Fait';
+      if (x.indexOf('cours') >= 0) return 'En cours';
+      return 'À faire';
+    }
+
+    // version TABLEAU (desktop) — chaque action est SUIVIE : statut cliquable + ressenti
+    let lignes = actions.map((a, i) => {
+      const statut = a.statut || 'À faire';
+      const aRessenti = a.ressenti && a.ressenti.trim();
+      return '<tr data-i="' + i + '">' +
         '<td><span class="plan-them">' + echapValeur(a.thematique) + '</span></td>' +
         '<td><span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span></td>' +
         '<td class="plan-obj"><span class="plan-verbe">' + echapValeur(a.verbe_bloom) + '</span><span class="plan-niv">' + echapValeur(a.niveau_bloom) + '</span><p>' + echapValeur(a.objectif_smart) + '</p></td>' +
         '<td><button class="plan-prio ' + classePrio(a.priorite) + '" data-prio="' + i + '">' + echapValeur(a.priorite) + '</button></td>' +
-      '</tr>'
-    ).join('');
+        '<td class="plan-suivi-cell">' +
+          '<button class="plan-statut ' + classeStatut(statut) + '" data-statut="' + i + '">' + libStatut(statut) + '</button>' +
+          '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti="' + i + '" title="Laisser un ressenti">' + (aRessenti ? '✏️' : '💬') + '</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
 
     const tableau =
       '<div class="plan-table-wrap">' +
         '<table class="plan-table">' +
-          '<thead><tr><th>Thématique</th><th>Type</th><th>Objectif</th><th>Priorité</th></tr></thead>' +
+          '<thead><tr><th>Thématique</th><th>Type</th><th>Objectif</th><th>Priorité</th><th>Suivi</th></tr></thead>' +
           '<tbody>' + lignes + '</tbody>' +
         '</table>' +
       '</div>';
 
-    // version CARTES (mobile)
-    let cartes = actions.map((a, i) =>
-      '<div class="plan-mcard" data-i="' + i + '">' +
+    // version CARTES (mobile) — même suivi : statut + ressenti
+    let cartes = actions.map((a, i) => {
+      const statut = a.statut || 'À faire';
+      const aRessenti = a.ressenti && a.ressenti.trim();
+      return '<div class="plan-mcard" data-i="' + i + '">' +
         '<div class="plan-mcard-top"><span class="plan-them">' + echapValeur(a.thematique) + '</span><button class="plan-prio ' + classePrio(a.priorite) + '" data-prio-m="' + i + '">' + echapValeur(a.priorite) + '</button></div>' +
         '<div class="plan-mcard-type"><span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span><span class="plan-verbe">' + echapValeur(a.verbe_bloom) + '</span><span class="plan-niv">' + echapValeur(a.niveau_bloom) + '</span></div>' +
         '<p class="plan-mcard-obj">' + echapValeur(a.objectif_smart) + '</p>' +
-      '</div>'
-    ).join('');
+        '<div class="plan-mcard-suivi">' +
+          '<button class="plan-statut ' + classeStatut(statut) + '" data-statut-m="' + i + '">' + libStatut(statut) + '</button>' +
+          '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti-m="' + i + '">' + (aRessenti ? '✏️ Modifier mon ressenti' : '💬 Laisser un ressenti') + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
 
     const seedup =
       '<div class="plan-seedup">' +
@@ -1051,6 +1134,87 @@ const App = (() => {
     scr.querySelectorAll('[data-prio], [data-prio-m]').forEach(btn => {
       btn.onclick = () => cyclePrio(btn);
     });
+
+    // ---- SUIVI : statut cliquable (À faire → En cours → Fait) ----
+    const cycleStatut = (i) => {
+      const cur = (actions[i].statut || 'À faire').toLowerCase();
+      let next;
+      if (cur.indexOf('faire') >= 0) next = 'En cours';
+      else if (cur.indexOf('cours') >= 0) next = 'Fait';
+      else next = 'À faire';
+      actions[i].statut = next;
+      // refléter sur les deux vues (desktop + mobile)
+      scr.querySelectorAll('[data-statut="' + i + '"], [data-statut-m="' + i + '"]').forEach(b => {
+        b.textContent = next;
+        b.className = 'plan-statut ' + classeStatut(next);
+      });
+      sauverSuiviPlan(mod, actions);
+    };
+    scr.querySelectorAll('[data-statut], [data-statut-m]').forEach(btn => {
+      const i = parseInt(btn.getAttribute('data-statut') || btn.getAttribute('data-statut-m'), 10);
+      btn.onclick = () => cycleStatut(i);
+    });
+
+    // ---- SUIVI : ressenti (ouvre une petite saisie en bas de l'écran) ----
+    scr.querySelectorAll('[data-ressenti], [data-ressenti-m]').forEach(btn => {
+      const i = parseInt(btn.getAttribute('data-ressenti') || btn.getAttribute('data-ressenti-m'), 10);
+      btn.onclick = () => ouvrirRessenti(scr, mod, actions, i);
+    });
+
+    // mémoriser pour la sauvegarde et le tableau de bord
+    planActionsCourant = actions;
+    planModCourant = mod;
+  }
+
+  // état courant du plan affiché (pour sauvegarde du suivi)
+  let planActionsCourant = [];
+  let planModCourant = '';
+
+  // Saisie du ressenti sur une action : panneau léger en bas d'écran
+  function ouvrirRessenti(scr, mod, actions, i) {
+    const a = actions[i];
+    const ancien = a.ressenti || '';
+    let panel = document.getElementById('plan-ressenti-panel');
+    if (panel) panel.remove();
+    panel = document.createElement('div');
+    panel.id = 'plan-ressenti-panel';
+    panel.className = 'plan-rp';
+    panel.innerHTML =
+      '<div class="plan-rp-card">' +
+        '<div class="plan-rp-titre">Votre ressenti</div>' +
+        '<p class="plan-rp-obj">' + echapValeur(a.objectif_smart) + '</p>' +
+        '<textarea class="plan-rp-input" id="plan-rp-input" rows="4" placeholder="Où en êtes-vous ? Ce qui avance, ce qui bloque, ce que vous avez appris...">' + echapValeur(ancien) + '</textarea>' +
+        '<div class="plan-rp-actions">' +
+          '<button class="plan-rp-annuler" id="plan-rp-annuler">Annuler</button>' +
+          '<button class="plan-rp-ok" id="plan-rp-ok">Enregistrer</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(panel);
+    requestAnimationFrame(() => panel.classList.add('on'));
+    const fermer = () => { panel.classList.remove('on'); setTimeout(() => panel.remove(), 250); };
+    document.getElementById('plan-rp-annuler').onclick = fermer;
+    panel.onclick = (e) => { if (e.target === panel) fermer(); };
+    document.getElementById('plan-rp-ok').onclick = () => {
+      a.ressenti = (document.getElementById('plan-rp-input').value || '').trim();
+      // refléter l'icône "ressenti rempli" sur les boutons de cette action
+      scr.querySelectorAll('[data-ressenti="' + i + '"]').forEach(b => { b.classList.toggle('a-note', !!a.ressenti); b.textContent = a.ressenti ? '✏️' : '💬'; });
+      scr.querySelectorAll('[data-ressenti-m="' + i + '"]').forEach(b => { b.classList.toggle('a-note', !!a.ressenti); b.textContent = a.ressenti ? '✏️ Modifier mon ressenti' : '💬 Laisser un ressenti'; });
+      sauverSuiviPlan(mod, actions);
+      fermer();
+    };
+  }
+
+  // Envoi du suivi (statuts + ressentis) au serveur, pour remontée dans le tableau de bord
+  function sauverSuiviPlan(mod, actions) {
+    if (!identite.email) return;
+    const suivi = actions.map(a => ({
+      thematique: a.thematique, objectif: a.objectif_smart,
+      statut: a.statut || 'À faire', ressenti: a.ressenti || '', priorite: a.priorite || ''
+    }));
+    fetch(PROGRESSION_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save_plan_suivi', email: identite.email, module: mod, suivi: suivi }),
+    }).catch(() => { /* silencieux : le suivi local reste affiché */ });
   }
 
   // active l'écran plan et branche les boutons communs (retour, revoir, seedup)
@@ -1300,18 +1464,29 @@ const App = (() => {
       + (s.bouton ? '<button class="coach-intro-go" id="accueil-go">' + s.bouton + '</button>' : '')
       + '</div>'
     ).join('');
-    ov.innerHTML = '<div class="coach-intro-card"><div class="coach-intro-orb"><span class="coach-intro-orb-core"></span></div>' + stepsHtml + '</div>';
+    ov.innerHTML = '<div class="coach-intro-card"><div class="coach-intro-nea"><video class="coach-intro-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div><div class="coach-intro-nea-label">Néa · votre coach</div>' + stepsHtml + '</div>';
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('on'));
 
     const stepEls = ov.querySelectorAll('.coach-intro-step');
+    let etape = 0;
     const montrer = (n) => stepEls.forEach((s, k) => s.classList.toggle('show', k === n));
     montrer(0);
-    // cadence : ~2,5 s par message, sauf le dernier qui attend le clic
-    const timers = [];
-    for (let n = 1; n < steps.length; n++) {
-      timers.push(setTimeout(() => montrer(n), n * 2500));
-    }
+    // cadence confortable : ~4 s par message pour avoir le temps de lire (2,5 s était
+    // trop rapide, retour terrain). On peut aussi avancer à son propre rythme en touchant
+    // l'écran, ce qui rend le défilement automatique secondaire.
+    let timers = [];
+    const programmer = () => {
+      timers.forEach(clearTimeout); timers = [];
+      for (let n = etape + 1; n < steps.length; n++) {
+        timers.push(setTimeout(() => { etape = n; montrer(n); }, (n - etape) * 4000));
+      }
+    };
+    programmer();
+    // avancer manuellement au message suivant en touchant la carte (hors boutons)
+    const avancer = () => {
+      if (etape < steps.length - 1) { etape++; montrer(etape); programmer(); }
+    };
     let fini = false;
     const fermer = () => {
       if (fini) return; fini = true;
@@ -1321,8 +1496,11 @@ const App = (() => {
     };
     ov.addEventListener('click', (e) => {
       if (e.target && e.target.id === 'accueil-go') { fermer(); return; }
+      if (e.target && e.target.classList && e.target.classList.contains('coach-intro-skip')) { return; }
       // un clic sur le dernier message (déjà affiché) permet aussi de passer
-      if (stepEls[steps.length - 1] && stepEls[steps.length - 1].classList.contains('show')) fermer();
+      if (stepEls[steps.length - 1] && stepEls[steps.length - 1].classList.contains('show')) { fermer(); return; }
+      // sinon, on avance au message suivant à son rythme
+      avancer();
     });
     // filet : bouton "passer" discret pour les pressés, dès le départ
     const skip = document.createElement('button');
@@ -1370,10 +1548,14 @@ const App = (() => {
 
     scr.innerHTML =
       '<div class="qo-scroll">' +
-        '<div class="qo-head">' +
-          '<div class="qo-kicker">Avant de commencer</div>' +
-          '<h2 class="qo-title">Quelques mots sur vous</h2>' +
-          '<p class="qo-sub">' + ((ctx && ctx.intro) || 'Vos réponses enrichissent votre portrait.') + '</p>' +
+        '<div class="qo-nea-head">' +
+          '<div class="qo-nea-video">' +
+            '<video class="qo-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png">' +
+              '<source src="nea.mp4" type="video/mp4">' +
+            '</video>' +
+          '</div>' +
+          '<div class="qo-nea-label">Néa · votre coach</div>' +
+          '<p class="qo-nea-msg">« Bonjour' + (identite.prenom ? ' ' + echapValeur(identite.prenom) : '') + ', je suis <span class="qo-nea-a">Néa</span>, je vais vous accompagner tout au long de ce bilan. Avant de commencer, j\'aimerais vous connaître un peu. »</p>' +
         '</div>' +
         champsCtx +
         champIntention +
@@ -1703,7 +1885,10 @@ const App = (() => {
     refreshNav();
     if (idx < queue.length - 1) {
       clearTimeout(window._autoNext);
-      window._autoNext = setTimeout(() => next(), 300);
+      // Délai confortable : on laisse le temps de voir sa réponse validée avant
+      // d'enchaîner (300ms était trop rapide, retour terrain). Pas de bouton "continuer"
+      // (choix de l'équipe), mais une transition douce et lisible.
+      window._autoNext = setTimeout(() => next(), 650);
     }
   }
 
@@ -1731,7 +1916,7 @@ const App = (() => {
     refreshNav();
     if (idx < queue.length - 1) {
       clearTimeout(window._autoNext);
-      window._autoNext = setTimeout(() => next(), 320);
+      window._autoNext = setTimeout(() => next(), 650);
     }
   }
 
@@ -1829,7 +2014,7 @@ const App = (() => {
     // auto-avance douce après sélection (sauf dernière)
     if (idx < queue.length - 1) {
       clearTimeout(window._autoNext);
-      window._autoNext = setTimeout(() => next(), 360);
+      window._autoNext = setTimeout(() => next(), 650);
     }
   }
 
@@ -2051,6 +2236,45 @@ const App = (() => {
   // ============================================================
   // LA RÉVÉLATION ANIMÉE DU PORTRAIT
   // ============================================================
+  // ---- Sons de la révélation (synthétisés, aucun fichier à héberger) ----
+  // Sons doux et premium, générés par Web Audio. Silencieux si le navigateur le refuse.
+  let _audioCtx = null;
+  function _getAudio() {
+    if (_audioCtx) return _audioCtx;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      _audioCtx = new AC();
+      return _audioCtx;
+    } catch (e) { return null; }
+  }
+  function _note(freq, debut, duree, volume) {
+    const ac = _getAudio(); if (!ac) return;
+    try {
+      const t0 = ac.currentTime + debut;
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(volume, t0 + 0.06);
+      g.gain.linearRampToValueAtTime(0, t0 + duree);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t0); osc.stop(t0 + duree + 0.05);
+    } catch (e) {}
+  }
+  function sonSuspense() {
+    const ac = _getAudio(); if (!ac) return;
+    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+    _note(330, 0, 0.5, 0.05); _note(392, 0.35, 0.5, 0.05); _note(494, 0.7, 0.6, 0.05);
+  }
+  function sonReveal() {
+    const ac = _getAudio(); if (!ac) return;
+    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+    _note(523, 0, 1.4, 0.07); _note(659, 0.04, 1.4, 0.06); _note(784, 0.08, 1.5, 0.06); _note(1047, 0.12, 1.6, 0.04);
+  }
+  function sonLettre() { _note(880, 0, 0.04, 0.015); }
+
   function lancerRevelation(result) {
     const dom = result.dominante;
     if (!dom) { document.getElementById('screen-result').classList.add('active'); return; }
@@ -2073,7 +2297,7 @@ const App = (() => {
 
     // séquence d'animation
     setTimeout(() => { perso.classList.add('reveal-show'); lancerParticules(dom.famille); }, 700);  // le personnage apparaît + particules
-    setTimeout(() => { intro.classList.add('reveal-fade'); }, 1400);      // l'intro s'efface
+    setTimeout(() => { intro.classList.add('reveal-fade'); sonSuspense(); }, 1400);      // l'intro s'efface + montée sonore (suspense)
     setTimeout(() => { ecrireNom(nomEl, dom.nom); }, 1600);              // le nom s'écrit lettre par lettre
     setTimeout(() => { famEl.textContent = 'Famille ' + familleLabel; famEl.classList.add('reveal-show'); }, 1600 + dom.nom.length * 75 + 300);
     setTimeout(() => { cta.classList.add('reveal-show'); }, 1600 + dom.nom.length * 75 + 800);
@@ -2081,9 +2305,29 @@ const App = (() => {
     cta.onclick = () => {
       scr.classList.remove('active');
       arreterParticules();
-      document.getElementById('screen-result').classList.add('active');
-      window.scrollTo(0, 0);
-      document.getElementById('phone-scroll')?.scrollTo(0, 0);
+      // Passage par Néa : elle accueille la personne par son prénom avant la restitution,
+      // bouclant le fil rouge (elle était là au début, elle revient à la fin).
+      const neaScr = document.getElementById('screen-nea');
+      const neaMsg = document.getElementById('nea-msg');
+      const neaCta = document.getElementById('nea-cta');
+      if (neaScr && neaMsg) {
+        const prenom = identite.prenom || '';
+        neaMsg.innerHTML = '« Me revoici' + (prenom ? ' ' + echapValeur(prenom) : '') + '. J\'ai lu votre portrait en entier, et il dit de belles choses sur vous. Laissez-moi vous le présenter. »';
+        neaScr.classList.add('active');
+        window.scrollTo(0, 0);
+        const vid = neaScr.querySelector('.nea-vid');
+        if (vid) { try { vid.play(); } catch (e) {} }
+        if (neaCta) neaCta.onclick = () => {
+          neaScr.classList.remove('active');
+          document.getElementById('screen-result').classList.add('active');
+          window.scrollTo(0, 0);
+          document.getElementById('phone-scroll')?.scrollTo(0, 0);
+        };
+      } else {
+        document.getElementById('screen-result').classList.add('active');
+        window.scrollTo(0, 0);
+        document.getElementById('phone-scroll')?.scrollTo(0, 0);
+      }
     };
   }
 
@@ -2163,8 +2407,14 @@ const App = (() => {
     el.classList.add('reveal-typing');
     let i = 0;
     const timer = setInterval(() => {
-      if (i >= nom.length) { clearInterval(timer); el.classList.remove('reveal-typing'); return; }
-      el.textContent += nom[i]; i++;
+      if (i >= nom.length) {
+        clearInterval(timer);
+        el.classList.remove('reveal-typing');
+        el.classList.add('reveal-name-done'); // halo lumineux final
+        sonReveal();                          // accord lumineux à la révélation complète
+        return;
+      }
+      el.textContent += nom[i]; if (nom[i] !== ' ') sonLettre(); i++;
     }, 75);
   }
 

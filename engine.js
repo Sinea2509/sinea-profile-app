@@ -127,15 +127,21 @@ function calculerResultat(scoresBf, affinites, pointsSinea) {
     ptsNorm[nom] = pointsSinea[nom] * (potMoyen / p);
   }
 
-  // ===== DOSAGE EXPLICITE 60/40 =====
-  // 60% tempérament (affinité Big Five, validé scientifiquement)
-  // 40% questions Sinéa (signature propriétaire, affine le choix)
-  const maxPts = Math.max(...Object.values(ptsNorm), 0.001);
+  // ===== DOSAGE EXPLICITE 75/25 =====
+  // 75% tempérament (affinité Big Five, validé scientifiquement et STABLE d'une passation
+  //    à l'autre) : c'est le socle qui garantit la fidélité test-retest.
+  // 25% questions Sinéa (signature propriétaire) : départage des archétypes déjà proches,
+  //    sans pouvoir réorganiser tout le classement.
+  // La composante Sinéa est normalisée DOUCEMENT (linéaire, bornée) par rapport à un
+  // potentiel de référence fixe, et non plus par rapport au maximum observé élevé à une
+  // puissance : cette ancienne formule amplifiait de petits écarts de réponses en grands
+  // écarts de score, source d'instabilité du profil.
+  const REF_SINEA = (typeof potMoyen === 'number' && potMoyen > 0) ? potMoyen : 3.0;
   const score = {};
   for (const nom of noms) {
-    const compAffinite = affinites[nom];                                // 0-100
-    const compSinea = Math.pow(ptsNorm[nom] / maxPts, 1.3) * 100;       // 0-100
-    score[nom] = 0.6 * compAffinite + 0.4 * compSinea;
+    const compAffinite = affinites[nom];                                  // 0-100
+    const compSinea = Math.max(0, Math.min(100, (ptsNorm[nom] / REF_SINEA) * 100)); // 0-100, linéaire borné
+    score[nom] = 0.75 * compAffinite + 0.25 * compSinea;
   }
 
   const classement = [...noms].sort((a,b)=> score[b]-score[a]);
@@ -523,12 +529,25 @@ function scorerSpeStyleScores(repSpeQcm, type) {
 function scorerNaturelAdapte(repMini, repAdapte) {
   // Naturel : scores Big Five issus du mini-IPIP (déjà sur 0-100)
   const naturel = scorerBigFive(repMini);
-  // Adapté : 1 question par dimension (échelle 1-4 -> 0-100)
+  // Adapté : 2 questions par dimension (échelle 1-4 -> 0-100), moyennées.
+  // Deux items au lieu d'un évitent les valeurs extrêmes aberrantes (0 ou 100 pile)
+  // qui rendaient le profil adapté irréaliste et incohérent.
   const conv = {1:0.0, 2:33.333, 3:66.667, 4:100.0};
-  const map = { ADP_E:'E', ADP_A:'A', ADP_C:'C', ADP_N:'N', ADP_O:'O' };
+  const itemsParDim = {
+    E: ['ADP_E','ADP_E2'], A: ['ADP_A','ADP_A2'], C: ['ADP_C','ADP_C2'],
+    N: ['ADP_N','ADP_N2'], O: ['ADP_O','ADP_O2']
+  };
   const adapte = {};
-  for (const [qid, lettre] of Object.entries(map)) {
-    if (repAdapte[qid] !== undefined) adapte[lettre] = Math.round((conv[repAdapte[qid]]) * 10) / 10;
+  for (const [lettre, qids] of Object.entries(itemsParDim)) {
+    const vals = qids.map(q => repAdapte[q]).filter(v => v !== undefined).map(v => conv[v]);
+    if (vals.length) {
+      let m = vals.reduce((a,b)=>a+b,0) / vals.length;
+      // Adoucissement : on rapproche très légèrement les valeurs extrêmes du centre
+      // pour qu'une réponse maximale isolée ne produise pas un 0 ou 100 absolu irréaliste.
+      // (compression douce de 6% vers 50 : 0->3, 100->97, le milieu reste intact)
+      m = 50 + (m - 50) * 0.94;
+      adapte[lettre] = Math.round(m * 10) / 10;
+    }
   }
   // Écart par dimension et coût global
   const ecarts = {};

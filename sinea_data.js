@@ -19,6 +19,18 @@ const SINEA_DATA = {
    "texte": "Dans une discussion à plusieurs, je préfère observer plutôt que prendre la parole."
   },
   {
+   "id": "MINI_16",
+   "dimension": "extraversion",
+   "sens": "positif",
+   "texte": "Une journée riche en échanges et en rencontres me donne de l'énergie."
+  },
+  {
+   "id": "MINI_17",
+   "dimension": "extraversion",
+   "sens": "negatif",
+   "texte": "Après plusieurs heures entouré de monde, j'ai besoin de m'isoler pour récupérer."
+  },
+  {
    "id": "MINI_04",
    "dimension": "agreabilite",
    "sens": "positif",
@@ -35,6 +47,18 @@ const SINEA_DATA = {
    "dimension": "agreabilite",
    "sens": "negatif",
    "texte": "Je garde de la distance avec les états d'âme des autres."
+  },
+  {
+   "id": "MINI_18",
+   "dimension": "agreabilite",
+   "sens": "positif",
+   "texte": "J'accorde facilement ma confiance et je pars du bon côté des gens."
+  },
+  {
+   "id": "MINI_19",
+   "dimension": "agreabilite",
+   "sens": "negatif",
+   "texte": "Dans un désaccord, je défends mon point sans trop me soucier de ménager l'autre."
   },
   {
    "id": "MINI_07",
@@ -55,6 +79,18 @@ const SINEA_DATA = {
    "texte": "Je laisse souvent traîner ce que j'ai à faire."
   },
   {
+   "id": "MINI_20",
+   "dimension": "conscience",
+   "sens": "positif",
+   "texte": "J'aime que mon travail soit organisé, planifié, et que rien ne soit laissé au hasard."
+  },
+  {
+   "id": "MINI_21",
+   "dimension": "conscience",
+   "sens": "negatif",
+   "texte": "Il m'arrive de bâcler un détail pour aller plus vite."
+  },
+  {
    "id": "MINI_10",
    "dimension": "neuroticisme",
    "sens": "negatif",
@@ -73,6 +109,18 @@ const SINEA_DATA = {
    "texte": "Un imprévu peut me contrarier pour le reste de la journée."
   },
   {
+   "id": "MINI_22",
+   "dimension": "neuroticisme",
+   "sens": "positif",
+   "texte": "Avant un rendez-vous important, je me fais souvent du souci à l'avance."
+  },
+  {
+   "id": "MINI_23",
+   "dimension": "neuroticisme",
+   "sens": "negatif",
+   "texte": "Les critiques glissent sur moi sans trop m'affecter."
+  },
+  {
    "id": "MINI_13",
    "dimension": "ouverture",
    "sens": "positif",
@@ -89,6 +137,18 @@ const SINEA_DATA = {
    "dimension": "ouverture",
    "sens": "positif",
    "texte": "J'aime explorer des approches inhabituelles, même sans garantie de résultat."
+  },
+  {
+   "id": "MINI_24",
+   "dimension": "ouverture",
+   "sens": "positif",
+   "texte": "J'aime comprendre comment les choses fonctionnent en profondeur, par curiosité."
+  },
+  {
+   "id": "MINI_25",
+   "dimension": "ouverture",
+   "sens": "negatif",
+   "texte": "Je préfère m'en tenir aux méthodes que je connais déjà plutôt que d'en essayer de nouvelles."
   }
  ],
  "mini_choix_force": [
@@ -163,35 +223,45 @@ const SINEA_DATA = {
    "items": [
     "MINI_01",
     "MINI_02",
-    "MINI_03"
+    "MINI_03",
+    "MINI_16",
+    "MINI_17"
    ]
   },
   "agreabilite": {
    "items": [
     "MINI_04",
     "MINI_05",
-    "MINI_06"
+    "MINI_06",
+    "MINI_18",
+    "MINI_19"
    ]
   },
   "conscience": {
    "items": [
     "MINI_07",
     "MINI_08",
-    "MINI_09"
+    "MINI_09",
+    "MINI_20",
+    "MINI_21"
    ]
   },
   "neuroticisme": {
    "items": [
     "MINI_10",
     "MINI_11",
-    "MINI_12"
+    "MINI_12",
+    "MINI_22",
+    "MINI_23"
    ]
   },
   "ouverture": {
    "items": [
     "MINI_13",
     "MINI_14",
-    "MINI_15"
+    "MINI_15",
+    "MINI_24",
+    "MINI_25"
    ]
   }
  },
@@ -201,7 +271,12 @@ const SINEA_DATA = {
   "MINI_09",
   "MINI_10",
   "MINI_11",
-  "MINI_14"
+  "MINI_14",
+  "MINI_17",
+  "MINI_19",
+  "MINI_21",
+  "MINI_23",
+  "MINI_25"
  ],
  "mini_ancres": {
   "1": "Pas du tout moi",
@@ -5201,10 +5276,22 @@ const SINEA_DATA = {
     "texte": "Au travail, je prends souvent la parole en groupe et je vais vers les autres, même quand cela me demande un effort."
    },
    {
+    "id": "ADP_E2",
+    "dimension": "extraversion",
+    "sens": "positif",
+    "texte": "Mon poste me demande d'être souvent en relation, en réunion ou en échange, plus que je ne le ferais spontanément."
+   },
+   {
     "id": "ADP_A",
     "dimension": "agreabilite",
     "sens": "positif",
     "texte": "Au travail, je privilégie l'harmonie et je cherche à ménager les autres, même quand j'aurais envie de trancher."
+   },
+   {
+    "id": "ADP_A2",
+    "dimension": "agreabilite",
+    "sens": "positif",
+    "texte": "Dans mon travail, je m'adapte aux attentes des autres et je lisse mes positions plus que je ne le ferais naturellement."
    },
    {
     "id": "ADP_C",
@@ -5213,16 +5300,34 @@ const SINEA_DATA = {
     "texte": "Au travail, je m'impose de la rigueur, de l'organisation et du suivi, même quand ce n'est pas mon réflexe naturel."
    },
    {
+    "id": "ADP_C2",
+    "dimension": "conscience",
+    "sens": "positif",
+    "texte": "Mon travail m'oblige à planifier, documenter et respecter des process plus que je ne le ferais de moi-même."
+   },
+   {
     "id": "ADP_N",
     "dimension": "neuroticisme",
     "sens": "positif",
     "texte": "Au travail, je dois fournir un effort pour rester calme et garder mon sang-froid sous pression."
    },
    {
+    "id": "ADP_N2",
+    "dimension": "neuroticisme",
+    "sens": "positif",
+    "texte": "Je masque souvent mes tensions ou mes doutes au travail pour afficher une assurance que je ne ressens pas toujours."
+   },
+   {
     "id": "ADP_O",
     "dimension": "ouverture",
     "sens": "positif",
     "texte": "Au travail, je me pousse à explorer des idées nouvelles et à sortir des sentiers battus, même quand la routine me rassure."
+   },
+   {
+    "id": "ADP_O2",
+    "dimension": "ouverture",
+    "sens": "positif",
+    "texte": "Mon poste m'amène à m'adapter au changement et à remettre en question mes habitudes plus que je ne le choisirais."
    }
   ]
  }

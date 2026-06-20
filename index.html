@@ -27,7 +27,7 @@
         </div>
       </div>
       <button class="btn-primary btn-light" onclick="App.goToIdentif()">Commencer</button>
-      <button class="cover-login-link" onclick="App.goToConnexion()">J'ai déjà un compte · Se connecter</button>
+      <button class="cover-login-link" onclick="App.goToConnexion()">Accéder à mon espace</button>
       <p class="cover-note">Vos réponses restent confidentielles</p>
       <div class="cover-side">
         <div class="cover-side-card">
@@ -40,7 +40,7 @@
           </ul>
         </div>
         <button class="btn-primary btn-light" onclick="App.goToIdentif()">Commencer le test</button>
-        <button class="cover-login-link" onclick="App.goToConnexion()">J'ai déjà un compte · Se connecter</button>
+        <button class="cover-login-link" onclick="App.goToConnexion()">Accéder à mon espace</button>
         <p class="cover-note">Vos réponses restent confidentielles</p>
       </div>
     </div></div>
@@ -61,7 +61,7 @@
         <input class="identif-input" id="id-email" type="email" placeholder="vous@entreprise.com" autocomplete="email" />
         <div class="identif-error" id="id-error"></div>
         <button class="btn-primary identif-btn" id="id-submit">Commencer le test</button>
-        <button class="btn-ghost identif-resume" id="id-resume">J'ai déjà commencé, reprendre</button>
+        <button class="identif-resume" id="id-resume">J'ai déjà commencé, reprendre</button>
       </div>
     </div>
   </section>
@@ -190,6 +190,22 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-nea">
+    <div class="reveal-wrap">
+      <div class="reveal-pattern"></div>
+      <div class="reveal-content nea-content">
+        <div class="nea-video">
+          <video class="nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png">
+            <source src="nea.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="nea-label">Néa · votre coach</div>
+        <p class="nea-msg" id="nea-msg"></p>
+        <button class="reveal-cta" id="nea-cta">Découvrir mon portrait →</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-result">
     <div class="r-screen" id="phone-scroll">
       <div class="r-hero" id="r-hero"><div class="r-hero-in">
@@ -207,7 +223,6 @@
 <script src="sinea_data.js"></script>
 <script src="engine.js"></script>
 <script src="result.js"></script>
-<script src="revelation.js"></script>
 <script src="affinage.js"></script>
 <script src="controller.js"></script>
 </body>

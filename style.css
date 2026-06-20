@@ -54,7 +54,6 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
    ÉCRAN INTRO (avant un bloc de questions)
    ============================================================ */
 .intro{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 32px;text-align:center;}
-.intro-icon{width:64px;height:64px;border-radius:20px;background:var(--g-orangepink);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;font-size:28px;}
 .intro h2{font-size:28px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px;}
 .intro p{font-size:16px;color:var(--c-grey);line-height:1.55;max-width:320px;margin:0 auto 30px;}
 
@@ -536,6 +535,17 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .qo-input{width:100%;border:1.5px solid #E5E3DD;border-radius:14px;padding:15px;font-family:var(--font);font-size:15.5px;color:var(--c-black);background:#fff;resize:vertical;transition:border-color 0.2s;line-height:1.5;}
 .qo-input:focus{outline:none;border-color:var(--c-purple);}
 .qo-submit{margin-top:8px;margin-bottom:6px;}
+
+/* Accueil incarné par Néa, en tête de l'écran d'intention (cohérent avec la révélation) */
+.qo-nea-head{text-align:center;margin-bottom:34px;}
+.qo-nea-video{width:104px;height:104px;margin:0 auto 16px;border-radius:50%;overflow:hidden;position:relative;box-shadow:0 0 50px -10px rgba(249,168,118,0.7);animation:qoNeaPop 0.8s cubic-bezier(0.34,1.56,0.64,1) both;}
+.qo-nea-video::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(249,168,118,0.45);animation:qoNeaRing 2.6s ease-in-out infinite;pointer-events:none;}
+.qo-nea-vid{width:100%;height:100%;object-fit:cover;display:block;}
+.qo-nea-label{font-size:11.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:14px;}
+.qo-nea-msg{font-size:17px;font-weight:600;line-height:1.5;color:var(--c-dark-grey);max-width:420px;margin:0 auto;}
+.qo-nea-a{color:#E08A4E;font-weight:800;}
+@keyframes qoNeaPop{from{opacity:0;transform:scale(0.7);}to{opacity:1;transform:scale(1);}}
+@keyframes qoNeaRing{0%,100%{transform:scale(1);opacity:0.5;}50%{transform:scale(1.08);opacity:0.15;}}
 /* Desktop : centré, large */
 @media (min-width: 768px){
   #screen-open .qo-scroll{max-width:620px;padding-top:80px;}
@@ -682,7 +692,8 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .identif-input:focus{outline:none;border-color:var(--c-purple);}
 .identif-error{color:var(--c-orange);font-size:13.5px;margin-top:12px;min-height:18px;font-weight:600;}
 .identif-btn{margin-top:18px;}
-.identif-resume{margin-top:8px;font-size:14px;}
+.identif-resume{margin-top:14px;font-size:14.5px;font-weight:700;color:var(--c-purple-text);background:rgba(136,132,240,0.1);border:1.5px solid rgba(136,132,240,0.4);border-radius:14px;padding:13px 20px;width:100%;cursor:pointer;font-family:var(--font);transition:background 0.2s, border-color 0.2s;}
+.identif-resume:hover{background:rgba(136,132,240,0.18);border-color:rgba(136,132,240,0.7);}
 @media (min-width:768px){ .identif-title{font-size:34px;} }
 
 /* ============================================================
@@ -803,6 +814,31 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .plan-verbe{font-weight:800;color:var(--c-black);font-size:13px;}
 .plan-niv{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-grey);background:#F0EEE8;border-radius:12px;padding:2px 8px;margin-left:8px;}
 .plan-prio{border:none;border-radius:20px;padding:5px 13px;font-family:var(--font);font-size:11.5px;font-weight:800;cursor:pointer;transition:transform 0.1s;}
+
+/* ---- SUIVI du plan d'action (interaction : statut + ressenti) ---- */
+.plan-suivi-cell{white-space:nowrap;}
+.plan-statut{border:none;border-radius:20px;padding:5px 13px;font-family:var(--font);font-size:11.5px;font-weight:800;cursor:pointer;transition:transform 0.1s, background 0.2s;}
+.plan-statut:active{transform:scale(0.95);}
+.ps-afaire{background:#ECEAE4;color:#8A8A8A;}
+.ps-cours{background:rgba(249,168,118,0.2);color:#C57A2E;}
+.ps-fait{background:rgba(62,173,139,0.18);color:#2E9970;}
+.plan-ressenti-btn{background:transparent;border:1px solid var(--c-border, #E5E3DD);border-radius:50%;width:30px;height:30px;font-size:13px;cursor:pointer;margin-left:6px;vertical-align:middle;transition:border-color 0.2s, background 0.2s;}
+.plan-ressenti-btn:hover{background:#F4F2EC;}
+.plan-ressenti-btn.a-note{border-color:var(--c-purple, #8884F0);background:rgba(136,132,240,0.08);}
+.plan-mcard-suivi{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.plan-mcard-suivi .plan-ressenti-btn{width:auto;height:auto;border-radius:20px;padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--c-purple-text, #5E59C7);}
+/* panneau de saisie du ressenti */
+.plan-rp{position:fixed;inset:0;background:rgba(20,14,40,0.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;opacity:0;transition:opacity 0.25s;backdrop-filter:blur(2px);}
+.plan-rp.on{opacity:1;}
+.plan-rp-card{background:#fff;border-radius:22px 22px 0 0;padding:24px 22px calc(24px + env(safe-area-inset-bottom));width:100%;max-width:560px;transform:translateY(20px);transition:transform 0.25s;}
+.plan-rp.on .plan-rp-card{transform:translateY(0);}
+@media (min-width:560px){.plan-rp{align-items:center;}.plan-rp-card{border-radius:22px;}}
+.plan-rp-titre{font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--c-purple-text, #5E59C7);margin-bottom:8px;}
+.plan-rp-obj{font-size:15px;font-weight:600;color:var(--c-dark, #2D2D2D);margin:0 0 16px;line-height:1.45;}
+.plan-rp-input{width:100%;border:1.5px solid #E5E3DD;border-radius:14px;padding:14px;font-family:var(--font);font-size:15px;line-height:1.5;color:var(--c-black, #151416);resize:vertical;box-sizing:border-box;}
+.plan-rp-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+.plan-rp-annuler{background:transparent;border:none;color:var(--c-grey, #747474);font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;padding:12px 18px;}
+.plan-rp-ok{background:var(--c-purple, #8884F0);color:#fff;border:none;border-radius:12px;font-family:var(--font);font-size:14.5px;font-weight:700;cursor:pointer;padding:12px 24px;}
 .plan-prio:active{transform:scale(0.95);}
 .pp-haute{background:#F98272;color:#fff;}
 .pp-moyenne{background:#F9C16E;color:#5A3D10;}
@@ -899,8 +935,8 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 #screen-connexion.active{display:flex;align-items:center;justify-content:center;}
 
 /* Lien "Se connecter" sur la cover : bouton outline élégant */
-.cover-login-link{display:inline-flex;align-items:center;justify-content:center;width:100%;margin-top:12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.35);color:#fff;font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;padding:13px 20px;border-radius:14px;text-decoration:none;transition:background 0.2s, border-color 0.2s;backdrop-filter:blur(4px);}
-.cover-login-link:hover{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.6);}
+.cover-login-link{display:inline-flex;align-items:center;justify-content:center;width:100%;margin-top:14px;background:rgba(255,255,255,0.22);border:2px solid rgba(255,255,255,0.85);color:#fff;font-family:var(--font);font-size:15.5px;font-weight:700;cursor:pointer;padding:15px 20px;border-radius:14px;text-decoration:none;transition:background 0.2s, border-color 0.2s;backdrop-filter:blur(6px);}
+.cover-login-link:hover{background:rgba(255,255,255,0.32);border-color:#fff;}
 
 /* ============================================================
    LE MODE D'EMPLOI DE MOI-MÊME (fiche partageable, hors norme)
@@ -1016,6 +1052,8 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .reveal-perso img{position:relative;z-index:1;width:200px;height:200px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,0.4);box-shadow:0 16px 50px rgba(0,0,0,0.45);}
 .reveal-nom{color:#fff;font-size:42px;font-weight:800;letter-spacing:-0.01em;min-height:52px;line-height:1.1;}
 .reveal-nom.reveal-typing::after{content:"|";animation:revealCaret 0.7s step-end infinite;opacity:0.6;}
+.reveal-nom.reveal-name-done{animation:revealNameGlow 1.2s ease-out both;}
+@keyframes revealNameGlow{0%{text-shadow:0 0 0 rgba(255,255,255,0);transform:scale(1);}40%{text-shadow:0 0 26px rgba(255,217,160,0.85),0 0 50px rgba(255,176,232,0.5);transform:scale(1.05);}100%{text-shadow:0 0 12px rgba(255,217,160,0.35);transform:scale(1);}}
 @keyframes revealCaret{50%{opacity:0;}}
 .reveal-famille{color:rgba(255,255,255,0.8);font-size:18px;font-weight:600;margin-top:10px;opacity:0;transform:translateY(8px);transition:opacity 0.6s ease, transform 0.6s ease;}
 .reveal-famille.reveal-show{opacity:1;transform:translateY(0);}
@@ -1023,6 +1061,19 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .reveal-cta.reveal-show{opacity:1;transform:translateY(0);}
 .reveal-cta:hover{transform:translateY(-2px);}
 @media (max-width:520px){ .reveal-perso img{width:160px;height:160px;} .reveal-nom{font-size:34px;} }
+
+/* Écran Néa de fin (boucle le fil rouge, après la révélation de l'archétype) */
+#screen-nea{background:radial-gradient(circle at 50% 35%,#2A2150,#140E28 70%);}
+.nea-content{text-align:center;max-width:520px;margin:0 auto;padding:20px;}
+.nea-video{width:130px;height:130px;margin:0 auto 20px;border-radius:50%;overflow:hidden;position:relative;box-shadow:0 0 60px -8px #FFA76E;animation:neaPop 0.9s cubic-bezier(0.34,1.56,0.64,1) both;}
+.nea-video::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);animation:neaRing 2.5s ease-in-out infinite;pointer-events:none;}
+.nea-vid{width:100%;height:100%;object-fit:cover;display:block;}
+.nea-label{font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#FFC9A0;margin-bottom:18px;opacity:0;animation:neaUp 0.7s 0.3s both;}
+.nea-msg{font-size:clamp(18px,3.4vw,23px);font-weight:700;line-height:1.45;color:#fff;margin:0 auto 8px;opacity:0;animation:neaUp 0.8s 0.5s both;}
+#screen-nea .reveal-cta{margin-top:30px;opacity:0;animation:neaUp 0.8s 0.9s both;}
+@keyframes neaPop{from{opacity:0;transform:scale(0.7);}to{opacity:1;transform:scale(1);}}
+@keyframes neaRing{0%,100%{transform:scale(1);opacity:0.4;}50%{transform:scale(1.1);opacity:0.1;}}
+@keyframes neaUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 
 /* Conseil actionnable dans les compatibilités */
 .r-compat-conseil{margin-top:12px;padding:11px 13px;background:#F7F4FF;border-radius:11px;font-size:13.5px;line-height:1.45;color:var(--c-dark-grey);}
@@ -1165,13 +1216,11 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .coach-intro.on{opacity:1;}
 .coach-intro-card{max-width:460px;width:100%;text-align:center;color:#fff;transform:translateY(12px);transition:transform 0.6s ease;}
 .coach-intro.on .coach-intro-card{transform:translateY(0);}
-.coach-intro-orb{width:90px;height:90px;margin:0 auto 30px;border-radius:50%;position:relative;
-  background:radial-gradient(circle at 35% 30%, #B7A8FF, #5E59C7 55%, #3A356F);
-  box-shadow:0 0 0 0 rgba(142,137,232,0.55), 0 14px 50px rgba(94,89,199,0.6);
-  animation:coachOrbPulse 2.6s ease-in-out infinite;}
-.coach-intro-orb-core{position:absolute;inset:18px;border-radius:50%;background:radial-gradient(circle at 40% 35%, #fff, rgba(255,255,255,0.15) 70%);opacity:0.85;animation:coachOrbCore 2.6s ease-in-out infinite;}
-@keyframes coachOrbPulse{0%,100%{box-shadow:0 0 0 0 rgba(142,137,232,0.5), 0 14px 50px rgba(94,89,199,0.55);transform:scale(1);}50%{box-shadow:0 0 0 22px rgba(142,137,232,0), 0 14px 60px rgba(94,89,199,0.7);transform:scale(1.06);}}
-@keyframes coachOrbCore{0%,100%{opacity:0.7;}50%{opacity:1;}}
+.coach-intro-nea{width:96px;height:96px;margin:0 auto 14px;border-radius:50%;overflow:hidden;position:relative;box-shadow:0 0 50px -10px #FFA76E;}
+.coach-intro-nea::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);animation:coachNeaRing 2.6s ease-in-out infinite;pointer-events:none;}
+.coach-intro-nea-vid{width:100%;height:100%;object-fit:cover;display:block;}
+.coach-intro-nea-label{font-size:11px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#FFC9A0;margin-bottom:26px;}
+@keyframes coachNeaRing{0%,100%{transform:scale(1);opacity:0.35;}50%{transform:scale(1.1);opacity:0.1;}}
 .coach-intro-step{display:none;animation:coachStepIn 0.7s ease both;}
 .coach-intro-step.show{display:block;}
 @keyframes coachStepIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
