@@ -209,11 +209,14 @@ function calculerPotentielsSinea() {
   return pot;
 }
 
-function scorer(repMini, repSinea) {
+function scorer(repMini, repSinea, tempsReponses) {
   const scoresBf = scorerBigFive(repMini);
   const aff = calculerAffinites(scoresBf);
   const pts = calculerPointsSinea(repSinea);
-  return calculerResultat(scoresBf, aff, pts);
+  const res = calculerResultat(scoresBf, aff, pts);
+  // Rebranchement de la fiabilité : le badge "Fiabilité de votre profil" en dépend.
+  res.fiabilite = scorerFiabilite(repMini, tempsReponses || {});
+  return res;
 }
 
 // Recalcule le profil après un ajustement manuel des scores Big Five (affinage).

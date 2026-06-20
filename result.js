@@ -774,8 +774,9 @@ const Result = (() => {
 
       <div class="r-chat-bloc" id="chat-bloc">
         <div class="r-me-head">
+          <div class="r-chat-nea"><video class="r-chat-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div>
           <div class="r-me-kicker">Vos 3 questions</div>
-          <h2 class="r-me-title">Vos questions à votre coach</h2>
+          <h2 class="r-me-title">Vos questions à Néa</h2>
           <p class="r-me-sub">Néa a lu votre portrait. Posez-lui jusqu'à trois questions pour aller plus loin. <span class="r-chat-compteur" id="chat-compteur"></span></p>
         </div>
         <div class="r-chat-window" id="chat-window">
@@ -1021,14 +1022,10 @@ const Result = (() => {
     };
     hero.appendChild(b);
 
-    // Le génie surgit de lui-même après que le personnage a eu le temps d'être découvert.
-    // Garde-fous : pas en mode candidat, une seule fois (introDejaJouee), et jamais
-    // par-dessus le contenu si la personne a déjà commencé à descendre vers son analyse.
-    if (res.modeCampagne !== 'recrutement') {
-      setTimeout(() => {
-        if (!introDejaJouee && window.scrollY < 120) jouerIntroCoach(dom);
-      }, 2500);
-    }
+    // Note : l'accueil de Néa ne se déclenche plus tout seul par minuteur (il se lançait
+    // par-dessus l'animation de révélation du profil, ce qui gâchait l'effet). La révélation
+    // a sa propre séquence (personnage → nom → écran "Me revoici" de Néa). L'intro de la
+    // restitution reste disponible via le bouton "Découvrir mon analyse" si besoin.
   }
 
   function jouerIntroCoach(dom){
@@ -1422,6 +1419,24 @@ const Result = (() => {
       };
       App.envoyerInteractions(inter);
     }, 1500);
+  }
+  // Construit l'objet interactions à l'instant T (sans délai) et l'envoie tout de suite.
+  // Utilisé avant d'ouvrir le plan d'action, pour garantir que les dernières cases
+  // cochées sont bien parties au serveur (sinon le plan se charge avant la sauvegarde).
+  function sauvegarderInteractionsImmediat(){
+    if (!window.App || !App.envoyerInteractions) return;
+    if (interTimer) { clearTimeout(interTimer); interTimer = null; }
+    const inter = {
+      forces_validees: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]),
+      forces_libelles: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
+      vigilances_validees: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]),
+      vigilances_libelles: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
+      moteur_valide: !!validations['moteur_0'],
+      reponses_ouvertes: Object.assign({}, openAnswers),
+      pistes_choisies: Array.from(selectedActions),
+      diagType: RES ? RES.diagType : 'classic',
+    };
+    App.envoyerInteractions(inter);
   }
   function toggleAction(i){ const el=document.getElementById('act-'+i); el.classList.toggle('sel'); if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i); sauvegarderInteractions(); }
 
@@ -2247,7 +2262,7 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites };
+  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

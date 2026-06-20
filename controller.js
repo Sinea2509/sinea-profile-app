@@ -914,6 +914,16 @@ const App = (() => {
       '<div class="plan-loading" id="plan-loading"><div class="plan-loading-spin"></div>' +
       '<p>Nous rassemblons votre profil et vos choix...</p></div></div>';
     activerScreenPlan(scr, mod);
+    // On force l'envoi immédiat des dernières cases cochées (le cochage a un délai de
+    // sauvegarde de 1,5s ; sans ça, ouvrir le plan trop vite chargerait des données
+    // incomplètes). Puis on laisse un court instant au serveur avant de relire.
+    if (window.Result && Result.sauvegarderInteractionsImmediat) {
+      try { Result.sauvegarderInteractionsImmediat(); } catch (e) {}
+    }
+    setTimeout(() => chargerEtAfficherPlan(mod, scr), 700);
+  }
+
+  function chargerEtAfficherPlan(mod, scr) {
     // on charge en parallèle l'analyse (profil), les interactions (choix) et le suivi sauvegardé
     Promise.all([
       fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'load_analyse', email: identite.email }) }).then(r => r.json()).catch(() => ({})),
@@ -2063,7 +2073,15 @@ const App = (() => {
       answered = used === total;
     }
     btnNext.disabled = !answered;
-    btnNext.textContent = idx === queue.length - 1 ? 'Voir mon profil' : 'Continuer';
+    // Les réponses s'enchaînent automatiquement : le bouton "Continuer" ferait doublon
+    // (retour terrain de l'équipe). On ne montre le bouton que sur la DERNIÈRE question,
+    // où il devient "Voir mon profil" (là, pas d'enchaînement auto après la réponse).
+    if (idx === queue.length - 1) {
+      btnNext.style.display = '';
+      btnNext.textContent = 'Voir mon profil';
+    } else {
+      btnNext.style.display = 'none';
+    }
   }
 
   // ---- Finalisation ----
