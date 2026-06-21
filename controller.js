@@ -1773,6 +1773,10 @@ const App = (() => {
     else if (posInChap === Math.floor(chapItems / 2) && chapItems > 8) enc = ' · à mi-parcours';
     document.getElementById('q-step').textContent = `${label} · ${posInChap} / ${chapItems}${enc}`;
 
+    // Progression GLOBALE (toutes étapes) : nourrit la métaphore de la graine qui pousse.
+    const pctGlobal = ((idx + 1) / queue.length) * 100;
+    majPousse(pctGlobal);
+
     // Panneau latéral desktop : chapitre, étape, note contextuelle
     const chapsAll = chapitres();
     const numChap = chapsAll.findIndex(c => c.id === cur.chap) + 1;
@@ -1791,6 +1795,20 @@ const App = (() => {
       };
       asideNote.textContent = notes[cur.chap] || notes.socle;
     }
+  }
+
+  // Métaphore vivante : une graine qui devient plante en fleur au fil du parcours.
+  // 6 phases selon la progression globale (tige dessinée en CSS, feuilles puis fleur).
+  function majPousse(pct) {
+    const zone = document.getElementById('q-pousse');
+    if (!zone) return;
+    let stade = 0;
+    if (pct >= 92) stade = 5;        // floraison
+    else if (pct >= 72) stade = 4;   // plante feuillue (2 paires)
+    else if (pct >= 50) stade = 3;   // jeune plant (1 paire)
+    else if (pct >= 28) stade = 2;   // pousse
+    else if (pct >= 10) stade = 1;   // germination
+    zone.setAttribute('data-stade', String(stade));
   }
 
   // Tag de section selon le type
@@ -2056,8 +2074,18 @@ const App = (() => {
     document.getElementById(`rv-${id}-${key}`).textContent = newVal;
     const used = Object.values(answers[id]).reduce((s, x) => s + x, 0);
     document.getElementById('rc-' + id).textContent = total - used;
-    // valide seulement si tous les points distribués
-    if (used === total) { refreshNav(true); } else { refreshNav(false); }
+    // Tous les points placés : on enchaîne automatiquement (comme les autres questions),
+    // avec un délai confortable pour voir le résultat. Plus besoin de bouton "continuer".
+    if (used === total) {
+      refreshNav(true);
+      if (idx < queue.length - 1) {
+        clearTimeout(window._autoNext);
+        window._autoNext = setTimeout(() => next(), 750);
+      }
+    } else {
+      clearTimeout(window._autoNext);
+      refreshNav(false);
+    }
   }
 
   // ---- Barre de navigation bas ----
@@ -2073,12 +2101,17 @@ const App = (() => {
       answered = used === total;
     }
     btnNext.disabled = !answered;
-    // Les réponses s'enchaînent automatiquement : le bouton "Continuer" ferait doublon
-    // (retour terrain de l'équipe). On ne montre le bouton que sur la DERNIÈRE question,
-    // où il devient "Voir mon profil" (là, pas d'enchaînement auto après la réponse).
-    if (idx === queue.length - 1) {
+    // Le bouton n'apparaît que là où il est UTILE pour ne JAMAIS bloquer :
+    // - dernière question (devient "Voir mon profil")
+    // - curseur (la personne ajuste librement : aucun moment "auto" évident)
+    // - répartition de points (on garde un bouton de secours une fois les points placés,
+    //   au cas où l'enchaînement auto n'a pas suffi ou si on a ajusté)
+    // Pour swipe, choix forcé, qcm : enchaînement automatique, pas de bouton.
+    const derniere = idx === queue.length - 1;
+    const besoinBouton = derniere || cur.kind === 'curseur' || cur.kind === 'repart';
+    if (besoinBouton) {
       btnNext.style.display = '';
-      btnNext.textContent = 'Voir mon profil';
+      btnNext.textContent = derniere ? 'Voir mon profil →' : 'Continuer →';
     } else {
       btnNext.style.display = 'none';
     }

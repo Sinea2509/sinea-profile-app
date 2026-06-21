@@ -583,6 +583,7 @@ const Result = (() => {
     document.getElementById('r-kicker').textContent='Votre archétype';
     document.getElementById('r-archetype').textContent=dom.nom;
     document.getElementById('r-verb').textContent=verbe(dom.nom);
+    chargerSignature(res);
     document.getElementById('r-hero').style.setProperty('--fam-color',color);
     const portrait=document.getElementById('r-portrait-img'); portrait.src=img(dom.nom); portrait.alt=dom.nom;
 
@@ -863,6 +864,61 @@ const Result = (() => {
   }
   let emailCourant = '';
   function setEmail(e){ emailCourant = e || ''; }
+
+  const SIGNATURE_URL = API_BASE + "/signature";
+  // Génère la "signature" de la personne (tête de restitution) via l'IA, et l'affiche.
+  // Pendant le calcul : un état d'attente discret. Si l'IA échoue : on masque proprement
+  // (la restitution reste complète sans elle, jamais d'erreur visible).
+  function chargerSignature(res){
+    const box = document.getElementById('r-signature');
+    if (!box) return;
+    const dom = res.dominante || {};
+    box.innerHTML = `
+      <div class="r-sign-card r-sign-loading">
+        <div class="r-sign-nea"><video class="r-sign-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div>
+        <div class="r-sign-wait"><span></span><span></span><span></span></div>
+        <p class="r-sign-waittxt">Néa rédige votre signature...</p>
+      </div>`;
+    const payload = {
+      dominante: res.dominante,
+      secondaires: res.secondaires,
+      scoresBigFive: res.scoresBigFive,
+      naturelAdapte: res.naturelAdapte,
+      reponses_ouvertes: (res.reponsesOuvertes || {})
+    };
+    fetch(SIGNATURE_URL, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(r => r.json()).then(data => {
+      if (!data || !data.ok || !data.signature) { box.innerHTML = ''; return; }
+      afficherSignature(box, data.signature, res);
+    }).catch(() => { box.innerHTML = ''; });
+  }
+
+  function afficherSignature(box, sig, res){
+    const fiab = (res.fiabilite && res.fiabilite.score !== undefined) ? res.fiabilite.score : null;
+    box.innerHTML = `
+      <div class="r-sign-card">
+        <div class="r-sign-essence">${escapeHtmlR(sig.essence || '')}</div>
+        <div class="r-sign-grid">
+          <div class="r-sign-item">
+            <div class="r-sign-lab">Votre force rare</div>
+            <p>${escapeHtmlR(sig.force_rare || '')}</p>
+          </div>
+          <div class="r-sign-item">
+            <div class="r-sign-lab">Votre tension</div>
+            <p>${escapeHtmlR(sig.tension || '')}</p>
+          </div>
+          <div class="r-sign-item">
+            <div class="r-sign-lab">Votre prochain pas</div>
+            <p>${escapeHtmlR(sig.prochain_pas || '')}</p>
+          </div>
+        </div>
+        <div class="r-sign-foot">Fondé sur le modèle des Big Five, le standard scientifique international${fiab !== null ? ` · Fiabilité de votre profil ${fiab}%` : ''}</div>
+      </div>`;
+  }
+
+  function escapeHtmlR(s){ return String(s == null ? '' : s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
   function initPortraitPdf(){
     const dispo = lireToken() || emailCourant;
     const btn = document.getElementById('portrait-pdf-btn');

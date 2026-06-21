@@ -67,6 +67,49 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .q-step{font-family:var(--font);font-size:12px;font-weight:600;color:var(--c-grey);text-transform:uppercase;letter-spacing:0.05em;}
 .q-bar{height:6px;background:#E4E2DC;border-radius:3px;overflow:hidden;}
 .q-bar-fill{height:100%;width:5%;background:var(--g-primary);border-radius:3px;transition:width 0.4s ease;}
+
+/* ---- La graine qui pousse au fil du parcours (SVG, 6 phases) ---- */
+.q-progress-row{display:flex;align-items:flex-end;gap:14px;}
+.q-progress-row .q-progress-head{flex:1;}
+.q-pousse{position:relative;width:50px;height:66px;flex-shrink:0;}
+.pousse-svg{width:100%;height:100%;overflow:visible;}
+.ps-pot{fill:#C9986B;}
+.ps-terre{fill:#7A5A3C;}
+.ps-graine{fill:#8B6F47;transition:opacity 0.5s, transform 0.5s;transform-origin:center;}
+/* tige : se "dessine" progressivement via stroke-dasharray */
+.ps-tige{fill:none;stroke:#5BA35B;stroke-width:3;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 0.8s cubic-bezier(0.34,1,0.64,1);}
+.ps-feuille{fill:#6FBE6F;opacity:0;transform:scale(0.3);transform-origin:30px 50px;transition:opacity 0.5s, transform 0.55s cubic-bezier(0.34,1.4,0.64,1);}
+.ps-f3,.ps-f4{transform-origin:30px 40px;}
+.ps-fleur{opacity:0;transform:scale(0);transform-origin:30px 27px;transition:opacity 0.5s, transform 0.6s cubic-bezier(0.34,1.56,0.64,1);}
+.ps-petale{fill:#F9A8C8;}
+.ps-coeur{fill:#F9C846;}
+
+/* PHASES :
+   0 graine · 1 germination (tige courte) · 2 pousse · 3 jeune plant (1 paire) ·
+   4 plante feuillue (2 paires) · 5 floraison */
+.q-pousse[data-stade="0"] .ps-graine{opacity:1;}
+.q-pousse[data-stade="0"] .ps-tige{stroke-dashoffset:100;}
+
+.q-pousse[data-stade="1"] .ps-graine{opacity:0.5;transform:translateY(2px) scale(0.8);}
+.q-pousse[data-stade="1"] .ps-tige{stroke-dashoffset:78;}
+
+.q-pousse[data-stade="2"] .ps-graine{opacity:0;}
+.q-pousse[data-stade="2"] .ps-tige{stroke-dashoffset:55;}
+
+.q-pousse[data-stade="3"] .ps-graine{opacity:0;}
+.q-pousse[data-stade="3"] .ps-tige{stroke-dashoffset:38;}
+.q-pousse[data-stade="3"] .ps-f1,.q-pousse[data-stade="3"] .ps-f2{opacity:1;transform:scale(1);}
+
+.q-pousse[data-stade="4"] .ps-graine{opacity:0;}
+.q-pousse[data-stade="4"] .ps-tige{stroke-dashoffset:16;}
+.q-pousse[data-stade="4"] .ps-f1,.q-pousse[data-stade="4"] .ps-f2,
+.q-pousse[data-stade="4"] .ps-f3,.q-pousse[data-stade="4"] .ps-f4{opacity:1;transform:scale(1);}
+
+.q-pousse[data-stade="5"] .ps-graine{opacity:0;}
+.q-pousse[data-stade="5"] .ps-tige{stroke-dashoffset:6;}
+.q-pousse[data-stade="5"] .ps-f1,.q-pousse[data-stade="5"] .ps-f2,
+.q-pousse[data-stade="5"] .ps-f3,.q-pousse[data-stade="5"] .ps-f4{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="5"] .ps-fleur{opacity:1;transform:scale(1);}
 .q-card-wrap{flex:1;display:flex;flex-direction:column;padding:32px 28px 16px;}
 #q-card{flex:1;display:flex;flex-direction:column;transition:opacity 0.32s ease,transform 0.32s ease;}
 .q-tag{font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:16px;}
@@ -108,7 +151,8 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Nav bas */
 .q-nav{padding:14px 28px calc(20px + env(safe-area-inset-bottom));display:flex;gap:12px;align-items:center;background:linear-gradient(to top,var(--c-beige) 70%,transparent);position:sticky;bottom:0;}
 .q-nav .btn-primary{flex:1;}
-#btn-prev{flex-shrink:0;width:auto;}
+#btn-prev{flex-shrink:0;width:auto;background:#fff;border:1.5px solid var(--c-border, #E5E3DD);color:var(--c-purple-text, #5E59C7);border-radius:100px;padding:12px 22px;font-weight:700;font-size:14.5px;box-shadow:0 2px 10px rgba(0,0,0,0.06);transition:background 0.2s, border-color 0.2s;}
+#btn-prev:hover{background:var(--c-beige, #F5F4F0);border-color:var(--c-purple, #8884F0);}
 
 /* ============================================================
    ÉCRAN LOADER
@@ -130,6 +174,28 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-chat-nea{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;overflow:hidden;position:relative;box-shadow:0 0 36px -8px var(--c-orange, #F9A876);}
 .r-chat-nea-vid{width:100%;height:100%;object-fit:cover;display:block;}
 .r-hero{background:var(--g-halo);color:var(--c-white);padding:54px 28px 132px;position:relative;overflow:hidden;text-align:center;}
+
+/* ---- La signature de l'apprenant (tête de restitution, pièce "waouh") ---- */
+.r-signature{margin:-92px 20px 0;position:relative;z-index:5;}
+.r-sign-card{background:#fff;border-radius:22px;padding:30px 26px 22px;box-shadow:0 18px 50px -18px rgba(94,89,199,0.45);animation:signIn 0.8s cubic-bezier(0.22,1,0.36,1) both;}
+@keyframes signIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+.r-sign-essence{font-size:clamp(20px,4.2vw,26px);font-weight:800;line-height:1.34;letter-spacing:-0.01em;color:var(--c-dark, #2D2D2D);text-align:center;background:linear-gradient(100deg, var(--c-purple-text, #5E59C7), #B07DD6 60%, var(--c-orange, #F9A876));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.r-sign-grid{display:grid;gap:18px;margin-top:24px;}
+@media (min-width:620px){.r-sign-grid{grid-template-columns:1fr 1fr 1fr;}}
+.r-sign-item{border-top:2px solid #F0EEE8;padding-top:13px;}
+.r-sign-lab{font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--c-purple-text, #5E59C7);margin-bottom:7px;}
+.r-sign-item p{margin:0;font-size:14.5px;line-height:1.55;color:#3C3C46;}
+.r-sign-foot{margin-top:22px;padding-top:14px;border-top:1px solid #F0EEE8;font-size:11.5px;color:var(--c-grey, #8A8A8A);text-align:center;letter-spacing:0.02em;}
+/* état d'attente pendant la génération IA */
+.r-sign-loading{text-align:center;}
+.r-sign-nea{width:72px;height:72px;margin:0 auto 16px;border-radius:50%;overflow:hidden;box-shadow:0 0 36px -8px var(--c-orange, #F9A876);}
+.r-sign-nea-vid{width:100%;height:100%;object-fit:cover;display:block;}
+.r-sign-wait{display:flex;gap:7px;justify-content:center;margin-bottom:10px;}
+.r-sign-wait span{width:8px;height:8px;border-radius:50%;background:var(--c-purple, #8884F0);animation:signDot 1.2s ease-in-out infinite;}
+.r-sign-wait span:nth-child(2){animation-delay:0.2s;}
+.r-sign-wait span:nth-child(3){animation-delay:0.4s;}
+@keyframes signDot{0%,100%{opacity:0.3;transform:scale(0.8);}50%{opacity:1;transform:scale(1);}}
+.r-sign-waittxt{margin:0;font-size:13.5px;color:var(--c-grey, #8A8A8A);font-style:italic;}
 .r-hero::before{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:320px;opacity:0.2;}
 .r-hero-in{position:relative;z-index:2;}
 .r-kicker{font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;margin-bottom:10px;}
