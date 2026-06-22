@@ -322,7 +322,8 @@ const Result = (() => {
       // Plus d'infobulle au survol (coupée sur mobile) : la description du profil retenu
       // s'affiche directement sous les pastilles, toujours lisible quel que soit l'écran.
       const pastilles = Object.entries(conf.profils).map(([key, label]) => {
-        return `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}">${label}</span>`;
+        const tip = (defs[key] || '').replace(/"/g, '&quot;');
+        return `<span class="dimc-opt ${key === choisi ? 'dimc-sel' : ''}"${tip ? ` data-tip="${tip}"` : ''}>${label}</span>`;
       }).join('');
       const desc = defs[choisi] || '';
       return `
@@ -784,7 +785,7 @@ const Result = (() => {
           <div class="r-chat-nea"><img class="r-chat-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" /></div>
           <div class="r-me-kicker">Vos 3 questions</div>
           <h2 class="r-me-title">Vos questions à Néa</h2>
-          <p class="r-me-sub">Néa a lu votre portrait. Posez-lui jusqu'à trois questions pour aller plus loin. <span class="r-chat-compteur" id="chat-compteur"></span></p>
+          <p class="r-me-sub">Néa a lu votre portrait. Elle vous accorde trois vœux : trois questions sur vous, pour aller plus loin. <span class="r-chat-compteur" id="chat-compteur"></span></p>
         </div>
         <div class="r-chat-window" id="chat-window">
           <div class="r-chat-suggestions" id="chat-suggestions"></div>
@@ -1109,8 +1110,9 @@ const Result = (() => {
           <p class="coach-intro-line">Voici votre portrait, fondé sur vos réponses.<br>Prenez le temps de le lire attentivement.</p>
         </div>
         <div class="coach-intro-step" data-step="3">
-          <p class="coach-intro-line"><strong>Et comme un génie sorti de sa lampe</strong>, je réalise ensuite vos <strong>trois questions</strong>.</p>
-          <p class="coach-intro-hint">Trois, pas une de plus. Choisissez-les bien.</p>
+          <p class="coach-intro-line">Et puisque j'ai lu votre portrait, permettez-moi de jouer les génies : je vous réserve <strong>trois vœux</strong>.</p>
+          <p class="coach-intro-line">Trois questions sur vous, une fois votre lecture faite. J'y répondrai.</p>
+          <p class="coach-intro-hint">Trois, pas un de plus. Choisissez-les bien.</p>
           <button class="coach-intro-go" id="coach-intro-go">Découvrir mon portrait</button>
         </div>
       </div>`;
@@ -1119,7 +1121,7 @@ const Result = (() => {
 
     const steps = ov.querySelectorAll('.coach-intro-step');
     let i = 0;
-    const montrer = (n) => steps.forEach((s, k) => s.classList.toggle('show', k === n));
+    const montrer = (n) => { steps.forEach((s, k) => s.classList.toggle('show', k === n)); if (n === 2) { const c = ov.querySelector('.coach-intro-card'); if (c) c.classList.add('genie'); } };
     montrer(0);
     const t1 = setTimeout(() => montrer(1), 2300);
     const t2 = setTimeout(() => montrer(2), 4800);
@@ -1182,15 +1184,15 @@ const Result = (() => {
   function majCompteurChat(restant){
     const el = document.getElementById('chat-compteur');
     if (!el) return;
-    if (restant > 0) el.textContent = `Il vous reste ${restant} question${restant > 1 ? 's' : ''}.`;
-    else el.textContent = 'Vous avez utilisé vos trois questions.';
+    if (restant > 0) el.textContent = `Il vous reste ${restant} vœu${restant > 1 ? 'x' : ''}.`;
+    else el.textContent = 'Vos trois vœux sont exaucés.';
   }
-  // Désactive la saisie quand les 3 questions sont consommées.
+  // Désactive la saisie quand les 3 vœux sont consommés.
   function verrouillerChat(){
     const input = document.getElementById('chat-input');
     const send = document.getElementById('chat-send');
     const sugg = document.getElementById('chat-suggestions');
-    if (input) { input.disabled = true; input.placeholder = 'Vos trois questions ont été posées'; }
+    if (input) { input.disabled = true; input.placeholder = 'Vos trois vœux sont exaucés'; }
     if (send) send.disabled = true;
     if (sugg) sugg.style.display = 'none';
   }
@@ -1281,6 +1283,19 @@ const Result = (() => {
   // Étape 1 : on coche (explication claire). Étape 2 : on valide ses choix (enregistrement,
   // sans changement de page). Étape 3 : accès au plan, qui reste un choix explicite.
   let selValidated = false;
+  let selbarScrollBound = false;
+  function setupSelbarScrollHide(){
+    if (selbarScrollBound) return;
+    selbarScrollBound = true;
+    let t;
+    window.addEventListener('scroll', function(){
+      const b = document.getElementById('r-selbar');
+      if (!b || !b.classList.contains('on')) return;
+      b.classList.add('r-selbar-hide');           // se retire pendant qu'on fait défiler
+      clearTimeout(t);
+      t = setTimeout(function(){ b.classList.remove('r-selbar-hide'); }, 650); // revient une fois posé
+    }, { passive: true });
+  }
   function majBarreSelection(){
     const nbForces = Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).length;
     const nbVig = Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]).length;
@@ -1326,6 +1341,7 @@ const Result = (() => {
       };
     }
     barre.classList.add('on');
+    setupSelbarScrollHide();
   }
   function saveOpen(q,v){ openAnswers[q]=v; sauvegarderInteractions(); }
 

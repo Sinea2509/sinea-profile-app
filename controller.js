@@ -331,7 +331,7 @@ const App = (() => {
           document.getElementById('screen-connexion').classList.remove('active');
           afficherEcranCode(email);
         } else if (data && data.no_account) {
-          err.innerHTML = "Aucun compte associé à cet email. <a href='#' id='cx-vers-test' style='color:var(--c-purple-text);font-weight:600;'>Commencer le test</a>";
+          err.innerHTML = "Aucun compte associé à cet email. <a href='#' id='cx-vers-test' style='color:var(--c-purple-text);font-weight:600;'>Commencer l'analyse</a>";
           const lien = document.getElementById('cx-vers-test');
           if (lien) lien.onclick = (e) => { e.preventDefault(); document.getElementById('screen-connexion').classList.remove('active'); goToIdentif(); };
         } else {
@@ -410,11 +410,11 @@ const App = (() => {
     ov.className = 'cand-info-overlay';
     ov.innerHTML = '<div class="cand-info-card">'
       + '<div class="cand-info-kicker">Avant de commencer</div>'
-      + '<h2 class="cand-info-titre">Ce test éclaire, il ne décide pas</h2>'
+      + '<h2 class="cand-info-titre">Cette analyse éclaire, elle ne décide pas</h2>'
       + '<p>Ce questionnaire évalue vos <b>soft skills</b> et votre façon naturelle de fonctionner au travail. Il porte sur le comportement, jamais sur vos compétences techniques.</p>'
       + '<p>Vos résultats servent à <b>préparer un échange de qualité</b> avec l\'entreprise. Ils restent confidentiels et la décision de recrutement appartient toujours à des humains.</p>'
       + '<p>Vous recevrez votre <b>portrait de personnalité</b>, qui reste le vôtre, quelle que soit la suite du processus.</p>'
-      + '<p class="cand-info-note">Répondez spontanément : il n\'existe aucune bonne ou mauvaise réponse, et le test détecte mieux la sincérité que la perfection.</p>'
+      + '<p class="cand-info-note">Répondez spontanément : il n\'existe aucune bonne ou mauvaise réponse, et l\'analyse détecte mieux la sincérité que la perfection.</p>'
       + '<button class="cand-info-go" id="cand-info-go">J\'ai compris, commencer</button>'
       + '</div>';
     document.body.appendChild(ov);
@@ -481,7 +481,7 @@ const App = (() => {
         } else {
           const raison = data ? data.raison : '';
           if (raison === 'deja_fait') {
-            err.innerHTML = 'Vous avez déjà passé ce test. <a href="#" id="magic-vers-connexion" style="color:var(--c-purple-text);font-weight:600;">Accéder à mon espace</a>';
+            err.innerHTML = 'Vous avez déjà passé cette analyse. <a href="#" id="magic-vers-connexion" style="color:var(--c-purple-text);font-weight:600;">Accéder à mon espace</a>';
             brancherLienConnexion();
           }
           else if (raison === 'module_deja_fait') {
@@ -1015,13 +1015,19 @@ const App = (() => {
     })
       .then(r => r.json())
       .then(data => {
-        const actions = (data && data.actions) || [];
-        rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(actions, suiviSauve));
+        let actions = (data && data.actions) || [];
+        const synthese = (data && data.synthese) || '';
+        // si l'IA renvoie une liste vide ou une erreur, on affiche au moins
+        // les elements coches, pour que le plan ne soit jamais vide
+        if (!actions.length) {
+          actions = construireReplisPlan(forces, vigilances, objectifs);
+        }
+        rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(actions, suiviSauve), synthese);
       })
       .catch(() => {
-        // repli : si l'IA échoue, on affiche au moins les éléments cochés en tableau simple
+        // repli : si l'IA échoue, on affiche au moins les éléments cochés
         const repli = construireReplisPlan(forces, vigilances, objectifs);
-        rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(repli, suiviSauve));
+        rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(repli, suiviSauve), '');
       });
   }
 
@@ -1031,11 +1037,13 @@ const App = (() => {
     const parObjectif = {};
     suiviSauve.forEach(s => { if (s && s.objectif) parObjectif[s.objectif] = s; });
     actions.forEach(a => {
-      const s = parObjectif[a.objectif_smart];
+      const cle = a.objectif || a.objectif_smart;
+      const s = parObjectif[cle];
       if (s) {
         if (s.statut) a.statut = s.statut;
         if (s.ressenti) a.ressenti = s.ressenti;
-        if (s.priorite) a.priorite = s.priorite;
+        if (s.horizon) a.horizon = s.horizon;
+        else if (s.priorite) a.horizon = horizonDepuisPriorite(s.priorite);
       }
     });
     return actions;
@@ -1044,16 +1052,19 @@ const App = (() => {
   // repli local si l'IA est indisponible : objectifs simples sans SMART généré
   function construireReplisPlan(forces, vigilances, objectifs) {
     const out = [];
-    forces.forEach(f => out.push({ thematique: 'Force', type: 'Capitaliser', verbe_bloom: 'Mobiliser', niveau_bloom: 'Appliquer', objectif_smart: f, priorite: 'Moyenne' }));
-    vigilances.forEach(v => out.push({ thematique: 'Progression', type: 'Progresser', verbe_bloom: 'Ajuster', niveau_bloom: 'Analyser', objectif_smart: v, priorite: 'Haute' }));
-    objectifs.forEach(o => out.push({ thematique: 'Développement', type: 'Explorer', verbe_bloom: 'Expérimenter', niveau_bloom: 'Créer', objectif_smart: o, priorite: 'Basse' }));
+    forces.forEach(f => out.push({ thematique: 'Force', type: 'Capitaliser', horizon: 'Bientôt', objectif: 'Capitaliser sur ' + minuscule1(f), premier_pas: 'Repérez cette semaine une situation où mobiliser ce point.', indicateur: 'Vous l\'activez consciemment au moins une fois.' }));
+    vigilances.forEach(v => out.push({ thematique: 'Progression', type: 'Progresser', horizon: 'Maintenant', objectif: 'Progresser sur ' + minuscule1(v), premier_pas: 'Choisissez une occasion proche pour vous y exercer.', indicateur: 'Vous observez un premier ajustement concret.' }));
+    objectifs.forEach(o => out.push({ thematique: 'Développement', type: 'Explorer', horizon: 'Plus tard', objectif: 'Explorer ' + minuscule1(o), premier_pas: 'Réservez un moment pour vous documenter ou en parler.', indicateur: 'Vous franchissez une première étape visible.' }));
     return out;
   }
 
   // construit le tableau (desktop) + cartes (mobile) des actions, avec priorité modifiable
-  function rendrePlanActions(scr, mod, heroHtml, actions) {
-    const ordrePrio = { 'Haute': 0, 'Moyenne': 1, 'Basse': 2 };
-    actions.sort((a, b) => (ordrePrio[a.priorite] ?? 1) - (ordrePrio[b.priorite] ?? 1));
+  // construit la feuille de route : un cap (synthese) + des objectifs en cartes,
+  // chacun en trois couches (objectif, premier pas, indicateur) avec un horizon.
+  function rendrePlanActions(scr, mod, heroHtml, actions, synthese) {
+    const ordreHor = { 'Maintenant': 0, 'Bientôt': 1, 'Bientot': 1, 'Plus tard': 2 };
+    actions.forEach(a => { if (!a.horizon) a.horizon = horizonDepuisPriorite(a.priorite); });
+    actions.sort((x, y) => (ordreHor[x.horizon] ?? 1) - (ordreHor[y.horizon] ?? 1));
 
     function classeType(t) {
       const x = (t || '').toLowerCase();
@@ -1061,13 +1072,12 @@ const App = (() => {
       if (x.indexOf('progress') === 0) return 'pt-pro';
       return 'pt-exp';
     }
-    function classePrio(p) {
-      const x = (p || '').toLowerCase();
-      if (x.indexOf('haut') === 0) return 'pp-haute';
-      if (x.indexOf('bass') === 0) return 'pp-basse';
-      return 'pp-moyenne';
+    function classeHorizon(h) {
+      const x = (h || '').toLowerCase();
+      if (x.indexOf('maintenant') === 0) return 'ph-now';
+      if (x.indexOf('plus tard') === 0) return 'ph-later';
+      return 'ph-soon';
     }
-
     function classeStatut(s) {
       const x = (s || '').toLowerCase();
       if (x.indexOf('fait') === 0) return 'ps-fait';
@@ -1080,77 +1090,69 @@ const App = (() => {
       if (x.indexOf('cours') >= 0) return 'En cours';
       return 'À faire';
     }
+    const objDe = (a) => a.objectif || a.objectif_smart || '';
 
-    // version TABLEAU (desktop) — chaque action est SUIVIE : statut cliquable + ressenti
-    let lignes = actions.map((a, i) => {
+    // une carte par objectif, en trois couches
+    const cartes = actions.map((a, i) => {
       const statut = a.statut || 'À faire';
       const aRessenti = a.ressenti && a.ressenti.trim();
-      return '<tr data-i="' + i + '">' +
-        '<td><span class="plan-them">' + echapValeur(a.thematique) + '</span></td>' +
-        '<td><span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span></td>' +
-        '<td class="plan-obj"><span class="plan-verbe">' + echapValeur(a.verbe_bloom) + '</span><span class="plan-niv">' + echapValeur(a.niveau_bloom) + '</span><p>' + echapValeur(a.objectif_smart) + '</p></td>' +
-        '<td><button class="plan-prio ' + classePrio(a.priorite) + '" data-prio="' + i + '">' + echapValeur(a.priorite) + '</button></td>' +
-        '<td class="plan-suivi-cell">' +
+      const pas = (a.premier_pas || '').trim();
+      const ind = (a.indicateur || '').trim();
+      return '<div class="planc" data-i="' + i + '">' +
+        '<div class="planc-head">' +
+          '<span class="plan-them">' + echapValeur(a.thematique) + '</span>' +
+          '<span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span>' +
+          '<button class="planc-horizon ' + classeHorizon(a.horizon) + '" data-horizon="' + i + '" title="Ajuster l\'horizon">' + echapValeur(a.horizon) + '</button>' +
+        '</div>' +
+        '<p class="planc-obj">' + echapValeur(objDe(a)) + '</p>' +
+        (pas ? '<div class="planc-layer planc-pas"><span class="planc-ic">▸</span><div class="planc-layer-txt"><span class="planc-lab">Premier pas</span><p>' + echapValeur(pas) + '</p></div></div>' : '') +
+        (ind ? '<div class="planc-layer planc-ind"><span class="planc-ic">◎</span><div class="planc-layer-txt"><span class="planc-lab">Vous saurez que c\'est acquis</span><p>' + echapValeur(ind) + '</p></div></div>' : '') +
+        '<div class="planc-suivi">' +
           '<button class="plan-statut ' + classeStatut(statut) + '" data-statut="' + i + '">' + libStatut(statut) + '</button>' +
-          '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti="' + i + '" title="Laisser un ressenti">' + (aRessenti ? '✏️' : '💬') + '</button>' +
-        '</td>' +
-      '</tr>';
-    }).join('');
-
-    const tableau =
-      '<div class="plan-table-wrap">' +
-        '<table class="plan-table">' +
-          '<thead><tr><th>Thématique</th><th>Type</th><th>Objectif</th><th>Priorité</th><th>Suivi</th></tr></thead>' +
-          '<tbody>' + lignes + '</tbody>' +
-        '</table>' +
-      '</div>';
-
-    // version CARTES (mobile) — même suivi : statut + ressenti
-    let cartes = actions.map((a, i) => {
-      const statut = a.statut || 'À faire';
-      const aRessenti = a.ressenti && a.ressenti.trim();
-      return '<div class="plan-mcard" data-i="' + i + '">' +
-        '<div class="plan-mcard-top"><span class="plan-them">' + echapValeur(a.thematique) + '</span><button class="plan-prio ' + classePrio(a.priorite) + '" data-prio-m="' + i + '">' + echapValeur(a.priorite) + '</button></div>' +
-        '<div class="plan-mcard-type"><span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span><span class="plan-verbe">' + echapValeur(a.verbe_bloom) + '</span><span class="plan-niv">' + echapValeur(a.niveau_bloom) + '</span></div>' +
-        '<p class="plan-mcard-obj">' + echapValeur(a.objectif_smart) + '</p>' +
-        '<div class="plan-mcard-suivi">' +
-          '<button class="plan-statut ' + classeStatut(statut) + '" data-statut-m="' + i + '">' + libStatut(statut) + '</button>' +
-          '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti-m="' + i + '">' + (aRessenti ? '✏️ Modifier mon ressenti' : '💬 Laisser un ressenti') + '</button>' +
+          '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti="' + i + '" title="Laisser un ressenti">' + (aRessenti ? '✏️ Mon ressenti' : '💬 Laisser un ressenti') + '</button>' +
         '</div>' +
       '</div>';
     }).join('');
 
+    const capHtml = (synthese && synthese.trim())
+      ? '<div class="plan-cap"><div class="plan-cap-lab">Votre cap</div><p class="plan-cap-txt">' + echapValeur(synthese.trim()) + '</p></div>'
+      : '';
+
     const seedup =
       '<div class="plan-seedup">' +
+        '<span class="plan-seedup-tag">Option</span>' +
         '<div class="plan-seedup-ic">⚡</div>' +
-        '<div class="plan-seedup-txt"><div class="plan-seedup-t">Passez à l\'action avec SeedUp</div>' +
-        '<p>Ces objectifs deviennent des défis concrets, pensés pour votre profil. Quelques minutes par semaine pour ancrer durablement vos progrès.</p></div>' +
-        '<button class="plan-seedup-btn" id="plan-go-seedup">Découvrir mes défis</button>' +
+        '<div class="plan-seedup-txt"><div class="plan-seedup-t">Ancrez vos objectifs avec SeedUp</div>' +
+        '<p>En complément, SeedUp transforme ces objectifs en défis courts. Quelques minutes par semaine pour ancrer durablement vos progrès.</p></div>' +
+        '<button class="plan-seedup-btn" id="plan-go-seedup">Découvrir l\'option SeedUp</button>' +
       '</div>';
 
     scr.innerHTML = '<div class="plan-scroll">' + heroHtml +
-      '<p class="plan-intro-tab">Voici vos objectifs, formulés pour être clairs et atteignables. La priorité est proposée, vous pouvez l\'ajuster en cliquant dessus.</p>' +
-      tableau +
-      '<div class="plan-cards-mobile">' + cartes + '</div>' +
+      capHtml +
+      '<p class="plan-intro-tab">Voici votre feuille de route. Chaque objectif tient en trois temps : le cap, le premier pas, et le signe que c\'est acquis. L\'horizon est proposé, ajustez-le en cliquant dessus.</p>' +
+      '<div class="plan-cards">' + cartes + '</div>' +
       seedup +
     '</div>';
     activerScreenPlan(scr, mod);
 
-    // priorité modifiable : clic fait défiler Haute → Moyenne → Basse
-    const cyclePrio = (btn) => {
-      const cur = (btn.textContent || '').trim().toLowerCase();
+    // horizon ajustable : Maintenant -> Bientôt -> Plus tard
+    const cycleHorizon = (i, btn) => {
+      const cur = (actions[i].horizon || 'Bientôt').toLowerCase();
       let next, cls;
-      if (cur.indexOf('haut') === 0) { next = 'Moyenne'; cls = 'pp-moyenne'; }
-      else if (cur.indexOf('moy') === 0) { next = 'Basse'; cls = 'pp-basse'; }
-      else { next = 'Haute'; cls = 'pp-haute'; }
+      if (cur.indexOf('maintenant') === 0) { next = 'Bientôt'; cls = 'ph-soon'; }
+      else if (cur.indexOf('bient') === 0) { next = 'Plus tard'; cls = 'ph-later'; }
+      else { next = 'Maintenant'; cls = 'ph-now'; }
+      actions[i].horizon = next;
       btn.textContent = next;
-      btn.className = 'plan-prio ' + cls;
+      btn.className = 'planc-horizon ' + cls;
+      sauverSuiviPlan(mod, actions);
     };
-    scr.querySelectorAll('[data-prio], [data-prio-m]').forEach(btn => {
-      btn.onclick = () => cyclePrio(btn);
+    scr.querySelectorAll('[data-horizon]').forEach(btn => {
+      const i = parseInt(btn.getAttribute('data-horizon'), 10);
+      btn.onclick = () => cycleHorizon(i, btn);
     });
 
-    // ---- SUIVI : statut cliquable (À faire → En cours → Fait) ----
+    // statut cliquable : À faire -> En cours -> Fait
     const cycleStatut = (i) => {
       const cur = (actions[i].statut || 'À faire').toLowerCase();
       let next;
@@ -1158,28 +1160,36 @@ const App = (() => {
       else if (cur.indexOf('cours') >= 0) next = 'Fait';
       else next = 'À faire';
       actions[i].statut = next;
-      // refléter sur les deux vues (desktop + mobile)
-      scr.querySelectorAll('[data-statut="' + i + '"], [data-statut-m="' + i + '"]').forEach(b => {
+      scr.querySelectorAll('[data-statut="' + i + '"]').forEach(b => {
         b.textContent = next;
         b.className = 'plan-statut ' + classeStatut(next);
       });
       sauverSuiviPlan(mod, actions);
     };
-    scr.querySelectorAll('[data-statut], [data-statut-m]').forEach(btn => {
-      const i = parseInt(btn.getAttribute('data-statut') || btn.getAttribute('data-statut-m'), 10);
+    scr.querySelectorAll('[data-statut]').forEach(btn => {
+      const i = parseInt(btn.getAttribute('data-statut'), 10);
       btn.onclick = () => cycleStatut(i);
     });
 
-    // ---- SUIVI : ressenti (ouvre une petite saisie en bas de l'écran) ----
-    scr.querySelectorAll('[data-ressenti], [data-ressenti-m]').forEach(btn => {
-      const i = parseInt(btn.getAttribute('data-ressenti') || btn.getAttribute('data-ressenti-m'), 10);
+    // ressenti
+    scr.querySelectorAll('[data-ressenti]').forEach(btn => {
+      const i = parseInt(btn.getAttribute('data-ressenti'), 10);
       btn.onclick = () => ouvrirRessenti(scr, mod, actions, i);
     });
 
-    // mémoriser pour la sauvegarde et le tableau de bord
     planActionsCourant = actions;
     planModCourant = mod;
   }
+
+  // horizon par défaut depuis l'ancienne priorité (compat si le back n'est pas redéployé)
+  function horizonDepuisPriorite(p) {
+    const x = (p || '').toLowerCase();
+    if (x.indexOf('haut') === 0) return 'Maintenant';
+    if (x.indexOf('bass') === 0) return 'Plus tard';
+    return 'Bientôt';
+  }
+  // minuscule sur la première lettre (pour les objectifs de repli)
+  function minuscule1(s) { s = String(s || ''); return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
 
   // état courant du plan affiché (pour sauvegarde du suivi)
   let planActionsCourant = [];
@@ -1197,7 +1207,7 @@ const App = (() => {
     panel.innerHTML =
       '<div class="plan-rp-card">' +
         '<div class="plan-rp-titre">Votre ressenti</div>' +
-        '<p class="plan-rp-obj">' + echapValeur(a.objectif_smart) + '</p>' +
+        '<p class="plan-rp-obj">' + echapValeur(a.objectif || a.objectif_smart) + '</p>' +
         '<textarea class="plan-rp-input" id="plan-rp-input" rows="4" placeholder="Où en êtes-vous ? Ce qui avance, ce qui bloque, ce que vous avez appris...">' + echapValeur(ancien) + '</textarea>' +
         '<div class="plan-rp-actions">' +
           '<button class="plan-rp-annuler" id="plan-rp-annuler">Annuler</button>' +
@@ -1223,8 +1233,8 @@ const App = (() => {
   function sauverSuiviPlan(mod, actions) {
     if (!identite.email) return;
     const suivi = actions.map(a => ({
-      thematique: a.thematique, objectif: a.objectif_smart,
-      statut: a.statut || 'À faire', ressenti: a.ressenti || '', priorite: a.priorite || ''
+      thematique: a.thematique, objectif: a.objectif || a.objectif_smart || '',
+      statut: a.statut || 'À faire', ressenti: a.ressenti || '', horizon: a.horizon || ''
     }));
     fetch(PROGRESSION_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2322,7 +2332,16 @@ const App = (() => {
   function sonReveal() {
     const ac = _getAudio(); if (!ac) return;
     if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
-    _note(523, 0, 1.4, 0.07); _note(659, 0.04, 1.4, 0.06); _note(784, 0.08, 1.5, 0.06); _note(1047, 0.12, 1.6, 0.04);
+    // montee scintillante facon poussiere d'etoile
+    _note(523, 0,    0.55, 0.06);   // do5
+    _note(659, 0.12, 0.55, 0.06);   // mi5
+    _note(784, 0.24, 0.6,  0.06);   // sol5
+    _note(1047,0.36, 0.7,  0.05);   // do6
+    _note(1319,0.48, 0.8,  0.04);   // mi6
+    // accord final qui resonne plus longtemps (tail premium)
+    _note(523, 0.62, 2.6,  0.05);   // do5
+    _note(784, 0.64, 2.6,  0.045);  // sol5
+    _note(1047,0.66, 2.7,  0.04);   // do6
   }
   function sonLettre() { _note(880, 0, 0.04, 0.015); }
 
@@ -2363,7 +2382,7 @@ const App = (() => {
       const neaCta = document.getElementById('nea-cta');
       if (neaScr && neaMsg) {
         const prenom = identite.prenom || '';
-        neaMsg.innerHTML = '« Me revoici' + (prenom ? ' ' + echapValeur(prenom) : '') + '. J\'ai lu votre portrait en entier, et il dit de belles choses sur vous. Laissez-moi vous le présenter. »';
+        neaMsg.innerHTML = '« Me revoici' + (prenom ? ' ' + echapValeur(prenom) : '') + '. J\'ai lu votre portrait en entier, et il dit de belles choses sur vous. Lisez-le attentivement : à la fin, je vous accorderai trois vœux, trois questions sur vous auxquelles je répondrai. Laissez-moi vous le présenter. »';
         neaScr.classList.add('active');
         window.scrollTo(0, 0);
         const vid = neaScr.querySelector('.nea-vid');

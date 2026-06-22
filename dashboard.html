@@ -1259,7 +1259,7 @@ function axesFormation(membres, famillesStats){
       const v=ctx[d]; const c=v && MGR_CONSEILS[d] && MGR_CONSEILS[d][v];
       if(c) mgrHtml+=`<div class="fm-conseil"><div class="fm-conseil-head"><span class="fm-dim">${d==='stress'?'Sous pression':d==='conflit'?'Face au conflit':d==='motivation'?'Moteur profond':d==='changement'?'Face au changement':'Rapport au risque'}</span><span class="fm-profil">${esc(c.lab)}</span></div><p>${esc(c.txt)}</p></div>`;
     });
-    if(!mgrHtml) mgrHtml='<p class="reco-desc">Les modes de fonctionnement contextuels ne sont pas disponibles pour ce profil (test passé avant leur mise en place).</p>';
+    if(!mgrHtml) mgrHtml='<p class="reco-desc">Les modes de fonctionnement contextuels ne sont pas disponibles pour ce profil (analyse passée avant leur mise en place).</p>';
     // coût d'adaptation
     let coutHtml='';
     if(na && na.cout){
@@ -2083,8 +2083,8 @@ function axesFormation(membres, famillesStats){
     cands.sort(function(a,b){ return ((b.adq&&b.adq.global)||0)-((a.adq&&a.adq.global)||0); });
     var h='<div class="recrut-cands">';
     h+='<div class="recrut-cands-tit">Candidats ('+cands.length+')</div>';
-    h+='<div class="recrut-mgr"><label>Futur manager (email, doit avoir passé le test)</label><input type="email" id="recrut-mgr-email" placeholder="manager@entreprise.fr"></div>';
-    if(!cands.length){ h+='<div class="compat-msg">Aucun candidat n\'a encore terminé le test sur cette campagne.</div></div>'; return h; }
+    h+='<div class="recrut-mgr"><label>Futur manager (email, doit avoir passé l\'analyse)</label><input type="email" id="recrut-mgr-email" placeholder="manager@entreprise.fr"></div>';
+    if(!cands.length){ h+='<div class="compat-msg">Aucun candidat n\'a encore terminé l\'analyse sur cette campagne.</div></div>'; return h; }
     cands.forEach(function(x){
       var r=x.r, g=x.adq?x.adq.global:null;
       var col=g!=null?couleurScore(g):'#B8B8C8';
@@ -2170,7 +2170,7 @@ function axesFormation(membres, famillesStats){
       h+='</div>';
     });
     if(Array.isArray(g.validation_fiabilite)&&g.validation_fiabilite.length){
-      h+='<div class="grille-crit"><div class="grille-crit-tit">Validation du profil</div><p class="cadrage-note">La cohérence des réponses au test invite à confirmer ces points de vive voix.</p><ul>'+li(g.validation_fiabilite)+'</ul></div>';
+      h+='<div class="grille-crit"><div class="grille-crit-tit">Validation du profil</div><p class="cadrage-note">La cohérence des réponses à l\'analyse invite à confirmer ces points de vive voix.</p><ul>'+li(g.validation_fiabilite)+'</ul></div>';
     }
     if(g.conseil_integration) h+='<div class="grille-note">'+esc(g.conseil_integration)+'</div>';
     h+='<div class="compat-actions"><button class="exp-btn exp-mini" onclick="exporterEntretienCandidat()">Exporter en PDF</button></div>';

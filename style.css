@@ -1461,3 +1461,58 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   .sw-actions{gap:12px;margin-top:10px;}
   .sw-btn{font-size:14px;padding:16px 16px;max-width:132px;}
 }
+
+/* ===== v17 : barre de selection — se retire pendant qu'on fait defiler ===== */
+.r-selbar.on.r-selbar-hide{transform:translateY(115%);}
+
+/* ===== v17 : animation au survol des CTA principaux ===== */
+.btn-primary,.plan-seedup-btn,.r-selbar-btn{transition:transform 0.18s ease, box-shadow 0.18s ease, background 0.2s ease;}
+.btn-primary:hover,.plan-seedup-btn:hover,.r-selbar-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(94,89,199,0.30);}
+.btn-primary:active,.plan-seedup-btn:active,.r-selbar-btn:active{transform:translateY(0) scale(0.99);}
+.esp-res-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,0.18);}
+
+/* ===== v17 : personnage de l'encart resultats — plus grand et plus vivant ===== */
+.esp-res-perso{width:132px;}
+.esp-res-perso img{width:132px;height:132px;border:3px solid rgba(255,255,255,0.5);box-shadow:0 12px 32px rgba(0,0,0,0.28);animation:espResFloat 5.5s ease-in-out infinite;}
+@keyframes espResFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+@media (max-width:520px){ .esp-res-perso{width:96px;} .esp-res-perso img{width:96px;height:96px;} }
+
+/* ===== v18 : halo dore de genie sur Nea a l'etape des trois voeux ===== */
+.coach-intro-card.genie .coach-intro-nea{animation:genieGlow 2.4s ease-in-out infinite;}
+@keyframes genieGlow{0%,100%{filter:drop-shadow(0 0 4px rgba(255,200,90,0.25));}50%{filter:drop-shadow(0 0 22px rgba(255,200,90,0.65));}}
+
+/* ===== v21 : feuille de route enrichie (cap + objectifs en trois couches) ===== */
+.plan-cap{background:linear-gradient(135deg, rgba(136,132,240,0.10), rgba(249,130,114,0.08));border:1px solid rgba(136,132,240,0.18);border-radius:18px;padding:18px 20px;margin:0 0 20px;}
+.plan-cap-lab{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-purple-text);margin-bottom:7px;}
+.plan-cap-txt{font-size:15px;line-height:1.6;color:var(--c-dark, #1A1A1A);margin:0;}
+
+.plan-cards{display:grid;grid-template-columns:1fr;gap:16px;}
+
+.planc{background:#fff;border:1px solid var(--c-border, #E9E6DF);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 2px 12px rgba(26,26,46,0.04);transition:box-shadow 0.2s, transform 0.2s;}
+.planc:hover{box-shadow:0 8px 24px rgba(26,26,46,0.08);transform:translateY(-2px);}
+.planc-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.planc-horizon{margin-left:auto;border:none;border-radius:20px;padding:5px 13px;font-family:var(--font);font-size:11.5px;font-weight:800;cursor:pointer;transition:transform 0.1s, filter 0.2s;}
+.planc-horizon:hover{filter:brightness(0.97);}
+.planc-horizon:active{transform:scale(0.97);}
+.ph-now{background:rgba(249,130,114,0.16);color:#D8513F;}
+.ph-soon{background:rgba(136,132,240,0.16);color:#5B57C9;}
+.ph-later{background:rgba(120,120,130,0.12);color:#6B6B78;}
+.planc-obj{font-size:16.5px;font-weight:700;line-height:1.4;color:var(--c-dark, #1A1A1A);margin:0;}
+
+.planc-layer{display:flex;gap:10px;align-items:flex-start;background:#FAF9F5;border-radius:12px;padding:11px 13px;}
+.planc-ic{flex-shrink:0;font-size:15px;line-height:1.5;width:20px;text-align:center;}
+.planc-pas .planc-ic{color:#5B57C9;}
+.planc-ind .planc-ic{color:#2E9970;}
+.planc-layer-txt{display:flex;flex-direction:column;gap:2px;}
+.planc-lab{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--c-dark-grey);}
+.planc-layer p{font-size:13.5px;line-height:1.5;color:#3A3A42;margin:0;}
+
+.planc-suivi{display:flex;align-items:center;gap:8px;margin-top:2px;padding-top:12px;border-top:1px solid #F0EEE8;}
+.planc-suivi .plan-ressenti-btn{width:auto;height:auto;border-radius:20px;padding:6px 13px;font-size:12.5px;font-weight:700;color:var(--c-dark-grey);margin-left:0;}
+
+.plan-seedup{position:relative;}
+.plan-seedup-tag{position:absolute;top:14px;right:16px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;background:rgba(255,255,255,0.22);color:#fff;padding:3px 10px;border-radius:20px;}
+
+@media (min-width:768px){
+  .plan-cards{grid-template-columns:1fr 1fr;}
+}
