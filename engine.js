@@ -299,17 +299,27 @@ function scorerFiabilite(repMini, tempsReponses) {
   });
 
   // SIGNAL 1 : cohérence interne (les items d'un même trait concordent-ils ?)
-  let dispMax = 0, traitIncoherent = null;
+  // C'est le meilleur révélateur du hasard : en cliquant au hasard, les items d'un même
+  // trait se contredisent. On mesure la dispersion MOYENNE sur tous les traits (pas juste
+  // le pire), ce qui capte bien un remplissage aléatoire diffus.
+  let dispMax = 0, traitIncoherent = null, sommeDisp = 0, nbTraits = 0;
   for (const [t, vals] of Object.entries(parTrait)) {
     if (vals.length < 2) continue;
     const moy = vals.reduce((a,b)=>a+b,0) / vals.length;
     const ecart = Math.sqrt(vals.reduce((s,v)=>s+Math.pow(v-moy,2),0) / vals.length);
+    sommeDisp += ecart; nbTraits++;
     if (ecart > dispMax) { dispMax = ecart; traitIncoherent = t; }
   }
-  // Une dispersion modérée est NORMALE chez quelqu'un de sincère (les facettes d'un
-  // même trait ne sont pas identiques). On ne pénalise que les vraies contradictions fortes.
-  if (dispMax > 68) { penalites += 8; signaux.push({ type:'incoherence', niveau:'fort', detail:'Réponses contradictoires sur un même trait' }); }
-  else if (dispMax > 60) { penalites += 3; signaux.push({ type:'incoherence', niveau:'modéré', detail:'Légères contradictions internes' }); }
+  const dispMoyenne = nbTraits ? sommeDisp / nbTraits : 0;
+  // Dispersion sur le PIRE trait (contradiction ponctuelle forte)
+  if (dispMax > 60) { penalites += 6; signaux.push({ type:'incoherence', niveau:'fort', detail:'Réponses contradictoires sur un même trait' }); }
+  else if (dispMax > 52) { penalites += 3; signaux.push({ type:'incoherence', niveau:'modéré', detail:'Légères contradictions internes' }); }
+  // Dispersion MOYENNE sur TOUS les traits = meilleur révélateur du hasard.
+  // Repère réel : une personne cohérente est autour de 4-15 ; un clic au hasard tourne
+  // autour de 30-32. On cale les seuils sur cette réalité.
+  if (dispMoyenne > 28) { penalites += 40; signaux.push({ type:'hasard', niveau:'fort', detail:'Réponses sans cohérence interne, typiques d\u0027un remplissage au hasard' }); }
+  else if (dispMoyenne > 23) { penalites += 24; signaux.push({ type:'hasard', niveau:'fort', detail:'Cohérence interne très faible' }); }
+  else if (dispMoyenne > 18) { penalites += 10; signaux.push({ type:'hasard', niveau:'modéré', detail:'Cohérence interne perfectible' }); }
 
   // SIGNAL 2 : concordance swipe vs choix forcé
   let nbDesaccords = 0;

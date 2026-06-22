@@ -84,32 +84,42 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .ps-petale{fill:#F9A8C8;}
 .ps-coeur{fill:#F9C846;}
 
-/* PHASES :
-   0 graine · 1 germination (tige courte) · 2 pousse · 3 jeune plant (1 paire) ·
-   4 plante feuillue (2 paires) · 5 floraison */
+/* PALIERS (0 à 14) : la tige se dessine progressivement, les feuilles puis la fleur
+   éclosent à des paliers réguliers, pour une croissance très animée. */
 .q-pousse[data-stade="0"] .ps-graine{opacity:1;}
 .q-pousse[data-stade="0"] .ps-tige{stroke-dashoffset:100;}
-
-.q-pousse[data-stade="1"] .ps-graine{opacity:0.5;transform:translateY(2px) scale(0.8);}
-.q-pousse[data-stade="1"] .ps-tige{stroke-dashoffset:78;}
-
-.q-pousse[data-stade="2"] .ps-graine{opacity:0;}
-.q-pousse[data-stade="2"] .ps-tige{stroke-dashoffset:55;}
-
-.q-pousse[data-stade="3"] .ps-graine{opacity:0;}
-.q-pousse[data-stade="3"] .ps-tige{stroke-dashoffset:38;}
-.q-pousse[data-stade="3"] .ps-f1,.q-pousse[data-stade="3"] .ps-f2{opacity:1;transform:scale(1);}
-
-.q-pousse[data-stade="4"] .ps-graine{opacity:0;}
-.q-pousse[data-stade="4"] .ps-tige{stroke-dashoffset:16;}
-.q-pousse[data-stade="4"] .ps-f1,.q-pousse[data-stade="4"] .ps-f2,
-.q-pousse[data-stade="4"] .ps-f3,.q-pousse[data-stade="4"] .ps-f4{opacity:1;transform:scale(1);}
-
-.q-pousse[data-stade="5"] .ps-graine{opacity:0;}
-.q-pousse[data-stade="5"] .ps-tige{stroke-dashoffset:6;}
-.q-pousse[data-stade="5"] .ps-f1,.q-pousse[data-stade="5"] .ps-f2,
-.q-pousse[data-stade="5"] .ps-f3,.q-pousse[data-stade="5"] .ps-f4{opacity:1;transform:scale(1);}
-.q-pousse[data-stade="5"] .ps-fleur{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="1"] .ps-graine{opacity:0.6;transform:translateY(1px) scale(0.85);}
+.q-pousse[data-stade="1"] .ps-tige{stroke-dashoffset:90;}
+.q-pousse[data-stade="2"] .ps-graine{opacity:0.2;}
+.q-pousse[data-stade="2"] .ps-tige{stroke-dashoffset:80;}
+.q-pousse[data-stade="3"] .ps-tige{stroke-dashoffset:70;}
+.q-pousse[data-stade="4"] .ps-tige{stroke-dashoffset:62;}
+.q-pousse[data-stade="4"] .ps-f1{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="5"] .ps-tige{stroke-dashoffset:54;}
+.q-pousse[data-stade="5"] .ps-f1,.q-pousse[data-stade="5"] .ps-f2{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="6"] .ps-tige{stroke-dashoffset:47;}
+.q-pousse[data-stade="6"] .ps-f1,.q-pousse[data-stade="6"] .ps-f2{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="7"] .ps-tige{stroke-dashoffset:40;}
+.q-pousse[data-stade="7"] .ps-f1,.q-pousse[data-stade="7"] .ps-f2{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="8"] .ps-tige{stroke-dashoffset:33;}
+.q-pousse[data-stade="8"] .ps-f1,.q-pousse[data-stade="8"] .ps-f2,.q-pousse[data-stade="8"] .ps-f3{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="9"] .ps-tige{stroke-dashoffset:27;}
+.q-pousse[data-stade="9"] .ps-f1,.q-pousse[data-stade="9"] .ps-f2,.q-pousse[data-stade="9"] .ps-f3,.q-pousse[data-stade="9"] .ps-f4{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="10"] .ps-tige{stroke-dashoffset:21;}
+.q-pousse[data-stade="10"] .ps-f1,.q-pousse[data-stade="10"] .ps-f2,.q-pousse[data-stade="10"] .ps-f3,.q-pousse[data-stade="10"] .ps-f4{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="11"] .ps-tige{stroke-dashoffset:16;}
+.q-pousse[data-stade="11"] .ps-f1,.q-pousse[data-stade="11"] .ps-f2,.q-pousse[data-stade="11"] .ps-f3,.q-pousse[data-stade="11"] .ps-f4{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="12"] .ps-tige{stroke-dashoffset:11;}
+.q-pousse[data-stade="12"] .ps-f1,.q-pousse[data-stade="12"] .ps-f2,.q-pousse[data-stade="12"] .ps-f3,.q-pousse[data-stade="12"] .ps-f4{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="12"] .ps-fleur{opacity:0.5;transform:scale(0.5);}
+.q-pousse[data-stade="13"] .ps-tige{stroke-dashoffset:6;}
+.q-pousse[data-stade="13"] .ps-f1,.q-pousse[data-stade="13"] .ps-f2,.q-pousse[data-stade="13"] .ps-f3,.q-pousse[data-stade="13"] .ps-f4{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="13"] .ps-fleur{opacity:0.8;transform:scale(0.8);}
+.q-pousse[data-stade="14"] .ps-tige{stroke-dashoffset:2;}
+.q-pousse[data-stade="14"] .ps-f1,.q-pousse[data-stade="14"] .ps-f2,.q-pousse[data-stade="14"] .ps-f3,.q-pousse[data-stade="14"] .ps-f4{opacity:1;transform:scale(1);}
+.q-pousse[data-stade="14"] .ps-fleur{opacity:1;transform:scale(1);}
+.q-pousse[data-stade] .ps-graine{opacity:0;}
+.q-pousse[data-stade="0"] .ps-graine,.q-pousse[data-stade="1"] .ps-graine{opacity:1;}
 .q-card-wrap{flex:1;display:flex;flex-direction:column;padding:32px 28px 16px;}
 #q-card{flex:1;display:flex;flex-direction:column;transition:opacity 0.32s ease,transform 0.32s ease;}
 .q-tag{font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--c-purple-text);margin-bottom:16px;}
@@ -169,8 +179,22 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
    ÉCRAN RÉSULTAT (restitution)
    ============================================================ */
 .r-screen{background:var(--c-beige);}
-.r-topbar-espace{position:sticky;top:10px;float:right;margin:10px 14px 0 0;z-index:30;background:rgba(255,255,255,0.92);color:var(--c-purple-text);border:none;border-radius:100px;padding:9px 16px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,0.12);backdrop-filter:blur(6px);transition:background 0.2s;}
-.r-topbar-espace:hover{background:#fff;}
+.r-topbar-espace{position:absolute;top:16px;left:16px;z-index:30;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:99px;padding:9px 15px;font-family:var(--font);font-size:12px;font-weight:800;letter-spacing:0.03em;cursor:pointer;backdrop-filter:blur(6px);transition:background 0.15s;}
+.r-topbar-espace:hover{background:rgba(255,255,255,0.28);}
+
+/* Barre de sélection : récap en temps réel de ce qui nourrit le plan d'action */
+.r-selbar{position:fixed;left:0;right:0;bottom:0;z-index:80;transform:translateY(110%);transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);pointer-events:none;}
+.r-selbar.on{transform:translateY(0);pointer-events:auto;}
+.r-selbar-in{max-width:680px;margin:0 auto;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(94,89,199,0.18);padding:16px 20px calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:3px solid var(--c-purple, #8884F0);}
+.r-selbar-txt{display:flex;flex-direction:column;line-height:1.2;}
+.r-selbar-count{font-size:16px;font-weight:800;color:var(--c-purple-text, #5E59C7);}
+.r-selbar-lab{font-size:12.5px;color:var(--c-grey, #888);}
+.r-selbar-btn{flex-shrink:0;background:var(--c-purple, #8884F0);color:#fff;border:none;border-radius:13px;padding:13px 20px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s;}
+.r-selbar-btn:hover{background:#7571E8;}
+@media (max-width:520px){
+  .r-selbar-in{flex-direction:column;align-items:stretch;gap:10px;text-align:center;border-radius:16px 16px 0 0;}
+  .r-selbar-btn{width:100%;}
+}
 .r-chat-nea{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;overflow:hidden;position:relative;box-shadow:0 0 36px -8px var(--c-orange, #F9A876);}
 .r-chat-nea-vid{width:100%;height:100%;object-fit:cover;display:block;}
 .r-hero{background:var(--g-halo);color:var(--c-white);padding:54px 28px 132px;position:relative;overflow:hidden;text-align:center;}

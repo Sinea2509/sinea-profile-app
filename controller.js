@@ -1798,17 +1798,14 @@ const App = (() => {
   }
 
   // Métaphore vivante : une graine qui devient plante en fleur au fil du parcours.
-  // 6 phases selon la progression globale (tige dessinée en CSS, feuilles puis fleur).
+  // 15 paliers pour une croissance très progressive et animée (la tige grandit en
+  // continu, les feuilles puis la fleur éclosent à des paliers réguliers).
   function majPousse(pct) {
     const zone = document.getElementById('q-pousse');
     if (!zone) return;
-    let stade = 0;
-    if (pct >= 92) stade = 5;        // floraison
-    else if (pct >= 72) stade = 4;   // plante feuillue (2 paires)
-    else if (pct >= 50) stade = 3;   // jeune plant (1 paire)
-    else if (pct >= 28) stade = 2;   // pousse
-    else if (pct >= 10) stade = 1;   // germination
-    zone.setAttribute('data-stade', String(stade));
+    // palier de 0 à 14 (15 paliers) selon la progression globale
+    const palier = Math.min(14, Math.floor((pct / 100) * 15));
+    zone.setAttribute('data-stade', String(palier));
   }
 
   // Tag de section selon le type
@@ -2469,7 +2466,10 @@ const App = (() => {
     }, 75);
   }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
+  function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
+
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

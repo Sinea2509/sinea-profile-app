@@ -1267,6 +1267,39 @@ const Result = (() => {
     const key=`${type}_${i}`; validations[key]=!validations[key];
     document.getElementById(`v-${type}-${i}`).classList.toggle('sel',validations[key]);
     sauvegarderInteractions();
+    majBarreSelection();
+  }
+
+  // Barre récapitulative : montre en temps réel ce qui est retenu pour le plan d'action,
+  // et donne un accès direct. Rend le lien "je coche → je construis mon plan" évident.
+  function majBarreSelection(){
+    const nbForces = Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).length;
+    const nbVig = Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]).length;
+    const total = nbForces + nbVig;
+    let barre = document.getElementById('r-selbar');
+    if (total === 0) { if (barre) barre.classList.remove('on'); return; }
+    if (!barre) {
+      barre = document.createElement('div');
+      barre.id = 'r-selbar';
+      barre.className = 'r-selbar';
+      barre.innerHTML = `
+        <div class="r-selbar-in">
+          <div class="r-selbar-txt"><span class="r-selbar-count" id="r-selbar-count"></span><span class="r-selbar-lab">retenus pour votre plan</span></div>
+          <button class="r-selbar-btn" id="r-selbar-btn">Construire mon plan d'action →</button>
+        </div>`;
+      document.body.appendChild(barre);
+      document.getElementById('r-selbar-btn').onclick = () => {
+        // on force l'envoi immédiat puis on ouvre le plan
+        if (typeof sauvegarderInteractionsImmediat === 'function') { try { sauvegarderInteractionsImmediat(); } catch(e){} }
+        const mod = (RES && RES.diagType && RES.diagType !== 'classic') ? 'spe' : 'socle';
+        if (window.App && App.ouvrirPlanDepuisResto) App.ouvrirPlanDepuisResto(mod);
+      };
+    }
+    const parts = [];
+    if (nbForces) parts.push(nbForces + (nbForces > 1 ? ' forces' : ' force'));
+    if (nbVig) parts.push(nbVig + (nbVig > 1 ? ' points de vigilance' : ' point de vigilance'));
+    document.getElementById('r-selbar-count').textContent = parts.join(' · ');
+    barre.classList.add('on');
   }
   function saveOpen(q,v){ openAnswers[q]=v; sauvegarderInteractions(); }
 
