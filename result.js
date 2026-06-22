@@ -301,7 +301,7 @@ const Result = (() => {
   function badgeFiabilite(res){
     const f = res.fiabilite;
     if (!f || f.score === undefined) return '';
-    const couleur = f.score >= 85 ? '#3EAD8B' : (f.score >= 70 ? '#F9A876' : '#F98272');
+    const couleur = f.score >= 80 ? '#3EAD8B' : (f.score >= 60 ? '#F9A876' : '#F98272');
     const tagPrecise = profilPrecise
       ? `<span class="r-fiab-precise">✓ Profil précisé</span>`
       : '';
@@ -683,6 +683,7 @@ const Result = (() => {
         <div class="r-section-tag">Votre naturel et votre adaptation au travail</div>
         <p class="r-hint">L'écart entre qui vous êtes spontanément et comment vous agissez au travail révèle où vous fournissez un effort.</p>
         ${carteNaturelAdapte(res)}
+        <div class="r-ia" id="ia-naturel"><div class="r-ia-tag">Naturel et adaptation, dimension par dimension</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vous en situation</div>
         <div class="r-ia" id="ia-situation"><div class="r-ia-tag">Votre profil en action</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos forces, à valider</div>
@@ -708,6 +709,8 @@ const Result = (() => {
         <div class="r-ia" id="ia-dim_changement"><div class="r-ia-tag">Face au mouvement</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre posture face au conflit</div>
         <div class="r-ia" id="ia-dim_conflit"><div class="r-ia-tag">Dans la friction</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">La synthèse de vos dimensions profondes</div>
+        <div class="r-ia r-ia-synthese" id="ia-dim_synthese"><div class="r-ia-tag">Le fil conducteur</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         ${Object.keys(res.contextuelPlus || {}).length ? `
         <div class="r-bloc-head" style="margin-top:34px"><span class="r-bloc-tag">Pilotage</span><h2>Vos dimensions de pilotage</h2></div>
         <p class="r-bloc-intro">Quatre dimensions, fondées sur la Self-Determination Theory et le modèle SMART, révèlent comment vous piloter et travailler avec vous au quotidien.</p>
@@ -720,7 +723,9 @@ const Result = (() => {
         <div class="r-section-tag">Votre rapport au cadre</div>
         <div class="r-ia" id="ia-dim_autorite"><div class="r-ia-tag">Vous et le cadre</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Ce qui nourrit votre engagement</div>
-        <div class="r-ia" id="ia-dim_reconnaissance"><div class="r-ia-tag">Votre carburant</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>` : ''}
+        <div class="r-ia" id="ia-dim_reconnaissance"><div class="r-ia-tag">Votre carburant</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">La synthèse de votre pilotage</div>
+        <div class="r-ia r-ia-synthese" id="ia-pilotage_synthese"><div class="r-ia-tag">Votre mode d'emploi managérial</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>` : ''}
       </div>
 
       <div class="r-bloc" id="b2">
@@ -736,6 +741,7 @@ const Result = (() => {
         <div class="r-cf-grid">${conflitRows}</div>
         <div class="r-section-tag">Vos angles morts relationnels</div>
         <div class="r-ia" id="ia-angles"><div class="r-ia-tag">Vos angles morts</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-ia" id="ia-angles-coaching"><div class="r-ia-tag">Pour progresser sur vos angles morts</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
       </div>
 
       <div class="r-bloc" id="b3">
@@ -775,7 +781,7 @@ const Result = (() => {
 
       <div class="r-chat-bloc" id="chat-bloc">
         <div class="r-me-head">
-          <div class="r-chat-nea"><video class="r-chat-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div>
+          <div class="r-chat-nea"><img class="r-chat-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" /></div>
           <div class="r-me-kicker">Vos 3 questions</div>
           <h2 class="r-me-title">Vos questions à Néa</h2>
           <p class="r-me-sub">Néa a lu votre portrait. Posez-lui jusqu'à trois questions pour aller plus loin. <span class="r-chat-compteur" id="chat-compteur"></span></p>
@@ -875,7 +881,7 @@ const Result = (() => {
     const dom = res.dominante || {};
     box.innerHTML = `
       <div class="r-sign-card r-sign-loading">
-        <div class="r-sign-nea"><video class="r-sign-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div>
+        <div class="r-sign-nea"><img class="r-sign-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" /></div>
         <div class="r-sign-wait"><span></span><span></span><span></span></div>
         <p class="r-sign-waittxt">Néa rédige votre signature...</p>
       </div>`;
@@ -1093,7 +1099,7 @@ const Result = (() => {
     ov.className = 'coach-intro';
     ov.innerHTML = `
       <div class="coach-intro-card">
-        <div class="coach-intro-nea"><video class="coach-intro-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div>
+        <div class="coach-intro-nea"><img class="coach-intro-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" /></div>
         <div class="coach-intro-nea-label">Néa · votre coach</div>
         <div class="coach-intro-step" data-step="1">
           <p class="coach-intro-hi">Bonjour${prenom ? ' ' + prenom : ''}.</p>
@@ -1266,12 +1272,15 @@ const Result = (() => {
   function toggleValid(type,i){
     const key=`${type}_${i}`; validations[key]=!validations[key];
     document.getElementById(`v-${type}-${i}`).classList.toggle('sel',validations[key]);
+    selValidated = false;
     sauvegarderInteractions();
     majBarreSelection();
   }
 
-  // Barre récapitulative : montre en temps réel ce qui est retenu pour le plan d'action,
-  // et donne un accès direct. Rend le lien "je coche → je construis mon plan" évident.
+  // Barre récapitulative : montre en temps réel ce qui est retenu pour le plan d'action.
+  // Étape 1 : on coche (explication claire). Étape 2 : on valide ses choix (enregistrement,
+  // sans changement de page). Étape 3 : accès au plan, qui reste un choix explicite.
+  let selValidated = false;
   function majBarreSelection(){
     const nbForces = Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).length;
     const nbVig = Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]).length;
@@ -1282,23 +1291,40 @@ const Result = (() => {
       barre = document.createElement('div');
       barre.id = 'r-selbar';
       barre.className = 'r-selbar';
-      barre.innerHTML = `
-        <div class="r-selbar-in">
-          <div class="r-selbar-txt"><span class="r-selbar-count" id="r-selbar-count"></span><span class="r-selbar-lab">retenus pour votre plan</span></div>
-          <button class="r-selbar-btn" id="r-selbar-btn">Construire mon plan d'action →</button>
-        </div>`;
       document.body.appendChild(barre);
-      document.getElementById('r-selbar-btn').onclick = () => {
-        // on force l'envoi immédiat puis on ouvre le plan
-        if (typeof sauvegarderInteractionsImmediat === 'function') { try { sauvegarderInteractionsImmediat(); } catch(e){} }
-        const mod = (RES && RES.diagType && RES.diagType !== 'classic') ? 'spe' : 'socle';
-        if (window.App && App.ouvrirPlanDepuisResto) App.ouvrirPlanDepuisResto(mod);
-      };
     }
     const parts = [];
     if (nbForces) parts.push(nbForces + (nbForces > 1 ? ' forces' : ' force'));
     if (nbVig) parts.push(nbVig + (nbVig > 1 ? ' points de vigilance' : ' point de vigilance'));
-    document.getElementById('r-selbar-count').textContent = parts.join(' · ');
+    const recap = parts.join(' · ');
+    const mod = (RES && RES.diagType && RES.diagType !== 'classic') ? 'spe' : 'socle';
+    if (selValidated) {
+      barre.innerHTML =
+        '<div class="r-selbar-in">' +
+          '<div class="r-selbar-hint">Vous retrouverez votre plan à tout moment dans votre espace.</div>' +
+          '<div class="r-selbar-row">' +
+            '<div class="r-selbar-txt r-selbar-ok">✓ Vos choix sont enregistrés</div>' +
+            '<button class="r-selbar-btn" id="r-selbar-voir">Voir mon plan d\'action →</button>' +
+          '</div>' +
+        '</div>';
+      const voir = document.getElementById('r-selbar-voir');
+      if (voir) voir.onclick = () => { if (window.App && App.ouvrirPlanDepuisResto) App.ouvrirPlanDepuisResto(mod); };
+    } else {
+      barre.innerHTML =
+        '<div class="r-selbar-in">' +
+          '<div class="r-selbar-hint">Cochez les forces et les points à travailler que vous voulez retrouver dans votre plan, puis validez.</div>' +
+          '<div class="r-selbar-row">' +
+            '<div class="r-selbar-txt"><span class="r-selbar-count" id="r-selbar-count">' + recap + '</span><span class="r-selbar-lab">retenus pour votre plan d\'action</span></div>' +
+            '<button class="r-selbar-btn" id="r-selbar-btn">Valider mes choix</button>' +
+          '</div>' +
+        '</div>';
+      const btn = document.getElementById('r-selbar-btn');
+      if (btn) btn.onclick = () => {
+        if (typeof sauvegarderInteractionsImmediat === 'function') { try { sauvegarderInteractionsImmediat(); } catch(e){} }
+        selValidated = true;
+        majBarreSelection();
+      };
+    }
     barre.classList.add('on');
   }
   function saveOpen(q,v){ openAnswers[q]=v; sauvegarderInteractions(); }
@@ -1932,6 +1958,27 @@ const Result = (() => {
     }
   }
 
+  // Angles morts : rend les 3 conseils de coach et les 3 questions a se poser (section JSON)
+  function rendreAnglesCoaching(data){
+    const el = document.getElementById('ia-angles-coaching');
+    if (!el) return;
+    if (!data || data._erreur || (!data.conseils && !data.questions)) { el.style.display = 'none'; return; }
+    const conseils = Array.isArray(data.conseils) ? data.conseils : [];
+    const questions = Array.isArray(data.questions) ? data.questions : [];
+    let html = '<div class="r-ia-tag">Pour progresser sur vos angles morts</div>';
+    if (conseils.length){
+      html += '<div class="r-coach-bloc"><div class="r-coach-titre">Trois conseils de coach</div><ul class="r-coach-liste r-coach-conseils">';
+      conseils.forEach(function(c){ html += '<li>' + mdInline(String(c)) + '</li>'; });
+      html += '</ul></div>';
+    }
+    if (questions.length){
+      html += '<div class="r-coach-bloc"><div class="r-coach-titre">Trois questions à vous poser</div><ul class="r-coach-liste r-coach-questions">';
+      questions.forEach(function(q){ html += '<li>' + mdInline(String(q)) + '</li>'; });
+      html += '</ul></div>';
+    }
+    el.innerHTML = html;
+  }
+
   // Au second passage (module commercial/manager), on oriente directement
   // la personne vers SA nouvelle analyse plutôt que de la laisser en haut du socle.
   function orienterVersModule(res){
@@ -1995,6 +2042,13 @@ const Result = (() => {
         `<p>${situ.reunion||''}</p><p>${situ.pression||''}</p>`);
       poseSection('ia-angles','Vos angles morts', c.angles_relationnels,
         `<p>À force de jouer vos forces, certains aspects de votre impact peuvent vous échapper.</p>`);
+
+      // Naturel vs adapté : analyse détaillée dimension par dimension (texte déjà généré, désormais affiché)
+      poseSection('ia-naturel','Naturel et adaptation, dimension par dimension', c.nat_adapte,
+        `<p>Votre profil compose en permanence entre votre nature spontanée et les attentes du travail.</p>`);
+
+      // Angles morts : trois conseils de coach et trois questions à se poser
+      rendreAnglesCoaching(c.angles_coaching);
 
       // Le mode d'emploi de moi-même (fiche partageable, 2 parties : collègues + manager)
       const meBloc = document.getElementById('mode-emploi-bloc');
@@ -2103,6 +2157,7 @@ const Result = (() => {
       poseSection('ia-dim_risque','Votre boussole', c.dim_risque, `<p>Votre rapport au risque éclaire vos décisions.</p>`);
       poseSection('ia-dim_changement','Face au mouvement', c.dim_changement, `<p>Votre rapport au changement façonne votre adaptabilité.</p>`);
       poseSection('ia-dim_conflit','Dans la friction', c.dim_conflit, `<p>Votre posture face au conflit révèle votre style relationnel.</p>`);
+      poseSection('ia-dim_synthese','Le fil conducteur', c.dim_synthese, `<p>La combinaison de vos cinq registres dessine une façon de fonctionner cohérente et reconnaissable.</p>`);
       // Dimensions de pilotage (énergie, collaboration, autorité, reconnaissance)
       if (res.contextuelPlus) {
         const cp = res.contextuelPlus;
@@ -2111,6 +2166,7 @@ const Result = (() => {
         if (cp.collaboration) poseSection('ia-dim_collaboration','Avec les autres', c.dim_collaboration, fb('collaboration'));
         if (cp.autorite) poseSection('ia-dim_autorite','Vous et le cadre', c.dim_autorite, fb('autorite'));
         if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Votre carburant', c.dim_reconnaissance, fb('reconnaissance'));
+        poseSection('ia-pilotage_synthese','Votre mode d\'emploi managérial', c.pilotage_synthese, `<p>Réunies, ces quatre dimensions indiquent comment travailler avec vous au quotidien pour que vous donniez le meilleur.</p>`);
       }
 
       // Bloc spé (manager OU commercial)

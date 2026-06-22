@@ -317,9 +317,9 @@ function scorerFiabilite(repMini, tempsReponses) {
   // Dispersion MOYENNE sur TOUS les traits = meilleur révélateur du hasard.
   // Repère réel : une personne cohérente est autour de 4-15 ; un clic au hasard tourne
   // autour de 30-32. On cale les seuils sur cette réalité.
-  if (dispMoyenne > 28) { penalites += 40; signaux.push({ type:'hasard', niveau:'fort', detail:'Réponses sans cohérence interne, typiques d\u0027un remplissage au hasard' }); }
-  else if (dispMoyenne > 23) { penalites += 24; signaux.push({ type:'hasard', niveau:'fort', detail:'Cohérence interne très faible' }); }
-  else if (dispMoyenne > 18) { penalites += 10; signaux.push({ type:'hasard', niveau:'modéré', detail:'Cohérence interne perfectible' }); }
+  if (dispMoyenne > 24) { penalites += 50; signaux.push({ type:'hasard', niveau:'fort', detail:'Réponses sans cohérence interne, typiques d\u0027un remplissage au hasard' }); }
+  else if (dispMoyenne > 19) { penalites += 32; signaux.push({ type:'hasard', niveau:'fort', detail:'Cohérence interne très faible' }); }
+  else if (dispMoyenne > 16) { penalites += 14; signaux.push({ type:'hasard', niveau:'modéré', detail:'Cohérence interne perfectible' }); }
 
   // SIGNAL 2 : concordance swipe vs choix forcé
   let nbDesaccords = 0;
@@ -377,9 +377,9 @@ function scorerFiabilite(repMini, tempsReponses) {
   const score = Math.max(0, Math.min(100, 100 - penalites));
   let niveau, message;
   if (score >= 85) { niveau = 'élevée'; message = 'Le profil est très cohérent : les réponses concordent et se confirment mutuellement.'; }
-  else if (score >= 70) { niveau = 'bonne'; message = 'Le profil est cohérent dans l\'ensemble. Résultats fiables.'; }
-  else if (score >= 50) { niveau = 'moyenne'; message = 'Le profil présente des tensions internes. Les résultats donnent une tendance, à confirmer par un échange.'; }
-  else { niveau = 'faible'; message = 'Les réponses manquent de cohérence. À interpréter avec prudence.'; }
+  else if (score >= 80) { niveau = 'bonne'; message = 'Le profil est cohérent dans l\'ensemble. Résultats fiables.'; }
+  else if (score >= 60) { niveau = 'moyenne'; message = 'Le profil présente des tensions internes. Les résultats donnent une tendance, à confirmer par un échange.'; }
+  else { niveau = 'faible'; message = 'La cohérence des réponses est faible, signe d\'un remplissage rapide ou peu réfléchi. À interpréter avec beaucoup de prudence.'; }
 
   return { score, niveau, message, signaux, traitTension: traitIncoherent };
 }

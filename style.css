@@ -185,14 +185,18 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Barre de sélection : récap en temps réel de ce qui nourrit le plan d'action */
 .r-selbar{position:fixed;left:0;right:0;bottom:0;z-index:80;transform:translateY(110%);transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);pointer-events:none;}
 .r-selbar.on{transform:translateY(0);pointer-events:auto;}
-.r-selbar-in{max-width:680px;margin:0 auto;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(94,89,199,0.18);padding:16px 20px calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:3px solid var(--c-purple, #8884F0);}
+.r-selbar-in{max-width:680px;margin:0 auto;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(94,89,199,0.18);padding:14px 20px calc(16px + env(safe-area-inset-bottom));display:block;border-top:3px solid var(--c-purple, #8884F0);}
+.r-selbar-row{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.r-selbar-hint{font-size:12px;color:var(--c-grey, #888);text-align:center;line-height:1.35;margin-bottom:11px;}
+.r-selbar-ok{font-size:15px;font-weight:800;color:#3EAD8B;}
 .r-selbar-txt{display:flex;flex-direction:column;line-height:1.2;}
 .r-selbar-count{font-size:16px;font-weight:800;color:var(--c-purple-text, #5E59C7);}
 .r-selbar-lab{font-size:12.5px;color:var(--c-grey, #888);}
 .r-selbar-btn{flex-shrink:0;background:var(--c-purple, #8884F0);color:#fff;border:none;border-radius:13px;padding:13px 20px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s;}
 .r-selbar-btn:hover{background:#7571E8;}
 @media (max-width:520px){
-  .r-selbar-in{flex-direction:column;align-items:stretch;gap:10px;text-align:center;border-radius:16px 16px 0 0;}
+  .r-selbar-in{border-radius:16px 16px 0 0;}
+  .r-selbar-row{flex-direction:column;align-items:stretch;gap:10px;text-align:center;}
   .r-selbar-btn{width:100%;}
 }
 .r-chat-nea{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;overflow:hidden;position:relative;box-shadow:0 0 36px -8px var(--c-orange, #F9A876);}
@@ -1410,3 +1414,29 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* ---- bouton discret pour passer l'accueil ---- */
 .coach-intro-skip{display:block;margin:22px auto 0;background:transparent;border:none;color:#A9A2D6;font-family:var(--font);font-size:13px;cursor:pointer;opacity:0.75;transition:opacity 0.2s;}
 .coach-intro-skip:hover{opacity:1;text-decoration:underline;}
+
+/* ===== v13 : message d'accueil "votre coach se reveille" en violet anime (au lieu de l'orange d'erreur) ===== */
+.identif-error.nea-wake{color:var(--c-purple-text);font-weight:600;display:flex;align-items:center;justify-content:center;gap:9px;animation:neaWake 1.5s ease-in-out infinite;}
+.nea-dot{width:9px;height:9px;border-radius:50%;background:var(--c-purple);display:inline-block;flex:0 0 auto;animation:neaDot 1.2s ease-in-out infinite;}
+@keyframes neaWake{0%,100%{opacity:0.7;}50%{opacity:1;}}
+@keyframes neaDot{0%{transform:scale(0.8);box-shadow:0 0 0 0 rgba(136,132,240,0.45);}70%{transform:scale(1.1);box-shadow:0 0 0 8px rgba(136,132,240,0);}100%{transform:scale(0.8);box-shadow:0 0 0 0 rgba(136,132,240,0);}}
+
+/* ===== v13 : barre de progression du parcours plus visible (degrade vif + brillance qui avance) ===== */
+.q-bar{height:9px;background:#E8E6E0;border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);}
+.q-bar-fill{height:100%;width:5%;background:linear-gradient(90deg,#F98272,#8884F0,#E290EC);background-size:200% 100%;border-radius:6px;box-shadow:0 1px 8px rgba(136,132,240,0.4);transition:width 0.45s ease;animation:qBarShimmer 2.6s linear infinite;}
+@keyframes qBarShimmer{0%{background-position:0% 50%;}100%{background-position:200% 50%;}}
+
+/* ===== v15 : blocs de synthese de combinaison (dimensions profondes + pilotage) ===== */
+.r-ia-synthese{background:linear-gradient(135deg, rgba(136,132,240,0.08), rgba(226,144,236,0.05));border:1px solid rgba(136,132,240,0.28);}
+.r-ia-synthese .r-ia-tag{color:var(--c-purple-text, #5E59C7);}
+
+/* ===== v15 : angles morts, conseils de coach + questions a se poser ===== */
+.r-coach-bloc{margin-top:16px;}
+.r-coach-bloc:first-of-type{margin-top:4px;}
+.r-coach-titre{font-family:var(--font);font-size:13px;font-weight:800;color:var(--c-purple-text, #5E59C7);margin-bottom:10px;}
+.r-coach-liste{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;}
+.r-coach-liste li{position:relative;padding-left:30px;font-size:15px;line-height:1.5;color:#2C2A33;}
+.r-coach-conseils li::before{content:'';position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;background:rgba(62,173,139,0.14);}
+.r-coach-conseils li::after{content:'✓';position:absolute;left:5px;top:1px;font-size:12px;font-weight:800;color:#3EAD8B;}
+.r-coach-questions li::before{content:'';position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;background:rgba(136,132,240,0.16);}
+.r-coach-questions li::after{content:'?';position:absolute;left:6px;top:1px;font-size:12px;font-weight:800;color:var(--c-purple-text, #5E59C7);}

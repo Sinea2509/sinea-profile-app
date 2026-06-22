@@ -427,7 +427,8 @@ const App = (() => {
     const err = document.getElementById('magic-error');
     const code = (input.value || '').trim();
     if (!code) { err.textContent = 'Merci d\'entrer votre code d\'accès.'; return; }
-    err.textContent = 'Nous réveillons votre coach et préparons votre espace...';
+    err.innerHTML = '<span class="nea-dot"></span>Nous réveillons votre coach et préparons votre espace...';
+    err.classList.add('nea-wake');
     if (submit) submit.disabled = true;
     fetch(VERIFIER_CODE_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -436,6 +437,7 @@ const App = (() => {
       .then(r => r.json())
       .then(data => {
         if (submit) submit.disabled = false;
+        err.classList.remove('nea-wake');
         if (data && data.ok) {
           magicCode = code;
           nomCampagne = data.campagne || '';
@@ -493,6 +495,7 @@ const App = (() => {
       })
       .catch(() => {
         if (submit) submit.disabled = false;
+        err.classList.remove('nea-wake');
         err.textContent = 'La vérification a échoué. Réessayez dans un instant.';
       });
   }
@@ -538,13 +541,15 @@ const App = (() => {
     const code = (document.getElementById('code-saisie').value || '').trim();
     const err = document.getElementById('code-error');
     if (code.length !== 6) { err.textContent = 'Entrez les 6 chiffres du code.'; return; }
-    err.textContent = 'Nous réveillons votre coach et préparons votre espace...';
+    err.innerHTML = '<span class="nea-dot"></span>Nous réveillons votre coach et préparons votre espace...';
+    err.classList.add('nea-wake');
     fetch(AUTH_URL, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "verify_code", email: identite.email, code }),
     })
       .then(r => r.json())
       .then(data => {
+        err.classList.remove('nea-wake');
         if (data && data.ok) {
           identite.prenom = data.prenom || identite.prenom;
           err.textContent = '';
@@ -554,7 +559,7 @@ const App = (() => {
           err.textContent = (data && data.error) || 'Code incorrect.';
         }
       })
-      .catch(() => { err.textContent = 'Connexion impossible. Réessayez.'; });
+      .catch(() => { err.classList.remove('nea-wake'); err.textContent = 'Connexion impossible. Réessayez.'; });
   }
 
   function renvoyerCode() {
@@ -1474,7 +1479,7 @@ const App = (() => {
       + (s.bouton ? '<button class="coach-intro-go" id="accueil-go">' + s.bouton + '</button>' : '')
       + '</div>'
     ).join('');
-    ov.innerHTML = '<div class="coach-intro-card"><div class="coach-intro-nea"><video class="coach-intro-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png"><source src="nea.mp4" type="video/mp4"></video></div><div class="coach-intro-nea-label">Néa · votre coach</div>' + stepsHtml + '</div>';
+    ov.innerHTML = '<div class="coach-intro-card"><div class="coach-intro-nea"><img class="coach-intro-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" /></div><div class="coach-intro-nea-label">Néa · votre coach</div>' + stepsHtml + '</div>';
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('on'));
 
@@ -1560,9 +1565,7 @@ const App = (() => {
       '<div class="qo-scroll">' +
         '<div class="qo-nea-head">' +
           '<div class="qo-nea-video">' +
-            '<video class="qo-nea-vid" autoplay loop muted playsinline poster="Nea_detoure_full.png">' +
-              '<source src="nea.mp4" type="video/mp4">' +
-            '</video>' +
+            '<img class="qo-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" />' +
           '</div>' +
           '<div class="qo-nea-label">Néa · votre coach</div>' +
           '<p class="qo-nea-msg">« Bonjour' + (identite.prenom ? ' ' + echapValeur(identite.prenom) : '') + ', je suis <span class="qo-nea-a">Néa</span>, je vais vous accompagner tout au long de ce bilan. Avant de commencer, j\'aimerais vous connaître un peu. »</p>' +
