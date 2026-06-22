@@ -1109,9 +1109,11 @@ const Result = (() => {
         <div class="coach-intro-step" data-step="1">
           <p class="coach-intro-hi">Bonjour${prenom ? ' ' + prenom : ''}.</p>
           <p class="coach-intro-line">Je suis Néa, votre coach.</p>
+          <button class="coach-intro-go coach-intro-next">Continuer</button>
         </div>
         <div class="coach-intro-step" data-step="2">
           <p class="coach-intro-line">Voici votre portrait, fondé sur vos réponses.<br>Prenez le temps de le lire attentivement.</p>
+          <button class="coach-intro-go coach-intro-next">Continuer</button>
         </div>
         <div class="coach-intro-step" data-step="3">
           <p class="coach-intro-line">Et puisque j'ai lu votre portrait, permettez-moi de jouer les génies : je vous réserve <strong>trois vœux</strong>.</p>
@@ -1127,24 +1129,18 @@ const Result = (() => {
     let i = 0;
     const montrer = (n) => { steps.forEach((s, k) => s.classList.toggle('show', k === n)); if (n === 2) { const c = ov.querySelector('.coach-intro-card'); if (c) c.classList.add('genie'); } };
     montrer(0);
-    const t1 = setTimeout(() => montrer(1), 2300);
-    const t2 = setTimeout(() => montrer(2), 4800);
     const fermer = () => {
-      clearTimeout(t1); clearTimeout(t2);
       ov.classList.remove('on');
       setTimeout(() => ov.remove(), 500);
       const toc = document.querySelector('.r-toc');
       const cible = toc || document.getElementById('b0');
       if (cible) setTimeout(() => cible.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
     };
-    // bouton de fin (apparaît à l'étape 3) + clic n'importe où après la dernière étape
-    ov.addEventListener('click', (e) => {
-      if (e.target && e.target.id === 'coach-intro-go') { fermer(); return; }
-      // si on est déjà à la dernière étape, un clic ferme aussi
-      if (steps[2] && steps[2].classList.contains('show')) fermer();
-    });
-    // sécurité : fermeture auto si la personne ne fait rien
-    setTimeout(() => { if (document.body.contains(ov)) fermer(); }, 14000);
+    // la personne avance à son rythme : un clic passe à l'étape suivante, le dernier clic ouvre le portrait
+    const avancer = () => { if (i < 2) { i += 1; montrer(i); } else { fermer(); } };
+    ov.addEventListener('click', () => avancer());
+    // sécurité : fermeture auto si la personne quitte sans interagir
+    setTimeout(() => { if (document.body.contains(ov)) fermer(); }, 90000);
   }
 
   function initChat(dom, res) {
@@ -1908,8 +1904,12 @@ const Result = (() => {
         ctx.restore();
         dessinerTexte();
       };
-      img.onerror = () => dessinerTexte();
-      img.src = slug + '.webp';
+      img.onerror = () => {
+        // repli : si la variante h/f manque, on tente l'image actuelle, puis le texte
+        if (img.src.indexOf('_h.webp') >= 0 || img.src.indexOf('_f.webp') >= 0) { img.onerror = () => dessinerTexte(); img.src = slug + '.webp'; }
+        else dessinerTexte();
+      };
+      img.src = (window.App && App.srcPerso) ? App.srcPerso(slug) : slug + '.webp';
     } else {
       dessinerTexte();
     }

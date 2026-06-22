@@ -15,6 +15,14 @@ const App = (() => {
   }
   let result = null;
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
+  let monArchetype = ''; // archétype de la personne, pour la situer dans le codex
+  // ===== Personnages : variante masculine / féminine (option B) =====
+  // S'active des que les visuels <slug>_h.webp et <slug>_f.webp sont en ligne.
+  var VARIANTES_PERSO_ACTIVES = false; // passer à true une fois les visuels masculins/féminins déployés
+  function variantePerso(){ try { return localStorage.getItem('sinea_perso_variant') || ''; } catch(e){ return ''; } }
+  function setVariantePerso(v){ try { localStorage.setItem('sinea_perso_variant', v || ''); } catch(e){} }
+  function srcPerso(slug){ if(!slug) return ''; var v=variantePerso(); return (VARIANTES_PERSO_ACTIVES && (v==='h'||v==='f')) ? (slug+'_'+v+'.webp') : (slug+'.webp'); }
+  function onerrPerso(slug){ return "this.onerror=null;this.src='"+slug+".webp'"; }
   let modeCampagne = '';    // 'recrutement' → parcours candidat : écran d'information + restitution allégée
   let droits = '';          // droits de la personne (modules autorisés), issus du lien d'invitation
   let magicCode = '';       // magic code de campagne saisi par la personne (pour consommer le quota à la fin)
@@ -167,6 +175,7 @@ const App = (() => {
   function chapitres() {
     const ch = [
       { id: 'socle', titre: 'Votre personnalité', sous: 'Comment vous fonctionnez, spontanément.' },
+      { id: 'socle2', titre: 'Votre style au travail', sous: 'Les nuances qui vous rendent unique.' },
       { id: 'contexte', titre: 'Votre rapport au monde', sous: 'Stress, motivation, changement : ce qui vous anime.' },
     ];
     if (diagType === 'manager') ch.push({ id: 'spe', titre: 'Votre management', sous: 'Votre posture de manager au quotidien.' });
@@ -208,28 +217,29 @@ const App = (() => {
       return q;
     }
 
-    // ===== CHAPITRE 1 : SOCLE =====
+    // ===== CHAPITRE 1 : SOCLE — qui vous êtes, spontanément (Big Five) =====
     // On entremêle les items du mini-test pour que deux questions de la même dimension
-    // ne se suivent pas (sinon on enchaîne 5 questions d'extraversion d'affilée, d'où une
-    // impression de répétition, retour terrain). Alterner les dimensions rend le parcours
-    // plus varié et réduit aussi les biais de réponse en série.
+    // ne se suivent pas, ce qui varie le parcours et réduit les biais de réponse en série.
     const miniEntrelace = entrelacerParDimension(d.mini_items);
     miniEntrelace.forEach(it => q.push({ kind: 'swipe', id: it.id, item: it, chap: 'socle' }));
     // Choix forcé Big Five (anti-désirabilité, alimente aussi le score de fiabilité)
     (d.mini_choix_force || []).forEach(it => q.push({ kind: 'choixforce', id: it.id, item: it, chap: 'socle' }));
-    // Questions "adapté" (comportement au travail) pour mesurer le coût d'adaptation
-    (d.adapte?.questions || []).forEach(it => q.push({ kind: 'swipe', id: it.id, item: it, chap: 'socle' }));
+    const finBloc1 = q.length; // on coupe ici pour faire souffler (mi-parcours du socle)
+
+    // ===== CHAPITRE 1bis : SOCLE 2 — votre style au travail =====
+    // Comportement adapté au travail, puis archétypes Sinéa
+    (d.adapte?.questions || []).forEach(it => q.push({ kind: 'swipe', id: it.id, item: it, chap: 'socle2' }));
     Object.values(d.sinea_famille).forEach(list => {
-      list.forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'socle' }));
+      list.forEach(it => q.push({ kind: 'qcm', id: it.id, item: it, chap: 'socle2' }));
     });
-    d.sinea_hybride.forEach(it => q.push({ kind: 'curseur', id: it.id, item: it, chap: 'socle' }));
-    (d.sinea_transversales || []).forEach(it => q.push({ kind: kindFromFormat(it, 'qcm'), id: it.id, item: it, chap: 'socle' }));
-    // Répartitions espacées dans le bloc socle
-    const repart = (d.sinea_repartitions || []).map(it => ({ kind: 'repart', id: it.id, item: it, chap: 'socle' }));
-    const base = q.length;
-    const step = Math.floor(base / (repart.length + 1));
+    d.sinea_hybride.forEach(it => q.push({ kind: 'curseur', id: it.id, item: it, chap: 'socle2' }));
+    (d.sinea_transversales || []).forEach(it => q.push({ kind: kindFromFormat(it, 'qcm'), id: it.id, item: it, chap: 'socle2' }));
+    // Répartitions espacées dans ce second bloc
+    const repart = (d.sinea_repartitions || []).map(it => ({ kind: 'repart', id: it.id, item: it, chap: 'socle2' }));
+    const s2len = q.length - finBloc1;
+    const step2 = Math.max(1, Math.floor(s2len / (repart.length + 1)));
     repart.forEach((r, i) => {
-      const pos = 20 + step * (i + 1) + i;
+      const pos = finBloc1 + step2 * (i + 1) + i;
       q.splice(Math.min(pos, q.length), 0, r);
     });
 
@@ -430,14 +440,13 @@ const App = (() => {
     err.innerHTML = '<span class="nea-dot"></span>Nous réveillons votre coach et préparons votre espace...';
     err.classList.add('nea-wake');
     if (submit) submit.disabled = true;
+    const tWake = Date.now();
     fetch(VERIFIER_CODE_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'verifier', code, email: identite.email }),
     })
       .then(r => r.json())
       .then(data => {
-        if (submit) submit.disabled = false;
-        err.classList.remove('nea-wake');
         if (data && data.ok) {
           magicCode = code;
           nomCampagne = data.campagne || '';
@@ -445,40 +454,43 @@ const App = (() => {
           modeCampagne = (data.mode || '').toLowerCase();
           thematiqueCampagne = data.thematique || '';
           try { window.SINEA_THEME = thematiqueCampagne; } catch(e){} // expose la thématique à la séquence de révélation
-          err.textContent = '';
-          document.getElementById('screen-magic').classList.remove('active');
-          if (data.ajout_module && data.deja_socle) {
-            // la personne a déjà le socle : on lance directement le module (pas de re-socle)
-            estAjoutModule = true;
-            diagType = data.type;
-            commencerModule(data.type);
-          } else {
-            // parcours en deux étapes : le socle d'abord (start force diagType=classic),
-            // le module manager/commercial se débloque ensuite (droits = data.type).
-            estAjoutModule = false;
-            droits = data.type || 'classic';
-            // Avant de (re)lancer le bilan : vérifier côté serveur si cette personne a déjà
-            // terminé son socle. Si oui, l'envoyer vers son espace plutôt que de tout relancer.
-            // (Robuste même si elle revient depuis un autre navigateur, localStorage vide.)
-            if (identite.email) {
-              fetch(PROGRESSION_URL, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'load_analyse', email: identite.email }),
-              })
-                .then(r => r.json())
-                .then(a => {
-                  const analyses = (a && a.analyses) || {};
-                  if (analyses.socle) { goToEspace(); return; } // socle déjà fait : direction l'espace
-                  if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
-                  else start();
-                })
-                .catch(() => { if (modeCampagne === 'recrutement') afficherInfoCandidat(start); else start(); });
+          // storytelling : le message de réveil vit au moins 3 s avant le lancement
+          const reste = Math.max(0, 3000 - (Date.now() - tWake));
+          setTimeout(() => {
+            if (submit) submit.disabled = false;
+            err.classList.remove('nea-wake');
+            err.textContent = '';
+            document.getElementById('screen-magic').classList.remove('active');
+            if (data.ajout_module && data.deja_socle) {
+              // la personne a déjà le socle : on lance directement le module (pas de re-socle)
+              estAjoutModule = true;
+              diagType = data.type;
+              commencerModule(data.type);
             } else {
-              if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
-              else start();
+              estAjoutModule = false;
+              droits = data.type || 'classic';
+              if (identite.email) {
+                fetch(PROGRESSION_URL, {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ action: 'load_analyse', email: identite.email }),
+                })
+                  .then(r => r.json())
+                  .then(a => {
+                    const analyses = (a && a.analyses) || {};
+                    if (analyses.socle) { goToEspace(); return; } // socle déjà fait : direction l'espace
+                    if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
+                    else start();
+                  })
+                  .catch(() => { if (modeCampagne === 'recrutement') afficherInfoCandidat(start); else start(); });
+              } else {
+                if (modeCampagne === 'recrutement') afficherInfoCandidat(start);
+                else start();
+              }
             }
-          }
+          }, reste);
         } else {
+          if (submit) submit.disabled = false;
+          err.classList.remove('nea-wake');
           const raison = data ? data.raison : '';
           if (raison === 'deja_fait') {
             err.innerHTML = 'Vous avez déjà passé cette analyse. <a href="#" id="magic-vers-connexion" style="color:var(--c-purple-text);font-weight:600;">Accéder à mon espace</a>';
@@ -685,6 +697,7 @@ const App = (() => {
       archetype = analyses.socle.profil.dominante.nom || '';
       famille = analyses.socle.profil.dominante.famille || '';
     }
+    monArchetype = archetype; // retenu pour situer la personne dans le codex
     const droitsTxt = (data.droits || droits || '').toLowerCase();
     const progression = data.progression || {};
 
@@ -722,7 +735,7 @@ const App = (() => {
     if (persoEl) {
       const slugImg = archetype ? (SINEA_DATA.images && SINEA_DATA.images[archetype]) : '';
       if (slugImg) {
-        persoEl.innerHTML = `<img src="${slugImg}.webp" alt="${archetype}" />`;
+        persoEl.innerHTML = `<img src="${srcPerso(slugImg)}" alt="${archetype}" onerror="${onerrPerso(slugImg)}" />`;
         persoEl.style.display = 'block';
       } else {
         persoEl.style.display = 'none';
@@ -780,7 +793,14 @@ const App = (() => {
     if (cards.length) {
       parcoursHtml = '<div class="espace-label">Votre parcours</div>' + cards.join('');
     }
-    document.getElementById('espace-cards').innerHTML = parcoursHtml;
+    const codexCta = '<div class="espace-label">Explorer</div>' +
+      '<button class="espace-codex-btn" id="espace-codex-btn">' +
+        '<span class="espace-codex-ic">✦</span>' +
+        '<span class="espace-codex-txt"><span class="espace-codex-t">Le codex des personnages</span>' +
+        '<span class="espace-codex-d">Découvrez les vingt archétypes, par famille.</span></span>' +
+        '<span class="espace-codex-arr">→</span>' +
+      '</button>';
+    document.getElementById('espace-cards').innerHTML = parcoursHtml + codexCta;
 
     // Compatibilités d'équipe (si on connaît la famille de la personne)
     const compatEl = document.getElementById('espace-compat');
@@ -793,6 +813,8 @@ const App = (() => {
     // câbler les boutons
     document.querySelectorAll('[data-revoir]').forEach(b => { b.onclick = () => revoirAnalyse(b.getAttribute('data-revoir')); });
     document.querySelectorAll('[data-plan]').forEach(b => { b.onclick = () => ouvrirPlanAction(b.getAttribute('data-plan')); });
+    const codexBtn = document.getElementById('espace-codex-btn');
+    if (codexBtn) codexBtn.onclick = () => ouvrirCodex();
     document.querySelectorAll('[data-commencer]').forEach(b => {
       b.onclick = () => {
         const mod = b.getAttribute('data-commencer');
@@ -807,7 +829,127 @@ const App = (() => {
     });
   }
 
+  // ===== Le codex des personnages : encyclopédie des vingt archétypes =====
+  function ouvrirCodex() {
+    let scr = document.getElementById('screen-codex');
+    if (!scr) { scr = document.createElement('section'); scr.id = 'screen-codex'; scr.className = 'screen'; (document.querySelector('.app') || document.body).appendChild(scr); }
+    const persos = (SINEA_DATA && SINEA_DATA.personnages) || {};
+    const contenu = (SINEA_DATA && SINEA_DATA.contenu) || {};
+    const profils = (SINEA_DATA && SINEA_DATA.profils) || {};
+    const couleurDe = (fam) => ({ RELATION: '#F98272', ACTION: '#F5A623', STRUCTURE: '#3EADFF', VISION: '#5E59C7' }[(fam || '').toUpperCase()] || '#5E59C7');
+    const labelDe = (fam) => ({ RELATION: 'Relation', ACTION: 'Action', STRUCTURE: 'Structure', VISION: 'Vision' }[(fam || '').toUpperCase()] || '');
+
+    // la famille de la personne passe en tête
+    let maFamille = '';
+    for (const k in persos) { if (persos[k].nom === monArchetype) { maFamille = (persos[k].famille || '').toUpperCase(); break; } }
+    const famillesBase = [
+      { id: 'RELATION', label: 'Relation', desc: 'Celles et ceux qui tissent le lien.' },
+      { id: 'ACTION', label: 'Action', desc: 'Celles et ceux qui font avancer.' },
+      { id: 'STRUCTURE', label: 'Structure', desc: 'Celles et ceux qui bâtissent et sécurisent.' },
+      { id: 'VISION', label: 'Vision', desc: 'Celles et ceux qui éclairent le cap.' },
+    ];
+    const familles = famillesBase.slice().sort((a, b) => (b.id === maFamille ? 1 : 0) - (a.id === maFamille ? 1 : 0));
+
+    // signature Big Five en mini-barres
+    const dims = [['Extraversion', 'E'], ['Agréabilité', 'A'], ['Rigueur', 'C'], ['Stabilité', 'S'], ['Ouverture', 'O']];
+    function signatureBars(nom) {
+      const bf = profils[nom]; if (!bf) return '';
+      const val = { E: bf.E, A: bf.A, C: bf.C, S: 100 - (bf.N || 50), O: bf.O };
+      return '<div class="codex-sig">' + dims.map(d => {
+        const v = Math.max(0, Math.min(100, val[d[1]] || 0));
+        return '<div class="codex-sig-row"><span class="codex-sig-lab">' + d[0] + '</span><span class="codex-sig-bar"><span style="width:' + v + '%"></span></span></div>';
+      }).join('') + '</div>';
+    }
+
+    // fiche détaillée d'un archétype
+    function ficheHtml(slug) {
+      const p = persos[slug]; if (!p) return '';
+      const c = contenu[slug] || {};
+      const coul = couleurDe(p.famille);
+      const slugImg = (SINEA_DATA.images && SINEA_DATA.images[p.nom]) ? SINEA_DATA.images[p.nom] : '';
+      const img = slugImg ? '<img src="' + srcPerso(slugImg) + '" alt="' + echapValeur(p.nom) + '" onerror="' + onerrPerso(slugImg) + '"/>' : '';
+      const forces = (c.forces || []).slice(0, 3).map(f => '<li>' + echapValeur(f) + '</li>').join('');
+      const cm = c.complementarites || {};
+      const allies = (cm.matche || []).map(n => '<span class="codex-rel-chip">' + echapValeur(n) + '</span>').join('');
+      const frics = (cm.friction || []).map(n => '<span class="codex-rel-chip">' + echapValeur(n) + '</span>').join('');
+      const estMoi = (p.nom === monArchetype);
+      const famLine = labelDe(p.famille) + (p.verbe ? ' · ' + echapValeur(p.verbe) : '');
+      return '<div class="codex-fiche" style="--cf:' + coul + '">' +
+        '<button class="codex-fiche-x" id="codex-fiche-x" aria-label="Fermer">×</button>' +
+        '<div class="codex-fiche-top">' +
+          '<div class="codex-fiche-img">' + img + '</div>' +
+          (estMoi ? '<div class="codex-moi-badge codex-moi-badge-fiche">Le vôtre</div>' : '') +
+          '<div class="codex-fiche-fam">' + famLine + '</div>' +
+          '<h3 class="codex-fiche-nom">' + echapValeur(p.nom) + '</h3>' +
+          (p.axe ? '<p class="codex-fiche-axe">' + echapValeur(p.axe) + '</p>' : '') +
+        '</div>' +
+        (c.essence ? '<p class="codex-fiche-essence">' + echapValeur(c.essence) + '</p>' : '') +
+        (profils[p.nom] ? '<div class="codex-fiche-bloc"><div class="codex-fiche-lab">Sa signature</div>' + signatureBars(p.nom) + '</div>' : '') +
+        (forces ? '<div class="codex-fiche-bloc"><div class="codex-fiche-lab">Ce qu\'il apporte</div><ul class="codex-fiche-ul">' + forces + '</ul></div>' : '') +
+        ((allies || frics) ? '<div class="codex-fiche-rel">' +
+          (allies ? '<div class="codex-rel-col codex-rel-allies"><div class="codex-fiche-lab">Alliés naturels</div><div class="codex-rel-chips">' + allies + '</div>' + (cm.pourquoi_matche ? '<p class="codex-rel-why">' + echapValeur(cm.pourquoi_matche) + '</p>' : '') + '</div>' : '') +
+          (frics ? '<div class="codex-rel-col codex-rel-frics"><div class="codex-fiche-lab">Points de friction</div><div class="codex-rel-chips">' + frics + '</div>' + (cm.pourquoi_friction ? '<p class="codex-rel-why">' + echapValeur(cm.pourquoi_friction) + '</p>' : '') + '</div>' : '') +
+        '</div>' : '') +
+      '</div>';
+    }
+
+    let html = '<div class="codex-scroll">' +
+      '<button class="plan-retour" id="codex-retour">← Mon espace</button>' +
+      '<div class="codex-head"><div class="codex-kicker">Le codex</div>' +
+      '<h1 class="codex-titre">Les vingt personnages</h1>' +
+      '<p class="codex-sub">Quatre familles, vingt façons d\'incarner sa singularité au travail. Touchez un personnage pour le découvrir.</p></div>';
+    familles.forEach(fam => {
+      const coul = couleurDe(fam.id);
+      const membres = Object.keys(persos).filter(k => (persos[k].famille || '').toUpperCase() === fam.id);
+      if (!membres.length) return;
+      const estMaFamille = (fam.id === maFamille);
+      html += '<div class="codex-fam' + (estMaFamille ? ' codex-fam-moi' : '') + '" style="--cf:' + coul + ';">' +
+        '<div class="codex-fam-head"><span class="codex-fam-dot"></span>' +
+        '<div><div class="codex-fam-nom">' + fam.label + (estMaFamille ? ' <span class="codex-fam-tag">votre famille</span>' : '') + '</div>' +
+        '<div class="codex-fam-desc">' + fam.desc + '</div></div></div>' +
+        '<div class="codex-grid">';
+      membres.forEach(k => {
+        const p = persos[k];
+        const slugImg = (SINEA_DATA.images && SINEA_DATA.images[p.nom]) ? SINEA_DATA.images[p.nom] : '';
+        const imgTag = slugImg ? '<img src="' + srcPerso(slugImg) + '" alt="' + echapValeur(p.nom) + '" loading="lazy" onerror="' + onerrPerso(slugImg) + '"/>' : '';
+        const estMoi = (p.nom === monArchetype);
+        html += '<div class="codex-card' + (estMoi ? ' codex-card-moi' : '') + '" data-slug="' + k + '">' +
+          (estMoi ? '<div class="codex-moi-badge">Le vôtre</div>' : '') +
+          '<div class="codex-card-img">' + imgTag + '</div>' +
+          '<div class="codex-card-nom">' + echapValeur(p.nom) + '</div>' +
+          (p.verbe ? '<div class="codex-card-verbe">' + echapValeur(p.verbe) + '</div>' : '') +
+          (p.axe ? '<p class="codex-card-axe">' + echapValeur(p.axe) + '</p>' : '') +
+          '<span class="codex-card-plus">Découvrir</span>' +
+        '</div>';
+      });
+      html += '</div></div>';
+    });
+    html += '<div class="codex-fiche-ov" id="codex-fiche-ov"></div>';
+    html += '</div>';
+    scr.innerHTML = html;
+    document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    scr.classList.add('active');
+    window.scrollTo(0, 0);
+
+    const retour = document.getElementById('codex-retour');
+    if (retour) retour.onclick = () => { scr.classList.remove('active'); goToEspace(); };
+
+    // fiche au clic
+    const ov = document.getElementById('codex-fiche-ov');
+    const fermerFiche = () => { ov.classList.remove('on'); setTimeout(() => { ov.innerHTML = ''; }, 280); };
+    const ouvrirFiche = (slug) => {
+      ov.innerHTML = ficheHtml(slug);
+      ov.scrollTop = 0;
+      requestAnimationFrame(() => ov.classList.add('on'));
+      const x = document.getElementById('codex-fiche-x');
+      if (x) x.onclick = fermerFiche;
+    };
+    ov.addEventListener('click', (e) => { if (e.target === ov) fermerFiche(); });
+    scr.querySelectorAll('.codex-card').forEach(b => b.onclick = () => ouvrirFiche(b.getAttribute('data-slug')));
+  }
+
   // Liste des IDs de questions d'un module (pour calculer le %)
+
   function idsDuModule(mod) {
     const d = SINEA_DATA;
     if (mod === 'socle') {
@@ -842,7 +984,7 @@ const App = (() => {
     const dateLigne = dateTxt ? `<div class="esp-res-date">Réalisé le ${dateTxt}</div>` : '';
     // personnage de l'archétype (affiché pour le socle, qui porte le portrait de personnalité)
     const slug = (archetype && SINEA_DATA.images && SINEA_DATA.images[archetype]) ? SINEA_DATA.images[archetype] : '';
-    const persoHtml = (mod === 'socle' && slug) ? `<div class="esp-res-perso"><img src="${slug}.webp" alt="${archetype}"/></div>` : '';
+    const persoHtml = (mod === 'socle' && slug) ? `<div class="esp-res-perso"><img src="${srcPerso(slug)}" alt="${archetype}" onerror="${onerrPerso(slug)}"/></div>` : '';
     return `<div class="esp-resultat">
       <div class="esp-res-glow"></div>
       <div class="esp-res-in">
@@ -984,7 +1126,7 @@ const App = (() => {
     const heroHtml =
       '<button class="plan-retour" id="plan-retour">← Mon espace</button>' +
       '<div class="plan-hero" style="--pf1:' + couleurFam + ';">' +
-        (slug ? '<div class="plan-hero-img"><img src="' + slug + '.webp" alt="' + echapValeur(archetype) + '"/></div>' : '') +
+        (slug ? '<div class="plan-hero-img"><img src="' + srcPerso(slug) + '" alt="' + echapValeur(archetype) + '" onerror="' + onerrPerso(slug) + '"/></div>' : '') +
         '<div class="plan-hero-kicker">Votre feuille de route</div>' +
         '<h1 class="plan-hero-titre">Votre plan d\'action</h1>' +
         (archetype ? '<p class="plan-hero-sub">Taillé pour ' + echapValeur(archetype) + ' que vous êtes. Voici par où commencer.</p>' : '<p class="plan-hero-sub">Voici par où commencer.</p>') +
@@ -1676,28 +1818,39 @@ const App = (() => {
     const pct = (queue.length && firstIdx > 0) ? Math.min(99, Math.round((firstIdx / queue.length) * 100)) : (queue.length ? Math.min(99, Math.round((idx / queue.length) * 100)) : 0);
     const C = 2 * Math.PI * 34; // circonférence de l'anneau (r=34)
     const encouragements = {
-      contexte: { bravo: 'Première partie terminée', phrase: 'Le plus long est derrière vous. Encore quelques questions courtes pour affiner votre profil avec précision.' },
-      spe: { bravo: 'Votre socle est complet', phrase: diagType === 'commercial' ? 'Place à la dernière étape : votre façon de vendre et de convaincre.' : 'Place à la dernière étape : votre posture de manager au quotidien.' },
+      socle2: { bravo: 'Première partie terminée' },
+      contexte: { bravo: 'Vous avancez bien' },
+      spe: { bravo: 'Votre socle est complet' },
+    };
+    // Néa accompagne chaque transition : une phrase courte, et un fil rouge qui monte vers la révélation
+    const neaLines = {
+      socle: 'Bonjour, je suis Néa. Je vous accompagne dans cette exploration. Répondez avec spontanéité, je m\'occupe du reste.',
+      socle2: 'Je vous regarde répondre, et déjà votre profil prend forme. Accordons-nous un instant, puis poursuivons.',
+      contexte: 'Je vous cerne de mieux en mieux. Place à quelques situations concrètes, pour affiner le trait.',
+      spe: 'Votre portrait est presque complet. Un dernier éclairage, et je vous connaîtrai vraiment.',
     };
     const enc = numero > 1 ? encouragements[chapId] : null;
+    const neaLine = neaLines[chapId] || '';
     const celebration = enc ? `
-        <div class="chap-bravo chap-a1"><span class="chap-bravo-check">✓</span>${enc.bravo}</div>
+        <div class="chap-bravo chap-a2"><span class="chap-bravo-check">✓</span>${enc.bravo}</div>
         <div class="chap-ring chap-a2">
           <svg viewBox="0 0 80 80">
             <circle cx="40" cy="40" r="34" class="chap-ring-bg"/>
             <circle cx="40" cy="40" r="34" class="chap-ring-fill" style="stroke-dasharray:${C};stroke-dashoffset:${C * (1 - pct / 100)}"/>
           </svg>
           <div class="chap-ring-pct">${pct}%</div>
-        </div>
-        <div class="chap-encourage chap-a3">${enc.phrase}</div>` : '';
+        </div>` : '';
     scr.innerHTML = `
       <div class="chap-halo"></div>
       <div class="chap-in">
-        <div class="chap-step ${enc ? 'chap-a1' : ''}">Étape ${numero} sur ${totalChap}</div>
+        <div class="chap-nea chap-a1"><img src="Nea_detoure_full.png.webp" alt="Néa, votre coach"/></div>
+        <div class="chap-nea-label chap-a1">Néa · votre coach</div>
+        <div class="chap-step chap-a1">Étape ${numero} sur ${totalChap}</div>
         ${celebration}
-        <h2 class="chap-title ${enc ? 'chap-a3' : ''}">${chap.titre}</h2>
-        <div class="chap-sub ${enc ? 'chap-a4' : ''}">${chap.sous}</div>
-        <button class="chap-btn ${enc ? 'chap-a4' : ''}" id="chap-go">${numero > 1 ? 'Continuer' : 'Commencer'}</button>
+        ${neaLine ? `<div class="chap-nea-line chap-a2">${neaLine}</div>` : ''}
+        <h2 class="chap-title chap-a3">${chap.titre}</h2>
+        <div class="chap-sub chap-a3">${chap.sous}</div>
+        <button class="chap-btn chap-a4" id="chap-go">${numero > 1 ? 'Continuer' : 'Commencer'}</button>
       </div>`;
     // masquer les autres écrans
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
@@ -1806,6 +1959,7 @@ const App = (() => {
     if (asideNote) {
       const notes = {
         socle: "Répondez spontanément. Il n'y a pas de bonne ou de mauvaise réponse, seulement la vôtre.",
+        socle2: "Continuez sur votre lancée. Ces questions affinent les nuances de votre style.",
         contexte: "Ces situations révèlent vos réflexes naturels face aux moments clés du quotidien.",
         spe: cur.chap === 'spe' && diagType === 'commercial'
           ? "Ces mises en situation éclairent votre façon de vendre et de convaincre."
@@ -1823,7 +1977,14 @@ const App = (() => {
     if (!zone) return;
     // palier de 0 à 14 (15 paliers) selon la progression globale
     const palier = Math.min(14, Math.floor((pct / 100) * 15));
+    const ancien = parseInt(zone.getAttribute('data-stade') || '-1', 10);
     zone.setAttribute('data-stade', String(palier));
+    // la plante réagit quand elle grandit, pour que la personne la remarque
+    if (palier > ancien && ancien >= 0) {
+      zone.classList.remove('pousse-grow');
+      void zone.offsetWidth; // relance l'animation
+      zone.classList.add('pousse-grow');
+    }
   }
 
   // Tag de section selon le type
@@ -2367,7 +2528,23 @@ const App = (() => {
 
     // réinitialiser
     perso.classList.remove('reveal-show'); nomEl.textContent = ''; famEl.classList.remove('reveal-show'); cta.classList.remove('reveal-show'); intro.classList.remove('reveal-fade');
-    if (slug) imgEl.src = slug + '.webp';
+    if (slug) { imgEl.onerror = function(){ this.onerror=null; this.src = slug + '.webp'; }; imgEl.src = srcPerso(slug); }
+    // option B : choix de la version du personnage, visible une fois les visuels h/f en ligne
+    if (VARIANTES_PERSO_ACTIVES && slug && perso) {
+      let tg = document.getElementById('reveal-variante');
+      if (!tg) { tg = document.createElement('div'); tg.id = 'reveal-variante'; tg.className = 'reveal-variante'; perso.parentNode.insertBefore(tg, perso.nextSibling); }
+      const vc = variantePerso() || 'f';
+      tg.innerHTML = '<span class="rv-lab">Votre personnage</span>'
+        + '<button class="rv-opt' + (vc === 'f' ? ' on' : '') + '" data-v="f">Féminin</button>'
+        + '<button class="rv-opt' + (vc === 'h' ? ' on' : '') + '" data-v="h">Masculin</button>';
+      tg.querySelectorAll('.rv-opt').forEach(b => b.onclick = () => {
+        const nv = b.getAttribute('data-v');
+        setVariantePerso(nv);
+        tg.querySelectorAll('.rv-opt').forEach(x => x.classList.toggle('on', x === b));
+        imgEl.onerror = function(){ this.onerror = null; this.src = slug + '.webp'; };
+        imgEl.src = srcPerso(slug);
+      });
+    }
     scr.classList.add('active');
 
     // séquence d'animation
@@ -2496,7 +2673,7 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

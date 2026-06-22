@@ -1522,3 +1522,92 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   .plan-scroll{max-width:880px;padding:36px 32px 80px;}
   .plan-hero{max-width:600px;margin-left:auto;margin-right:auto;}
 }
+
+/* ===== v24 : la graine réagit visiblement à chaque palier de croissance ===== */
+.q-pousse{width:58px;height:76px;}
+.q-pousse.pousse-grow{animation:poussePulse 0.75s ease;}
+@keyframes poussePulse{0%{transform:scale(1);}35%{transform:scale(1.22);filter:drop-shadow(0 0 12px rgba(94,170,139,0.65));}100%{transform:scale(1);}}
+
+/* ===== v25 : le codex des personnages ===== */
+#screen-codex{background:var(--c-beige);}
+.codex-scroll{max-width:480px;margin:0 auto;padding:20px 22px 70px;}
+.codex-head{text-align:center;padding:14px 0 24px;}
+.codex-kicker{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--c-purple-text);margin-bottom:8px;}
+.codex-titre{font-size:30px;font-weight:800;color:var(--c-dark, #1A1A2E);margin:0 0 8px;line-height:1.1;}
+.codex-sub{font-size:14.5px;line-height:1.55;color:var(--c-dark-grey);max-width:420px;margin:0 auto;}
+.codex-fam{margin-bottom:30px;}
+.codex-fam-head{display:flex;align-items:center;gap:11px;margin-bottom:14px;}
+.codex-fam-dot{width:14px;height:14px;border-radius:50%;background:var(--cf);flex-shrink:0;}
+.codex-fam-nom{font-size:18px;font-weight:800;color:var(--c-dark, #1A1A2E);}
+.codex-fam-desc{font-size:13px;color:var(--c-dark-grey);}
+.codex-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.codex-card{background:#fff;border:1px solid var(--c-border, #E9E6DF);border-top:3px solid var(--cf);border-radius:16px;padding:16px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(26,26,46,0.04);transition:transform 0.18s, box-shadow 0.18s;}
+.codex-card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(26,26,46,0.1);}
+.codex-card-img{width:84px;height:84px;border-radius:50%;overflow:hidden;background:#F4F2EC;background:color-mix(in srgb, var(--cf) 10%, #fff);box-shadow:0 4px 14px rgba(0,0,0,0.12);}
+.codex-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.codex-card-nom{font-size:15px;font-weight:800;color:var(--c-dark, #1A1A2E);margin-top:4px;}
+.codex-card-verbe{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--cf);}
+.codex-card-axe{font-size:12.5px;line-height:1.45;color:var(--c-dark-grey);margin:2px 0 0;}
+.espace-codex-btn{display:flex;align-items:center;gap:14px;width:100%;background:#fff;border:1px solid var(--c-border, #E9E6DF);border-radius:18px;padding:18px;cursor:pointer;font-family:var(--font);text-align:left;box-shadow:0 2px 12px rgba(26,26,46,0.04);transition:transform 0.18s, box-shadow 0.18s;}
+.espace-codex-btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(26,26,46,0.08);}
+.espace-codex-ic{width:46px;height:46px;flex-shrink:0;border-radius:14px;background:linear-gradient(135deg, #8884F0, #F98272);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.espace-codex-txt{display:flex;flex-direction:column;gap:3px;flex:1;}
+.espace-codex-t{font-size:15.5px;font-weight:800;color:var(--c-dark, #1A1A2E);}
+.espace-codex-d{font-size:13px;color:var(--c-dark-grey);}
+.espace-codex-arr{font-size:20px;color:var(--c-purple-text);font-weight:700;}
+.reveal-variante{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.rv-lab{font-size:12px;color:rgba(255,255,255,0.72);font-weight:600;}
+.rv-opt{border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.08);color:#fff;border-radius:20px;padding:6px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.18s;}
+.rv-opt.on{background:#fff;color:var(--c-dark, #1A1A2E);border-color:#fff;}
+@media (min-width:768px){
+  .codex-scroll{max-width:1000px;padding:40px 40px 90px;}
+  .codex-grid{grid-template-columns:repeat(4, 1fr);gap:18px;}
+  .codex-titre{font-size:40px;}
+}
+
+/* ===== v26 : codex enrichi (carte personnelle, fiche au clic, signature, affinités) ===== */
+.codex-card{position:relative;cursor:pointer;}
+.codex-card-plus{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--cf);opacity:0.75;margin-top:4px;}
+.codex-card-moi{border:2px solid var(--cf);box-shadow:0 6px 20px rgba(26,26,46,0.12);}
+.codex-moi-badge{position:absolute;top:10px;right:10px;background:var(--cf);color:#fff;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;padding:3px 9px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.18);}
+.codex-fam-moi .codex-fam-nom{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.codex-fam-tag{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:#fff;background:var(--cf);padding:2px 9px;border-radius:20px;}
+
+/* fiche détaillée (overlay) */
+.codex-fiche-ov{position:fixed;inset:0;z-index:1000;background:rgba(26,26,46,0.55);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity 0.28s ease;}
+.codex-fiche-ov.on{opacity:1;pointer-events:auto;}
+.codex-fiche{position:relative;width:100%;max-width:460px;margin:auto;background:#fff;border-radius:22px;padding:0 22px 24px;box-shadow:0 24px 70px rgba(0,0,0,0.35);transform:translateY(18px) scale(0.98);transition:transform 0.3s cubic-bezier(.2,.8,.2,1);}
+.codex-fiche-ov.on .codex-fiche{transform:translateY(0) scale(1);}
+.codex-fiche-x{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,0.06);color:#444;font-size:22px;line-height:1;cursor:pointer;transition:background 0.18s;}
+.codex-fiche-x:hover{background:rgba(0,0,0,0.12);}
+.codex-fiche-top{text-align:center;padding:26px 8px 16px;margin:0 -22px 16px;border-radius:22px 22px 0 0;background:color-mix(in srgb, var(--cf) 10%, #fff);}
+.codex-fiche-img{width:108px;height:108px;border-radius:50%;overflow:hidden;margin:0 auto 12px;border:3px solid var(--cf);box-shadow:0 8px 24px rgba(0,0,0,0.16);background:#fff;}
+.codex-fiche-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.codex-fiche-fam{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--cf);}
+.codex-fiche-nom{font-size:24px;font-weight:800;color:var(--c-dark, #1A1A2E);margin:5px 0 6px;}
+.codex-fiche-axe{font-size:13.5px;line-height:1.5;color:var(--c-dark-grey);margin:0;max-width:340px;margin-left:auto;margin-right:auto;}
+.codex-moi-badge-fiche{position:static;display:inline-block;margin-bottom:10px;}
+.codex-fiche-essence{font-size:14.5px;line-height:1.6;color:#33333E;margin:0 0 18px;}
+.codex-fiche-bloc{margin-bottom:18px;}
+.codex-fiche-lab{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:var(--c-dark-grey);margin-bottom:9px;}
+.codex-fiche-ul{margin:0;padding-left:18px;}
+.codex-fiche-ul li{font-size:13.5px;line-height:1.5;color:#33333E;margin-bottom:5px;}
+.codex-sig{display:flex;flex-direction:column;gap:8px;}
+.codex-sig-row{display:flex;align-items:center;gap:10px;}
+.codex-sig-lab{font-size:12px;color:var(--c-dark-grey);width:96px;flex-shrink:0;}
+.codex-sig-bar{flex:1;height:7px;border-radius:4px;background:#EFEDE7;overflow:hidden;}
+.codex-sig-bar span{display:block;height:100%;border-radius:4px;background:var(--cf);}
+.codex-fiche-rel{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.codex-rel-col{background:#FAF9F5;border-radius:14px;padding:12px;}
+.codex-rel-allies{border-left:3px solid #3EAD8B;}
+.codex-rel-frics{border-left:3px solid #E8896B;}
+.codex-rel-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;}
+.codex-rel-chip{font-size:11.5px;font-weight:700;background:#fff;border:1px solid var(--c-border, #E9E6DF);border-radius:14px;padding:3px 9px;color:var(--c-dark, #1A1A2E);}
+.codex-rel-why{font-size:12px;line-height:1.45;color:var(--c-dark-grey);margin:0;}
+@media (max-width:520px){ .codex-fiche-rel{grid-template-columns:1fr;} }
+
+/* ===== v28 : Néa présente sur les transitions de chapitre ===== */
+#screen-chapter .chap-nea{width:62px;height:62px;border-radius:50%;overflow:hidden;margin:0 auto 8px;border:2px solid rgba(255,255,255,0.5);box-shadow:0 6px 18px rgba(0,0,0,0.22);background:rgba(255,255,255,0.1);}
+#screen-chapter .chap-nea img{width:100%;height:100%;object-fit:cover;display:block;}
+#screen-chapter .chap-nea-label{color:rgba(255,255,255,0.82);font-size:11.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:12px;}
+#screen-chapter .chap-nea-line{color:#fff;font-size:16px;line-height:1.55;font-weight:600;font-style:italic;max-width:340px;margin:0 auto 20px;}
