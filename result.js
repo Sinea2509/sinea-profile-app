@@ -604,7 +604,8 @@ const Result = (() => {
 
     const forcesProposees=[...(dc.forces||[]), ...forcesSituationnelles(res)];
     const forcesVal=forcesProposees.map((f,i)=>validItem('force',i,f)).join('');
-    const vigVal=(dc.vigilance||[]).map((v,i)=>validItem('vig',i,v)).join('');
+    const vigVal=(dc.vigilance||[]).map((v,i)=>validItem('vigilance',i,v)).join('');
+    const levVal=(dc.leviers||[]).map((l,i)=>validItem('levier',i,l)).join('');
 
     const cles=SINEA_DATA.cles_familles||{};
     const famBlocks=['RELATION','ACTION','STRUCTURE','VISION'].map(f=>{
@@ -750,6 +751,9 @@ const Result = (() => {
         <div class="r-section-tag">Vos points de vigilance</div>
         <p class="r-hint">Lesquels aimeriez-vous travailler ?</p>
         <div class="r-validables-grid">${vigVal}</div>
+        ${levVal ? `<div class="r-section-tag">Vos leviers de développement</div>
+        <p class="r-hint">Lesquels aimeriez-vous explorer ?</p>
+        <div class="r-validables-grid">${levVal}</div>` : ''}
         <div class="r-section-tag">Votre moteur</div>
         <div class="r-validable r-val-moteur" id="v-moteur-0" onclick="Result.toggleValid('moteur',0)"><div class="r-val-check">✓</div><p>${dc.moteur||''}</p></div>
         <div class="r-section-tag">Vos pistes d'action</div>
@@ -1299,7 +1303,8 @@ const Result = (() => {
   function majBarreSelection(){
     const nbForces = Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).length;
     const nbVig = Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]).length;
-    const total = nbForces + nbVig;
+    const nbLeviers = Object.keys(validations).filter(k => k.startsWith('levier_') && validations[k]).length;
+    const total = nbForces + nbVig + nbLeviers;
     let barre = document.getElementById('r-selbar');
     if (total === 0) { if (barre) barre.classList.remove('on'); return; }
     if (!barre) {
@@ -1311,6 +1316,7 @@ const Result = (() => {
     const parts = [];
     if (nbForces) parts.push(nbForces + (nbForces > 1 ? ' forces' : ' force'));
     if (nbVig) parts.push(nbVig + (nbVig > 1 ? ' points de vigilance' : ' point de vigilance'));
+    if (nbLeviers) parts.push(nbLeviers + (nbLeviers > 1 ? ' leviers' : ' levier'));
     const recap = parts.join(' · ');
     const mod = (RES && RES.diagType && RES.diagType !== 'classic') ? 'spe' : 'socle';
     if (selValidated) {
@@ -1327,7 +1333,7 @@ const Result = (() => {
     } else {
       barre.innerHTML =
         '<div class="r-selbar-in">' +
-          '<div class="r-selbar-hint">Cochez les forces et les points à travailler que vous voulez retrouver dans votre plan, puis validez.</div>' +
+          '<div class="r-selbar-hint">Cochez les forces, les points à travailler et les leviers à explorer que vous voulez retrouver dans votre plan, puis validez.</div>' +
           '<div class="r-selbar-row">' +
             '<div class="r-selbar-txt"><span class="r-selbar-count" id="r-selbar-count">' + recap + '</span><span class="r-selbar-lab">retenus pour votre plan d\'action</span></div>' +
             '<button class="r-selbar-btn" id="r-selbar-btn">Valider mes choix</button>' +
@@ -1529,6 +1535,8 @@ const Result = (() => {
         forces_libelles: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
         vigilances_validees: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]),
         vigilances_libelles: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
+        leviers_valides: Object.keys(validations).filter(k => k.startsWith('levier_') && validations[k]),
+        leviers_libelles: Object.keys(validations).filter(k => k.startsWith('levier_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
         moteur_valide: !!validations['moteur_0'],
         reponses_ouvertes: Object.assign({}, openAnswers),
         pistes_choisies: Array.from(selectedActions),
@@ -1562,6 +1570,8 @@ const Result = (() => {
       forces_libelles: Object.keys(validations).filter(k => k.startsWith('force_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
       vigilances_validees: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]),
       vigilances_libelles: Object.keys(validations).filter(k => k.startsWith('vigilance_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
+      leviers_valides: Object.keys(validations).filter(k => k.startsWith('levier_') && validations[k]),
+      leviers_libelles: Object.keys(validations).filter(k => k.startsWith('levier_') && validations[k]).map(k => validLabels[k]).filter(Boolean),
       moteur_valide: !!validations['moteur_0'],
       reponses_ouvertes: Object.assign({}, openAnswers),
       pistes_choisies: Array.from(selectedActions),

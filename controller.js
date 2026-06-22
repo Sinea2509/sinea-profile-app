@@ -612,6 +612,8 @@ const App = (() => {
   function goToEspace() {
     // masquer les autres écrans
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
+    const _sb = document.getElementById('r-selbar');
+    if (_sb) _sb.classList.remove('on');
     const scr = document.getElementById('screen-espace');
     scr.classList.add('active');
     // charger les données depuis le serveur
@@ -969,12 +971,12 @@ const App = (() => {
     // données issues des choix de la personne
     const forces = (inter.forces_libelles && inter.forces_libelles.length) ? inter.forces_libelles : (inter.forces_validees || []);
     const vigilances = (inter.vigilances_libelles && inter.vigilances_libelles.length) ? inter.vigilances_libelles : [];
+    const objectifs = (inter.leviers_libelles && inter.leviers_libelles.length) ? inter.leviers_libelles : [];
     const ouvertes = inter.reponses_ouvertes || {};
     const projection = (ouvertes.q3 || '').trim();
     const defiPro = (ouvertes.qm1 || ouvertes.qc1 || '').trim();
-    const objectifs = [];
-    if (projection) objectifs.push(projection);
-    if (defiPro) objectifs.push(defiPro);
+    // les mots de la personne enrichissent l'IA en contexte, sans devenir des objectifs bruts
+    const contexte = [projection, defiPro].filter(Boolean).join(' ');
 
     const couleurFam = (famille === 'RELATION' ? '#F98272' : famille === 'ACTION' ? '#F5A623' : famille === 'STRUCTURE' ? '#3EADFF' : '#5E59C7');
 
@@ -992,7 +994,7 @@ const App = (() => {
     const rien = !forces.length && !vigilances.length && !objectifs.length;
     if (rien) {
       scr.innerHTML = '<div class="plan-scroll">' + heroHtml +
-        '<div class="plan-vide-card"><p>Votre plan d\'action se construit au fil de votre lecture. Retournez à votre analyse, cochez les forces qui vous parlent, les points à travailler et les pistes d\'action : ils se rassembleront ici, prêts à vous accompagner.</p>' +
+        '<div class="plan-vide-card"><p>Votre plan d\'action se construit au fil de votre lecture. Retournez à votre analyse, cochez les forces qui vous parlent, les points à travailler et les leviers à explorer : ils se rassembleront ici, prêts à vous accompagner.</p>' +
         '<button class="btn-primary" data-revoir="' + mod + '">Revenir à mon analyse</button></div></div>';
       activerScreenPlan(scr, mod);
       return;
@@ -1011,7 +1013,7 @@ const App = (() => {
     fetch(API_BASE + '/plan_action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profil: profil, forces: forces, vigilances: vigilances, objectifs: objectifs, thematique: thematique }),
+      body: JSON.stringify({ profil: profil, forces: forces, vigilances: vigilances, objectifs: objectifs, thematique: thematique, contexte: contexte }),
     })
       .then(r => r.json())
       .then(data => {
@@ -1052,9 +1054,9 @@ const App = (() => {
   // repli local si l'IA est indisponible : objectifs simples sans SMART généré
   function construireReplisPlan(forces, vigilances, objectifs) {
     const out = [];
-    forces.forEach(f => out.push({ thematique: 'Force', type: 'Capitaliser', horizon: 'Bientôt', objectif: 'Capitaliser sur ' + minuscule1(f), premier_pas: 'Repérez cette semaine une situation où mobiliser ce point.', indicateur: 'Vous l\'activez consciemment au moins une fois.' }));
-    vigilances.forEach(v => out.push({ thematique: 'Progression', type: 'Progresser', horizon: 'Maintenant', objectif: 'Progresser sur ' + minuscule1(v), premier_pas: 'Choisissez une occasion proche pour vous y exercer.', indicateur: 'Vous observez un premier ajustement concret.' }));
-    objectifs.forEach(o => out.push({ thematique: 'Développement', type: 'Explorer', horizon: 'Plus tard', objectif: 'Explorer ' + minuscule1(o), premier_pas: 'Réservez un moment pour vous documenter ou en parler.', indicateur: 'Vous franchissez une première étape visible.' }));
+    forces.forEach(f => out.push({ thematique: 'Force', type: 'Capitaliser', horizon: 'Bientôt', objectif: f, premier_pas: 'Repérez cette semaine une situation où mobiliser ce point.', indicateur: 'Vous l\'activez consciemment au moins une fois.' }));
+    vigilances.forEach(v => out.push({ thematique: 'Progression', type: 'Progresser', horizon: 'Maintenant', objectif: v, premier_pas: 'Choisissez une occasion proche pour vous y exercer.', indicateur: 'Vous observez un premier ajustement concret.' }));
+    objectifs.forEach(o => out.push({ thematique: 'Développement', type: 'Explorer', horizon: 'Plus tard', objectif: o, premier_pas: 'Réservez un moment pour vous documenter ou en parler.', indicateur: 'Vous franchissez une première étape visible.' }));
     return out;
   }
 
@@ -1246,6 +1248,9 @@ const App = (() => {
   function activerScreenPlan(scr, mod) {
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
     scr.classList.add('active');
+    // la barre de sélection appartient à la restitution : on la retire sur le plan
+    const _selbar = document.getElementById('r-selbar');
+    if (_selbar) _selbar.classList.remove('on');
     window.scrollTo(0, 0);
     const r = document.getElementById('plan-retour');
     if (r) r.onclick = () => { scr.classList.remove('active'); goToEspace(); };

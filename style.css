@@ -1516,3 +1516,9 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 @media (min-width:768px){
   .plan-cards{grid-template-columns:1fr 1fr;}
 }
+
+/* ===== v22 : feuille de route — largeur desktop (sinon colonne mobile perdue dans le vide) ===== */
+@media (min-width:768px){
+  .plan-scroll{max-width:880px;padding:36px 32px 80px;}
+  .plan-hero{max-width:600px;margin-left:auto;margin-right:auto;}
+}
