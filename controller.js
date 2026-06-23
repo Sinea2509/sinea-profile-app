@@ -884,6 +884,7 @@ const App = (() => {
           (p.axe ? '<p class="codex-fiche-axe">' + echapValeur(p.axe) + '</p>' : '') +
         '</div>' +
         (c.essence ? '<p class="codex-fiche-essence">' + echapValeur(c.essence) + '</p>' : '') +
+        ((window.SINEA_EMBLEMES && window.SINEA_EMBLEMES[p.nom]) ? '<div class="codex-fiche-embleme"><span class="codex-emb-ic" style="color:' + ({RELATION:'#F98272',ACTION:'#F5A623',STRUCTURE:'#3EADFF',VISION:'#5E59C7'}[(p.famille||'').toUpperCase()]||'#5E59C7') + '">' + window.SINEA_EMBLEMES[p.nom].svg + '</span><div class="codex-emb-txt"><span class="codex-emb-objet">Emblème, ' + echapValeur(window.SINEA_EMBLEMES[p.nom].objet) + '</span><span class="codex-emb-phrase">' + echapValeur(window.SINEA_EMBLEMES[p.nom].phrase) + '</span></div></div>' : '') +
         (profils[p.nom] ? '<div class="codex-fiche-bloc"><div class="codex-fiche-lab">Sa signature</div>' + signatureBars(p.nom) + '</div>' : '') +
         (forces ? '<div class="codex-fiche-bloc"><div class="codex-fiche-lab">Ce qu\'il apporte</div><ul class="codex-fiche-ul">' + forces + '</ul></div>' : '') +
         ((allies || frics) ? '<div class="codex-fiche-rel">' +
@@ -2357,6 +2358,7 @@ const App = (() => {
         result.speDims = Engine.scorerSpeDims(repSpeDims, diagType, result.scoresBigFive);
         result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
         result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);
+        result.epithete = Engine.epitheteMetier(result.speStyle, result.diagType);
       } else {
         // MODE SOCLE (ou parcours complet)
         result = Engine.scorer(repMini, repSinea);
@@ -2370,6 +2372,7 @@ const App = (() => {
           result.speDims = Engine.scorerSpeDims(repSpeDims, diagType, result.scoresBigFive);
           result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
           result.speStyleScores = Engine.scorerSpeStyleScores(repSpeQcm, diagType);
+          result.epithete = Engine.epitheteMetier(result.speStyle, result.diagType);
         }
       }
 
@@ -2511,11 +2514,15 @@ const App = (() => {
     const imgEl = document.getElementById('reveal-img');
     const nomEl = document.getElementById('reveal-nom');
     const famEl = document.getElementById('reveal-famille');
+    const epEl = document.getElementById('reveal-epithete');
+    const embEl = document.getElementById('reveal-embleme');
     const cta = document.getElementById('reveal-cta');
     if (!scr) { document.getElementById('screen-result').classList.add('active'); return; }
 
     // réinitialiser
     perso.classList.remove('reveal-show'); nomEl.textContent = ''; famEl.classList.remove('reveal-show'); cta.classList.remove('reveal-show'); intro.classList.remove('reveal-fade');
+    if (epEl) { epEl.textContent = ''; epEl.classList.remove('reveal-show'); }
+    if (embEl) { embEl.innerHTML = ''; embEl.classList.remove('reveal-show'); }
     if (slug) { imgEl.onerror = function(){ this.onerror=null; this.src = slug + '.webp'; }; imgEl.src = srcPerso(slug); }
     // option B : choix de la version du personnage, visible une fois les visuels h/f en ligne
     if (VARIANTES_PERSO_ACTIVES && slug && perso) {
@@ -2539,8 +2546,20 @@ const App = (() => {
     setTimeout(() => { perso.classList.add('reveal-show'); lancerParticules(dom.famille); }, 700);  // le personnage apparaît + particules
     setTimeout(() => { intro.classList.add('reveal-fade'); sonSuspense(); }, 1400);      // l'intro s'efface + montée sonore (suspense)
     setTimeout(() => { ecrireNom(nomEl, dom.nom); }, 1600);              // le nom s'écrit lettre par lettre
-    setTimeout(() => { famEl.textContent = 'Famille ' + familleLabel; famEl.classList.add('reveal-show'); }, 1600 + dom.nom.length * 75 + 300);
-    setTimeout(() => { cta.classList.add('reveal-show'); }, 1600 + dom.nom.length * 75 + 800);
+    setTimeout(() => {
+      if (epEl && result.epithete) { epEl.textContent = result.epithete; epEl.classList.add('reveal-show'); }
+      famEl.textContent = 'Famille ' + familleLabel; famEl.classList.add('reveal-show');
+    }, 1600 + dom.nom.length * 75 + 300);
+    setTimeout(() => {
+      const emb = (window.SINEA_EMBLEMES || {})[dom.nom];
+      if (embEl && emb) {
+        embEl.innerHTML = '<span class="reveal-emb-ic">' + emb.svg + '</span>'
+          + '<div class="reveal-emb-txt"><span class="reveal-emb-objet">Votre emblème, ' + emb.objet + '</span>'
+          + '<span class="reveal-emb-phrase">' + emb.phrase + '</span></div>';
+        embEl.classList.add('reveal-show');
+      }
+    }, 1600 + dom.nom.length * 75 + 550);
+    setTimeout(() => { cta.classList.add('reveal-show'); }, 1600 + dom.nom.length * 75 + 900);
 
     cta.onclick = () => {
       scr.classList.remove('active');

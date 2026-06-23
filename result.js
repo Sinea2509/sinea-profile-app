@@ -591,6 +591,7 @@ const Result = (() => {
 
     document.getElementById('r-kicker').textContent='Votre archétype';
     document.getElementById('r-archetype').textContent=dom.nom;
+    const epHero=document.getElementById('r-epithete'); if(epHero){ epHero.textContent=res.epithete||''; epHero.style.display=res.epithete?'':'none'; }
     document.getElementById('r-verb').textContent=verbe(dom.nom);
     chargerSignature(res);
     document.getElementById('r-hero').style.setProperty('--fam-color',color);
@@ -853,15 +854,16 @@ const Result = (() => {
       cartePreview.innerHTML = `
         <div class="r-carte-mini" style="background:linear-gradient(145deg, ${famCarte.c1}, ${famCarte.c2});">
           <div class="r-carte-mini-logo">SINÉA</div>
-          <div class="r-carte-mini-perso"><img src="${img(dom.nom)}" alt="${dom.nom}"/></div>
+          <div class="r-carte-mini-perso"><img src="${img(dom.nom)}" alt="${dom.nom}"/>${(window.SINEA_EMBLEMES&&window.SINEA_EMBLEMES[dom.nom])?`<span class="r-carte-mini-emb" style="color:${famCarte.c1}">${window.SINEA_EMBLEMES[dom.nom].svg}</span>`:''}</div>
           <div class="r-carte-mini-kicker">Mon archétype</div>
           <div class="r-carte-mini-nom">${dom.nom}</div>
+          ${res.epithete?`<div class="r-carte-mini-fac">${res.epithete}</div>`:''}
           <div class="r-carte-mini-fam">Famille ${famCarte.label}</div>
         </div>`;
     }
     const carteBtn = document.getElementById('carte-share-btn');
     const prenomUser = (window.App && App.getPrenom) ? App.getPrenom() : '';
-    if (carteBtn) carteBtn.onclick = () => genererCarte(dom.nom, dom.famille, carteSlug, prenomUser);
+    if (carteBtn) carteBtn.onclick = () => genererCarte(dom.nom, dom.famille, carteSlug, prenomUser, res.epithete||'');
 
     // Câbler le chat avec l'archétype
     initChat(dom, res);
@@ -1819,9 +1821,9 @@ const Result = (() => {
     "Le Révélateur": "Je fais émerger le potentiel des autres.",
   };
 
-  function genererCarte(archetype, famille, slug, prenom) {
+  function genererCarte(archetype, famille, slug, prenom, epithete) {
     // s'assurer que la police est chargée avant de dessiner (sinon police générique sur le PNG)
-    const lancer = () => genererCarteRendu(archetype, famille, slug, prenom);
+    const lancer = () => genererCarteRendu(archetype, famille, slug, prenom, epithete);
     if (document.fonts && document.fonts.ready) {
       Promise.all([
         document.fonts.load('800 76px Poppins'),
@@ -1834,7 +1836,7 @@ const Result = (() => {
     }
   }
 
-  function genererCarteRendu(archetype, famille, slug, prenom) {
+  function genererCarteRendu(archetype, famille, slug, prenom, epithete) {
     const taille = 1080; // carré HD pour les réseaux
     const canvas = document.createElement('canvas');
     canvas.width = taille; canvas.height = taille;
@@ -1879,19 +1881,26 @@ const Result = (() => {
       // nom de l'archétype (grand)
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '800 76px Poppins, Arial, sans-serif';
-      ctx.fillText(archetype, taille/2, taille*0.725);
+      ctx.fillText(archetype, taille/2, taille*0.715);
+
+      // épithète métier (facette unisexe selon le style, si module passé)
+      if (epithete) {
+        ctx.font = 'italic 600 33px Poppins, Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.fillText(epithete, taille/2, taille*0.76);
+      }
 
       // famille (pastille)
       ctx.font = '600 30px Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.fillText('Famille ' + fam.label, taille/2, taille*0.72 + 52);
+      ctx.fillText('Famille ' + fam.label, taille/2, taille*(epithete ? 0.805 : 0.77));
 
       // phrase signature (avec retour à la ligne automatique)
       const phrase = PHRASES_CARTE[archetype] || '';
       ctx.font = '400 34px Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
       const mots = phrase.split(' ');
-      let ligne = ''; let y = taille*0.84; const maxW = taille*0.82; const lh = 46;
+      let ligne = ''; let y = taille*(epithete ? 0.865 : 0.84); const maxW = taille*0.82; const lh = 46;
       const lignes = [];
       mots.forEach(m => {
         const test = ligne ? ligne + ' ' + m : m;

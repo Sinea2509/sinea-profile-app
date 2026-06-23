@@ -579,5 +579,28 @@ function scorerNaturelAdapte(repMini, repAdapte) {
 }
 
 // Export
-const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, recalculerDepuisBigFive, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte };
+// ---- Épithète métier (facette unisexe ajoutée au nom selon le style dominant) ----
+// Format "qui + verbe" : invariable en genre, aucune variante masculin/féminin à gérer.
+const EPITHETES_MGMT = {
+  visionnaire: 'qui inspire',
+  coaching: 'qui fait grandir',
+  affiliatif: 'qui rassemble',
+  democratique: 'qui fédère',
+  chef_de_file: 'qui tire vers le haut',
+  directif: 'qui tranche'
+};
+const EPITHETES_COM = {
+  challenger: 'qui challenge',
+  relationnel: 'qui met en confiance',
+  battant: 'qui conquiert',
+  solitaire: 'qui avance en solo',
+  resolveur: 'qui résout'
+};
+function epitheteMetier(speStyle, diagType) {
+  if (!speStyle || !diagType || diagType === 'classic') return '';
+  const table = diagType === 'manager' ? EPITHETES_MGMT : (diagType === 'commercial' ? EPITHETES_COM : null);
+  return (table && table[speStyle]) ? table[speStyle] : '';
+}
+
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, recalculerDepuisBigFive, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte, epitheteMetier };
 

@@ -1622,3 +1622,31 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* ===== v31 : carte LinkedIn premium (intitulé + motif de marque en filigrane) ===== */
 .r-carte-mini::before{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:190px;opacity:0.1;}
 .r-carte-mini-kicker{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;opacity:0.72;position:relative;z-index:1;margin-bottom:3px;}
+
+/* ===== v33 : facette métier (épithète unisexe selon le style management/commercial) ===== */
+.reveal-epithete{color:rgba(255,255,255,0.95);font-size:22px;font-weight:600;font-style:italic;margin-top:8px;opacity:0;transform:translateY(8px);transition:opacity 0.6s ease, transform 0.6s ease;}
+.reveal-epithete.reveal-show{opacity:1;transform:translateY(0);}
+.r-epithete{font-size:18px;font-weight:600;font-style:italic;color:var(--fam-color,#5E59C7);margin-bottom:8px;}
+.r-carte-mini-fac{font-size:15px;font-weight:600;font-style:italic;opacity:0.95;position:relative;z-index:1;margin-top:3px;text-align:center;}
+@media (max-width:520px){ .reveal-epithete{font-size:18px;} }
+
+/* ===== v34 : emblèmes (objet symbolique par archétype) ===== */
+/* Encart à la révélation */
+.reveal-embleme{display:inline-flex;align-items:center;gap:13px;margin-top:20px;padding:12px 18px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);border-radius:16px;max-width:380px;text-align:left;opacity:0;transform:translateY(8px);transition:opacity 0.6s ease, transform 0.6s ease;}
+.reveal-embleme.reveal-show{opacity:1;transform:translateY(0);}
+.reveal-emb-ic{flex:0 0 auto;color:#fff;display:flex;}
+.reveal-emb-ic svg{width:34px;height:34px;}
+.reveal-emb-txt{display:flex;flex-direction:column;gap:2px;}
+.reveal-emb-objet{color:#fff;font-size:15px;font-weight:700;}
+.reveal-emb-phrase{color:rgba(255,255,255,0.85);font-size:13px;font-style:italic;line-height:1.4;}
+/* Emblème dans la fiche du codex */
+.codex-fiche-embleme{display:flex;align-items:center;gap:13px;margin:14px 0;padding:13px 16px;background:rgba(0,0,0,0.03);border-radius:14px;}
+.codex-emb-ic{flex:0 0 auto;display:flex;}
+.codex-emb-ic svg{width:32px;height:32px;}
+.codex-emb-txt{display:flex;flex-direction:column;gap:2px;}
+.codex-emb-objet{font-size:14px;font-weight:700;color:var(--c-dark-grey);}
+.codex-emb-phrase{font-size:13px;font-style:italic;color:var(--c-grey);line-height:1.45;}
+/* Pastille emblème sur l'aperçu de la carte */
+.r-carte-mini-emb{position:absolute;right:-2px;bottom:-2px;width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.18);z-index:2;}
+.r-carte-mini-emb svg{width:22px;height:22px;}
+.r-carte-mini-perso{position:relative;display:inline-block;}
