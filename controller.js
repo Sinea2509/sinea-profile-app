@@ -1633,7 +1633,8 @@ const App = (() => {
       + (s.hi ? '<p class="coach-intro-hi">' + s.hi + '</p>' : '')
       + '<p class="coach-intro-line">' + s.line + '</p>'
       + (s.hint ? '<p class="coach-intro-hint">' + s.hint + '</p>' : '')
-      + (s.bouton ? '<button class="coach-intro-go" id="accueil-go">' + s.bouton + '</button>' : '')
+      + (s.bouton ? '<button class="coach-intro-go" id="accueil-go">' + s.bouton + '</button>'
+                  : '<button class="coach-intro-go coach-intro-next">Continuer</button>')
       + '</div>'
     ).join('');
     ov.innerHTML = '<div class="coach-intro-card"><div class="coach-intro-nea"><img class="coach-intro-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" /></div><div class="coach-intro-nea-label">Néa · votre coach</div>' + stepsHtml + '</div>';
@@ -1644,34 +1645,21 @@ const App = (() => {
     let etape = 0;
     const montrer = (n) => stepEls.forEach((s, k) => s.classList.toggle('show', k === n));
     montrer(0);
-    // cadence confortable : ~4 s par message pour avoir le temps de lire (2,5 s était
-    // trop rapide, retour terrain). On peut aussi avancer à son propre rythme en touchant
-    // l'écran, ce qui rend le défilement automatique secondaire.
-    let timers = [];
-    const programmer = () => {
-      timers.forEach(clearTimeout); timers = [];
-      for (let n = etape + 1; n < steps.length; n++) {
-        timers.push(setTimeout(() => { etape = n; montrer(n); }, (n - etape) * 4000));
-      }
-    };
-    programmer();
-    // avancer manuellement au message suivant en touchant la carte (hors boutons)
-    const avancer = () => {
-      if (etape < steps.length - 1) { etape++; montrer(etape); programmer(); }
-    };
+    // La personne avance entièrement à son rythme : aucun défilement automatique.
+    // Un clic, sur la carte ou sur Continuer, passe au message suivant.
+    const avancer = () => { if (etape < steps.length - 1) { etape++; montrer(etape); } };
     let fini = false;
     const fermer = () => {
       if (fini) return; fini = true;
-      timers.forEach(clearTimeout);
       ov.classList.remove('on');
       setTimeout(() => { ov.remove(); suite(); }, 500);
     };
     ov.addEventListener('click', (e) => {
       if (e.target && e.target.id === 'accueil-go') { fermer(); return; }
       if (e.target && e.target.classList && e.target.classList.contains('coach-intro-skip')) { return; }
-      // un clic sur le dernier message (déjà affiché) permet aussi de passer
+      // un clic sur le dernier message (déjà affiché) démarre le bilan
       if (stepEls[steps.length - 1] && stepEls[steps.length - 1].classList.contains('show')) { fermer(); return; }
-      // sinon, on avance au message suivant à son rythme
+      // sinon, on avance au message suivant
       avancer();
     });
     // filet : bouton "passer" discret pour les pressés, dès le départ

@@ -90,6 +90,12 @@ const Result = (() => {
       </div>`;
   }
 
+  // Voix de Néa en ouverture d'une grande section (prolonge le fil rouge dans la restitution)
+  function neaSection(txt){
+    if (!txt) return '';
+    return '<div class="r-nea-intro"><span class="r-nea-intro-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span><p class="r-nea-intro-txt">' + txt + '</p></div>';
+  }
+
   // Visuel : naturel vs adapté (coût d'adaptation par dimension)
   function carteNaturelAdapte(res){
     const na = res.naturelAdapte;
@@ -501,6 +507,7 @@ const Result = (() => {
       speBlocHtml = `
       <div class="r-bloc" id="b-spe">
         <div class="r-bloc-head"><span class="r-bloc-tag">Votre métier</span><h2>Votre management</h2></div>
+        ${neaSection('Votre socle est posé. Découvrons comment il façonne votre manière de manager.')}
         <p class="r-bloc-intro">Votre personnalité éclaire votre manière de manager. Voici comment vos traits se traduisent dans votre posture de leader.</p>
         <div class="r-section-tag">Votre style en un coup d'œil</div>
         ${carteStyle(res)}
@@ -532,6 +539,7 @@ const Result = (() => {
       speBlocHtml = `
       <div class="r-bloc" id="b-spe">
         <div class="r-bloc-head"><span class="r-bloc-tag">Votre métier</span><h2>Votre approche commerciale</h2></div>
+        ${neaSection('Votre socle est posé. Découvrons comment il s\'exprime dans votre façon de convaincre.')}
         <p class="r-bloc-intro">Votre personnalité éclaire votre manière de vendre. Voici comment vos traits se traduisent dans votre posture commerciale.</p>
         <div class="r-section-tag">Votre style en un coup d'œil</div>
         ${carteStyle(res)}
@@ -664,6 +672,7 @@ const Result = (() => {
 
       <div class="r-bloc" id="b1">
         <div class="r-bloc-head"><span class="r-bloc-tag">Bloc 1</span><h2>Vous connaître en profondeur</h2></div>
+        ${neaSection('Commençons par l\'essentiel : vous. Voici ce que vos réponses disent de votre façon de fonctionner.')}
         <div class="r-section-tag">Qui vous êtes</div>
         <div class="r-ia" id="ia-ouverture"><div class="r-ia-tag">Votre portrait</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">L'alchimie de vos forces</div>
@@ -732,6 +741,7 @@ const Result = (() => {
 
       <div class="r-bloc" id="b2">
         <div class="r-bloc-head"><span class="r-bloc-tag">Bloc 2</span><h2>Lire et comprendre les autres</h2></div>
+        ${neaSection('Maintenant que je vous cerne, voyons comment vous percevez les autres et créez du lien.')}
         <p class="r-bloc-intro">Votre profil vous offre une grille de lecture des autres. En identifiant la famille de vos interlocuteurs, vous adaptez votre communication et désamorcez les tensions plus vite.</p>
         <div class="r-section-tag">Votre carte des familles</div>
         <div class="r-card"><div class="r-radar">${radarSvg(res.radarFamilles,color)}</div></div>
@@ -748,6 +758,7 @@ const Result = (() => {
 
       <div class="r-bloc" id="b3">
         <div class="r-bloc-head"><span class="r-bloc-tag">Bloc 3</span><h2>Passer à l'action</h2></div>
+        ${neaSection('Place au concret. Voici comment transformer cette lecture en élan, à votre main.')}
         <div class="r-section-tag">Vos points de vigilance</div>
         <p class="r-hint">Lesquels aimeriez-vous travailler ?</p>
         <div class="r-validables-grid">${vigVal}</div>
@@ -843,6 +854,7 @@ const Result = (() => {
         <div class="r-carte-mini" style="background:linear-gradient(145deg, ${famCarte.c1}, ${famCarte.c2});">
           <div class="r-carte-mini-logo">SINÉA</div>
           <div class="r-carte-mini-perso"><img src="${img(dom.nom)}" alt="${dom.nom}"/></div>
+          <div class="r-carte-mini-kicker">Mon archétype</div>
           <div class="r-carte-mini-nom">${dom.nom}</div>
           <div class="r-carte-mini-fam">Famille ${famCarte.label}</div>
         </div>`;
@@ -1854,13 +1866,20 @@ const Result = (() => {
       if (prenom) {
         ctx.font = '600 30px Poppins, Arial, sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.fillText(prenom, taille/2, taille*0.605);
+        ctx.fillText(prenom, taille/2, taille*0.6);
       }
+
+      // intitulé : Mon archétype
+      ctx.font = '700 25px Poppins, Arial, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.72)';
+      if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
+      ctx.fillText('MON ARCHÉTYPE', taille/2, taille*0.658);
+      if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
       // nom de l'archétype (grand)
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '800 76px Poppins, Arial, sans-serif';
-      ctx.fillText(archetype, taille/2, taille*0.72);
+      ctx.fillText(archetype, taille/2, taille*0.725);
 
       // famille (pastille)
       ctx.font = '600 30px Poppins, Arial, sans-serif';
@@ -1892,27 +1911,42 @@ const Result = (() => {
     };
 
     // dessiner le personnage (rond, au centre haut) puis le texte
-    if (slug) {
-      const img = new Image();
-      img.onload = () => {
-        const d = taille*0.34; const cx = taille/2; const cy = taille*0.36;
-        ctx.save();
-        ctx.beginPath(); ctx.arc(cx, cy, d/2, 0, Math.PI*2); ctx.closePath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 8; ctx.stroke();
-        ctx.clip();
-        ctx.drawImage(img, cx - d/2, cy - d/2, d, d);
-        ctx.restore();
+    const dessinerPerso = () => {
+      if (slug) {
+        const img = new Image();
+        img.onload = () => {
+          const d = taille*0.34; const cx = taille/2; const cy = taille*0.36;
+          ctx.save();
+          ctx.beginPath(); ctx.arc(cx, cy, d/2, 0, Math.PI*2); ctx.closePath();
+          ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 8; ctx.stroke();
+          ctx.clip();
+          ctx.drawImage(img, cx - d/2, cy - d/2, d, d);
+          ctx.restore();
+          dessinerTexte();
+        };
+        img.onerror = () => {
+          // repli : si la variante h/f manque, on tente l'image actuelle, puis le texte
+          if (img.src.indexOf('_h.webp') >= 0 || img.src.indexOf('_f.webp') >= 0) { img.onerror = () => dessinerTexte(); img.src = slug + '.webp'; }
+          else dessinerTexte();
+        };
+        img.src = (window.App && App.srcPerso) ? App.srcPerso(slug) : slug + '.webp';
+      } else {
         dessinerTexte();
-      };
-      img.onerror = () => {
-        // repli : si la variante h/f manque, on tente l'image actuelle, puis le texte
-        if (img.src.indexOf('_h.webp') >= 0 || img.src.indexOf('_f.webp') >= 0) { img.onerror = () => dessinerTexte(); img.src = slug + '.webp'; }
-        else dessinerTexte();
-      };
-      img.src = (window.App && App.srcPerso) ? App.srcPerso(slug) : slug + '.webp';
-    } else {
-      dessinerTexte();
-    }
+      }
+    };
+
+    // motif topographique de la marque, en filigrane (repli silencieux si absent)
+    const motif = new Image();
+    motif.onload = () => {
+      ctx.save();
+      ctx.globalAlpha = 0.10;
+      const ps = 270;
+      for (let x = 0; x < taille; x += ps) { for (let y = 0; y < taille; y += ps) { ctx.drawImage(motif, x, y, ps, ps); } }
+      ctx.restore();
+      dessinerPerso();
+    };
+    motif.onerror = () => dessinerPerso();
+    motif.src = 'pattern.webp';
   }
 
   function telechargerCanvas(canvas, archetype) {

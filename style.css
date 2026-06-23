@@ -1611,3 +1611,14 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 #screen-chapter .chap-nea img{width:100%;height:100%;object-fit:cover;display:block;}
 #screen-chapter .chap-nea-label{color:rgba(255,255,255,0.82);font-size:11.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:12px;}
 #screen-chapter .chap-nea-line{color:#fff;font-size:16px;line-height:1.55;font-weight:600;font-style:italic;max-width:340px;margin:0 auto 20px;}
+
+/* ===== v30 : voix de Néa en ouverture des grandes sections de la restitution ===== */
+.r-nea-intro{display:flex;align-items:center;gap:14px;margin:2px 0 24px;padding:14px 18px;background:linear-gradient(135deg,rgba(249,130,114,0.08),rgba(226,144,236,0.08));border:1px solid rgba(249,130,114,0.16);border-radius:16px;}
+.r-nea-intro-img{flex:0 0 auto;width:50px;height:50px;border-radius:50%;overflow:hidden;padding:2px;background-image:linear-gradient(135deg,#F98272,#E290EC);box-shadow:0 4px 12px rgba(249,130,114,0.22);}
+.r-nea-intro-img img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;background:#fff;}
+.r-nea-intro-txt{margin:0;font-size:15.5px;line-height:1.5;font-style:italic;font-weight:500;color:var(--c-dark-grey);}
+@media(min-width:900px){.r-nea-intro-txt{font-size:16.5px;}}
+
+/* ===== v31 : carte LinkedIn premium (intitulé + motif de marque en filigrane) ===== */
+.r-carte-mini::before{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:190px;opacity:0.1;}
+.r-carte-mini-kicker{font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;opacity:0.72;position:relative;z-index:1;margin-bottom:3px;}

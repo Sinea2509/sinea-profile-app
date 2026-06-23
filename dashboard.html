@@ -453,6 +453,14 @@
     .focus-item{flex-direction:column;gap:4px;}
     .focus-nom{min-width:0;}
   }
+  /* Cartographie premium : quadrants nommes */
+  .carto-quad{position:absolute;font-size:10px;font-weight:700;color:var(--c-medium-grey);text-transform:uppercase;letter-spacing:0.04em;opacity:0.6;z-index:1;pointer-events:none;}
+  .carto-quad.tl{top:26px;left:30px;} .carto-quad.tr{top:26px;right:30px;} .carto-quad.bl{bottom:42px;left:30px;} .carto-quad.br{bottom:42px;right:30px;}
+  /* Levier Sinea sous chaque axe de formation */
+  .reco-sinea{margin-top:9px;font-size:12.5px;font-weight:700;color:var(--c-purple-text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .reco-sinea-tag{font-size:9.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;background:rgba(94,89,199,0.12);color:var(--c-purple-text);padding:3px 9px;border-radius:20px;}
+  .reco-cta{display:block;margin-top:18px;text-align:center;background:var(--g-purpleblue);color:#fff;text-decoration:none;border-radius:13px;padding:14px 20px;font-family:var(--font);font-size:14px;font-weight:700;transition:transform 0.12s,box-shadow 0.12s;}
+  .reco-cta:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(84,116,245,0.28);}
 </style>
 </head>
 <body>
@@ -1138,6 +1146,22 @@ function axesFormation(membres, famillesStats){
   return axes.slice(0,4);
 }
 
+// Relie chaque axe de développement à l'offre Sinéa correspondante (accroche commerciale)
+const SINEA_PARCOURS = {
+  "Assertivité et communication authentique":"Parcours Soft Skills · Assertivité et communication",
+  "Prise de parole et présence sereine":"Parcours Prise de parole et impact",
+  "Gestion de la pression et récupération":"Parcours Gestion du stress et énergie durable",
+  "Organisation personnelle et priorisation":"Parcours Efficacité et organisation",
+  "Créativité et ouverture en confiance":"Atelier Créativité et idéation",
+  "Prise de recul et vision stratégique":"Parcours Leadership et vision stratégique",
+  "Cohésion et intelligence relationnelle":"Parcours Cohésion et intelligence relationnelle",
+  "Décision et passage à l'action":"Parcours Management et prise de décision",
+  "Méthode et fiabilisation":"Parcours Méthode et excellence opérationnelle",
+  "Conversations difficiles et feedback direct":"Parcours Conversations difficiles et feedback",
+  "Consolidation des forces":"Accompagnement sur-mesure d'approfondissement"
+};
+function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mesure Sinéa"; }
+
 
   // ===== FIN MODULE ANALYSE DATA =====
 
@@ -1566,6 +1590,10 @@ function axesFormation(membres, famillesStats){
             <div class="carto-axe-y bas">Réflexion</div>
             <div class="carto-axe-x gauche">Relation</div>
             <div class="carto-axe-x droite">Tâche</div>
+            <div class="carto-quad tl">Action + relation</div>
+            <div class="carto-quad tr">Action + tâche</div>
+            <div class="carto-quad bl">Réflexion + relation</div>
+            <div class="carto-quad br">Réflexion + tâche</div>
             <div class="chart-box tall"><canvas id="chartCarto"></canvas></div>
           </div>
         </div>
@@ -1661,8 +1689,9 @@ function axesFormation(membres, famillesStats){
           <div class="panel-title">Axes de développement et de formation</div>
           <div class="panel-sub">Déduits des écarts d'adaptation réels et des registres peu couverts.</div>
           <div class="reco-grid">
-            ${axes.map((a,i)=>`<div class="reco-item"><div class="reco-num" style="background:var(--g-purpleblue)">${i+1}</div><div class="reco-body"><div class="reco-titre">${esc(a.titre)}</div><div class="reco-desc">${esc(a.desc)}</div></div></div>`).join('')}
+            ${axes.map((a,i)=>`<div class="reco-item"><div class="reco-num" style="background:var(--g-purpleblue)">${i+1}</div><div class="reco-body"><div class="reco-titre">${esc(a.titre)}</div><div class="reco-desc">${esc(a.desc)}</div><div class="reco-sinea"><span class="reco-sinea-tag">Le levier Sinéa</span>${esc(parcoursSinea(a.titre))}</div></div></div>`).join('')}
           </div>
+          <a class="reco-cta" href="https://sineaformation.fr" target="_blank" rel="noopener">Construire le parcours de formation de cette équipe avec Sinéa</a>
         </div>`;
       }
 
@@ -1833,8 +1862,9 @@ function axesFormation(membres, famillesStats){
       if(!datasetsByFam[f]) datasetsByFam[f]={label:FAM_LABELS[f]||f,data:[],backgroundColor:FAM_COLORS[f]||'#999',pointRadius:9,pointHoverRadius:12,borderColor:'#fff',borderWidth:2};
       datasetsByFam[f].data.push({x:pos.x,y:pos.y,nom:m.nom});
     });
+    const labelsCarto={id:'labelsCarto',afterDatasetsDraw:function(chart){var cx=chart.ctx;cx.save();cx.font='600 11px Manrope, sans-serif';cx.fillStyle='#4A4A55';cx.textAlign='center';chart.data.datasets.forEach(function(ds,di){var meta=chart.getDatasetMeta(di);if(meta.hidden)return;meta.data.forEach(function(pt,i){var nom=(((ds.data[i]||{}).nom)||'').split(' ')[0];if(nom)cx.fillText(nom,pt.x,pt.y-13);});});cx.restore();}};
     const c3=document.getElementById('chartCarto');
-    if(c3) charts.carto=new Chart(c3,{type:'scatter',data:{datasets:Object.values(datasetsByFam)},options:{responsive:true,maintainAspectRatio:false,scales:{x:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}},y:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}}},plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:12}},tooltip:{callbacks:{label:c=>c.raw.nom}}},animation:{duration:800}}});
+    if(c3) charts.carto=new Chart(c3,{type:'scatter',data:{datasets:Object.values(datasetsByFam)},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:14}},scales:{x:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}},y:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}}},plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:12}},tooltip:{callbacks:{label:c=>c.raw.nom}}},animation:{duration:800}},plugins:[labelsCarto]});
   }
 
   // ====== ANALYSE STRATÉGIQUE ======
@@ -1857,20 +1887,27 @@ function axesFormation(membres, famillesStats){
   function ouvrirImpression(titre, corps){
     var w = window.open('', '_blank');
     if(!w){ alert('Autorisez les fenêtres pop-up pour exporter en PDF.'); return; }
-    var styles = 'body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#1A1A2E;max-width:760px;margin:0 auto;padding:34px 28px;line-height:1.55;}'+
-      'h1{font-size:21px;margin:0 0 4px;} .exp-sous{font-size:12.5px;color:#777;margin-bottom:24px;}'+
-      '.exp-logo{font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:#5E59C7;margin-bottom:14px;}'+
-      'h2{font-size:13px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#5E59C7;margin:22px 0 8px;}'+
-      'p{font-size:13.5px;margin:0 0 10px;} ul{margin:0 0 12px;padding-left:18px;} li{font-size:13.5px;margin-bottom:6px;}'+
-      '.exp-cle{margin-top:18px;padding:13px 16px;background:#F2F0FA;border-radius:10px;font-style:italic;font-weight:600;font-size:13.5px;}'+
-      '.exp-score{font-size:30px;font-weight:800;margin:4px 0 12px;} .exp-dim{display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid #EEE;padding:6px 0;}'+
-      '.exp-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;padding:3px 9px;border-radius:6px;background:#1A1A2E;color:#fff;margin-bottom:14px;}'+
-      '.exp-foot{margin-top:30px;padding-top:14px;border-top:1px solid #EEE;font-size:11px;color:#999;}'+
-      '@media print{ body{padding:10px;} }';
+    var styles = "body{font-family:'Poppins','Manrope',-apple-system,Segoe UI,Roboto,sans-serif;color:#1A1A2E;max-width:800px;margin:0 auto;padding:0 0 40px;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact;}"+
+      ".exp-band{height:9px;background:linear-gradient(90deg,#F98272,#E290EC 55%,#5E59C7);}"+
+      ".exp-wrap{padding:30px 42px 0;}"+
+      ".exp-logo{font-size:13px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#5E59C7;}"+
+      ".exp-logo span{color:#C9C3E8;margin-left:7px;}"+
+      "h1{font-size:26px;font-weight:800;letter-spacing:-0.02em;margin:16px 0 6px;color:#1A1A2E;}"+
+      ".exp-sous{font-size:13px;color:#8A8A98;margin-bottom:18px;}"+
+      ".exp-badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:5px 12px;border-radius:7px;background:#1A1A2E;color:#fff;margin-bottom:20px;}"+
+      "h2{font-size:12.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#5E59C7;margin:26px 0 9px;padding-left:12px;border-left:3px solid #E290EC;}"+
+      "p{font-size:13.5px;margin:0 0 11px;color:#33333F;}"+
+      "ul{margin:0 0 14px;padding-left:2px;list-style:none;} li{font-size:13.5px;margin-bottom:8px;padding-left:20px;position:relative;color:#33333F;}"+
+      "li::before{content:'';position:absolute;left:3px;top:7px;width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#F98272,#E290EC);}"+
+      ".exp-cle{margin:18px 0;padding:16px 20px;background:linear-gradient(135deg,rgba(94,89,199,0.07),rgba(226,144,236,0.07));border-radius:12px;border-left:3px solid #5E59C7;font-style:italic;font-weight:600;font-size:14px;color:#33333F;}"+
+      ".exp-score{font-size:38px;font-weight:800;margin:4px 0 14px;color:#5E59C7;}"+
+      ".exp-dim{display:flex;justify-content:space-between;font-size:13px;border-bottom:1px solid #EEE;padding:7px 0;}"+
+      ".exp-foot{margin:34px 42px 0;padding-top:16px;border-top:1px solid #ECECEC;font-size:11px;color:#A0A0AA;line-height:1.5;}"+
+      "@media print{ .exp-wrap{padding-top:22px;} }";
     w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+titre+'</title><style>'+styles+'</style></head><body>'+
-      '<div class="exp-logo">Sinéa Profile</div>'+corps+
-      '<div class="exp-foot">Document généré par Sinéa Profile · sineaformation.fr · Cet éclairage nourrit la réflexion et le dialogue, la décision finale reste humaine.</div>'+
-      '<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},350);};</scr'+'ipt></body></html>');
+      '<div class="exp-band"></div><div class="exp-wrap"><div class="exp-logo">Sinéa<span>Profile</span></div>'+corps+
+      '<div class="exp-foot">Document établi par Sinéa Profile · sineaformation.fr · Cet éclairage nourrit la réflexion et le dialogue, la décision finale reste humaine.</div>'+
+      '</div><scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},350);};</scr'+'ipt></body></html>');
     w.document.close();
   }
   function expListe(arr){ return Array.isArray(arr)&&arr.length ? '<ul>'+arr.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>' : ''; }
