@@ -146,6 +146,38 @@ const Result = (() => {
     directif:'Directif', coaching:'Coaching', affiliatif:'Affiliatif',
     challenger:'Challenger', relationnel:'Relationnel', battant:'Battant', solitaire:'Indépendant', resolveur:'Résolveur'
   };
+  // Essence courte de chaque style, pour l'encart de découverte en tête de bloc métier
+  const STYLE_ESSENCE = {
+    visionnaire:'Vous donnez une direction claire et vous embarquez par le sens.',
+    coaching:'Vous faites grandir chacun et vous misez sur le potentiel.',
+    affiliatif:'Vous créez le lien et vous soudez le collectif.',
+    democratique:'Vous impliquez, vous écoutez, et vous décidez ensemble.',
+    chef_de_file:'Vous montrez l\'exemple et vous tirez l\'équipe vers le haut.',
+    directif:'Vous posez le cadre et vous décidez avec netteté.',
+    challenger:'Vous bousculez les certitudes et vous faites réfléchir le client.',
+    relationnel:'Vous bâtissez la confiance et vous cultivez la relation.',
+    battant:'Vous avancez avec énergie et vous visez la conclusion.',
+    solitaire:'Vous suivez votre instinct et vous menez la vente à votre main.',
+    resolveur:'Vous démêlez les problèmes du client et vous sécurisez l\'accord.'
+  };
+  // Guide situationnel : le bon style au bon moment (cœur des modèles Goleman et Challenger)
+  const STYLE_SITUATIONS = {
+    manager: [
+      { s:'Donner un cap, lancer un changement', st:'visionnaire' },
+      { s:'Faire monter quelqu\'un en compétence', st:'coaching' },
+      { s:'Souder l\'équipe, apaiser les tensions', st:'affiliatif' },
+      { s:'Construire l\'adhésion sur une décision', st:'democratique' },
+      { s:'Obtenir vite des résultats d\'une équipe autonome', st:'chef_de_file' },
+      { s:'Gérer une crise, trancher dans l\'urgence', st:'directif' }
+    ],
+    commercial: [
+      { s:'Ouvrir les yeux du client, créer le besoin', st:'challenger' },
+      { s:'Installer une relation de confiance durable', st:'relationnel' },
+      { s:'Pousser vers la décision, closer', st:'battant' },
+      { s:'Mener une vente complexe à votre main', st:'solitaire' },
+      { s:'Démêler un problème client épineux', st:'resolveur' }
+    ]
+  };
   const SPE_DIM_LABELS = {
     delegation:{ titre:'Votre délégation', profils:{ controle:'Contrôle', cadre:'Cadre clair', autonomie:'Autonomie', lacher_prise:'Lâcher-prise' } },
     feedback:{ titre:'Votre feedback', profils:{ direct:'Direct', factuel:'Factuel', enveloppe:'Enveloppé', questionnant:'Questionnant' } },
@@ -214,9 +246,30 @@ const Result = (() => {
 
   // ---- Le pari sur soi : la personne se positionne d'instinct avant la révélation ----
   let parisSpe = {};
+  let pariStyle = '';
+  let _coulSpe = '#5E59C7';
   function chargerParis(diagType){
     try { parisSpe = JSON.parse(localStorage.getItem('sinea_paris_' + diagType) || '{}') || {}; }
     catch(e){ parisSpe = {}; }
+    try { pariStyle = localStorage.getItem('sinea_pari_style_' + diagType) || ''; }
+    catch(e){ pariStyle = ''; }
+  }
+  function parierStyle(st){
+    pariStyle = st;
+    try { localStorage.setItem('sinea_pari_style_' + ((RES && RES.diagType) || 'spe'), st); } catch(e){}
+    const z = document.getElementById('spe-hero-zone');
+    if (z && RES) {
+      z.innerHTML = heroRevealLoading(RES);
+      setTimeout(function(){
+        const z2 = document.getElementById('spe-hero-zone');
+        if (z2 && RES) {
+          z2.innerHTML = heroStyle(RES, _coulSpe);
+          const h = z2.querySelector('.spe-hero');
+          if (h) h.classList.add('spe-hero-in');
+        }
+      }, 1200);
+    }
+    sauvegarderInteractions();
   }
   function parierDim(axe, valeur){
     parisSpe[axe] = valeur;
@@ -421,6 +474,96 @@ const Result = (() => {
     return `<svg viewBox="-20 0 320 260" width="100%" style="max-width:340px">${p}</svg>`;
   }
 
+  // Encart de découverte : le style métier dominant mis en avant, avec son essence et le radar
+  // Ouverture narrative du chapitre métier : pont entre le socle et le métier, voix de Néa
+  function metierOuverture(res, color){
+    const type = res.diagType;
+    const titre = type==='manager' ? 'Votre management' : 'Votre approche commerciale';
+    const recit = type==='manager'
+      ? "Vous venez de découvrir qui vous êtes. Voyons maintenant ce que cela donne quand vous prenez la tête d'une équipe, votre façon de décider, de faire grandir, de trancher. Tout part de votre socle et prend ici une forme bien à vous."
+      : "Vous venez de découvrir qui vous êtes. Voyons maintenant ce que cela donne face à un client, votre façon de convaincre, d'écouter, de conclure. Tout part de votre socle et prend ici une forme bien à vous.";
+    return `<div class="spe-cover" style="--fam-color:${color}">
+      <div class="spe-cover-kicker">Votre métier</div>
+      <h2 class="spe-cover-titre">${titre}</h2>
+      <div class="spe-cover-nea">
+        <span class="spe-cover-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span>
+        <p class="spe-cover-nea-txt">${recit}</p>
+      </div>
+    </div>`;
+  }
+
+  // Temps de lecture avant la révélation du style, pour mettre en scène la découverte
+  function heroRevealLoading(res){
+    return `<div class="spe-hero spe-hero-loading" style="--fam-color:${_coulSpe}">
+      <span class="spe-hero-load-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span>
+      <div class="spe-hero-load-txt">Néa lit votre style<span class="spe-hero-dots"><i></i><i></i><i></i></span></div>
+    </div>`;
+  }
+
+  function heroStyle(res, color){
+    const type = res.diagType;
+    const dom = res.speStyle;
+    const styles = STYLES_PAR_TYPE[type];
+    if (!dom || !styles) return '';
+    _coulSpe = color;
+    const kicker = type==='manager' ? 'Votre style de management dominant' : 'Votre style de vente dominant';
+    // Temps 1 : tant que la personne n'a pas parié, on lui demande son intuition avant de révéler
+    if (!pariStyle) {
+      const q = type==='manager' ? 'Selon vous, quel manager êtes-vous ?' : 'Selon vous, quel vendeur êtes-vous ?';
+      const chips = styles.map(s=>`<button type="button" class="spe-bet-chip" onclick="Result.parierStyle('${s}')">${STYLE_LABELS[s]||s}</button>`).join('');
+      return `<div class="spe-hero spe-hero-bet" style="--fam-color:${color}">
+        <div class="spe-bet-kicker">Avant de découvrir votre style</div>
+        <div class="spe-bet-q">${q}</div>
+        <div class="spe-bet-chips">${chips}</div>
+        <div class="spe-bet-hint">Fiez-vous à votre instinct, puis découvrez votre style réel.</div>
+      </div>`;
+    }
+    // Temps 2 : révélation du style dominant, avec le résultat du pari
+    const scores = res.speStyleScores || {};
+    const tri = styles.slice().sort((a,b)=>(scores[b]||0)-(scores[a]||0));
+    const sec = tri.find(s=>s!==dom);
+    const secLine = sec ? `<div class="spe-hero-sec">Nuancé par votre style <strong>${STYLE_LABELS[sec]||sec}</strong></div>` : '';
+    let payoff;
+    if (pariStyle === dom) {
+      payoff = `<div class="spe-payoff spe-payoff-ok"><span class="spe-payoff-ic">✓</span>Bien vu, votre intuition rejoint votre style dominant.</div>`;
+    } else {
+      payoff = `<div class="spe-payoff"><span class="spe-payoff-ic">✦</span>Votre intuition penchait vers <strong>${STYLE_LABELS[pariStyle]||pariStyle}</strong>, et votre style dominant ressort <strong>${STYLE_LABELS[dom]||dom}</strong>.</div>`;
+    }
+    return `<div class="spe-hero" style="--fam-color:${color}">
+      <div class="spe-hero-txt">
+        <div class="spe-hero-kicker">${kicker}</div>
+        <div class="spe-hero-nom">${STYLE_LABELS[dom]||dom}</div>
+        <div class="spe-hero-essence">${STYLE_ESSENCE[dom]||''}</div>
+        ${secLine}
+        ${payoff}
+      </div>
+      <div class="spe-hero-radar"><div class="spe-hero-radar-lbl">Votre profil de styles</div>${radarStyleSpe(res, color)}</div>
+    </div>`;
+  }
+
+  // Navigation ancrée vers les trois chapitres du bloc métier
+  function navMetier(type){
+    const labels = ['Qui vous êtes','Vous en situation','Votre progression'];
+    return `<div class="spe-nav">${labels.map((l,i)=>`<button type="button" class="spe-nav-chip" onclick="document.getElementById('spe-ch${i+1}').scrollIntoView({behavior:'smooth',block:'start'})">${l}</button>`).join('')}</div>`;
+  }
+
+  // Guide situationnel : où le style dominant fait la différence, et les registres à activer
+  function guideSituationnel(res){
+    const type = res.diagType;
+    const dom = res.speStyle;
+    const list = STYLE_SITUATIONS[type];
+    if (!list || !dom) return '';
+    const rows = list.map(it=>{
+      const moi = it.st===dom;
+      return `<div class="spe-sit-row${moi?' spe-sit-moi':''}"><span class="spe-sit-s">${it.s}</span><span class="spe-sit-st">${STYLE_LABELS[it.st]||it.st}${moi?' · votre force':''}</span></div>`;
+    }).join('');
+    return `<div class="spe-sit">
+      <div class="spe-sit-titre">Le bon style au bon moment</div>
+      <div class="spe-sit-intro">Votre style dominant fait la différence dans certaines situations. Les autres registres se travaillent et s'activent selon le moment.</div>
+      ${rows}
+    </div>`;
+  }
+
   // Petite pépite décalée : un fait surprenant et vrai, glissé pour faire sourire et apprendre.
   function pepite(texte, id){
     if (!texte) return '';
@@ -506,65 +649,79 @@ const Result = (() => {
     if (dt === 'manager') {
       speBlocHtml = `
       <div class="r-bloc" id="b-spe">
-        <div class="r-bloc-head"><span class="r-bloc-tag">Votre métier</span><h2>Votre management</h2></div>
-        ${neaSection('Votre socle est posé. Découvrons comment il façonne votre manière de manager.')}
-        <p class="r-bloc-intro">Votre personnalité éclaire votre manière de manager. Voici comment vos traits se traduisent dans votre posture de leader.</p>
-        <div class="r-section-tag">Votre style en un coup d'œil</div>
-        ${carteStyle(res)}
-        <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
+        ${metierOuverture(res, color)}
+        <div id="spe-hero-zone">${heroStyle(res, color)}</div>
+        ${navMetier('manager')}
         <div id="dimc-zone">${carteDimensionsSpe(res)}</div>
-        <div class="r-section-tag">Comment votre personnalité nourrit votre management</div>
-        <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Votre ADN de manager</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre rapport à la délégation</div>
-        <div class="r-ia" id="ia-dim_delegation"><div class="r-ia-tag">Votre délégation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre style de feedback</div>
-        <div class="r-ia" id="ia-dim_feedback"><div class="r-ia-tag">Votre feedback</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Exigence et bienveillance</div>
-        <div class="r-ia" id="ia-dim_exigence"><div class="r-ia-tag">Votre curseur d'exigence</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos moments clés de manager</div>
-        <div class="r-ia" id="ia-mgmt_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos formulations en situation</div>
-        <div class="r-ia" id="ia-mgmt_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos leviers de motivation d'équipe</div>
-        <div class="r-ia" id="ia-mgmt_motivation_equipe"><div class="r-ia-tag">Motiver votre équipe</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos contextes de réussite</div>
-        <div class="r-ia" id="ia-mgmt_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Le manager que vous êtes</div>
-        <div class="r-ia" id="ia-mgmt_synthese_leadership"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
-        <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        ${guideSituationnel(res)}
+        <div class="spe-chap" id="spe-ch1">
+          <div class="spe-chap-head"><span class="spe-chap-num">1</span><h3>Qui vous êtes comme manager</h3></div>
+          <div class="r-section-tag">Comment votre personnalité nourrit votre management</div>
+          <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Votre ADN de manager</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Votre rapport à la délégation</div>
+          <div class="r-ia" id="ia-dim_delegation"><div class="r-ia-tag">Votre délégation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Votre style de feedback</div>
+          <div class="r-ia" id="ia-dim_feedback"><div class="r-ia-tag">Votre feedback</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Exigence et bienveillance</div>
+          <div class="r-ia" id="ia-dim_exigence"><div class="r-ia-tag">Votre curseur d'exigence</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        </div>
+        <div class="spe-chap" id="spe-ch2">
+          <div class="spe-chap-head"><span class="spe-chap-num">2</span><h3>Vous en situation</h3></div>
+          <div class="r-section-tag">Vos moments clés de manager</div>
+          <div class="r-ia" id="ia-mgmt_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Vos formulations en situation</div>
+          <div class="r-ia" id="ia-mgmt_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Vos leviers de motivation d'équipe</div>
+          <div class="r-ia" id="ia-mgmt_motivation_equipe"><div class="r-ia-tag">Motiver votre équipe</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Vos contextes de réussite</div>
+          <div class="r-ia" id="ia-mgmt_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        </div>
+        <div class="spe-chap" id="spe-ch3">
+          <div class="spe-chap-head"><span class="spe-chap-num">3</span><h3>Votre synthèse et votre progression</h3></div>
+          <div class="r-section-tag">Le manager que vous êtes</div>
+          <div class="r-ia" id="ia-mgmt_synthese_leadership"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
+          <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        </div>
         <button type="button" class="spe-fiche-btn" id="fiche-btn" onclick="Result.telechargerFiche('fiche-btn')">Ma fiche réflexe (1 page PDF)</button>
       </div>`;
     } else if (dt === 'commercial') {
       speBlocHtml = `
       <div class="r-bloc" id="b-spe">
-        <div class="r-bloc-head"><span class="r-bloc-tag">Votre métier</span><h2>Votre approche commerciale</h2></div>
-        ${neaSection('Votre socle est posé. Découvrons comment il s\'exprime dans votre façon de convaincre.')}
-        <p class="r-bloc-intro">Votre personnalité éclaire votre manière de vendre. Voici comment vos traits se traduisent dans votre posture commerciale.</p>
-        <div class="r-section-tag">Votre style en un coup d'œil</div>
-        ${carteStyle(res)}
-        <div class="r-card" style="text-align:center">${radarStyleSpe(res, color)}</div>
+        ${metierOuverture(res, color)}
+        <div id="spe-hero-zone">${heroStyle(res, color)}</div>
+        ${navMetier('commercial')}
         <div id="dimc-zone">${carteDimensionsSpe(res)}</div>
-        <div class="r-section-tag">Comment votre personnalité nourrit votre vente</div>
-        <div class="r-ia" id="ia-com_croisement"><div class="r-ia-tag">Votre ADN de commercial</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre rapport au closing</div>
-        <div class="r-ia" id="ia-dim_closing"><div class="r-ia-tag">Votre closing</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre posture face à l'objection</div>
-        <div class="r-ia" id="ia-dim_objection"><div class="r-ia-tag">Face aux objections</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre tempérament commercial</div>
-        <div class="r-ia" id="ia-dim_chasseur"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos moments clés de vente</div>
-        <div class="r-ia" id="ia-com_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos formulations en situation</div>
-        <div class="r-ia" id="ia-com_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre style de relation client</div>
-        <div class="r-ia" id="ia-com_relation_client"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos contextes de réussite commerciale</div>
-        <div class="r-ia" id="ia-com_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Le commercial que vous êtes</div>
-        <div class="r-ia" id="ia-com_synthese_vendeur"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
-        <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        ${guideSituationnel(res)}
+        <div class="spe-chap" id="spe-ch1">
+          <div class="spe-chap-head"><span class="spe-chap-num">1</span><h3>Qui vous êtes comme commercial</h3></div>
+          <div class="r-section-tag">Comment votre personnalité nourrit votre vente</div>
+          <div class="r-ia" id="ia-com_croisement"><div class="r-ia-tag">Votre ADN de commercial</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Votre rapport au closing</div>
+          <div class="r-ia" id="ia-dim_closing"><div class="r-ia-tag">Votre closing</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Votre posture face à l'objection</div>
+          <div class="r-ia" id="ia-dim_objection"><div class="r-ia-tag">Face aux objections</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Votre tempérament commercial</div>
+          <div class="r-ia" id="ia-dim_chasseur"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        </div>
+        <div class="spe-chap" id="spe-ch2">
+          <div class="spe-chap-head"><span class="spe-chap-num">2</span><h3>Vous en situation</h3></div>
+          <div class="r-section-tag">Vos moments clés de vente</div>
+          <div class="r-ia" id="ia-com_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Vos formulations en situation</div>
+          <div class="r-ia" id="ia-com_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Votre style de relation client</div>
+          <div class="r-ia" id="ia-com_relation_client"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Vos contextes de réussite commerciale</div>
+          <div class="r-ia" id="ia-com_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        </div>
+        <div class="spe-chap" id="spe-ch3">
+          <div class="spe-chap-head"><span class="spe-chap-num">3</span><h3>Votre synthèse et votre progression</h3></div>
+          <div class="r-section-tag">Le commercial que vous êtes</div>
+          <div class="r-ia" id="ia-com_synthese_vendeur"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+          <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
+          <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        </div>
         <button type="button" class="spe-fiche-btn" id="fiche-btn" onclick="Result.telechargerFiche('fiche-btn')">Ma fiche réflexe (1 page PDF)</button>
       </div>`;
     }
@@ -595,6 +752,7 @@ const Result = (() => {
     document.getElementById('r-verb').textContent=verbe(dom.nom);
     chargerSignature(res);
     document.getElementById('r-hero').style.setProperty('--fam-color',color);
+    var _spb=document.getElementById('b-spe'); if(_spb)_spb.style.setProperty('--fam-color',color);
     const portrait=document.getElementById('r-portrait-img'); portrait.src=img(dom.nom); portrait.alt=dom.nom;
 
     const blendSegs=Object.entries(res.blend).map(([nom,pct])=>{
@@ -2476,7 +2634,7 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
+  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

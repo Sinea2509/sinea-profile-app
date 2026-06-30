@@ -1650,3 +1650,74 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-carte-mini-emb{position:absolute;right:-2px;bottom:-2px;width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,0.18);z-index:2;}
 .r-carte-mini-emb svg{width:22px;height:22px;}
 .r-carte-mini-perso{position:relative;display:inline-block;}
+
+/* ===== v36 : refonte du bloc métier (découverte + chapitres + guide situationnel) ===== */
+#b-spe{--fam-color:#5E59C7;}
+/* Héros de découverte du style */
+.spe-hero{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin:6px 0 18px;padding:24px 26px;border-radius:20px;background:var(--c-beige);border-left:5px solid var(--fam-color);}
+.spe-hero-txt{flex:1;min-width:240px;}
+.spe-hero-kicker{font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--c-grey);margin-bottom:6px;}
+.spe-hero-nom{font-size:34px;font-weight:800;letter-spacing:-0.02em;color:var(--fam-color);line-height:1.05;margin-bottom:8px;}
+.spe-hero-essence{font-size:15.5px;line-height:1.5;color:var(--c-dark-grey);font-weight:500;}
+.spe-hero-sec{font-size:13.5px;color:var(--c-grey);margin-top:8px;}
+.spe-hero-sec strong{color:var(--c-dark-grey);font-weight:700;}
+.spe-hero-radar{flex:0 0 auto;width:300px;max-width:100%;text-align:center;margin:0 auto;}
+@media(min-width:760px){ .spe-hero-nom{font-size:40px;} }
+/* Navigation ancrée */
+.spe-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px;}
+.spe-nav-chip{border:1px solid var(--c-medium-grey);background:var(--c-white);color:var(--c-dark-grey);font-family:var(--font);font-size:13px;font-weight:600;padding:8px 14px;border-radius:20px;cursor:pointer;transition:background 0.15s,border-color 0.15s;}
+.spe-nav-chip:hover{background:var(--c-beige);border-color:var(--fam-color);}
+/* Guide situationnel */
+.spe-sit{margin:18px 0;padding:20px 22px;border-radius:18px;background:var(--c-white);border:1px solid #ECEAE3;box-shadow:0 2px 10px rgba(0,0,0,0.03);}
+.spe-sit-titre{font-size:17px;font-weight:800;color:var(--c-dark-grey);margin-bottom:4px;}
+.spe-sit-intro{font-size:13.5px;color:var(--c-grey);line-height:1.5;margin-bottom:14px;}
+.spe-sit-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;margin-bottom:7px;background:var(--c-beige);}
+.spe-sit-row.spe-sit-moi{background:var(--c-white);border-left:3px solid var(--fam-color);box-shadow:0 1px 7px rgba(0,0,0,0.06);}
+.spe-sit-s{font-size:14px;color:var(--c-dark-grey);font-weight:500;}
+.spe-sit-st{font-size:12px;font-weight:700;color:var(--c-grey);white-space:nowrap;}
+.spe-sit-moi .spe-sit-st{color:var(--fam-color);}
+/* Chapitres */
+.spe-chap{margin:28px 0 0;scroll-margin-top:14px;}
+.spe-chap-head{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding-bottom:10px;border-bottom:2px solid #EFEDE6;}
+.spe-chap-num{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:var(--fam-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;}
+.spe-chap-head h3{font-size:19px;font-weight:800;letter-spacing:-0.01em;color:var(--c-dark-grey);margin:0;}
+
+/* ===== v36 : pari sur le style (intuition avant la découverte) + payoff ===== */
+.spe-hero-bet{flex-direction:column;align-items:flex-start;text-align:left;}
+.spe-bet-kicker{font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--c-grey);}
+.spe-bet-q{font-size:22px;font-weight:800;color:var(--c-dark-grey);margin:6px 0 14px;line-height:1.2;}
+.spe-bet-chips{display:flex;flex-wrap:wrap;gap:9px;}
+.spe-bet-chip{border:1.5px solid var(--c-medium-grey);background:var(--c-white);color:var(--c-dark-grey);font-family:var(--font);font-size:14px;font-weight:600;padding:10px 16px;border-radius:22px;cursor:pointer;transition:background 0.15s,border-color 0.15s,transform 0.12s,color 0.15s;}
+.spe-bet-chip:hover{border-color:var(--fam-color);background:var(--fam-color);color:#fff;transform:translateY(-1px);}
+.spe-bet-hint{font-size:12.5px;color:var(--c-grey);margin-top:12px;font-style:italic;}
+.spe-payoff{display:flex;align-items:center;gap:9px;margin-top:14px;padding:11px 15px;border-radius:12px;background:var(--c-beige);font-size:14px;color:var(--c-dark-grey);line-height:1.45;}
+.spe-payoff strong{font-weight:700;color:var(--fam-color);}
+.spe-payoff-ic{flex:0 0 auto;font-size:17px;font-weight:800;color:var(--fam-color);}
+
+/* ===== v38 : storytelling d'ouverture métier + découverte mise en scène ===== */
+/* Cover de chapitre métier */
+.spe-cover{position:relative;margin:30px 0 22px;padding:32px 30px 28px;border-radius:22px;background:linear-gradient(135deg,#2D2D2D,#1b1b1e);overflow:hidden;}
+.spe-cover::before{content:'';position:absolute;top:0;left:0;width:6px;height:100%;background:var(--fam-color);}
+.spe-cover-kicker{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--fam-color);margin-bottom:8px;}
+.spe-cover-titre{font-size:30px;font-weight:800;letter-spacing:-0.02em;color:#fff;margin:0 0 18px;line-height:1.1;}
+.spe-cover-nea{display:flex;align-items:flex-start;gap:14px;}
+.spe-cover-nea-img{flex:0 0 auto;width:46px;height:46px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.08);}
+.spe-cover-nea-img img{width:100%;height:100%;object-fit:cover;}
+.spe-cover-nea-txt{font-size:15px;line-height:1.6;color:rgba(255,255,255,0.88);margin:0;}
+@media(min-width:760px){ .spe-cover-titre{font-size:34px;} }
+/* Découverte : temps de lecture */
+.spe-hero-loading{justify-content:center;gap:14px;min-height:124px;}
+.spe-hero-load-img{flex:0 0 auto;width:52px;height:52px;border-radius:50%;overflow:hidden;animation:spe-pulse 1.1s ease-in-out infinite;}
+.spe-hero-load-img img{width:100%;height:100%;object-fit:cover;}
+.spe-hero-load-txt{font-size:17px;font-weight:700;color:var(--c-dark-grey);display:flex;align-items:center;}
+.spe-hero-dots{display:inline-flex;gap:4px;margin-left:8px;}
+.spe-hero-dots i{width:6px;height:6px;border-radius:50%;background:var(--fam-color);animation:spe-bounce 1.2s infinite;}
+.spe-hero-dots i:nth-child(2){animation-delay:0.2s;}
+.spe-hero-dots i:nth-child(3){animation-delay:0.4s;}
+@keyframes spe-pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.08);opacity:0.85;}}
+@keyframes spe-bounce{0%,60%,100%{transform:translateY(0);opacity:0.5;}30%{transform:translateY(-5px);opacity:1;}}
+/* Découverte : révélation animée */
+.spe-hero-in{animation:spe-reveal 0.6s cubic-bezier(0.16,1,0.3,1);}
+@keyframes spe-reveal{0%{opacity:0;transform:translateY(14px) scale(0.98);}100%{opacity:1;transform:none;}}
+/* Radar encadré */
+.spe-hero-radar-lbl{font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--c-grey);margin-bottom:4px;text-align:center;}

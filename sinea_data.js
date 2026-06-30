@@ -1325,7 +1325,7 @@ const SINEA_DATA = {
    "id": "SINEA_REPART_01",
    "format": "repartition",
    "but": "Mesure directe du dosage entre les 4 familles. Vérification croisée du Big Five.",
-   "situation": "Pour finir, répartissez 10 points selon votre façon naturelle d'avoir de l'impact au travail :",
+   "situation": "Répartissez 10 points selon votre façon naturelle d'avoir de l'impact au travail :",
    "points_total": 10,
    "axes": [
     {
