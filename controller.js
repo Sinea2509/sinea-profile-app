@@ -636,9 +636,532 @@ const App = (() => {
       body: JSON.stringify({ action: 'load_analyse', email: identite.email }),
     })
       .then(r => r.json())
-      .then(data => renderEspace(data || {}))
+      .then(data => { renderEspace(data || {}); chargerSuiteEspace(data || {}); })
       .catch(() => renderEspace({}));
   }
+
+  // La suite de l'espace : un seul chargement des interactions, qui nourrit
+  // le retour commenté de Néa et la re-mesure express.
+  function chargerSuiteEspace(data) {
+    if (!identite.email) return;
+    fetch(PROGRESSION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load_interactions', email: identite.email }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        const carte = (d && d.interactions) || {};
+        poserRetourNea(carte);
+        poserRemesure(data, carte);
+        poserMiroir(data, carte);
+        poserSeedupEspace(carte);
+      })
+      .catch(() => {});
+  }
+
+  // Le retour commenté : Néa lit les interactions enregistrées, tous parcours
+  // confondus (socle, manager, commercial), et accueille la personne avec un
+  // mot sur sa progression réelle.
+  function poserRetourNea(carte) {
+    const slot = document.getElementById('espace-nea');
+    if (!slot) return;
+    let nbActions = 0, nbForces = 0;
+    Object.values(carte).forEach(function (it) {
+      if (!it || typeof it !== 'object') return;
+      nbActions += (it.pistes_choisies || []).length;
+      nbForces += (it.forces_libelles || []).length;
+    });
+    const morceaux = [];
+    // Les défis de terrain SeedUp d'abord : le mouvement le plus concret
+    const sd = carte.seedup && Array.isArray(carte.seedup.liste) ? carte.seedup.liste : [];
+    if (sd.length) {
+      const reussites = sd.map(function (x) { return x.r; }).filter(function (v) { return typeof v === 'number'; });
+      const moyR = reussites.length ? Math.round(reussites.reduce(function (a, b) { return a + b; }, 0) / reussites.length * 10) / 10 : null;
+      morceaux.push('vous avez ancré ' + sd.length + ' défi' + (sd.length > 1 ? 's' : '') + ' sur le terrain' + (moyR !== null ? ' avec une réussite de ' + moyR + ' sur 10' : ''));
+    }
+    if (nbActions) morceaux.push('vous avez ' + nbActions + ' action' + (nbActions > 1 ? 's' : '') + ' en cours dans votre plan');
+    if (nbForces) morceaux.push(nbForces + ' force' + (nbForces > 1 ? 's validées' : ' validée'));
+    let phrase;
+    if (morceaux.length) {
+      phrase = 'Me revoici. Depuis votre portrait, ' + morceaux.join(' et ') + '. ' +
+        (nbActions ? 'Continuez sur cette lancée, chaque action ancrée compte.' : 'Choisissez une première action dans votre plan, elle lance le mouvement.');
+    } else {
+      phrase = 'Me revoici. Votre portrait vous attend, et votre plan d\'action est le meilleur endroit pour transformer la lecture en mouvement.';
+    }
+    slot.innerHTML = '<div class="esp-nea">' +
+      '<span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
+      '<div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>' + phrase + '</p></div>' +
+      '</div>';
+  }
+
+  // ---- Le jardin d'ancrage : les défis de terrain dans l'espace ----
+  // SeedUp sème des graines : chaque défi ancré devient une plante, et le
+  // parcours devient un jardin. Le personnage de l'archétype y jardine.
+  // Le bloc n'apparaît que si des données SeedUp existent pour la personne.
+  // Le rythme du jardin : tous les cinq défis, les pousses se consolident
+  // en un arbre, l'étape franchie devient un repère permanent du visuel.
+  const NOMS_ETAPES_JARDIN = ['Premières pousses', 'Le premier arbre', 'Le bosquet', 'Le jardin s\'enracine', 'Le jardin s\'épanouit', 'Jardin luxuriant'];
+  function etapeJardin(nb) {
+    const arbres = Math.floor(nb / 5);
+    const label = arbres >= NOMS_ETAPES_JARDIN.length ? 'La forêt d\'ancrage' : NOMS_ETAPES_JARDIN[arbres];
+    const manque = 5 - (nb % 5 === 0 ? 0 : nb % 5);
+    const numero = arbres + 1;
+    return { arbres: arbres, label: label, manque: (nb % 5 === 0 ? 5 : manque), numero: numero };
+  }
+  function slugDeNom(nom) {
+    const P = (window.SINEA_DATA && SINEA_DATA.personnages) || {};
+    for (const k in P) { if (P[k] && P[k].nom === nom) return k; }
+    return '';
+  }
+
+  // Jardin génératif déterministe. Les arbres sont les étapes franchies,
+  // un tous les cinq défis, avec leur écriteau numéroté. Les plantes sont
+  // les défis en cours vers le prochain arbre. Les fleurs portent les
+  // couleurs des quatre familles.
+  function jardinSvg(nb, slugPerso, nouvelArbre) {
+    const arbres = Math.min(Math.floor(nb / 5), 6);
+    const plantes = nb % 5;
+    const fleurs = ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
+    const sol = 104;
+    const x0 = slugPerso ? 92 : 26;
+    const xMax = 324;
+    const total = arbres + Math.max(plantes, nb === 0 ? 1 : 0) || 1;
+    const pas = total === 1 ? 0 : (xMax - x0) / (arbres + Math.max(plantes, 1) - (plantes ? 0 : 1) || 1);
+    let elems = '';
+    let idx = 0;
+    const posX = function (i, n) { return Math.round(n <= 1 ? (x0 + xMax) / 2 : x0 + (xMax - x0) * (i / (n - 1))); };
+    const nTotal = arbres + (plantes || 0);
+
+    // Les arbres des étapes franchies
+    for (let a = 0; a < arbres; a++) {
+      const x = posX(idx, Math.max(nTotal, 2)); idx++;
+      const dernier = (a === arbres - 1);
+      const numEtape = (Math.floor(nb / 5) > 6 && dernier) ? Math.floor(nb / 5) * 5 : (a + 1) * 5;
+      const tronc = '<path d="M' + (x - 3) + ' ' + sol + ' C ' + (x - 3) + ' ' + (sol - 20) + ', ' + (x - 1.5) + ' ' + (sol - 30) + ', ' + x + ' ' + (sol - 36) + ' C ' + (x + 1.5) + ' ' + (sol - 30) + ', ' + (x + 3) + ' ' + (sol - 20) + ', ' + (x + 3) + ' ' + sol + ' Z" fill="#8A6244"/>';
+      const feuillage = '<circle cx="' + (x - 9) + '" cy="' + (sol - 40) + '" r="12" fill="#4C8F5D"/>'
+        + '<circle cx="' + (x + 9) + '" cy="' + (sol - 42) + '" r="13" fill="#5B9E6B"/>'
+        + '<circle cx="' + x + '" cy="' + (sol - 52) + '" r="11" fill="#6FB07E"/>';
+      const montrerEcriteau = (arbres <= 4) || dernier;
+      const ecriteau = montrerEcriteau
+        ? '<rect x="' + (x + 6) + '" y="' + (sol - 14) + '" width="3" height="14" rx="1.5" fill="#B08D5F"/>'
+          + '<rect x="' + (x - 2) + '" y="' + (sol - 22) + '" width="19" height="11" rx="3" fill="#E8D9BC" stroke="#C9A876" stroke-width="1"/>'
+          + '<text x="' + (x + 7.5) + '" y="' + (sol - 13.6) + '" text-anchor="middle" font-size="7.5" font-weight="700" fill="#5C4630">' + numEtape + '</text>'
+        : '';
+      elems += '<g class="jr-pousse' + ((nouvelArbre && dernier) ? ' jr-arbre-fete' : '') + '" style="animation-delay:' + (0.12 * (idx - 1)).toFixed(2) + 's"><g class="jr-plante">' + tronc + feuillage + ecriteau + '</g></g>';
+    }
+
+    // Les pousses en cours vers le prochain arbre
+    for (let i = 0; i < plantes; i++) {
+      const x = posX(idx, Math.max(nTotal, 2)); idx++;
+      const h = 24 + ((i * 7) % 18);
+      const type = i % 3;
+      const tige = '<path d="M' + x + ' ' + sol + ' C ' + (x - 2) + ' ' + (sol - h * 0.5) + ', ' + (x + 2) + ' ' + (sol - h * 0.7) + ', ' + x + ' ' + (sol - h) + '" stroke="#3E7C4F" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+      let corps = '';
+      if (type === 0) {
+        corps = tige
+          + '<ellipse cx="' + (x - 7) + '" cy="' + (sol - h * 0.55) + '" rx="7.5" ry="3.6" fill="#5B9E6B" transform="rotate(-28 ' + (x - 7) + ' ' + (sol - h * 0.55) + ')"/>'
+          + '<ellipse cx="' + (x + 7) + '" cy="' + (sol - h * 0.72) + '" rx="7.5" ry="3.6" fill="#4C8F5D" transform="rotate(26 ' + (x + 7) + ' ' + (sol - h * 0.72) + ')"/>';
+      } else if (type === 1) {
+        const c = fleurs[(arbres + i) % 4];
+        const cy = sol - h;
+        let petales = '';
+        for (let p = 0; p < 5; p++) {
+          const a2 = (Math.PI * 2 * p) / 5 - Math.PI / 2;
+          petales += '<circle cx="' + (x + Math.cos(a2) * 5.6).toFixed(1) + '" cy="' + (cy + Math.sin(a2) * 5.6).toFixed(1) + '" r="4" fill="' + c + '"/>';
+        }
+        corps = tige + petales + '<circle cx="' + x + '" cy="' + cy + '" r="3.4" fill="#F5E7C6"/>';
+      } else {
+        corps = '<circle cx="' + (x - 5) + '" cy="' + (sol - 8) + '" r="8" fill="#4C8F5D"/><circle cx="' + (x + 5) + '" cy="' + (sol - 9) + '" r="9" fill="#5B9E6B"/><circle cx="' + x + '" cy="' + (sol - 14) + '" r="7" fill="#6FB07E"/>';
+      }
+      elems += '<g class="jr-pousse" style="animation-delay:' + (0.12 * (idx - 1)).toFixed(2) + 's"><g class="jr-plante">' + corps + '</g></g>';
+    }
+
+    const perso = slugPerso
+      ? '<image class="jr-perso" href="' + srcPerso(slugPerso) + '" x="12" y="24" width="64" height="84" preserveAspectRatio="xMidYMax meet"/>'
+      : '';
+    return '<svg class="jr-svg" viewBox="0 0 340 120" role="img" aria-label="Votre jardin d\'ancrage : ' + Math.floor(nb / 5) + ' étape' + (Math.floor(nb / 5) > 1 ? 's' : '') + ' franchie' + (Math.floor(nb / 5) > 1 ? 's' : '') + ', ' + nb + ' défis ancrés">'
+      + '<path d="M0 106 C 70 96, 150 112, 220 103 S 320 108, 340 102 L340 120 L0 120 Z" fill="#E7E9DC"/>'
+      + '<path d="M0 106 C 70 96, 150 112, 220 103 S 320 108, 340 102" stroke="#D6DAC6" stroke-width="1.4" fill="none"/>'
+      + perso + elems + '</svg>';
+  }
+
+  function poserSeedupEspace(carte) {
+    const slot = document.getElementById('espace-seedup');
+    if (!slot) return;
+    slot.innerHTML = '';
+    const sd = carte.seedup || {};
+    const liste = Array.isArray(sd.liste) ? sd.liste.slice() : [];
+    if (!liste.length) return;
+    liste.sort(function (a, b) { return String(b.d || '').localeCompare(String(a.d || '')); });
+    const reussites = liste.map(function (x) { return x.r; }).filter(function (v) { return typeof v === 'number'; });
+    const moyR = reussites.length ? Math.round(reussites.reduce(function (a, b) { return a + b; }, 0) / reussites.length * 10) / 10 : null;
+    const dateMaj = sd.maj ? new Date(sd.maj).toLocaleDateString('fr-FR') : '';
+    const etape = etapeJardin(liste.length);
+
+    // Un arbre vient-il de pousser (étape des cinq défis franchie) ?
+    // Grande animation, une seule fois : l'arbre surgit, le ruban, les pétales.
+    let fete = false;
+    try {
+      const cleP = 'sinea_jardin_etape';
+      const precedent = parseInt(localStorage.getItem(cleP) || '0', 10);
+      if (etape.arbres > precedent) fete = true;
+      localStorage.setItem(cleP, String(etape.arbres));
+    } catch (e) {}
+
+    // Étage 3 du pont : quels défis servent quelles actions du plan ?
+    // Appariement déterministe par mots significatifs partagés, sans IA.
+    const actionsPlan = [];
+    Object.values(carte).forEach(function (it) {
+      if (it && Array.isArray(it.pistes_libelles)) it.pistes_libelles.forEach(function (l) {
+        if (l && actionsPlan.indexOf(l) < 0) actionsPlan.push(l);
+      });
+    });
+    const VIDES = ['dans','avec','pour','votre','vous','cette','plus','sans','tous','toute','être','etre','faire','chaque','entre','avant','après','apres'];
+    function motsSignif(t) {
+      return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z ]/g, ' ').split(/\s+/)
+        .filter(function (m) { return m.length >= 4 && VIDES.indexOf(m) < 0; });
+    }
+    function actionServie(titreDefi) {
+      if (!actionsPlan.length) return '';
+      const md = motsSignif(titreDefi);
+      let meilleure = '', score = 0;
+      actionsPlan.forEach(function (a) {
+        const ma = motsSignif(a);
+        let n = 0;
+        md.forEach(function (m) { if (ma.indexOf(m) >= 0) n++; });
+        if (n > score) { score = n; meilleure = a; }
+      });
+      return score >= 2 ? meilleure : '';
+    }
+
+    function carteDefi(x) {
+      const dateTxt = x.d ? new Date(x.d + 'T12:00:00').toLocaleDateString('fr-FR') : '';
+      let h = '<div class="esp-sd-item">';
+      h += '<div class="esp-sd-top"><span class="esp-sd-titre">' + echapValeur(x.t || 'Défi') + '</span><span class="esp-sd-date">' + dateTxt + '</span></div>';
+      const chips = [];
+      if (typeof x.r === 'number') chips.push('Réussite ' + x.r + '/10');
+      if (typeof x.n === 'number') chips.push('Défi noté ' + x.n + '/5');
+      if (chips.length) h += '<div class="esp-sd-chips">' + chips.map(function (c) { return '<span class="esp-sd-chip">' + c + '</span>'; }).join('') + '</div>';
+      const deb = String(x.deb || '').trim();
+      if (deb) {
+        if (deb.indexOf('http') === 0) h += '<a class="esp-sd-video" href="' + echapValeur(deb) + '" target="_blank" rel="noopener">Voir ma vidéo de débrief</a>';
+        else h += '<p class="esp-sd-deb">« ' + echapValeur(deb) + ' »</p>';
+      }
+      const coach = String(x.coach || '').trim();
+      if (coach) h += '<div class="esp-sd-coach"><span class="esp-sd-coach-lbl">Votre coach</span>' + echapValeur(coach) + '</div>';
+      const sert = actionServie(x.t || '');
+      if (sert) h += '<div class="esp-sd-lien">Sert votre action : « ' + echapValeur(sert.length > 90 ? sert.slice(0, 90) + '…' : sert) + ' »</div>';
+      h += '</div>';
+      return h;
+    }
+
+    const slugP = slugDeNom(monArchetype);
+    const fleursFete = ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
+    const confetti = fete
+      ? '<div class="jr-confetti">' + [0, 1, 2, 3, 4, 5].map(function (i) {
+          return '<i style="left:' + (12 + i * 14) + '%;animation-delay:' + (i * 0.12).toFixed(2) + 's;background:' + fleursFete[i % 4] + '"></i>';
+        }).join('') + '</div>'
+      : '';
+    const ordinal = etape.numero === 1 ? 'premier' : etape.numero + 'e';
+    const suivantTxt = 'encore ' + etape.manque + ' défi' + (etape.manque > 1 ? 's' : '') + ' avant votre ' + ordinal + ' arbre';
+
+    slot.innerHTML = '<div class="esp-rem esp-sd">'
+      + '<div class="esp-rem-kicker">SeedUp · Votre jardin d\'ancrage</div>'
+      + '<div class="esp-rem-titre">' + etape.label + '</div>'
+      + '<div class="jr-wrap">' + (fete ? '<div class="jr-etape">Étape franchie · ' + (etape.arbres * 5) + ' défis ancrés</div>' : '') + confetti + jardinSvg(liste.length, slugP, fete) + '</div>'
+      + '<div class="esp-sd-stats">' + liste.length + ' défi' + (liste.length > 1 ? 's' : '') + ' planté' + (liste.length > 1 ? 's' : '')
+      + (moyR !== null ? ' · réussite moyenne ' + moyR + '/10' : '')
+      + ' · ' + suivantTxt
+      + (dateMaj ? ' · mis à jour le ' + dateMaj : '') + '</div>'
+      + '<div class="esp-sd-soustitre">Vos défis, un à un</div>'
+      + liste.slice(0, 3).map(carteDefi).join('')
+      + (liste.length > 3 ? '<div id="esp-sd-reste" style="display:none">' + liste.slice(3).map(carteDefi).join('') + '</div><button type="button" class="esp-rem-btn esp-sd-btn" id="esp-sd-plus">Voir mes ' + liste.length + ' défis</button>' : '')
+      + '<p class="esp-sd-canal">Retrouvez l\'expérience complète dans votre application SeedUp.</p>'
+      + '</div>';
+    const plus = document.getElementById('esp-sd-plus');
+    if (plus) plus.onclick = function () {
+      const reste = document.getElementById('esp-sd-reste');
+      if (reste) reste.style.display = 'block';
+      plus.style.display = 'none';
+    };
+  }
+
+  // ---- Re-mesure express de l'adaptation (pilier Ancrer) ----
+  // La nature est stable, l'adaptation évolue : dix questions, deux minutes,
+  // et la personne voit comment son coût d'adaptation a bougé dans le temps.
+  const REMESURE_JOURS = 90;
+  let _remRep = {};
+  let _remContexte = null;
+
+  function poserRemesure(data, carte) {
+    const slot = document.getElementById('espace-remesure');
+    if (!slot) return;
+    slot.innerHTML = '';
+    const socle = (data && data.analyses && data.analyses.socle) || null;
+    const na = socle && socle.profil && socle.profil.naturelAdapte;
+    if (!na || !na.naturel || !na.adapte) return;
+    const force = /[?&]remesure=test/.test(location.search);
+    const dateSocle = (socle.date || (socle.profil && socle.profil.date)) ? new Date(socle.date || socle.profil.date).getTime() : null;
+    const liste = ((carte.remesure || {}).liste) || [];
+    const derniere = liste.length ? liste[liste.length - 1] : null;
+    const refTemps = derniere ? new Date(derniere.date).getTime() : dateSocle;
+    const attenteOk = refTemps ? (Date.now() - refTemps) >= REMESURE_JOURS * 24 * 3600 * 1000 : true;
+    _remContexte = { na: na, liste: liste };
+    if (derniere) rendreEvolutionRemesure(slot, na, derniere, force || attenteOk);
+    else if (force || attenteOk) rendreInvitationRemesure(slot);
+  }
+
+  function rendreInvitationRemesure(slot) {
+    slot.innerHTML = `<div class="esp-rem">
+      <div class="esp-rem-kicker">Re-mesure express</div>
+      <div class="esp-rem-titre">Votre adaptation a-t-elle évolué ?</div>
+      <p class="esp-rem-txt">Votre nature est stable, votre adaptation au travail évolue. Dix questions, deux minutes, et vous voyez le chemin parcouru depuis votre bilan.</p>
+      <button type="button" class="esp-rem-btn" id="esp-rem-go">Commencer la re-mesure</button>
+    </div>`;
+    const go = document.getElementById('esp-rem-go');
+    if (go) go.onclick = function () { ouvrirFormRemesure(slot); };
+  }
+
+  function ouvrirFormRemesure(slot) {
+    _remRep = {};
+    const qs = (SINEA_DATA.adapte && SINEA_DATA.adapte.questions) || [];
+    const ancres = SINEA_DATA.mini_ancres || { 1: 'Pas du tout moi', 2: 'Plutôt pas moi', 3: 'Plutôt moi', 4: 'Tout à fait moi' };
+    const lignes = qs.map(q => `<div class="esp-rem-q">
+        <p class="esp-rem-q-txt">${q.texte}</p>
+        <div class="esp-rem-opts">${[1, 2, 3, 4].map(v => `<button type="button" class="esp-rem-opt" data-q="${q.id}" data-v="${v}">${ancres[v]}</button>`).join('')}</div>
+      </div>`).join('');
+    slot.innerHTML = `<div class="esp-rem">
+      <div class="esp-rem-kicker">Re-mesure express</div>
+      <div class="esp-rem-titre">Votre comportement réel au travail, aujourd'hui</div>
+      <p class="esp-rem-txt">Répondez avec spontanéité, en pensant à vos dernières semaines.</p>
+      ${lignes}
+      <button type="button" class="esp-rem-btn" id="esp-rem-valider" disabled>Voir mon évolution</button>
+    </div>`;
+    slot.querySelectorAll('.esp-rem-opt').forEach(function (b) {
+      b.onclick = function () {
+        const q = this.getAttribute('data-q');
+        _remRep[q] = parseInt(this.getAttribute('data-v'), 10);
+        slot.querySelectorAll('.esp-rem-opt[data-q="' + q + '"]').forEach(function (x) { x.classList.remove('on'); });
+        this.classList.add('on');
+        const btn = document.getElementById('esp-rem-valider');
+        if (btn && Object.keys(_remRep).length >= qs.length) btn.disabled = false;
+      };
+    });
+    const val = document.getElementById('esp-rem-valider');
+    if (val) val.onclick = function () { validerRemesure(slot); };
+  }
+
+  function validerRemesure(slot) {
+    const na = _remContexte && _remContexte.na;
+    if (!na) return;
+    const mesure = Engine.remesurerAdapte(_remRep, na.naturel);
+    const entree = {
+      date: new Date().toISOString(),
+      adapte: mesure.adapte, ecarts: mesure.ecarts,
+      cout: mesure.cout, moyenneEcart: mesure.moyenneEcart,
+    };
+    const liste = (_remContexte.liste || []).concat([entree]);
+    _remContexte.liste = liste;
+    fetch(PROGRESSION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save_interactions', email: identite.email, type_analyse: 'remesure', interactions: { liste: liste } }),
+    }).catch(() => {});
+    rendreEvolutionRemesure(slot, na, entree, false);
+  }
+
+  function rendreEvolutionRemesure(slot, na, mesure, proposerNouvelle) {
+    const avant = (typeof na.moyenneEcart === 'number') ? na.moyenneEcart : null;
+    const apres = mesure.moyenneEcart;
+    const delta = (avant !== null) ? Math.round((apres - avant) * 10) / 10 : null;
+    let phrase;
+    if (delta === null) phrase = `Votre re-mesure est enregistrée. Elle servira de point de comparaison pour la suite.`;
+    else if (delta <= -3) phrase = `Votre coût d'adaptation a baissé de ${Math.abs(delta)} points. Vous travaillez plus proche de votre nature, le signe d'un ancrage qui prend.`;
+    else if (delta >= 3) phrase = `Votre coût d'adaptation a augmenté de ${delta} points. Votre contexte vous demande davantage en ce moment : identifiez ce qui pèse, et préservez des espaces où vous fonctionnez au naturel.`;
+    else phrase = `Votre coût d'adaptation est stable. Vous tenez votre équilibre entre nature et posture professionnelle.`;
+    const dateTxt = mesure.date ? new Date(mesure.date).toLocaleDateString('fr-FR') : '';
+    slot.innerHTML = `<div class="esp-rem">
+      <div class="esp-rem-kicker">Votre évolution</div>
+      <div class="esp-rem-titre">Coût d'adaptation : ${avant !== null ? avant + ' <span class="esp-rem-fleche">›</span> ' : ''}${apres}</div>
+      <div class="esp-rem-cout">Niveau ${mesure.cout}${dateTxt ? ' · re-mesuré le ' + dateTxt : ''}</div>
+      <div class="esp-nea" style="margin-top:12px"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span><div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>${phrase}</p></div></div>
+      ${proposerNouvelle ? '<button type="button" class="esp-rem-btn" id="esp-rem-encore">Re-mesurer à nouveau</button>' : ''}
+    </div>`;
+    const enc = document.getElementById('esp-rem-encore');
+    if (enc) enc.onclick = function () { ouvrirFormRemesure(slot); };
+  }
+
+  // ---- Miroir 360 léger : le regard des collègues, comparé au profil ----
+  // Deux collègues au moins répondent à cinq questions par un lien anonyme.
+  // L'écart entre leur perception et le profil adapté devient une analyse.
+  const MIROIR_QUESTIONS = [
+    { d: 'E', label: 'Aller vers les autres', texte: 'Cette personne va spontanément vers les autres et prend sa place dans un groupe.' },
+    { d: 'A', label: 'Attention aux autres', texte: 'Cette personne se montre attentive aux besoins des autres et cherche des solutions qui conviennent à chacun.' },
+    { d: 'C', label: 'Organisation et fiabilité', texte: 'Cette personne est organisée et fiable dans ce qu\'elle entreprend.' },
+    { d: 'S', label: 'Calme sous pression', texte: 'Cette personne garde son calme et sa stabilité quand la pression monte.' },
+    { d: 'O', label: 'Curiosité et idées', texte: 'Cette personne propose volontiers des idées ou des approches nouvelles.' },
+  ];
+  const MIROIR_ANCRES = { 1: 'Pas du tout', 2: 'Plutôt pas', 3: 'Plutôt oui', 4: 'Tout à fait' };
+  const MIROIR_CONV = { 1: 0.0, 2: 33.333, 3: 66.667, 4: 100.0 };
+  let _mirRep = {};
+
+  // Perception agrégée par dimension, avec le même adoucissement doux que le profil adapté
+  function agregerMiroir(reponses) {
+    const percu = {};
+    MIROIR_QUESTIONS.forEach(function (q) {
+      const vals = reponses.map(function (rep) { return MIROIR_CONV[(rep.r || {})[q.d]]; }).filter(function (v) { return v !== undefined; });
+      if (vals.length) {
+        let m = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+        m = 50 + (m - 50) * 0.94;
+        percu[q.d] = Math.round(m * 10) / 10;
+      }
+    });
+    return percu;
+  }
+
+  function poserMiroir(data, carte) {
+    const slot = document.getElementById('espace-miroir');
+    if (!slot || !identite.email) return;
+    slot.innerHTML = '';
+    const socle = (data && data.analyses && data.analyses.socle) || null;
+    const na = socle && socle.profil && socle.profil.naturelAdapte;
+    if (!na || !na.adapte) return;
+    const mir = carte.miroir || {};
+    const jeton = mir.jeton || '';
+    const reponses = mir.reponses || [];
+    if (!jeton) {
+      slot.innerHTML = `<div class="esp-rem esp-mir">
+        <div class="esp-rem-kicker">Miroir 360</div>
+        <div class="esp-rem-titre">Le regard de vos collègues</div>
+        <p class="esp-rem-txt">Invitez deux collègues à répondre à cinq questions, une minute, réponses anonymes. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
+        <button type="button" class="esp-rem-btn" id="esp-mir-init">Créer mon lien d'invitation</button>
+      </div>`;
+      const b = document.getElementById('esp-mir-init');
+      if (b) b.onclick = function () {
+        b.disabled = true;
+        fetch(PROGRESSION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'miroir_init', email: identite.email }),
+        })
+          .then(r => r.json())
+          .then(d => {
+            if (d && d.ok && d.jeton) { carte.miroir = { jeton: d.jeton, reponses: [] }; poserMiroir(data, carte); }
+            else b.disabled = false;
+          })
+          .catch(function () { b.disabled = false; });
+      };
+      return;
+    }
+    const lien = location.origin + location.pathname + '?miroir=' + jeton;
+    const blocLien = `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
+    if (reponses.length < 2) {
+      const attente = reponses.length === 1
+        ? '1 réponse reçue. L\'analyse s\'ouvre à la deuxième, pour préserver l\'anonymat.'
+        : 'Aucune réponse pour l\'instant. Envoyez ce lien à deux collègues, leurs réponses restent anonymes.';
+      slot.innerHTML = `<div class="esp-rem esp-mir">
+        <div class="esp-rem-kicker">Miroir 360</div>
+        <div class="esp-rem-titre">Le regard de vos collègues</div>
+        <p class="esp-rem-txt">${attente}</p>
+        ${blocLien}
+      </div>`;
+    } else {
+      const percu = agregerMiroir(reponses);
+      const vous = { E: na.adapte.E, A: na.adapte.A, C: na.adapte.C, S: (typeof na.adapte.N === 'number' ? Math.round((100 - na.adapte.N) * 10) / 10 : undefined), O: na.adapte.O };
+      let maxDim = null, maxGap = 0;
+      const lignes = MIROIR_QUESTIONS.map(function (q) {
+        const p = percu[q.d], v = vous[q.d];
+        if (p === undefined || v === undefined) return '';
+        const g = Math.round((p - v) * 10) / 10;
+        if (Math.abs(g) > Math.abs(maxGap)) { maxGap = g; maxDim = q; }
+        return `<div class="esp-mir-row" data-d="${q.d}"><span class="esp-mir-lab">${q.label}</span><span class="esp-mir-vals">Eux ${Math.round(p)} · Vous ${Math.round(v)}</span></div>`;
+      }).join('');
+      let phrase;
+      if (Math.abs(maxGap) < 12) {
+        phrase = 'Le regard de vos collègues rejoint votre propre lecture. Ce que vous pensez montrer, ils le voient : une belle cohérence entre intérieur et extérieur.';
+      } else if (maxGap > 0) {
+        phrase = `Vos collègues perçoivent davantage de ${maxDim.label.toLowerCase()} que ce que vous vous accordez. Vous montrez plus que vous ne le pensez : appuyez-vous dessus.`;
+      } else {
+        phrase = `Vos collègues perçoivent moins de ${maxDim.label.toLowerCase()} que ce que vous pensez montrer. Cet écart dit quelque chose de précieux, angle mort ou réserve : explorez-le lors d'un prochain échange.`;
+      }
+      slot.innerHTML = `<div class="esp-rem esp-mir">
+        <div class="esp-rem-kicker">Miroir 360 · ${reponses.length} regards</div>
+        <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
+        ${lignes}
+        <div class="esp-nea" style="margin-top:12px"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span><div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>${phrase}</p></div></div>
+        ${reponses.length < 5 ? '<p class="esp-rem-txt" style="margin:12px 0 8px">Ajoutez d\'autres regards pour affiner :</p>' + blocLien : ''}
+      </div>`;
+    }
+    const cop = document.getElementById('esp-mir-copie');
+    if (cop) cop.onclick = function () {
+      const inp = document.getElementById('esp-mir-input');
+      const fini = function () { cop.textContent = 'Copié !'; setTimeout(function () { cop.textContent = 'Copier'; }, 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(lien).then(fini).catch(function () { if (inp) { inp.select(); document.execCommand('copy'); fini(); } });
+      else if (inp) { inp.select(); document.execCommand('copy'); fini(); }
+    };
+  }
+
+  // ---- Le formulaire collègue : ouvert par lien ?miroir=jeton, sans compte ----
+  function rendreFormMiroir(jeton) {
+    _mirRep = {};
+    const ov = document.createElement('div');
+    ov.className = 'mir-page';
+    const lignes = MIROIR_QUESTIONS.map(function (q) {
+      return '<div class="esp-rem-q"><p class="esp-rem-q-txt">' + q.texte + '</p><div class="esp-rem-opts">' +
+        [1, 2, 3, 4].map(function (v) { return '<button type="button" class="esp-rem-opt" data-q="' + q.d + '" data-v="' + v + '">' + MIROIR_ANCRES[v] + '</button>'; }).join('') +
+        '</div></div>';
+    }).join('');
+    ov.innerHTML = '<div class="mir-card">' +
+      '<div class="mir-head"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
+      '<div><div class="esp-rem-kicker">Miroir Sinéa</div><div class="esp-rem-titre">Votre regard sur un collègue</div></div></div>' +
+      '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Cinq questions, une minute. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
+      lignes +
+      '<button type="button" class="esp-rem-btn" id="mir-valider" disabled>Envoyer mon regard</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.querySelectorAll('.esp-rem-opt').forEach(function (b) {
+      b.onclick = function () {
+        const q = this.getAttribute('data-q');
+        _mirRep[q] = parseInt(this.getAttribute('data-v'), 10);
+        ov.querySelectorAll('.esp-rem-opt[data-q="' + q + '"]').forEach(function (x) { x.classList.remove('on'); });
+        this.classList.add('on');
+        const btn = document.getElementById('mir-valider');
+        if (btn && Object.keys(_mirRep).length >= MIROIR_QUESTIONS.length) btn.disabled = false;
+      };
+    });
+    const val = document.getElementById('mir-valider');
+    if (val) val.onclick = function () {
+      val.disabled = true;
+      val.textContent = 'Envoi...';
+      fetch(PROGRESSION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'miroir_repondre', jeton: jeton, reponses: _mirRep }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          const carteMerci = d && d.ok
+            ? '<div class="esp-rem-titre">Merci pour votre regard</div><p class="esp-rem-txt">Votre perception est enregistrée, de façon anonyme. Elle aidera votre collègue à mieux se connaître.</p>'
+            : (d && d.raison === 'complet'
+              ? '<div class="esp-rem-titre">Ce miroir est complet</div><p class="esp-rem-txt">Cette personne a déjà reçu le nombre maximal de regards. Merci pour votre intention.</p>'
+              : '<div class="esp-rem-titre">Lien inconnu</div><p class="esp-rem-txt">Ce lien d\'invitation ne correspond à aucun profil. Demandez un nouveau lien à la personne qui vous a invité.</p>');
+          ov.innerHTML = '<div class="mir-card">' + carteMerci + '</div>';
+        })
+        .catch(function () {
+          val.disabled = false;
+          val.textContent = 'Envoyer mon regard';
+        });
+    };
+  }
+
+  (function initMiroirInvite() {
+    const m = location.search.match(/[?&]miroir=([a-f0-9]{16,32})/);
+    if (!m) return;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { rendreFormMiroir(m[1]); });
+    else rendreFormMiroir(m[1]);
+  })();
 
   // Nombre de questions par module (pour le taux de complétion)
   const NB_QUESTIONS = { socle: 60, commercial: 36, manager: 36 };
@@ -2368,6 +2891,10 @@ const App = (() => {
         result.diagType = diagType;
         result.reponsesOuvertes = openAnswers;
         result.naturelAdapte = Engine.scorerNaturelAdapte(repMini, repAdapte);
+        // Tensions intérieures (configurations de traits) et signaux saillants (réponses extrêmes) :
+        // ils nourrissent la génération pour un portrait plus profond et plus concret.
+        result.tensions = Engine.detecterTensions(result.scoresBigFive, result.naturelAdapte);
+        result.signauxSaillants = Engine.signauxSaillants(repMini);
         if (diagType !== 'classic') {
           result.speDims = Engine.scorerSpeDims(repSpeDims, diagType, result.scoresBigFive);
           result.speStyle = Engine.scorerSpeStyle(repSpeQcm, diagType);
@@ -2389,6 +2916,7 @@ const App = (() => {
           blend: result.blend, naturelAdapte: result.naturelAdapte, contextuel: result.contextuel,
           contextuelPlus: result.contextuelPlus, fiabilite: result.fiabilite,
           speStyle: result.speStyle, speStyleScores: result.speStyleScores, speDims: result.speDims,
+          tensions: result.tensions, signauxSaillants: result.signauxSaillants,
           diagType: result.diagType,
           classement: result.classement,
           modeCampagne: modeCampagne || undefined,

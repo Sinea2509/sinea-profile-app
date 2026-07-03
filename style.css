@@ -1721,3 +1721,136 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 @keyframes spe-reveal{0%{opacity:0;transform:translateY(14px) scale(0.98);}100%{opacity:1;transform:none;}}
 /* Radar encadré */
 .spe-hero-radar-lbl{font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--c-grey);margin-bottom:4px;text-align:center;}
+
+/* ===== v41 : tensions intérieures + retour commenté de l'espace ===== */
+.r-tension{border-left:4px solid #5E59C7;}
+.r-tension + .r-tension{margin-top:14px;}
+.r-tension-axe{font-size:12.5px;font-style:italic;color:#5E59C7;margin:-4px 0 10px;font-weight:600;}
+.esp-nea{display:flex;align-items:flex-start;gap:13px;margin:14px 0 6px;padding:15px 17px;border-radius:16px;background:linear-gradient(120deg,rgba(249,130,114,0.07),rgba(94,89,199,0.08));border:1px solid rgba(94,89,199,0.14);}
+.esp-nea-img{flex:0 0 auto;width:42px;height:42px;border-radius:50%;overflow:hidden;background:#fff;}
+.esp-nea-img img{width:100%;height:100%;object-fit:cover;}
+.esp-nea-label{font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#5E59C7;margin-bottom:3px;}
+.esp-nea-txt p{margin:0;font-size:14px;line-height:1.55;color:var(--c-dark-grey);font-style:italic;}
+
+/* ===== v42 : re-mesure express de l'adaptation ===== */
+.esp-rem{margin:12px 0 6px;padding:20px 20px 18px;border-radius:18px;background:var(--c-white);border:1px solid #ECEAE3;box-shadow:0 2px 10px rgba(0,0,0,0.04);}
+.esp-rem-kicker{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#5E59C7;margin-bottom:4px;}
+.esp-rem-titre{font-size:19px;font-weight:800;letter-spacing:-0.01em;color:var(--c-dark-grey);margin-bottom:6px;}
+.esp-rem-txt{font-size:13.5px;line-height:1.55;color:var(--c-grey);margin:0 0 12px;}
+.esp-rem-btn{border:none;background:#5E59C7;color:#fff;font-family:var(--font);font-size:14px;font-weight:700;padding:11px 20px;border-radius:22px;cursor:pointer;transition:opacity 0.15s,transform 0.12s;}
+.esp-rem-btn:hover{transform:translateY(-1px);}
+.esp-rem-btn:disabled{opacity:0.35;cursor:default;transform:none;}
+.esp-rem-q{padding:12px 0 10px;border-top:1px solid #F0EEE8;}
+.esp-rem-q-txt{font-size:14px;font-weight:600;color:var(--c-dark-grey);margin:0 0 9px;line-height:1.45;}
+.esp-rem-opts{display:flex;flex-wrap:wrap;gap:7px;}
+.esp-rem-opt{border:1.5px solid var(--c-medium-grey);background:var(--c-white);color:var(--c-dark-grey);font-family:var(--font);font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:18px;cursor:pointer;transition:background 0.12s,border-color 0.12s,color 0.12s;}
+.esp-rem-opt:hover{border-color:#5E59C7;}
+.esp-rem-opt.on{background:#5E59C7;border-color:#5E59C7;color:#fff;}
+.esp-rem-cout{font-size:13px;font-weight:600;color:var(--c-grey);}
+.esp-rem-fleche{color:#5E59C7;font-weight:800;}
+.esp-rem .esp-rem-btn{margin-top:12px;}
+
+/* ===== v43 : miroir 360 léger ===== */
+.mir-page{position:fixed;inset:0;z-index:9000;background:var(--c-beige);overflow-y:auto;padding:28px 16px 48px;display:flex;justify-content:center;align-items:flex-start;}
+.mir-card{width:100%;max-width:560px;background:var(--c-white);border-radius:20px;padding:26px 24px 24px;box-shadow:0 8px 32px rgba(0,0,0,0.08);}
+.mir-head{display:flex;align-items:center;gap:13px;margin-bottom:10px;}
+.mir-card .esp-rem-btn{margin-top:14px;width:100%;}
+.esp-mir-lien{display:flex;gap:8px;margin-top:4px;}
+.esp-mir-input{flex:1;min-width:0;border:1px solid var(--c-medium-grey);border-radius:12px;padding:9px 12px;font-family:var(--font);font-size:12.5px;color:var(--c-grey);background:var(--c-beige);}
+.esp-mir-copie{padding:9px 16px;}
+.esp-mir-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;background:var(--c-beige);margin-bottom:6px;}
+.esp-mir-lab{font-size:13.5px;font-weight:600;color:var(--c-dark-grey);}
+.esp-mir-vals{font-size:12.5px;font-weight:700;color:#5E59C7;white-space:nowrap;}
+
+/* ===== v47 : bibliothèque SeedUp dans l'espace apprenant ===== */
+.esp-sd-stats{font-size:12.5px;font-weight:600;color:var(--c-grey);margin-bottom:12px;}
+.esp-sd-item{padding:12px 14px;border-radius:12px;background:var(--c-beige);margin-bottom:9px;}
+.esp-sd-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.esp-sd-titre{font-size:14px;font-weight:800;color:var(--c-dark-grey);}
+.esp-sd-date{font-size:11.5px;color:var(--c-grey);white-space:nowrap;}
+.esp-sd-chips{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0 2px;}
+.esp-sd-chip{font-size:11px;font-weight:700;color:#5E59C7;background:rgba(94,89,199,0.1);border-radius:12px;padding:3px 9px;}
+.esp-sd-deb{font-size:13px;font-style:italic;line-height:1.55;color:var(--c-dark-grey);margin:8px 0 2px;}
+.esp-sd-video{display:inline-block;font-size:12.5px;font-weight:700;color:#5E59C7;margin:8px 0 2px;text-decoration:underline;}
+.esp-sd-coach{margin-top:9px;padding:9px 12px;border-radius:10px;background:#fff;border-left:3px solid #F98272;font-size:12.5px;line-height:1.5;color:var(--c-dark-grey);}
+.esp-sd-coach-lbl{display:block;font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#F98272;margin-bottom:3px;}
+.esp-sd-btn{margin-top:6px;}
+.esp-sd-canal{font-size:11.5px;color:var(--c-grey);margin:12px 0 0;font-style:italic;}
+
+/* ============================================================
+   v49 · Élévation visuelle
+   Direction : la cartographie intérieure. Le motif topographique
+   de la marque en filigrane, le méridien de famille en tête de
+   bloc, la timeline d'ancrage. Une signature par surface, de la
+   retenue partout ailleurs. Mouvements sous préférence utilisateur.
+   ============================================================ */
+
+/* ----- Le socle : relief en filigrane + méridien de famille ----- */
+#screen-result{position:relative;isolation:isolate;}
+#screen-result::before{content:'';position:absolute;inset:0;z-index:-1;background:url('pattern.webp') repeat;background-size:560px;opacity:0.045;pointer-events:none;}
+#screen-result .r-bloc{position:relative;background:var(--c-white);border:1px solid #ECEAE3;border-radius:22px;box-shadow:0 2px 16px rgba(45,45,45,0.045);overflow:hidden;}
+#screen-result .r-bloc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--fam-color,#5E59C7),transparent 62%);}
+#screen-result .r-bloc-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--fam-color,#5E59C7);background:color-mix(in srgb,var(--fam-color,#5E59C7) 9%, white);border:1px solid color-mix(in srgb,var(--fam-color,#5E59C7) 22%, transparent);border-radius:16px;padding:5px 12px;}
+#screen-result .r-bloc-head h2{letter-spacing:-0.022em;font-weight:800;}
+#screen-result .r-section-tag{display:flex;align-items:center;gap:12px;font-size:11.5px;font-weight:800;letter-spacing:0.075em;text-transform:uppercase;color:var(--c-grey);}
+#screen-result .r-section-tag::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#E7E4DC,transparent);}
+#screen-result .r-card,#screen-result .r-ia{border:1px solid #EFEDE6;box-shadow:0 1px 10px rgba(45,45,45,0.035);border-radius:16px;}
+#screen-result .r-ia-tag{display:flex;align-items:center;gap:8px;}
+#screen-result .r-ia-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--fam-color,#5E59C7);flex:0 0 auto;}
+#screen-result .spe-chap-num{background:var(--c-white);color:var(--fam-color,#5E59C7);border:2px solid var(--fam-color,#5E59C7);box-shadow:0 0 0 4px color-mix(in srgb,var(--fam-color,#5E59C7) 12%, transparent);}
+#screen-result{font-variant-numeric:tabular-nums;}
+::selection{background:rgba(94,89,199,0.18);}
+
+/* Révélation douce des blocs (classe posée par le script, invisible sans lui) */
+@media (prefers-reduced-motion: no-preference){
+  #screen-result .rv{opacity:0;transform:translateY(14px);}
+  #screen-result .rv-in{opacity:1;transform:none;transition:opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);}
+}
+
+/* ----- La bibliothèque SeedUp : timeline d'ancrage ----- */
+.esp-sd .esp-sd-item{position:relative;margin-left:16px;padding-left:22px;border-radius:0 12px 12px 12px;}
+.esp-sd .esp-sd-item::before{content:'';position:absolute;left:-1px;top:0;bottom:-9px;width:2px;background:linear-gradient(180deg,#5E59C7,#B9A6E8);}
+.esp-sd .esp-sd-item:last-of-type::before{bottom:12px;}
+.esp-sd .esp-sd-item::after{content:'';position:absolute;left:-6px;top:15px;width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,#F98272,#5E59C7);box-shadow:0 0 0 3px var(--c-white);}
+#esp-sd-reste .esp-sd-item:first-of-type::before{top:-9px;}
+.esp-sd-video{display:inline-flex;align-items:center;gap:7px;background:rgba(94,89,199,0.1);border-radius:16px;padding:6px 13px;text-decoration:none;}
+.esp-sd-video::before{content:'▶';font-size:9px;}
+.esp-sd-coach{box-shadow:0 1px 6px rgba(45,45,45,0.05);}
+
+/* ===== v50 : le jardin d'ancrage ===== */
+.jr-wrap{position:relative;margin:8px 0 10px;background:linear-gradient(180deg,#FDFCF8,#F4F3EA);border:1px solid #ECEAE3;border-radius:16px;padding:8px 6px 0;overflow:hidden;}
+.jr-svg{display:block;width:100%;height:auto;}
+.jr-confetti{position:absolute;inset:0;pointer-events:none;}
+.jr-confetti i{position:absolute;bottom:16px;width:7px;height:7px;border-radius:50%;opacity:0;}
+.esp-sd-soustitre{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--c-grey);margin:14px 0 10px;}
+.esp-sd-soustitre::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#E7E4DC,transparent);}
+@media (prefers-reduced-motion: no-preference){
+  .jr-pousse{transform-box:fill-box;transform-origin:50% 100%;animation:jr-pousse 0.7s cubic-bezier(0.16,1,0.3,1) both;}
+  @keyframes jr-pousse{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+  .jr-plante{transform-box:fill-box;transform-origin:50% 100%;animation:jr-balance 6s ease-in-out infinite alternate;}
+  @keyframes jr-balance{from{transform:rotate(-1.4deg);}to{transform:rotate(1.4deg);}}
+  .jr-perso{animation:jr-flotte 4.5s ease-in-out infinite alternate;}
+  @keyframes jr-flotte{from{transform:translateY(0);}to{transform:translateY(-3px);}}
+  .jr-confetti i{animation:jr-monte 1.7s ease-out both;}
+  @keyframes jr-monte{0%{transform:translateY(0);opacity:0;}12%{opacity:1;}100%{transform:translateY(-92px);opacity:0;}}
+}
+@media (prefers-reduced-motion: reduce){
+  .jr-confetti{display:none;}
+}
+
+/* ===== v51 : l'étape franchie, tous les cinq défis ===== */
+.jr-etape{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:2;background:linear-gradient(120deg,#F98272,#5E59C7);color:#fff;font-size:12px;font-weight:800;letter-spacing:0.03em;padding:7px 16px;border-radius:20px;box-shadow:0 6px 18px rgba(94,89,199,0.3);white-space:nowrap;pointer-events:none;}
+@media (prefers-reduced-motion: no-preference){
+  .jr-etape{animation:jr-ruban 3.6s cubic-bezier(0.16,1,0.3,1) both;}
+  @keyframes jr-ruban{0%{opacity:0;transform:translate(-50%,-14px) scale(0.9);}10%{opacity:1;transform:translate(-50%,0) scale(1.04);}16%{transform:translate(-50%,0) scale(1);}82%{opacity:1;}100%{opacity:0;transform:translate(-50%,-8px);}}
+  .jr-arbre-fete{animation:jr-surgit 1s cubic-bezier(0.34,1.56,0.64,1) both !important;animation-delay:0.25s !important;}
+  @keyframes jr-surgit{0%{transform:scaleY(0);}62%{transform:scaleY(1.09);}80%{transform:scaleY(0.97);}100%{transform:scaleY(1);}}
+  .jr-arbre-fete .jr-plante{animation:jr-eclat 2.2s ease-out 1.3s 1, jr-balance 6s ease-in-out 3.6s infinite alternate;}
+  @keyframes jr-eclat{0%{filter:drop-shadow(0 0 0 rgba(94,89,199,0));}28%{filter:drop-shadow(0 0 9px rgba(94,89,199,0.55));}100%{filter:drop-shadow(0 0 0 rgba(94,89,199,0));}}
+}
+@media (prefers-reduced-motion: reduce){
+  .jr-etape{display:none;}
+}
+
+/* ===== v52 : le défi relié à son action du plan ===== */
+.esp-sd-lien{margin-top:9px;font-size:11.5px;font-weight:700;color:#3E7C4F;background:rgba(91,158,107,0.12);border-radius:12px;padding:6px 11px;display:inline-block;line-height:1.4;}

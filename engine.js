@@ -539,9 +539,7 @@ function scorerSpeStyleScores(repSpeQcm, type) {
 }
 
 // ---- Naturel vs adapté (coût d'adaptation au travail) ----
-function scorerNaturelAdapte(repMini, repAdapte) {
-  // Naturel : scores Big Five issus du mini-IPIP (déjà sur 0-100)
-  const naturel = scorerBigFive(repMini);
+function calculerProfilAdapte(repAdapte) {
   // Adapté : 2 questions par dimension (échelle 1-4 -> 0-100), moyennées.
   // Deux items au lieu d'un évitent les valeurs extrêmes aberrantes (0 ou 100 pile)
   // qui rendaient le profil adapté irréaliste et incohérent.
@@ -562,7 +560,10 @@ function scorerNaturelAdapte(repMini, repAdapte) {
       adapte[lettre] = Math.round(m * 10) / 10;
     }
   }
-  // Écart par dimension et coût global
+  return adapte;
+}
+
+function ecartsEtCout(naturel, adapte) {
   const ecarts = {};
   let sommeEcart = 0, n = 0;
   for (const d of ['E','A','C','N','O']) {
@@ -575,7 +576,24 @@ function scorerNaturelAdapte(repMini, repAdapte) {
   let cout = 'faible';
   if (moyenne >= 33) cout = 'élevé';
   else if (moyenne >= 18) cout = 'modéré';
-  return { naturel, adapte, ecarts, cout, moyenneEcart: Math.round(moyenne * 10) / 10 };
+  return { ecarts, cout, moyenneEcart: Math.round(moyenne * 10) / 10 };
+}
+
+function scorerNaturelAdapte(repMini, repAdapte) {
+  // Naturel : scores Big Five issus du mini-IPIP (déjà sur 0-100)
+  const naturel = scorerBigFive(repMini);
+  const adapte = calculerProfilAdapte(repAdapte);
+  const ec = ecartsEtCout(naturel, adapte);
+  return { naturel, adapte, ecarts: ec.ecarts, cout: ec.cout, moyenneEcart: ec.moyenneEcart };
+}
+
+// Re-mesure de l'adaptation dans le temps : la nature est stable, l'adaptation évolue.
+// On recalcule le profil adapté à partir de nouvelles réponses et on le compare
+// au naturel de référence mesuré à l'origine.
+function remesurerAdapte(repAdapte, naturelRef) {
+  const adapte = calculerProfilAdapte(repAdapte);
+  const ec = ecartsEtCout(naturelRef || {}, adapte);
+  return { adapte, ecarts: ec.ecarts, cout: ec.cout, moyenneEcart: ec.moyenneEcart };
 }
 
 // Export
@@ -602,5 +620,53 @@ function epitheteMetier(speStyle, diagType) {
   return (table && table[speStyle]) ? table[speStyle] : '';
 }
 
-const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, recalculerDepuisBigFive, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte, epitheteMetier };
+
+// ---- Tensions intérieures : configurations de traits qui tirent dans deux directions ----
+// Détection déterministe sur les Big Five (0-100) et l'écart naturel/adapté.
+// Retourne au plus 2 tensions {titre, axe}, consommées par le prompt back "tension".
+function detecterTensions(bf, naturelAdapte) {
+  if (!bf) return [];
+  const t = [];
+  const HAUT = 65, BAS = 40, SENS = 60;
+  if (bf.C >= HAUT && bf.N >= SENS) t.push({ titre: "L'exigence qui ne se repose jamais", axe: "haute exigence et sensibilité émotionnelle" });
+  if (bf.E >= HAUT && bf.N >= SENS) t.push({ titre: "L'élan sous tension", axe: "besoin de contact et intensité émotionnelle" });
+  if (bf.E >= HAUT && bf.A <= BAS) t.push({ titre: "Le leader qui bouscule", axe: "affirmation directe et harmonie du groupe" });
+  if (bf.A >= HAUT && bf.E <= BAS) t.push({ titre: "La bienveillance discrète", axe: "attention aux autres et réserve personnelle" });
+  if (bf.O >= HAUT && bf.C >= HAUT) t.push({ titre: "L'imagination cadrée", axe: "exploration des idées et besoin de structure" });
+  if (bf.O >= HAUT && bf.C <= BAS) t.push({ titre: "L'explorateur sans carte", axe: "idées foisonnantes et organisation du quotidien" });
+  if (bf.C >= HAUT && bf.O <= BAS) t.push({ titre: "La fiabilité prudente face au neuf", axe: "rigueur éprouvée et ouverture au changement" });
+  if (bf.A >= HAUT && bf.N >= SENS) t.push({ titre: "Le cœur exposé", axe: "empathie forte et protection de soi" });
+  try {
+    const ecarts = (naturelAdapte && naturelAdapte.ecarts) || {};
+    let maxEcart = 0;
+    Object.values(ecarts).forEach(function (v) {
+      const n = Math.abs(typeof v === 'number' ? v : Number(v && v.ecart) || 0);
+      if (n > maxEcart) maxEcart = n;
+    });
+    if (maxEcart >= 25) t.push({ titre: "Le rôle qui coûte", axe: "nature profonde et posture professionnelle" });
+  } catch (e) {}
+  return t.slice(0, 2);
+}
+
+// ---- Signaux saillants : les affirmations où la personne a répondu de façon extrême ----
+// Donne à l'IA des comportements réellement déclarés, pour ancrer le portrait dans du vécu.
+// Une seule par dimension pour la diversité du signal, trois au maximum.
+function signauxSaillants(repMini) {
+  if (!repMini) return [];
+  const items = SINEA_DATA.mini_items || [];
+  const ancres = SINEA_DATA.mini_ancres || {};
+  const forts = [], faibles = [];
+  const dims = new Set();
+  for (const it of items) {
+    const r = repMini[it.id];
+    if (r !== 4 && r !== 1) continue;
+    if (dims.has(it.dimension)) continue;
+    const ligne = '"' + it.texte + '" (réponse : ' + (ancres[r] || r) + ')';
+    if (r === 4) forts.push(ligne); else faibles.push(ligne);
+    dims.add(it.dimension);
+  }
+  return forts.concat(faibles).slice(0, 3);
+}
+
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, recalculerDepuisBigFive, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte, epitheteMetier, detecterTensions, signauxSaillants, remesurerAdapte };
 

@@ -47,6 +47,8 @@ const Result = (() => {
   const validations = {};
   const openAnswers = {};
   const selectedActions = new Set();
+  const actionLibelles = {};   // libellés des actions du plan, capturés au clic (pour le lien avec les défis SeedUp)
+  let coutPortrait = null;     // coût mesuré de la génération, attaché par le back, persisté avec les interactions
   let RES = null;
 
   function dataSlug(nom){ return SINEA_DATA.slugs[nom]; }
@@ -230,16 +232,6 @@ const Result = (() => {
     commercial:['challenger','relationnel','battant','solitaire','resolveur']
   };
 
-  function carteStyle(res){
-    const type = res.diagType;
-    const dom = res.speStyle;
-    if (!dom || !STYLES_PAR_TYPE[type]) return '';
-    const pastilles = STYLES_PAR_TYPE[type].map(st =>
-      `<span class="dimc-opt ${st === dom ? 'dimc-sel' : ''}">${STYLE_LABELS[st] || st}</span>`
-    ).join('');
-    const titre = type === 'manager' ? 'Votre style de leadership dominant' : 'Votre style de vente dominant';
-    return `<div class="dimc-card"><div class="dimc-row"><div class="dimc-titre">${titre}</div><div class="dimc-opts">${pastilles}</div></div></div>`;
-  }
 
   // Le plan de progression métier affiché, transmis ensuite aux défis SeedUp
   let planSpeCourant = null;
@@ -753,6 +745,7 @@ const Result = (() => {
     chargerSignature(res);
     document.getElementById('r-hero').style.setProperty('--fam-color',color);
     var _spb=document.getElementById('b-spe'); if(_spb)_spb.style.setProperty('--fam-color',color);
+    initRevelationBlocs();
     const portrait=document.getElementById('r-portrait-img'); portrait.src=img(dom.nom); portrait.alt=dom.nom;
 
     const blendSegs=Object.entries(res.blend).map(([nom,pct])=>{
@@ -854,6 +847,8 @@ const Result = (() => {
         <p class="r-hint">L'écart entre qui vous êtes spontanément et comment vous agissez au travail révèle où vous fournissez un effort.</p>
         ${carteNaturelAdapte(res)}
         <div class="r-ia" id="ia-naturel"><div class="r-ia-tag">Naturel et adaptation, dimension par dimension</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
+        <div class="r-section-tag">Vos tensions intérieures</div>
+        <div id="ia-tensions"><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vous en situation</div>
         <div class="r-ia" id="ia-situation"><div class="r-ia-tag">Votre profil en action</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos forces, à valider</div>
@@ -1279,7 +1274,7 @@ const Result = (() => {
         <div class="coach-intro-nea"><img class="coach-intro-nea-vid" src="Nea_detoure_full.png.webp" alt="Néa, votre coach" /></div>
         <div class="coach-intro-nea-label">Néa · votre coach</div>
         <div class="coach-intro-step" data-step="1">
-          <p class="coach-intro-hi">Bonjour${prenom ? ' ' + prenom : ''}.</p>
+          <p class="coach-intro-hi">Bonjour${prenom ? ' ' + echapHtml(prenom) : ''}.</p>
           <p class="coach-intro-line">Je suis Néa, votre coach.</p>
           <button class="coach-intro-go coach-intro-next">Continuer</button>
         </div>
@@ -1626,7 +1621,24 @@ const Result = (() => {
     }
   }
 
-  function echapHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // Révélation douce des blocs au défilement. Respecte la préférence de
+  // mouvement réduit, et sans script les blocs restent pleinement visibles.
+  function initRevelationBlocs(){
+    try {
+      if (!('IntersectionObserver' in window)) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const cibles = document.querySelectorAll('#screen-result .r-bloc, #screen-result .spe-chap');
+      if (!cibles.length) return;
+      const obs = new IntersectionObserver(function (entrees) {
+        entrees.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('rv-in'); obs.unobserve(e.target); }
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+      cibles.forEach(function (el) { el.classList.add('rv'); obs.observe(el); });
+    } catch (e) {}
+  }
+
+  function echapHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
   // ============================================================
   // QUESTIONS OUVERTES EN RESTITUTION (au pic de motivation) + MIROIR
@@ -1708,6 +1720,9 @@ const Result = (() => {
         moteur_valide: !!validations['moteur_0'],
         reponses_ouvertes: Object.assign({}, openAnswers),
         pistes_choisies: Array.from(selectedActions),
+        pistes_libelles: Array.from(selectedActions).map(i => actionLibelles[i] || '').filter(Boolean),
+        cout_portrait: coutPortrait,
+        avis: Object.assign({}, avis),
         auto_perception: (RES && RES.speDims) ? Object.keys(parisSpe).filter(a => parisSpe[a] && parisSpe[a] !== '_skip' && SPE_DIM_LABELS[a]).map(a => ({
           axe: a,
           titre: SPE_DIM_LABELS[a].titre,
@@ -1743,11 +1758,21 @@ const Result = (() => {
       moteur_valide: !!validations['moteur_0'],
       reponses_ouvertes: Object.assign({}, openAnswers),
       pistes_choisies: Array.from(selectedActions),
+      pistes_libelles: Array.from(selectedActions).map(i => actionLibelles[i] || '').filter(Boolean),
+      cout_portrait: coutPortrait,
+      avis: Object.assign({}, avis),
       diagType: RES ? RES.diagType : 'classic',
     };
     App.envoyerInteractions(inter);
   }
-  function toggleAction(i){ const el=document.getElementById('act-'+i); el.classList.toggle('sel'); if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i); sauvegarderInteractions(); }
+  function toggleAction(i){
+    const el=document.getElementById('act-'+i);
+    el.classList.toggle('sel');
+    const p = el && el.querySelector('p');
+    if (p) actionLibelles[i] = p.textContent.trim().slice(0, 140);
+    if(selectedActions.has(i))selectedActions.delete(i);else selectedActions.add(i);
+    sauvegarderInteractions();
+  }
 
   // Comparaisons amusantes calibrées sur la rareté (1 sur N).
   // Chaque palier propose plusieurs images : on en choisit une de façon stable
@@ -1852,6 +1877,13 @@ const Result = (() => {
       contextuel: res.contextuel || {},
       contextuel_plus: res.contextuelPlus || {},
       fiabilite: res.fiabilite || null,
+      // Écart de score entre les deux premiers archétypes : pilote la lecture
+      // de stabilité côté back (mélange assumé quand le résultat est serré)
+      ecart_dominant: (typeof res.ecartDominant === "number") ? res.ecartDominant : null,
+      // Réponses extrêmes déclarées : ancrent le portrait dans du vécu concret
+      signaux_saillants: res.signauxSaillants || [],
+      // Distribution complète des styles métier : l'IA raisonne en répertoire
+      spe_style_scores: res.speStyleScores || null,
       spe_dims: res.speDims || {}
     };
     const r = await fetch(BACKEND_URL, {
@@ -2237,6 +2269,7 @@ const Result = (() => {
     try{
       // Si on revoit une analyse sauvegardée : on utilise le contenu figé, sans rappeler l'IA
       const c = res.contenuFige ? res.contenuFige : await callWorker(res);
+      if (c && c._usage) coutPortrait = c._usage;
       // Sauvegarder l'analyse générée (figée) pour la revoir depuis l'espace perso
       if (!res.contenuFige) {
         try {
@@ -2276,6 +2309,22 @@ const Result = (() => {
 
       // Angles morts : trois conseils de coach et trois questions à se poser
       rendreAnglesCoaching(c.angles_coaching);
+
+      // Les tensions intérieures : configurations de traits analysées par l'IA.
+      // Sans tension détectée, le bloc s'efface proprement.
+      const zTensions = document.getElementById('ia-tensions');
+      if (zTensions) {
+        const lt = Array.isArray(c.tensions) ? c.tensions.filter(t => t && t.analyse && !t._erreur) : [];
+        if (lt.length) {
+          zTensions.innerHTML = lt.map(t =>
+            `<div class="r-ia r-tension"><div class="r-ia-tag">${echapHtml(t.titre || 'Tension intérieure')}</div><div class="r-tension-axe">Entre ${echapHtml(t.axe || '')}</div>${paras(t.analyse)}</div>`
+          ).join('');
+        } else {
+          const tagT = zTensions.previousElementSibling;
+          if (tagT && tagT.classList.contains('r-section-tag')) tagT.remove();
+          zTensions.remove();
+        }
+      }
 
       // Le mode d'emploi de moi-même (fiche partageable, 2 parties : collègues + manager)
       const meBloc = document.getElementById('mode-emploi-bloc');
@@ -2464,6 +2513,13 @@ const Result = (() => {
         if (cp.autorite) poseSection('ia-dim_autorite','Vous et le cadre', null, fb('autorite'));
         if (cp.reconnaissance) poseSection('ia-dim_reconnaissance','Votre carburant', null, fb('reconnaissance'));
       }
+      // Sans génération IA, le bloc des tensions s'efface proprement
+      const zTensionsFb = document.getElementById('ia-tensions');
+      if (zTensionsFb) {
+        const tagTFb = zTensionsFb.previousElementSibling;
+        if (tagTFb && tagTFb.classList.contains('r-section-tag')) tagTFb.remove();
+        zTensionsFb.remove();
+      }
       posefallbackActions(dc);
     }
   }
@@ -2546,6 +2602,7 @@ const Result = (() => {
   }
 
   function submitMoment3(){
+    sauvegarderInteractionsImmediat();
     showDefis();
   }
 
