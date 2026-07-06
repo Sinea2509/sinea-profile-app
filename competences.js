@@ -67,6 +67,16 @@
     },
   };
 
+  // Les dimensions métier mesurées affinent l'expression des compétences
+  // qu'elles observent directement : le comportemental réel plutôt que le proxy.
+  const DIMS_VERS_COMPETENCES = {
+    developpement_autres: ['delegation', 'feedback'],
+    organisation: ['cadrage'],
+    communication_influence: ['posture'],
+    orientation_resultats: ['closing'],
+    resilience: ['objection'],
+  };
+
   function borne(v) { return Math.max(0, Math.min(100, v)); }
 
   function traitsDepuis(bigFive) {
@@ -87,7 +97,7 @@
   // scorer(bigFive, ecarts) : bigFive = profil NATUREL ; ecarts = adapté moins
   // naturel par dimension (E,A,C,N,O), tel que transmis par le portail.
   // Sans écarts (mesure absente), l'expression vaut le potentiel.
-  function scorer(bigFive, ecarts) {
+  function scorer(bigFive, ecarts, dims) {
     const nat = traitsDepuis(bigFive);
     let adp = nat;
     if (ecarts && typeof ecarts === 'object') {
@@ -101,7 +111,16 @@
     }
     return REFERENTIEL.map((comp) => {
       const potentiel = scoreCompetence(comp, nat);
-      const expression = scoreCompetence(comp, adp);
+      let expression = scoreCompetence(comp, adp);
+      // Fusion avec les dimensions métier observées, quand elles existent
+      const clesDims = DIMS_VERS_COMPETENCES[comp.id];
+      if (clesDims && dims && typeof dims === 'object') {
+        const vals = clesDims.map((k) => Number(dims[k])).filter((v) => !isNaN(v) && v >= 0 && v <= 100);
+        if (vals.length) {
+          const moyDims = vals.reduce((a, b) => a + b, 0) / vals.length;
+          expression = Math.round((expression * 0.6 + moyDims * 0.4) * 10) / 10;
+        }
+      }
       let zone = 'neutre';
       if (potentiel <= 40) zone = 'economie';
       else if (potentiel >= 62 && expression >= 58) zone = 'appui';
@@ -112,9 +131,10 @@
 
   // prioriser(comps, posteId) : les 3 forces d'appui, les 3 opportunités où
   // investir en priorité pour CE poste, et jusqu'à 2 vigilances de staffing.
-  function prioriser(comps, posteId) {
+  function prioriser(comps, posteId, coefsCustom) {
     const poste = POSTES[posteId] || POSTES.manager;
-    const coef = (id) => poste.coefs[id] || 1;
+    const coef = (id) => (coefsCustom && coefsCustom[id]) || poste.coefs[id] || 1;
+    const nomPoste = coefsCustom ? 'Profil cible sur mesure' : poste.nom;
     const parScoreAppui = comps
       .filter((c) => c.potentiel >= 58 && c.expression >= 52)
       .map((c) => ({ c, s: ((c.potentiel + c.expression) / 2) * coef(c.id) }))
@@ -133,7 +153,7 @@
     if (opportunitesBrutes.length < 3) {
       const deja = new Set(opportunitesBrutes.map((x) => x.c.id));
       const leviers = comps
-        .filter((c) => !idsAppuis.has(c.id) && !deja.has(c.id) && coef(c.id) >= 1.1 && c.potentiel >= 45 && c.potentiel < 66)
+        .filter((c) => !idsAppuis.has(c.id) && !deja.has(c.id) && coef(c.id) >= 1.1 && c.potentiel >= 50 && c.potentiel < 66)
         .map((c) => ({ c: c, motif: 'levier_de_poste', s: coef(c.id) * 100 + c.potentiel }))
         .sort((a, b) => b.s - a.s);
       opportunitesBrutes = opportunitesBrutes.concat(leviers.slice(0, 3 - opportunitesBrutes.length));
@@ -143,7 +163,7 @@
       .filter((c) => coef(c.id) >= 1.2 && c.potentiel <= 46 && !idsAppuis.has(c.id))
       .sort((a, b) => a.potentiel - b.potentiel)
       .slice(0, 2);
-    return { poste: poste.nom, appuis, opportunites, vigilances };
+    return { poste: nomPoste, appuis, opportunites, vigilances };
   }
 
   // ================= Le collectif en trois réponses =================
@@ -156,7 +176,7 @@
   function collectif(membres) {
     const valides = (membres || []).filter((m) => m && m.bigFive && m.bigFive.O !== null && m.bigFive.O !== undefined);
     if (valides.length < 2) return null;
-    const parMembre = valides.map((m) => ({ nom: m.nom || '', comps: scorer(m.bigFive, m.ecarts) }));
+    const parMembre = valides.map((m) => ({ nom: m.nom || '', comps: scorer(m.bigFive, m.ecarts, m.dims) }));
     const parComp = REFERENTIEL.map((ref, i) => {
       const lignes = parMembre.map((pm) => ({ nom: pm.nom, potentiel: pm.comps[i].potentiel, expression: pm.comps[i].expression }));
       const triPot = lignes.slice().sort((a, b) => b.potentiel - a.potentiel);
@@ -171,7 +191,7 @@
         : 0;
       return {
         id: ref.id, nom: ref.nom, famille: ref.famille,
-        referents: triPot.filter((l) => l.potentiel >= 62).slice(0, 2),
+        referents: triPot.filter((l) => l.potentiel >= Math.max(62, potMoyen + 6)).slice(0, 2),
         maxPot: maxPot, potMoyen: potMoyen, exprMoyenne: exprMoyenne,
         dormant: dormant, nbPorteurs: porteurs.length,
       };
@@ -196,7 +216,7 @@
         .sort((a, b) => b.score - a.score);
       chantiers = chantiers.concat(repli.slice(0, 3 - chantiers.length));
     }
-    return { effectif: valides.length, referents, orphelines, chantiers: chantiers.slice(0, 3) };
+    return { effectif: valides.length, referents, orphelines, chantiers: chantiers.slice(0, 3), matrice: parComp };
   }
 
   // Quel geste de compétence ce défi de terrain travaille-t-il ?
@@ -213,5 +233,45 @@
     return meilleur ? { id: meilleur.id, nom: meilleur.nom, famille: meilleur.famille } : null;
   }
 
-  window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence };
+  // Expression de chaque compétence depuis un jeu de traits perçus
+  // (E, A, C, S, O sur 0-100) : la vue des pairs via le miroir.
+  function expressionDepuis(traits) {
+    const t = { O: borne(Number(traits.O) || 0), C: borne(Number(traits.C) || 0), E: borne(Number(traits.E) || 0), A: borne(Number(traits.A) || 0), S: borne(Number(traits.S) || 0) };
+    const out = {};
+    REFERENTIEL.forEach((comp) => { out[comp.id] = scoreCompetence(comp, t); });
+    return out;
+  }
+
+  // ===== La notice scientifique du référentiel =====
+  const NOTICE = {
+    preambule: [
+      "Le référentiel Sinéa comprend seize compétences réparties sur les quatre familles du modèle (Relation, Action, Structure, Vision). Chaque compétence est pondérée sur les cinq grands facteurs de personnalité (Big Five), le cadre le plus validé de la psychologie différentielle, dont la structure et la validité prédictive en contexte professionnel sont établies par des décennies de méta-analyses.",
+      "Le POTENTIEL d'une compétence est calculé sur le profil naturel : il traduit la facilité intrinsèque de développement, dans l'esprit des approches par les moteurs (dont TMA). L'EXPRESSION est calculée sur le profil adapté, le comportement déclaré en contexte de travail, affinée par les dimensions métier mesurées (délégation, feedback, cadrage, posture, closing, objection) lorsqu'elles existent, à hauteur de quarante pour cent.",
+      "Limites et calibration : les mesures sont auto-déclarées. Trois mécanismes de calibration les consolident : la fiabilité interne (cohérence des réponses, signaux de hasard), le miroir 360 (le regard agrégé des pairs, comparé à l'expression calculée), et, à mesure que le volume de passations le permet, les normes empiriques qui remplaceront les seuils absolus par des percentiles réels.",
+    ],
+    parComp: {
+      ecoute_active: "L'agréabilité prédit les comportements d'aide et la qualité relationnelle au travail (méta-analyses sur les comportements de citoyenneté organisationnelle) ; la stabilité émotionnelle soutient la disponibilité attentionnelle ; l'ouverture nourrit la curiosité pour le point de vue de l'autre.",
+      cooperation: "L'agréabilité est le prédicteur central de la coopération et du travail en équipe ; l'extraversion facilite l'engagement dans l'interaction ; la stabilité protège la relation dans la durée.",
+      communication_influence: "L'extraversion est le facteur le plus lié à l'émergence du leadership et à l'aisance de prise de parole (Judge et al., 2002) ; l'ouverture apporte la richesse argumentative, l'agréabilité l'accordage à l'auditoire.",
+      developpement_autres: "Le développement d'autrui combine l'orientation vers les personnes (agréabilité), l'appétit de transmission (ouverture) et l'énergie relationnelle (extraversion) ; il est central dans les modèles de leadership transformationnel.",
+      orientation_resultats: "La conscience est le prédicteur le plus robuste de la performance professionnelle toutes familles de métiers confondues (Barrick et Mount, 1991) ; l'extraversion ajoute la dynamique d'atteinte, la stabilité la constance de l'effort.",
+      prise_decision: "La stabilité émotionnelle réduit l'évitement décisionnel et la paralysie sous incertitude ; l'extraversion favorise l'affirmation du choix ; la conscience structure l'instruction du choix.",
+      initiative: "La proactivité est associée à l'extraversion et à l'ouverture (recherche de nouveauté, prise d'initiative) avec un socle de conscience pour transformer l'élan en action suivie.",
+      resilience: "La stabilité émotionnelle est, par construction, le cœur de la résistance au stress et le protecteur documenté de l'épuisement ; la conscience apporte les stratégies de coping actives, l'ouverture la réévaluation cognitive.",
+      organisation: "La planification et l'ordre sont des facettes constitutives de la conscience, dont la validité prédictive sur la performance de gestion est établie ; la stabilité soutient la tenue du cadre dans la durée.",
+      rigueur: "L'exigence de qualité et le souci du détail relèvent des facettes d'application et de délibération de la conscience ; la stabilité limite les erreurs sous pression, l'agréabilité la rigueur au service du collectif.",
+      fiabilite_suivi: "La fiabilité, tenir ce qui est dit dans les délais dits, est l'expression comportementale la plus directe de la conscience ; l'agréabilité y ajoute le souci de l'autre, la stabilité la régularité.",
+      analyse: "La pensée analytique mobilise l'ouverture (intellect, goût des idées) et la conscience (méthode, vérification) ; la stabilité protège le jugement des biais émotionnels.",
+      vision_strategique: "La projection à long terme s'appuie sur l'ouverture (pensée abstraite, imagination structurée), la conscience (cohérence des plans) et l'extraversion (capacité à porter le cap).",
+      creativite: "L'ouverture est le prédicteur majeur et constant de la créativité mesurée ; l'extraversion facilite l'expression des idées, la stabilité leur maturation sans autocensure anxieuse.",
+      adaptabilite: "La flexibilité face au changement combine l'ouverture (accueil de la nouveauté) et la stabilité émotionnelle (tolérance à l'incertitude), l'extraversion soutenant l'engagement dans le nouveau contexte.",
+      apprentissage: "L'orientation d'apprentissage est portée par l'ouverture (curiosité épistémique) et la conscience (persévérance d'étude) ; la stabilité entretient l'effort face à la difficulté.",
+    },
+  };
+
+  // Les couleurs des quatre familles, source unique pour tout le front
+  const COULEURS_FAMILLES = { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#2C97E0', VISION: '#5E59C7' };
+  const COULEURS_FAMILLES_LISTE = ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
+
+  window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence, expressionDepuis, NOTICE, COULEURS_FAMILLES, COULEURS_FAMILLES_LISTE };
 })();

@@ -1635,7 +1635,7 @@ const Result = (() => {
         });
       }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
       cibles.forEach(function (el) { el.classList.add('rv'); obs.observe(el); });
-    } catch (e) {}
+    } catch (e) { console.warn("[Sinéa]", e); }
   }
 
   function echapHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -2270,6 +2270,7 @@ const Result = (() => {
       // Si on revoit une analyse sauvegardée : on utilise le contenu figé, sans rappeler l'IA
       const c = res.contenuFige ? res.contenuFige : await callWorker(res);
       if (c && c._usage) coutPortrait = c._usage;
+      try { poserEssentiel(res, c); } catch (e) { console.warn("[Sinéa]", e); }
       // Sauvegarder l'analyse générée (figée) pour la revoir depuis l'espace perso
       if (!res.contenuFige) {
         try {
@@ -2291,7 +2292,7 @@ const Result = (() => {
             diagType: res.diagType,
           };
           if (window.App && App.sauverAnalyse) App.sauverAnalyse(typeAnalyse, { contenu: c, profil: profilLeger });
-        } catch (e) {}
+        } catch (e) { console.warn("[Sinéa]", e); }
       }
       poseSection('ia-ouverture','Votre portrait', c.ouverture, `<p>${dc.essence||''}</p>`);
       poseSection('ia-alchimie','Lecture croisée', c.alchimie,
@@ -2571,12 +2572,69 @@ const Result = (() => {
           <div class="m3-notes">${notesHtml}</div>
           <div class="m3-notes-labels"><span>${noteQ.min_label}</span><span>${noteQ.max_label}</span></div>
         </div>
+        <div class="m3-field m3-field-note">
+          <label class="m3-q">Ce portrait me donne des actions concrètes</label>
+          <div class="m3-notes">${[1,2,3,4,5].map(i => `<button type="button" class="m3-note" id="m3u-${i}" onclick="Result.setNoteExtra('AVIS_UTILITE','m3u',${i})">${i}</button>`).join('')}</div>
+          <div class="m3-notes-labels"><span>Pas vraiment</span><span>Totalement</span></div>
+        </div>
+        <div class="m3-field m3-field-note">
+          <label class="m3-q">Le portrait est clair et facile à comprendre</label>
+          <div class="m3-notes">${[1,2,3,4,5].map(i => `<button type="button" class="m3-note" id="m3c-${i}" onclick="Result.setNoteExtra('AVIS_CLARTE','m3c',${i})">${i}</button>`).join('')}</div>
+          <div class="m3-notes-labels"><span>Pas vraiment</span><span>Totalement</span></div>
+        </div>
         ${textQs}
         <button class="btn-primary m3-submit" id="m3-submit" disabled onclick="Result.submitMoment3()">Découvrir mes défis SeedUp</button>
       </div>`;
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
     scr.classList.add('active');
     window.scrollTo(0, 0);
+  }
+
+  // ===== L'essentiel : le profil en un coup d'œil, avant l'analyse complète =====
+  // Entièrement déterministe, assemblé depuis le contenu déjà généré : zéro coût.
+  // Répond à la personne surprise par son profil : la clé naturel/adapté d'abord,
+  // puis ses propres réponses comme trace, puis trois repères d'action.
+  const TRAITS_FR_ESS = { E: "l'aisance sociale", A: "la chaleur relationnelle", C: "la rigueur", N: "la sensibilité émotionnelle", O: "la curiosité" };
+  function poserEssentiel(res, c){
+    if (document.getElementById('essentiel-bloc')) return;
+    const premiere = document.querySelector('.r-section');
+    if (!premiere || !res || !res.dominante) return;
+    const sansGras = (t) => String(t || '').replace(/\*\*/g, '');
+    const prem = (t) => { const m = sansGras(t).split(/(?<=\.)\s/); return (m[0] || '').trim(); };
+    const famC = (window.Competences && window.Competences.COULEURS_FAMILLES) || { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#2C97E0', VISION: '#5E59C7' };
+    const blend = res.blend || {};
+    const trio = [res.dominante].concat(res.secondaires || []).slice(0, 3);
+    let h = '<div class="ess" id="essentiel-bloc"><div class="ess-kicker">L\'essentiel · votre profil en un coup d\'œil</div>';
+    h += '<div class="ess-trio">' + trio.map(a => '<span class="ess-arch" style="border-color:' + (famC[a.famille] || '#5E59C7') + '"><b>' + a.nom + '</b>' + (blend[a.nom] ? ' · ' + blend[a.nom] + '%' : '') + '</span>').join('') + '</div>';
+    // La clé de lecture naturel / adapté, quand l'écart est significatif
+    const na = res.naturelAdapte;
+    if (na && typeof na.moyenneEcart === 'number' && na.moyenneEcart >= 15 && na.ecarts){
+      let traitMax = '', vMax = 0;
+      Object.entries(na.ecarts).forEach(([t, v]) => { if (Math.abs(v) > Math.abs(vMax)) { vMax = v; traitMax = t; } });
+      h += '<div class="ess-cle"><span class="ess-cle-tag">La clé de lecture</span> Ce portrait décrit votre <b>nature profonde</b>. Au travail, vous vous adaptez fortement, surtout sur ' + (TRAITS_FR_ESS[traitMax] || traitMax) + ' (' + (vMax > 0 ? '+' : '') + Math.round(vMax) + ' points). Si le portrait vous surprend, c\'est sans doute votre personnage professionnel qui lit votre naturel : les deux sont vrais, l\'un se choisit, l\'autre se recharge.</div>';
+    }
+    // Trois repères d'action, depuis les angles de coaching déjà générés
+    const conseils = (c && c.angles_coaching && Array.isArray(c.angles_coaching.conseils)) ? c.angles_coaching.conseils.slice(0, 3) : [];
+    if (conseils.length){
+      h += '<div class="ess-titre">Trois repères pour agir</div><ul class="ess-liste">' + conseils.map(x => '<li>' + sansGras(x) + '</li>').join('') + '</ul>';
+    }
+    // D'où ça vient : ses propres réponses comme trace
+    const traces = [];
+    if (c && c.rebond_q1) traces.push(prem(c.rebond_q1));
+    if (c && c.rebond_q2) traces.push(prem(c.rebond_q2));
+    if (traces.length){
+      h += '<div class="ess-titre">D\'où ça vient</div><div class="ess-traces">' + traces.map(t => '<p>' + t + '</p>').join('') + '</div>';
+    }
+    // La fiabilité, dite simplement et honnêtement
+    const f = res.fiabilite;
+    if (f && typeof f.score === 'number'){
+      const fort = (f.signaux || []).some(x => x && x.niveau === 'fort');
+      h += '<div class="ess-fiab">Fiabilité de la mesure : <b>' + f.score + '/100, ' + (f.niveau || '') + '</b>.' + (fort ? ' Un signal de cohérence a été détecté et retravaillé par vos précisions : l\'échange avec votre formateur affinera encore la lecture.' : '') + '</div>';
+    }
+    h += '<button type="button" class="ess-cta" onclick="document.getElementById(\'essentiel-bloc\').nextElementSibling.scrollIntoView({behavior:\'smooth\'})">Lire l\'analyse complète</button></div>';
+    const zone = document.createElement('div');
+    zone.innerHTML = h;
+    premiere.parentNode.insertBefore(zone.firstChild, premiere);
   }
 
   function setNote(v){
@@ -2590,6 +2648,14 @@ const Result = (() => {
   }
 
   function setAvis(id, val){ avis[id] = val; }
+
+  function setNoteExtra(cle, prefixe, v){
+    avis[cle] = v;
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById(prefixe + '-' + i);
+      if (el) el.classList.toggle('sel', i <= v);
+    }
+  }
 
   function backFromMoment3(){
     document.getElementById('screen-moment3').classList.remove('active');
@@ -2691,7 +2757,7 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, setNote, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
+  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

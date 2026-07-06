@@ -378,10 +378,28 @@ function scorerFiabilite(repMini, tempsReponses) {
   let niveau, message;
   if (score >= 85) { niveau = 'élevée'; message = 'Le profil est très cohérent : les réponses concordent et se confirment mutuellement.'; }
   else if (score >= 80) { niveau = 'bonne'; message = 'Le profil est cohérent dans l\'ensemble. Résultats fiables.'; }
+  const aSignalFort = signaux.some(s2 => s2 && s2.niveau === 'fort');
+  if (aSignalFort && score >= 80) {
+    niveau = 'correcte';
+    message = 'Le profil est globalement cohérent, avec un signal interne à surveiller' + (traitIncoherent ? ' sur le trait ' + traitIncoherent : '') + '. Résultats utilisables, à confirmer par l\'échange.';
+  }
   else if (score >= 60) { niveau = 'moyenne'; message = 'Le profil présente des tensions internes. Les résultats donnent une tendance, à confirmer par un échange.'; }
   else { niveau = 'faible'; message = 'La cohérence des réponses est faible, signe d\'un remplissage rapide ou peu réfléchi. À interpréter avec beaucoup de prudence.'; }
 
   return { score, niveau, message, signaux, traitTension: traitIncoherent };
+}
+
+// ---- Percentiles réels (s'active quand SINEA_DATA.normes existe) ----
+// Les normes seront calculées depuis l'export des passations réelles
+// (étude psychométrique) et injectées dans sinea_data.js sous la forme
+// { E: [p5, p10, ..., p95], A: [...], ... } : rangs de percentiles.
+function percentileTrait(trait, score) {
+  const normes = (typeof SINEA_DATA !== 'undefined' && SINEA_DATA.normes) || null;
+  if (!normes || !Array.isArray(normes[trait]) || typeof score !== 'number') return null;
+  const seuils = normes[trait]; // valeurs des percentiles 5,10,...,95
+  let rang = 5;
+  for (let i = 0; i < seuils.length; i++) { if (score >= seuils[i]) rang = 5 + (i + 1) * 5; }
+  return Math.min(rang, 99);
 }
 
 // ---- Dimensions spé (management ou commercial) ----
@@ -668,5 +686,5 @@ function signauxSaillants(repMini) {
   return forts.concat(faibles).slice(0, 3);
 }
 
-const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, recalculerDepuisBigFive, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte, epitheteMetier, detecterTensions, signauxSaillants, remesurerAdapte };
+const Engine = { scorer, scorerBigFive, calculerAffinites, calculerPointsSinea, calculerResultat, recalculerDepuisBigFive, scorerContextuel, scorerContextuelPlus, scorerFiabilite, scorerSpeDims, scorerSpeStyle, scorerSpeStyleScores, scorerNaturelAdapte, epitheteMetier, detecterTensions, signauxSaillants, remesurerAdapte, percentileTrait };
 

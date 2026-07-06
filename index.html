@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+
+    window.addEventListener('error', function(e){ console.error('[Sinéa v64]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -123,6 +124,7 @@
           <div id="espace-nea"></div>
           <div id="espace-remesure"></div>
           <div id="espace-miroir"></div>
+          <div id="espace-competences"></div>
           <div id="espace-seedup"></div>
         </div>
         <div class="espace-hero-perso" id="espace-hero-perso"></div>
@@ -259,7 +261,8 @@
 <script src="engine.js"></script>
 <script src="result.js"></script>
 <script src="affinage.js"></script>
+<script src="competences.js"></script>
 <script src="controller.js"></script>
-<script>console.log("%cSinea Profile v57 servie en ligne","color:#5E59C7;font-weight:700;font-size:14px;");</script>
+<script>console.log("%cSinea Profile v64 servie en ligne","color:#5E59C7;font-weight:700;font-size:14px;");</script>
 </body>
 </html>

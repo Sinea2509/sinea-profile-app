@@ -15,6 +15,7 @@ const App = (() => {
   }
   let result = null;
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
+  let dataEspaceCourant = null;
   let monArchetype = ''; // archétype de la personne, pour la situer dans le codex
   // ===== Personnages : variante masculine / féminine (option B) =====
   // S'active des que les visuels <slug>_h.webp et <slug>_f.webp sont en ligne.
@@ -121,7 +122,7 @@ const App = (() => {
   }
 
   function clearProgress() {
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { console.warn("[Sinéa]", e); }
   }
 
   // ---- Lecture du type de diagnostic depuis l'URL (?type=manager) ----
@@ -130,7 +131,7 @@ const App = (() => {
       const p = new URLSearchParams(window.location.search);
       const t = (p.get('type') || '').toLowerCase();
       if (t === 'manager' || t === 'commercial') return t;
-    } catch (e) {}
+    } catch (e) { console.warn("[Sinéa]", e); }
     return 'classic';
   }
 
@@ -655,6 +656,7 @@ const App = (() => {
         poserRetourNea(carte);
         poserRemesure(data, carte);
         poserMiroir(data, carte);
+        try { poserCompetencesEspace(dataEspaceCourant); } catch (e) { console.warn("[Sinéa]", e); }
         poserSeedupEspace(carte);
       })
       .catch(() => {});
@@ -695,6 +697,37 @@ const App = (() => {
       '</div>';
   }
 
+  // ---- Vos compétences : la lecture Sinéa dans l'espace apprenant ----
+  // Déterministe, calculé en local depuis le profil déjà chargé : la personne
+  // voit ses appuis et ses opportunités, et ses défis SeedUp prennent sens.
+  function poserCompetencesEspace(data){
+    const slot = document.getElementById('espace-competences');
+    if (!slot || !window.Competences || !data) return;
+    const profil = data.analyses && data.analyses.socle && data.analyses.socle.profil;
+    if (!profil || !profil.scoresBigFive) return;
+    const ecarts = profil.naturelAdapte && profil.naturelAdapte.ecarts;
+    const poste = (profil.speStyleScores && Object.prototype.hasOwnProperty.call(profil.speStyleScores, 'challenger')) ? 'commercial' : 'manager';
+    const comps = Competences.scorer(profil.scoresBigFive, ecarts, profil.speDims);
+    const pri = Competences.prioriser(comps, poste);
+    if (!pri.appuis.length && !pri.opportunites.length) return;
+    const jauge = (c) => '<div class="esp-cp-jauge" title="Votre nature ' + Math.round(c.potentiel) + ' · Au travail ' + Math.round(c.expression) + '"><div class="esp-cp-pot" style="width:' + Math.round(c.potentiel) + '%"></div><div class="esp-cp-expr" style="left:' + Math.round(c.expression) + '%"></div></div><span class="esp-cp-val">' + Math.round(c.potentiel) + ' · ' + Math.round(c.expression) + '</span>';
+    let h = '<div class="esp-rem esp-cp">'
+      + '<div class="esp-rem-kicker">Vos compétences · la lecture Sinéa</div>'
+      + '<div class="esp-rem-titre">Là où votre nature vous porte</div>'
+      + '<p class="esp-cp-intro">Le potentiel vient de votre nature profonde, l\'expression de votre comportement au travail. Deux lectures, un même vous.</p>';
+    if (pri.appuis.length){
+      h += '<div class="esp-cp-titre">Vos terrains d\'appui</div>' + pri.appuis.map(c =>
+        '<div class="esp-cp-ligne"><span class="esp-cp-nom">' + echapValeur(c.nom) + '</span>' + jauge(c) + '</div>').join('');
+    }
+    if (pri.opportunites.length){
+      h += '<div class="esp-cp-titre">Vos opportunités à investir</div>' + pri.opportunites.map(c =>
+        '<div class="esp-cp-ligne"><span class="esp-cp-nom">' + echapValeur(c.nom) + '</span>' + jauge(c) + '</div>').join('')
+        + '<p class="esp-cp-pont">Le moteur est là, la pratique fera le reste : vos défis de terrain SeedUp travaillent précisément ces opportunités.</p>';
+    }
+    h += '</div>';
+    slot.innerHTML = h;
+  }
+
   // ---- Le jardin d'ancrage : les défis de terrain dans l'espace ----
   // SeedUp sème des graines : chaque défi ancré devient une plante, et le
   // parcours devient un jardin. Le personnage de l'archétype y jardine.
@@ -715,75 +748,159 @@ const App = (() => {
     return '';
   }
 
-  // Jardin génératif déterministe. Les arbres sont les étapes franchies,
-  // un tous les cinq défis, avec leur écriteau numéroté. Les plantes sont
-  // les défis en cours vers le prochain arbre. Les fleurs portent les
-  // couleurs des quatre familles.
+  // Jardin génératif déterministe, seconde génération : ciel et soleil,
+  // relief en deux plans, ombres portées, herbes folles, cinq essences de
+  // pousses, arbres à canopée nuancée et baies aux couleurs des familles,
+  // lucioles et papillon. Les arbres restent les étapes franchies (une
+  // tous les cinq défis, écriteau numéroté), les pousses le chemin en cours.
   function jardinSvg(nb, slugPerso, nouvelArbre) {
     const arbres = Math.min(Math.floor(nb / 5), 6);
     const plantes = nb % 5;
-    const fleurs = ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
-    const sol = 104;
-    const x0 = slugPerso ? 92 : 26;
-    const xMax = 324;
-    const total = arbres + Math.max(plantes, nb === 0 ? 1 : 0) || 1;
-    const pas = total === 1 ? 0 : (xMax - x0) / (arbres + Math.max(plantes, 1) - (plantes ? 0 : 1) || 1);
+    const FAM = (window.Competences && window.Competences.COULEURS_FAMILLES_LISTE) || ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
+    const VERTS = ['#4C8F5D', '#5B9E6B'];
+    const sol = 112;
+    const x0 = slugPerso ? 94 : 26;
+    const xMax = 322;
+    const nTotal = arbres + (plantes || 0);
+    const posX = function (i, n) { return Math.round(n <= 1 ? (x0 + xMax) / 2 : x0 + (xMax - x0) * (i / (n - 1))); };
+    const ombre = function (x, larg) { return '<ellipse cx="' + x + '" cy="' + (sol + 3) + '" rx="' + larg + '" ry="3.2" fill="rgba(70,80,58,0.13)"/>'; };
+
+    let fond = '<circle cx="296" cy="27" r="24" fill="#F6E7B8" opacity="0.28"/><circle cx="296" cy="27" r="14" fill="#F6E7B8" opacity="0.7"/>'
+      + '<path d="M0 97 C 80 85, 180 101, 260 91 S 340 96, 340 93 L340 132 L0 132 Z" fill="#E2E7D2"/>'
+      + '<path d="M0 112 C 70 104, 150 118, 220 110 S 320 115, 340 109 L340 132 L0 132 Z" fill="#EBE7D8"/>'
+      + '<path d="M0 112 C 70 104, 150 118, 220 110 S 320 115, 340 109" stroke="#D9D5C4" stroke-width="1.3" fill="none"/>';
+    for (let t = 0; t < 12; t++) {
+      const hx = 16 + t * 27 + ((t * 13) % 9);
+      const hy = sol + ((t * 7) % 4) - 1;
+      fond += '<path d="M' + hx + ' ' + hy + ' q -2 -6 -4 -8 M' + hx + ' ' + hy + ' q 0 -7 1 -9 M' + hx + ' ' + hy + ' q 2 -6 4 -7" stroke="' + VERTS[t % 2] + '" stroke-width="1.3" fill="none" opacity="0.75" stroke-linecap="round"/>';
+    }
+
     let elems = '';
     let idx = 0;
-    const posX = function (i, n) { return Math.round(n <= 1 ? (x0 + xMax) / 2 : x0 + (xMax - x0) * (i / (n - 1))); };
-    const nTotal = arbres + (plantes || 0);
 
-    // Les arbres des étapes franchies
     for (let a = 0; a < arbres; a++) {
       const x = posX(idx, Math.max(nTotal, 2)); idx++;
       const dernier = (a === arbres - 1);
       const numEtape = (Math.floor(nb / 5) > 6 && dernier) ? Math.floor(nb / 5) * 5 : (a + 1) * 5;
-      const tronc = '<path d="M' + (x - 3) + ' ' + sol + ' C ' + (x - 3) + ' ' + (sol - 20) + ', ' + (x - 1.5) + ' ' + (sol - 30) + ', ' + x + ' ' + (sol - 36) + ' C ' + (x + 1.5) + ' ' + (sol - 30) + ', ' + (x + 3) + ' ' + (sol - 20) + ', ' + (x + 3) + ' ' + sol + ' Z" fill="#8A6244"/>';
-      const feuillage = '<circle cx="' + (x - 9) + '" cy="' + (sol - 40) + '" r="12" fill="#4C8F5D"/>'
-        + '<circle cx="' + (x + 9) + '" cy="' + (sol - 42) + '" r="13" fill="#5B9E6B"/>'
-        + '<circle cx="' + x + '" cy="' + (sol - 52) + '" r="11" fill="#6FB07E"/>';
+      const tronc = '<path d="M' + (x - 3.2) + ' ' + sol + ' C ' + (x - 3.4) + ' ' + (sol - 18) + ', ' + (x - 1.5) + ' ' + (sol - 30) + ', ' + x + ' ' + (sol - 38) + ' C ' + (x + 1.5) + ' ' + (sol - 30) + ', ' + (x + 3.4) + ' ' + (sol - 18) + ', ' + (x + 3.2) + ' ' + sol + ' Z" fill="#8A6244"/>'
+        + '<path d="M' + (x - 1.2) + ' ' + (sol - 6) + ' C ' + (x - 1.6) + ' ' + (sol - 16) + ', ' + (x - 0.6) + ' ' + (sol - 24) + ', ' + x + ' ' + (sol - 30) + '" stroke="#6E4C33" stroke-width="0.9" fill="none" opacity="0.6"/>';
+      const cy1 = sol - 44;
+      const feuillage = '<circle cx="' + (x - 10) + '" cy="' + (cy1 + 2) + '" r="12" fill="#3E7C4F"/>'
+        + '<circle cx="' + (x + 10) + '" cy="' + cy1 + '" r="12.5" fill="#4C8F5D"/>'
+        + '<circle cx="' + x + '" cy="' + (cy1 - 9) + '" r="11" fill="#5B9E6B"/>'
+        + '<circle cx="' + (x - 5) + '" cy="' + (cy1 - 13) + '" r="6" fill="#7CBB8A"/>'
+        + '<circle cx="' + (x - 12) + '" cy="' + (cy1 - 3) + '" r="2" fill="' + FAM[a % 4] + '"/>'
+        + '<circle cx="' + (x + 9) + '" cy="' + (cy1 + 6) + '" r="2" fill="' + FAM[(a + 2) % 4] + '"/>';
       const montrerEcriteau = (arbres <= 4) || dernier;
       const ecriteau = montrerEcriteau
-        ? '<rect x="' + (x + 6) + '" y="' + (sol - 14) + '" width="3" height="14" rx="1.5" fill="#B08D5F"/>'
-          + '<rect x="' + (x - 2) + '" y="' + (sol - 22) + '" width="19" height="11" rx="3" fill="#E8D9BC" stroke="#C9A876" stroke-width="1"/>'
-          + '<text x="' + (x + 7.5) + '" y="' + (sol - 13.6) + '" text-anchor="middle" font-size="7.5" font-weight="700" fill="#5C4630">' + numEtape + '</text>'
+        ? '<rect x="' + (x + 7) + '" y="' + (sol - 14) + '" width="3" height="14" rx="1.5" fill="#B08D5F"/>'
+          + '<rect x="' + (x - 1) + '" y="' + (sol - 23) + '" width="19" height="11.5" rx="3" fill="#E8D9BC" stroke="#C9A876" stroke-width="1"/>'
+          + '<circle cx="' + (x + 1.6) + '" cy="' + (sol - 20.4) + '" r="0.9" fill="#A3814F"/>'
+          + '<text x="' + (x + 8.5) + '" y="' + (sol - 14.4) + '" text-anchor="middle" font-size="7.5" font-weight="700" fill="#5C4630">' + numEtape + '</text>'
         : '';
-      elems += '<g class="jr-pousse' + ((nouvelArbre && dernier) ? ' jr-arbre-fete' : '') + '" style="animation-delay:' + (0.12 * (idx - 1)).toFixed(2) + 's"><g class="jr-plante">' + tronc + feuillage + ecriteau + '</g></g>';
+      elems += ombre(x, 15) + '<g class="jr-pousse' + ((nouvelArbre && dernier) ? ' jr-arbre-fete' : '') + '" style="animation-delay:' + (0.12 * (idx - 1)).toFixed(2) + 's"><g class="jr-plante">' + tronc + feuillage + ecriteau + '</g></g>';
     }
 
-    // Les pousses en cours vers le prochain arbre
     for (let i = 0; i < plantes; i++) {
       const x = posX(idx, Math.max(nTotal, 2)); idx++;
-      const h = 24 + ((i * 7) % 18);
-      const type = i % 3;
-      const tige = '<path d="M' + x + ' ' + sol + ' C ' + (x - 2) + ' ' + (sol - h * 0.5) + ', ' + (x + 2) + ' ' + (sol - h * 0.7) + ', ' + x + ' ' + (sol - h) + '" stroke="#3E7C4F" stroke-width="2.4" fill="none" stroke-linecap="round"/>';
+      const h = 24 + ((i * 7) % 16);
+      const type = (arbres + i) % 5;
+      const cFam = FAM[(arbres + i) % 4];
+      const tige = '<path d="M' + x + ' ' + sol + ' C ' + (x - 2) + ' ' + (sol - h * 0.5) + ', ' + (x + 2) + ' ' + (sol - h * 0.7) + ', ' + x + ' ' + (sol - h) + '" stroke="#3E7C4F" stroke-width="2.2" fill="none" stroke-linecap="round"/>';
       let corps = '';
       if (type === 0) {
         corps = tige
-          + '<ellipse cx="' + (x - 7) + '" cy="' + (sol - h * 0.55) + '" rx="7.5" ry="3.6" fill="#5B9E6B" transform="rotate(-28 ' + (x - 7) + ' ' + (sol - h * 0.55) + ')"/>'
-          + '<ellipse cx="' + (x + 7) + '" cy="' + (sol - h * 0.72) + '" rx="7.5" ry="3.6" fill="#4C8F5D" transform="rotate(26 ' + (x + 7) + ' ' + (sol - h * 0.72) + ')"/>';
+          + '<path d="M' + x + ' ' + (sol - h * 0.45) + ' q -9 -3 -11 -10 q 9 0 11 10 Z" fill="#5B9E6B"/>'
+          + '<path d="M' + x + ' ' + (sol - h * 0.68) + ' q 9 -2 11 -9 q -9 -1 -11 9 Z" fill="#4C8F5D"/>'
+          + '<path d="M' + x + ' ' + (sol - h * 0.9) + ' q -7 -3 -8 -9 q 7 0 8 9 Z" fill="#6FB07E"/>';
       } else if (type === 1) {
-        const c = fleurs[(arbres + i) % 4];
         const cy = sol - h;
         let petales = '';
-        for (let p = 0; p < 5; p++) {
-          const a2 = (Math.PI * 2 * p) / 5 - Math.PI / 2;
-          petales += '<circle cx="' + (x + Math.cos(a2) * 5.6).toFixed(1) + '" cy="' + (cy + Math.sin(a2) * 5.6).toFixed(1) + '" r="4" fill="' + c + '"/>';
+        for (let p = 0; p < 6; p++) {
+          petales += '<ellipse cx="' + x + '" cy="' + (cy - 5) + '" rx="2.6" ry="5.4" fill="' + cFam + '" transform="rotate(' + (60 * p) + ' ' + x + ' ' + cy + ')"/>';
         }
-        corps = tige + petales + '<circle cx="' + x + '" cy="' + cy + '" r="3.4" fill="#F5E7C6"/>';
+        corps = tige
+          + '<path d="M' + x + ' ' + (sol - h * 0.4) + ' q -8 -2 -10 -8 q 8 0 10 8 Z" fill="#5B9E6B"/>'
+          + petales + '<circle cx="' + x + '" cy="' + cy + '" r="3.4" fill="#F5E7C6"/><circle cx="' + x + '" cy="' + cy + '" r="1.4" fill="#E8951A"/>';
+      } else if (type === 2) {
+        corps = '<circle cx="' + (x - 5) + '" cy="' + (sol - 8) + '" r="8" fill="#4C8F5D"/><circle cx="' + (x + 5) + '" cy="' + (sol - 9) + '" r="9" fill="#5B9E6B"/><circle cx="' + x + '" cy="' + (sol - 15) + '" r="7" fill="#6FB07E"/>'
+          + '<circle cx="' + (x - 6) + '" cy="' + (sol - 11) + '" r="2.1" fill="' + cFam + '"/><circle cx="' + (x + 5) + '" cy="' + (sol - 14) + '" r="2.1" fill="' + FAM[(arbres + i + 2) % 4] + '"/><circle cx="' + (x + 1) + '" cy="' + (sol - 6) + '" r="1.9" fill="' + FAM[(arbres + i + 1) % 4] + '"/>';
+      } else if (type === 3) {
+        corps = '<path d="M' + x + ' ' + sol + ' q -5 -' + (h * 0.7) + ' -9 -' + h + '" stroke="#5B9E6B" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
+          + '<path d="M' + x + ' ' + sol + ' q 0 -' + (h * 0.8) + ' 1 -' + (h + 3) + '" stroke="#4C8F5D" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
+          + '<path d="M' + x + ' ' + sol + ' q 5 -' + (h * 0.7) + ' 9 -' + (h - 2) + '" stroke="#6FB07E" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
+          + '<ellipse cx="' + (x + 1) + '" cy="' + (sol - h - 4) + '" rx="1.6" ry="3.4" fill="#D9C98A"/>';
       } else {
-        corps = '<circle cx="' + (x - 5) + '" cy="' + (sol - 8) + '" r="8" fill="#4C8F5D"/><circle cx="' + (x + 5) + '" cy="' + (sol - 9) + '" r="9" fill="#5B9E6B"/><circle cx="' + x + '" cy="' + (sol - 14) + '" r="7" fill="#6FB07E"/>';
+        const cy = sol - h;
+        corps = tige
+          + '<path d="M' + (x - 4) + ' ' + cy + ' C ' + (x - 4.5) + ' ' + (cy - 8) + ', ' + (x - 1.5) + ' ' + (cy - 10) + ', ' + x + ' ' + (cy - 10) + ' C ' + (x + 1.5) + ' ' + (cy - 10) + ', ' + (x + 4.5) + ' ' + (cy - 8) + ', ' + (x + 4) + ' ' + cy + ' C ' + (x + 2) + ' ' + (cy + 2) + ', ' + (x - 2) + ' ' + (cy + 2) + ', ' + (x - 4) + ' ' + cy + ' Z" fill="' + cFam + '"/>'
+          + '<path d="M' + x + ' ' + (cy - 10) + ' L ' + x + ' ' + (cy - 6) + '" stroke="#F5E7C6" stroke-width="1.6" stroke-linecap="round"/>'
+          + '<path d="M' + x + ' ' + (sol - h * 0.4) + ' q 9 -2 11 -9 q -9 -1 -11 9 Z" fill="#5B9E6B"/>';
       }
-      elems += '<g class="jr-pousse" style="animation-delay:' + (0.12 * (idx - 1)).toFixed(2) + 's"><g class="jr-plante">' + corps + '</g></g>';
+      elems += ombre(x, 8) + '<g class="jr-pousse" style="animation-delay:' + (0.12 * (idx - 1)).toFixed(2) + 's"><g class="jr-plante">' + corps + '</g></g>';
     }
 
+    let faune = '<circle class="jr-luciole" cx="' + (x0 + 26) + '" cy="52" r="1.9" fill="#F4D96B"/>'
+      + '<circle class="jr-luciole" style="animation-delay:1.4s" cx="' + (xMax - 34) + '" cy="40" r="1.7" fill="#F4D96B"/>'
+      + '<g class="jr-papillon"><path d="M' + (x0 + 74) + ' 46 q -7 -7 -2 -11 q 5 -1 4 9 Z" fill="' + FAM[nb % 4] + '" opacity="0.9"/>'
+      + '<path d="M' + (x0 + 76) + ' 46 q 7 -7 2 -11 q -5 -1 -4 9 Z" fill="' + FAM[(nb + 1) % 4] + '" opacity="0.9"/>'
+      + '<path d="M' + (x0 + 75) + ' 44 l 0 6" stroke="#5C4630" stroke-width="1.1" stroke-linecap="round"/></g>';
+
     const perso = slugPerso
-      ? '<image class="jr-perso" href="' + srcPerso(slugPerso) + '" x="12" y="24" width="64" height="84" preserveAspectRatio="xMidYMax meet"/>'
+      ? ombre(44, 20) + '<image class="jr-perso" href="' + srcPerso(slugPerso) + '" x="12" y="28" width="64" height="86" preserveAspectRatio="xMidYMax meet"/>'
       : '';
-    return '<svg class="jr-svg" viewBox="0 0 340 120" role="img" aria-label="Votre jardin d\'ancrage : ' + Math.floor(nb / 5) + ' étape' + (Math.floor(nb / 5) > 1 ? 's' : '') + ' franchie' + (Math.floor(nb / 5) > 1 ? 's' : '') + ', ' + nb + ' défis ancrés">'
-      + '<path d="M0 106 C 70 96, 150 112, 220 103 S 320 108, 340 102 L340 120 L0 120 Z" fill="#E7E9DC"/>'
-      + '<path d="M0 106 C 70 96, 150 112, 220 103 S 320 108, 340 102" stroke="#D6DAC6" stroke-width="1.4" fill="none"/>'
-      + perso + elems + '</svg>';
+    return '<svg class="jr-svg" viewBox="0 0 340 132" role="img" aria-label="Votre jardin d\'ancrage : ' + Math.floor(nb / 5) + ' étape' + (Math.floor(nb / 5) > 1 ? 's' : '') + ' franchie' + (Math.floor(nb / 5) > 1 ? 's' : '') + ', ' + nb + ' défis ancrés">'
+      + fond + perso + elems + faune + '</svg>';
+  }
+
+  // Le jardin en image partageable : rasterisation du SVG sur canvas,
+  // avec le personnage embarqué en data-URL pour éviter tout blocage.
+  function exporterJardinImage(nb, slugPerso, labelEtape){
+    const suite = function(persoData){
+      let svg = jardinSvg(nb, slugPerso);
+      if (slugPerso && persoData) svg = svg.split(srcPerso(slugPerso)).join(persoData);
+      else if (slugPerso && !persoData) svg = jardinSvg(nb, '');
+      svg = svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+      const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+      const img = new Image();
+      img.onload = function(){
+        try {
+          const cv = document.createElement('canvas');
+          cv.width = 1080; cv.height = 596;
+          const cx = cv.getContext('2d');
+          const grad = cx.createLinearGradient(0, 0, 0, 596);
+          grad.addColorStop(0, '#FDFCF8'); grad.addColorStop(1, '#F1EFE6');
+          cx.fillStyle = grad; cx.fillRect(0, 0, 1080, 596);
+          cx.fillStyle = '#5E59C7'; cx.font = '700 20px Georgia, serif';
+          cx.fillText('MON JARDIN D\'ANCRAGE', 48, 64);
+          cx.fillStyle = '#1A1A2E'; cx.font = '800 40px Georgia, serif';
+          cx.fillText(labelEtape || '', 48, 116);
+          cx.fillStyle = '#6B6B72'; cx.font = '600 22px Georgia, serif';
+          cx.fillText(nb + ' défi' + (nb > 1 ? 's' : '') + ' de terrain ancré' + (nb > 1 ? 's' : ''), 48, 152);
+          cx.drawImage(img, 40, 176, 1000, 388);
+          cx.fillStyle = '#8A879B'; cx.font = '700 18px Georgia, serif';
+          cx.fillText('Sinéa Profile · SeedUp', 48, 578);
+          cv.toBlob(function(b){
+            if (!b) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = 'mon-jardin-ancrage.png';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+          }, 'image/png');
+        } catch (e) { console.warn("[Sinéa]", e); }
+        URL.revokeObjectURL(url);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); };
+      img.src = url;
+    };
+    if (slugPerso){
+      fetch(srcPerso(slugPerso))
+        .then(r => r.ok ? r.blob() : Promise.reject())
+        .then(b => new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => res(''); fr.readAsDataURL(b); }))
+        .then(suite)
+        .catch(function(){ suite(''); });
+    } else suite('');
   }
 
   function poserSeedupEspace(carte) {
@@ -807,7 +924,7 @@ const App = (() => {
       const precedent = parseInt(localStorage.getItem(cleP) || '0', 10);
       if (etape.arbres > precedent) fete = true;
       localStorage.setItem(cleP, String(etape.arbres));
-    } catch (e) {}
+    } catch (e) { console.warn("[Sinéa]", e); }
 
     // Étage 3 du pont : quels défis servent quelles actions du plan ?
     // Appariement déterministe par mots significatifs partagés, sans IA.
@@ -858,7 +975,7 @@ const App = (() => {
     }
 
     const slugP = slugDeNom(monArchetype);
-    const fleursFete = ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
+    const fleursFete = (window.Competences && window.Competences.COULEURS_FAMILLES_LISTE) || ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
     const confetti = fete
       ? '<div class="jr-confetti">' + [0, 1, 2, 3, 4, 5].map(function (i) {
           return '<i style="left:' + (12 + i * 14) + '%;animation-delay:' + (i * 0.12).toFixed(2) + 's;background:' + fleursFete[i % 4] + '"></i>';
@@ -875,11 +992,14 @@ const App = (() => {
       + (moyR !== null ? ' · réussite moyenne ' + moyR + '/10' : '')
       + ' · ' + suivantTxt
       + (dateMaj ? ' · mis à jour le ' + dateMaj : '') + '</div>'
+      + '<button type="button" class="esp-rem-btn esp-sd-btn" id="jr-partage">Partager mon jardin (image)</button>'
       + '<div class="esp-sd-soustitre">Vos défis, un à un</div>'
       + liste.slice(0, 3).map(carteDefi).join('')
       + (liste.length > 3 ? '<div id="esp-sd-reste" style="display:none">' + liste.slice(3).map(carteDefi).join('') + '</div><button type="button" class="esp-rem-btn esp-sd-btn" id="esp-sd-plus">Voir mes ' + liste.length + ' défis</button>' : '')
       + '<p class="esp-sd-canal">Retrouvez l\'expérience complète dans votre application SeedUp.</p>'
       + '</div>';
+    const partage = document.getElementById('jr-partage');
+    if (partage) partage.onclick = function(){ exporterJardinImage(liste.length, slugP, etape.label); };
     const plus = document.getElementById('esp-sd-plus');
     if (plus) plus.onclick = function () {
       const reste = document.getElementById('esp-sd-reste');
@@ -1002,6 +1122,10 @@ const App = (() => {
     { d: 'C', label: 'Organisation et fiabilité', texte: 'Cette personne est organisée et fiable dans ce qu\'elle entreprend.' },
     { d: 'S', label: 'Calme sous pression', texte: 'Cette personne garde son calme et sa stabilité quand la pression monte.' },
     { d: 'O', label: 'Curiosité et idées', texte: 'Cette personne propose volontiers des idées ou des approches nouvelles.' },
+    { d: 'c_developpement_autres', label: 'Faire grandir les autres', texte: 'Cette personne aide les autres à progresser : elle transmet, donne du feedback, fait grandir.' },
+    { d: 'c_communication_influence', label: 'Convaincre et embarquer', texte: 'Quand cette personne présente une idée, elle convainc et embarque son auditoire.' },
+    { d: 'c_orientation_resultats', label: 'Aller au bout', texte: 'Cette personne va au bout de ce qu\'elle entreprend et conclut.' },
+    { d: 'c_prise_decision', label: 'Trancher', texte: 'Cette personne tranche et assume ses décisions, même dans l\'incertitude.' },
   ];
   const MIROIR_ANCRES = { 1: 'Pas du tout', 2: 'Plutôt pas', 3: 'Plutôt oui', 4: 'Tout à fait' };
   const MIROIR_CONV = { 1: 0.0, 2: 33.333, 3: 66.667, 4: 100.0 };
@@ -1086,10 +1210,23 @@ const App = (() => {
       } else {
         phrase = `Vos collègues perçoivent moins de ${maxDim.label.toLowerCase()} que ce que vous pensez montrer. Cet écart dit quelque chose de précieux, angle mort ou réserve : explorez-le lors d'un prochain échange.`;
       }
+      // Les compétences vues par les pairs : items directs quand ils existent
+      let lignesComp = '';
+      if (window.Competences) {
+        const vousComp = Competences.expressionDepuis(vous);
+        lignesComp = MIROIR_QUESTIONS.filter(function (q) { return q.d.indexOf('c_') === 0 && percu[q.d] !== undefined; })
+          .map(function (q) {
+            const id = q.d.slice(2);
+            const v = vousComp[id];
+            return `<div class="esp-mir-row"><span class="esp-mir-lab">${q.label}</span><span class="esp-mir-vals">Eux ${Math.round(percu[q.d])}${v !== undefined ? ' · Vous ' + Math.round(v) : ''}</span></div>`;
+          }).join('');
+        if (lignesComp) lignesComp = '<div class="esp-cp-titre" style="margin-top:14px">Vos compétences, vues par eux</div>' + lignesComp;
+      }
       slot.innerHTML = `<div class="esp-rem esp-mir">
         <div class="esp-rem-kicker">Miroir 360 · ${reponses.length} regards</div>
         <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
         ${lignes}
+        ${lignesComp}
         <div class="esp-nea" style="margin-top:12px"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span><div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>${phrase}</p></div></div>
         ${reponses.length < 5 ? '<p class="esp-rem-txt" style="margin:12px 0 8px">Ajoutez d\'autres regards pour affiner :</p>' + blocLien : ''}
       </div>`;
@@ -1116,7 +1253,7 @@ const App = (() => {
     ov.innerHTML = '<div class="mir-card">' +
       '<div class="mir-head"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
       '<div><div class="esp-rem-kicker">Miroir Sinéa</div><div class="esp-rem-titre">Votre regard sur un collègue</div></div></div>' +
-      '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Cinq questions, une minute. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
+      '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Neuf questions, deux minutes. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
       lignes +
       '<button type="button" class="esp-rem-btn" id="mir-valider" disabled>Envoyer mon regard</button>' +
       '</div>';
@@ -1208,6 +1345,7 @@ const App = (() => {
   }
 
   function renderEspace(data) {
+    dataEspaceCourant = data;
     const prenom = data.prenom || identite.prenom || '';
     // Filet : si le serveur renvoie l'email, on le re-mémorise. Garantit que le plan
     // d'action et les autres actions de l'espace ont toujours un email valide à utiliser.
@@ -1591,7 +1729,7 @@ const App = (() => {
     // sauvegarde de 1,5s ; sans ça, ouvrir le plan trop vite chargerait des données
     // incomplètes). Puis on laisse un court instant au serveur avant de relire.
     if (window.Result && Result.sauvegarderInteractionsImmediat) {
-      try { Result.sauvegarderInteractionsImmediat(); } catch (e) {}
+      try { Result.sauvegarderInteractionsImmediat(); } catch (e) { console.warn("[Sinéa]", e); }
     }
     setTimeout(() => chargerEtAfficherPlan(mod, scr), 700);
   }
@@ -2927,7 +3065,7 @@ const App = (() => {
         // save_analyse) : une utilisation par personne, à sa première analyse.
         // Le front ne consomme plus rien (zéro risque de double décompte ou d'oubli).
         magicCode = '';
-      } catch (e) {}
+      } catch (e) { console.warn("[Sinéa]", e); }
 
       clearInterval(msgTimer);
       document.getElementById('screen-loader').classList.remove('active');
@@ -2968,7 +3106,7 @@ const App = (() => {
                   result.fiabilite.affine = true;
                 }
               }
-            } catch (e) {}
+            } catch (e) { console.warn("[Sinéa]", e); }
           }
           afficherRestitution(result);
         });
@@ -3007,16 +3145,16 @@ const App = (() => {
       g.gain.linearRampToValueAtTime(0, t0 + duree);
       osc.connect(g); g.connect(ac.destination);
       osc.start(t0); osc.stop(t0 + duree + 0.05);
-    } catch (e) {}
+    } catch (e) { console.warn("[Sinéa]", e); }
   }
   function sonSuspense() {
     const ac = _getAudio(); if (!ac) return;
-    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { console.warn("[Sinéa]", e); } }
     _note(330, 0, 0.5, 0.05); _note(392, 0.35, 0.5, 0.05); _note(494, 0.7, 0.6, 0.05);
   }
   function sonReveal() {
     const ac = _getAudio(); if (!ac) return;
-    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { console.warn("[Sinéa]", e); } }
     // montee scintillante facon poussiere d'etoile
     _note(523, 0,    0.55, 0.06);   // do5
     _note(659, 0.12, 0.55, 0.06);   // mi5
@@ -3103,7 +3241,7 @@ const App = (() => {
         neaScr.classList.add('active');
         window.scrollTo(0, 0);
         const vid = neaScr.querySelector('.nea-vid');
-        if (vid) { try { vid.play(); } catch (e) {} }
+        if (vid) { try { vid.play(); } catch (e) { console.warn("[Sinéa]", e); } }
         if (neaCta) neaCta.onclick = () => {
           neaScr.classList.remove('active');
           document.getElementById('screen-result').classList.add('active');
