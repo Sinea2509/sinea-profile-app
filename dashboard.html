@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="competences.js"></script>
 <style>
   :root{
     --c-corail:#F98272; --c-orange:#F9A876; --c-pink:#E290EC; --c-violet:#8884F0;
@@ -574,6 +575,94 @@ body{font-variant-numeric:tabular-nums;}
 .sup-card-alerte{border-color:#F2C9C9;background:#FFFBFB;}
 .sup-avis-basse{color:#C24444;}
 .sup-err{color:#C24444;font-weight:800;}
+
+/* ===== v53 : brief de développement (logique TMA) ===== */
+.bd-intro{font-size:12.5px;color:#6B6B72;margin:2px 0 8px;line-height:1.5;}
+.bd-postes{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;}
+.bd-poste{border:1.5px solid #D8D5CC;background:#fff;color:#1A1A2E;font-family:inherit;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:18px;cursor:pointer;transition:all 0.12s;}
+.bd-poste.on{background:#5E59C7;border-color:#5E59C7;color:#fff;}
+.bd-btn{margin-bottom:10px;}
+.bd-brief{margin-top:6px;}
+.bd-accroche{font-size:14px;line-height:1.6;color:#1A1A2E;padding:12px 14px;border-radius:12px;background:linear-gradient(120deg,rgba(94,89,199,0.07),rgba(249,130,114,0.06));border-left:4px solid #5E59C7;margin-bottom:12px;}
+.bd-titre-sec{font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#5E59C7;margin:14px 0 8px;}
+.bd-carte{padding:11px 13px;border-radius:12px;margin-bottom:8px;background:#F8F7F4;}
+.bd-appui{border-left:4px solid #4C8F5D;}
+.bd-opp{border-left:4px solid #E8951A;}
+.bd-vigi{border-left:4px solid #B0AEB8;background:#FAFAFA;}
+.bd-comp{font-size:13.5px;font-weight:800;color:#1A1A2E;margin-bottom:5px;}
+.bd-usage,.bd-pourquoi{font-size:13px;line-height:1.55;margin:4px 0;}
+.bd-levier{font-size:13px;line-height:1.55;margin:4px 0;}
+.bd-offre{display:inline-block;font-size:11px;font-weight:800;color:#5E59C7;background:rgba(94,89,199,0.1);border-radius:12px;padding:4px 10px;margin-top:5px;}
+.bd-jauge{display:flex;align-items:center;gap:8px;margin:4px 0 7px;}
+.bd-jauge-lab{font-size:10.5px;font-weight:700;color:#6B6B72;white-space:nowrap;}
+.bd-jauge-bar{position:relative;flex:1;height:8px;border-radius:5px;background:#ECEAE3;}
+.bd-jauge-pot{position:absolute;inset:0 auto 0 0;border-radius:5px;background:linear-gradient(90deg,#B9A6E8,#5E59C7);}
+.bd-jauge-expr{position:absolute;top:-3px;width:3px;height:14px;border-radius:2px;background:#F98272;}
+.bd-seedup{margin-top:14px;padding:13px 15px;border-radius:14px;}
+.bd-seedup.on{background:rgba(76,143,93,0.08);border:1px solid rgba(76,143,93,0.3);}
+.bd-seedup.off{background:#F6F5F1;border:1.5px dashed #C9C5BA;opacity:0.72;}
+.bd-seedup-head{font-size:12.5px;font-weight:800;color:#1A1A2E;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.bd-badge-on{font-size:10.5px;font-weight:800;color:#fff;background:#4C8F5D;border-radius:12px;padding:3px 10px;}
+.bd-badge-off{font-size:10.5px;font-weight:800;color:#8A879B;background:#ECEAE3;border-radius:12px;padding:3px 10px;}
+.bd-seedup-txt{font-size:12.5px;line-height:1.55;color:#4A4A52;margin:0 0 8px;}
+.bd-defi-ligne{font-size:12px;line-height:1.5;color:#1A1A2E;padding:6px 9px;background:#fff;border-radius:9px;margin-bottom:5px;border:1px solid #ECEAE3;}
+.bd-seedup.off .bd-defi-ligne{color:#6B6B72;}
+.bd-export{margin-top:12px;}
+.bd-conclusion{font-size:13.5px;line-height:1.6;color:#1A1A2E;font-style:italic;margin-top:12px;padding-top:10px;border-top:1px solid #ECEAE3;}
+
+.bd-date{font-size:11.5px;color:#8A879B;margin-bottom:8px;}
+.bd-mat-btn{border:1.5px solid #D8D5CC;background:#fff;color:#5E59C7;font-family:inherit;font-size:12px;font-weight:700;padding:7px 14px;border-radius:18px;cursor:pointer;margin-top:12px;}
+.bd-mat-btn:hover{border-color:#5E59C7;}
+#bd-matrice{margin-top:10px;}
+.bd-mat-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #F0EEE8;}
+.bd-mat-nom{flex:0 0 200px;font-size:12.5px;font-weight:600;color:#1A1A2E;}
+.bd-mat-zone{flex:0 0 92px;text-align:center;font-size:10.5px;font-weight:800;border-radius:11px;padding:4px 0;}
+.z-appui{background:rgba(76,143,93,0.14);color:#2F6B3E;}
+.z-opportunite{background:rgba(232,149,26,0.15);color:#8A5A00;}
+.z-neutre{background:#EFEDE6;color:#6B6B72;}
+.z-economie{background:#F5F4F0;color:#9A98A3;}
+
+/* ===== v55 : les compétences de l'équipe (Phase B) ===== */
+.ce-panel{margin:14px 0;padding:20px 20px 18px;}
+.ce-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:6px;}
+.ce-titre{font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#5E59C7;margin:16px 0 9px;}
+.ce-dot{display:inline-block;width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+.ce-ref-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #F0EEE8;}
+.ce-ref-row:last-child{border-bottom:none;}
+.ce-ref-comp{flex:0 0 240px;font-size:13px;font-weight:600;color:#1A1A2E;}
+.ce-ref-noms{display:flex;gap:6px;flex-wrap:wrap;}
+.ce-chip{display:inline-block;font-size:11.5px;font-weight:700;color:#5E59C7;background:rgba(94,89,199,0.1);border-radius:12px;padding:4px 11px;}
+.ce-chip-orph{color:#8A2E2E;background:#FDEEEE;}
+.ce-orph{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px;}
+.ce-note{font-size:12.5px;line-height:1.55;color:#6B6B72;margin:4px 0;}
+.ce-note-ok{color:#2F6B3E;font-weight:600;}
+.ce-chantier{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:14px;background:linear-gradient(120deg,rgba(94,89,199,0.07),rgba(249,130,114,0.06));border:1px solid #E4E1EF;}
+.ce-chantier .ce-dot{margin-top:6px;}
+.ce-chantier-corps{flex:1;}
+.ce-chantier-nom{font-size:16px;font-weight:800;color:#1A1A2E;}
+.ce-runners{font-size:12px;color:#6B6B72;margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.ce-btn{white-space:normal;max-width:220px;}
+@media(max-width:700px){ .ce-chantier{flex-direction:column;} .ce-ref-comp{flex-basis:auto;} }
+
+/* ===== v56 : débrief coach hebdomadaire (Phase C) ===== */
+.ch-week{padding:14px 15px;border-radius:14px;background:#F8F7F4;margin-bottom:11px;}
+.ch-week-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px;}
+.ch-week-titre{font-size:14px;font-weight:800;color:#1A1A2E;}
+.ch-week-stats{font-size:12px;font-weight:600;color:#6B6B72;}
+.ch-badge{font-size:10px;font-weight:800;color:#2F6B3E;background:#E4F0E7;border-radius:11px;padding:3px 9px;margin-left:auto;}
+.ch-comps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px;}
+.ch-regard{width:100%;min-height:64px;border:1px solid #D8D5CC;border-radius:11px;padding:9px 12px;font-family:inherit;font-size:13px;line-height:1.5;resize:vertical;background:#fff;}
+.ch-regard:focus-visible{outline:2px solid #5E59C7;outline-offset:1px;}
+.ch-actions{display:flex;gap:8px;margin-top:8px;}
+.ch-save{background:#2D2D2D;color:#fff;border-color:#2D2D2D;}
+.ch-synt{margin-top:9px;}
+.ch-synt-txt{font-size:13px;line-height:1.6;color:#1A1A2E;background:#fff;border-left:3px solid #5E59C7;border-radius:0 10px 10px 0;padding:10px 13px;margin:0 0 6px;}
+.ch-points{margin:4px 0 0 4px;padding-left:16px;font-size:12.5px;line-height:1.6;color:#4A4A52;}
+.ch-alerte{font-size:12.5px;line-height:1.55;padding:10px 13px;border-radius:11px;background:#FFF4E5;color:#8A5A00;border:1px solid #F5D9A8;margin-bottom:10px;}
+
+/* ===== v57 : la preuve d'évolution ===== */
+.bd-preuve{display:inline-block;font-size:12px;font-weight:800;color:#2F6B3E;background:linear-gradient(120deg,rgba(76,143,93,0.14),rgba(94,89,199,0.1));border:1px solid rgba(76,143,93,0.3);border-radius:14px;padding:7px 13px;margin-bottom:10px;}
+.bd-preuve-fl{color:#5E59C7;}
 </style>
 </head>
 <body>
@@ -608,6 +697,8 @@ body{font-variant-numeric:tabular-nums;}
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
+  const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
+  const COACH_URL = API_BASE + "/coach_hebdo";
   const PROG_URL = API_BASE + "/progression";
   const ENTRETIEN_URL = API_BASE + "/entretien_candidat";
   let vueRecrutementForcee = false;  // section recrutement ouverte manuellement sur une campagne standard
@@ -1432,6 +1523,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       if(e) energieHtml=`<div class="fm-section"><div class="fm-section-titre">Énergie & rythme</div><div class="dim-item"><div class="dim-head"><span class="dim-nom-i">Rythme de travail</span><span class="dim-prof-i">${esc(e[0])}</span></div><div class="reco-desc">${esc(e[1])}</div><div class="dim-modele-i">Modèle SMART</div></div></div>`;
     }
     // dimensions de pilotage (collaboration, autorité, reconnaissance)
+    const posteDef = (m.speStyleScores && Object.prototype.hasOwnProperty.call(m.speStyleScores, 'challenger')) ? 'commercial' : 'manager';
     let pilotageHtml='';
     const DIMS_PILOT={
       collaboration:{titre:"Collaboration",modele:"Modèle SMART",profils:{autonome:["Autonome","Donne le meilleur en pilotant son périmètre seul. Confiez-lui un cadre clair, évitez le micro-management."],cooperatif:["Coopératif","S'épanouit dans l'échange et le travail à plusieurs. Intégrez-le aux dynamiques collectives."],interdependant:["Interdépendant","Articule son travail avec celui des autres. Placez-le aux interfaces, sur les projets transverses."],federateur:["Fédérateur","Anime et fait avancer le collectif. Confiez-lui des rituels ou sous-groupes à animer."]}},
@@ -1467,6 +1559,16 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
           ${coutHtml}
           ${energieHtml}
           ${pilotageHtml}
+          <div class="fm-section"><div class="fm-section-titre">Brief de développement</div>
+            <div class="bd-intro">Le potentiel vient de sa nature, l'expression de son comportement au travail. Choisissez le poste de référence :</div>
+            <div class="bd-postes">
+              <button type="button" class="bd-poste ${posteDef==='manager'?'on':''}" data-p="manager" onclick="choisirPosteBrief(this)">Manager</button>
+              <button type="button" class="bd-poste ${posteDef==='commercial'?'on':''}" data-p="commercial" onclick="choisirPosteBrief(this)">Commercial</button>
+              <button type="button" class="bd-poste" data-p="expert" onclick="choisirPosteBrief(this)">Expert</button>
+            </div>
+            <button class="fm-pdf-btn bd-btn" id="bd-btn" onclick="genererBriefDev(${idx})">Générer le brief</button>
+            <div id="bd-zone"></div>
+          </div>
           <div class="fm-section"><div class="fm-section-titre">Tempérament</div>${bfRows}</div>
           ${speHtml}
           ${interHtml}
@@ -1474,10 +1576,436 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       </div>`;
     const div=document.createElement('div'); div.id='fiche-membre'; div.innerHTML=html;
     document.body.appendChild(div);
+    chargerBriefDevSauve(idx);
   }
   function fermerMembre(){ const d=document.getElementById('fiche-membre'); if(d) d.remove(); }
 
   const PDF_PORTRAIT_URL = API_BASE + "/pdf_portrait";
+  // ===== Le brief de développement individuel (logique TMA) =====
+  // Le portail calcule tout en local via le moteur de compétences,
+  // l'endpoint ne fait que rédiger : le périmètre des données reste ici.
+  let briefDevCourant = null;
+  let collectifCourant = null;   // les trois réponses compétences de l'équipe
+  let axesForces = null;         // axes imposés au prochain brief de campagne (chantier)
+  let coachEtat = null;          // le carnet coach de la campagne courante { semaines: {...} }
+
+  function choisirPosteBrief(btn){
+    document.querySelectorAll('.bd-poste').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+
+  function genererBriefDev(idx){
+    const m = (typeof repsCourants !== 'undefined' && repsCourants[idx]) || (campagneData && campagneData.repondants ? campagneData.repondants[idx] : null);
+    const zone = document.getElementById('bd-zone');
+    const btn = document.getElementById('bd-btn');
+    if (!m || !zone || !window.Competences) return;
+    if (!m.bigFive || m.bigFive.O === null || m.bigFive.O === undefined){
+      zone.innerHTML = '<div class="empty">Profil incomplet : le brief demande les scores Big Five.</div>'; return;
+    }
+    const posteEl = document.querySelector('.bd-poste.on');
+    const poste = posteEl ? posteEl.getAttribute('data-p') : 'manager';
+    const comps = Competences.scorer(m.bigFive, m.naturelAdapte && m.naturelAdapte.ecarts);
+    const pri = Competences.prioriser(comps, poste);
+    const leger = (c) => ({ nom: c.nom, famille: c.famille, potentiel: c.potentiel, expression: c.expression, motif: c.motif || '' });
+    const prenom = String(m.nom || '').trim().split(/\s+/)[0] || '';
+    const seedupActif = (m.nbSeedup || 0) > 0;
+    const evolution = calculerEvolution(m);
+    if (btn){ btn.disabled = true; btn.textContent = 'Génération du brief...'; }
+    zone.innerHTML = '';
+    fetch(BRIEF_DEV_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Dashboard-Key': cleAcces },
+      body: JSON.stringify({
+        nom: m.nom || '', prenom: prenom, archetype: m.dominante || '', famille: m.famille || '',
+        poste: pri.poste, cout: (m.naturelAdapte && m.naturelAdapte.cout) || '',
+        appuis: pri.appuis.map(leger), opportunites: pri.opportunites.map(leger), vigilances: pri.vigilances.map(leger),
+        seedupActif: seedupActif, nbDefis: m.nbSeedup || 0, defisFaits: m.seedupTitres || [],
+        evolution: evolution,
+      }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (btn){ btn.disabled = false; btn.textContent = 'Générer le brief'; }
+        if (!d || !d.ok || !d.brief){ zone.innerHTML = '<div class="empty">La génération a échoué. Réessayez dans un instant.</div>'; return; }
+        briefDevCourant = d.brief;
+        briefDevCourant._m = m; briefDevCourant._poste = pri.poste;
+        briefDevCourant._pri = { appuis: pri.appuis.map(leger), opportunites: pri.opportunites.map(leger), vigilances: pri.vigilances.map(leger) };
+        briefDevCourant._seedupActif = seedupActif;
+        briefDevCourant._evolution = evolution;
+        briefDevCourant._comps = comps;
+        briefDevCourant._date = new Date().toISOString();
+        // Persistance : le brief se range avec les interactions de la personne,
+        // la prochaine ouverture de fiche l'affiche sans regénérer ni repayer.
+        if (m.email){
+          fetch(PROG_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save_interactions', email: m.email, type_analyse: 'brief_dev',
+              interactions: { poste: poste, posteNom: pri.poste, brief: d.brief, pri: briefDevCourant._pri, date: briefDevCourant._date } }),
+          }).catch(() => {});
+        }
+        zone.innerHTML = rendreBriefDev(briefDevCourant) +
+          '<div class="bd-export"><button class="exp-btn exp-mini" onclick="exporterBriefDev()">Exporter en PDF</button></div>';
+      })
+      .catch(() => {
+        if (btn){ btn.disabled = false; btn.textContent = 'Générer le brief'; }
+        zone.innerHTML = '<div class="empty">Erreur réseau pendant la génération.</div>';
+      });
+  }
+
+  // ===== Le débrief coach hebdomadaire (Phase C, super admin) =====
+  // Les défis de la semaine s'agrègent seuls, se mappent sur le référentiel,
+  // le coach ajoute trois phrases, l'IA rédige la restitution RH. Moins de
+  // cinq minutes par semaine, sinon personne ne le fera.
+  function lundiDeLaDate(iso){
+    const d = new Date(String(iso).slice(0, 10) + 'T12:00:00');
+    if (isNaN(d)) return '';
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.toISOString().slice(0, 10);
+  }
+
+  function semainesCoach(){
+    const cartes = {};
+    (campagneData.repondants || []).forEach(r => {
+      if (String(r.nom || '').toLowerCase().indexOf('test') >= 0) return;
+      (r.seedupListe || []).forEach(x => {
+        const sem = lundiDeLaDate(x.d);
+        if (!sem) return;
+        const c = cartes[sem] || (cartes[sem] = { n: 0, actifs: new Set(), reussites: [], comps: {} });
+        c.n++;
+        c.actifs.add(r.nom || '');
+        if (typeof x.r === 'number') c.reussites.push(x.r);
+        const m = window.Competences ? Competences.matcherCompetence(x.t) : null;
+        const nomC = m ? m.nom : 'Autres gestes';
+        c.comps[nomC] = (c.comps[nomC] || 0) + 1;
+      });
+    });
+    return Object.entries(cartes)
+      .map(([sem, c]) => ({
+        semaine: sem, n: c.n, actifs: c.actifs.size,
+        reussite: c.reussites.length ? Math.round(c.reussites.reduce((a, b) => a + b, 0) / c.reussites.length * 10) / 10 : null,
+        competences: Object.entries(c.comps).map(([nom, n]) => ({ nom, n })).sort((a, b) => b.n - a.n),
+      }))
+      .sort((a, b) => b.semaine.localeCompare(a.semaine));
+  }
+
+  function renderCoachHebdo(){
+    if (!SUPER || !campagneData) return '';
+    const semaines = semainesCoach();
+    if (!semaines.length) return '';
+    coachEtat = (campagneData.coach && campagneData.coach.semaines) ? JSON.parse(JSON.stringify(campagneData.coach)) : { semaines: {} };
+    let h = '<div class="panel ce-panel"><div class="ce-head"><div><div class="panel-title">Débrief coach hebdomadaire</div><div class="panel-sub">Les défis s\'agrègent seuls, ajoutez votre regard, la restitution RH se rédige.</div></div><button class="exp-btn exp-mini" onclick="exporterCoachHebdo()">Restitution RH (PDF)</button></div>';
+    h += '<div id="ch-notice"></div>';
+    semaines.slice(0, 8).forEach(sm => {
+      const sauve = coachEtat.semaines[sm.semaine] || {};
+      const dateFr = new Date(sm.semaine + 'T12:00:00').toLocaleDateString('fr-FR');
+      h += '<div class="ch-week" id="ch-' + sm.semaine + '">'
+        + '<div class="ch-week-head"><span class="ch-week-titre">Semaine du ' + dateFr + '</span>'
+        + '<span class="ch-week-stats">' + sm.n + ' défis · ' + sm.actifs + ' actif' + (sm.actifs > 1 ? 's' : '') + (sm.reussite !== null ? ' · réussite ' + sm.reussite + '/10' : '') + '</span>'
+        + (sauve.synthese ? '<span class="ch-badge">Enregistrée</span>' : '') + '</div>'
+        + '<div class="ch-comps">' + sm.competences.slice(0, 5).map(c => '<span class="ce-chip">' + esc(c.nom) + ' · ' + c.n + '</span>').join('') + '</div>'
+        + '<textarea class="ch-regard" id="ch-regard-' + sm.semaine + '" placeholder="Votre regard de coach, trois phrases suffisent...">' + esc(sauve.regard || '') + '</textarea>'
+        + '<div class="ch-actions"><button class="exp-btn exp-mini" id="ch-rediger-' + sm.semaine + '" onclick="redigerSemaineCoach(\'' + sm.semaine + '\')">Rédiger la restitution</button>'
+        + '<button class="exp-btn exp-mini ch-save" id="ch-sauver-' + sm.semaine + '" onclick="sauverCoach(\'' + sm.semaine + '\')">Enregistrer</button></div>'
+        + '<div class="ch-synt" id="ch-synt-' + sm.semaine + '">' + (sauve.synthese ? rendreSyntheseCoach(sauve) : '') + '</div>'
+        + '</div>';
+    });
+    h += '</div>';
+    return h;
+  }
+
+  function rendreSyntheseCoach(sv){
+    let h = '<p class="ch-synt-txt">' + esc(sv.synthese || '') + '</p>';
+    if (Array.isArray(sv.points) && sv.points.length) h += '<ul class="ch-points">' + sv.points.map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>';
+    return h;
+  }
+
+  function statsSemaine(sem){
+    return semainesCoach().find(x => x.semaine === sem) || null;
+  }
+
+  function redigerSemaineCoach(sem){
+    const sm = statsSemaine(sem);
+    const btn = document.getElementById('ch-rediger-' + sem);
+    const zone = document.getElementById('ch-synt-' + sem);
+    if (!sm || !zone) return;
+    const regard = (document.getElementById('ch-regard-' + sem) || {}).value || '';
+    // La synthèse précédente assure la continuité de la narration
+    const cles = Object.keys(coachEtat.semaines).filter(k => k < sem).sort();
+    const precedent = cles.length ? (coachEtat.semaines[cles[cles.length - 1]].synthese || '') : '';
+    if (btn){ btn.disabled = true; btn.textContent = 'Rédaction...'; }
+    fetch(COACH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Dashboard-Key': cleAcces },
+      body: JSON.stringify({
+        action: 'rediger', entreprise: campagneData.entreprise || '', campagne: campagneData.nom || codeCampagneCourant,
+        periode: new Date(sem + 'T12:00:00').toLocaleDateString('fr-FR'),
+        stats: { n: sm.n, actifs: sm.actifs, reussite: sm.reussite },
+        competences: sm.competences, regard: regard, precedent: precedent,
+      }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (btn){ btn.disabled = false; btn.textContent = 'Rédiger la restitution'; }
+        if (!d || !d.ok){ zone.innerHTML = '<div class="empty">La rédaction a échoué. Réessayez.</div>'; return; }
+        coachEtat.semaines[sem] = Object.assign(coachEtat.semaines[sem] || {}, {
+          regard: regard, synthese: d.synthese, points: d.points || [],
+          stats: { n: sm.n, actifs: sm.actifs, reussite: sm.reussite },
+          competences: sm.competences, maj: new Date().toISOString(),
+        });
+        zone.innerHTML = rendreSyntheseCoach(coachEtat.semaines[sem]);
+      })
+      .catch(() => {
+        if (btn){ btn.disabled = false; btn.textContent = 'Rédiger la restitution'; }
+        zone.innerHTML = '<div class="empty">Erreur réseau.</div>';
+      });
+  }
+
+  function sauverCoach(sem){
+    const btn = document.getElementById('ch-sauver-' + sem);
+    const notice = document.getElementById('ch-notice');
+    const regard = (document.getElementById('ch-regard-' + sem) || {}).value || '';
+    const sm = statsSemaine(sem);
+    coachEtat.semaines[sem] = Object.assign(coachEtat.semaines[sem] || {}, {
+      regard: regard,
+      stats: sm ? { n: sm.n, actifs: sm.actifs, reussite: sm.reussite } : (coachEtat.semaines[sem] || {}).stats,
+      competences: sm ? sm.competences : (coachEtat.semaines[sem] || {}).competences,
+      maj: new Date().toISOString(),
+    });
+    if (btn){ btn.disabled = true; btn.textContent = 'Enregistrement...'; }
+    fetch(COACH_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Dashboard-Key': cleAcces },
+      body: JSON.stringify({ action: 'sauver', code: codeCampagneCourant, coach: coachEtat }),
+    })
+      .then(r => r.json())
+      .then(d => {
+        if (btn){ btn.disabled = false; }
+        if (d && d.ok){
+          if (btn){ btn.textContent = 'Enregistré ✓'; setTimeout(() => { btn.textContent = 'Enregistrer'; }, 2500); }
+          campagneData.coach = coachEtat;
+        } else if (d && d.raison === 'champ_manquant'){
+          if (btn) btn.textContent = 'Enregistrer';
+          if (notice) notice.innerHTML = '<div class="ch-alerte">Pour activer la sauvegarde, ajoutez un champ texte long nommé exactement <b>Coach (JSON)</b> à votre table Campagnes dans Airtable. Tout le reste fonctionne déjà : rédaction et export inclus.</div>';
+        } else {
+          if (btn) btn.textContent = 'Erreur';
+          setTimeout(() => { if (btn) btn.textContent = 'Enregistrer'; }, 2500);
+        }
+      })
+      .catch(() => { if (btn){ btn.disabled = false; btn.textContent = 'Erreur'; setTimeout(() => { btn.textContent = 'Enregistrer'; }, 2500); } });
+  }
+
+  function exporterCoachHebdo(){
+    if (!coachEtat) return;
+    const cles = Object.keys(coachEtat.semaines).sort();
+    if (!cles.length){ alert('Aucune semaine rédigée pour l\'instant.'); return; }
+    let corps = '<p>Restitution hebdomadaire du coach SeedUp : les compétences réellement travaillées sur le terrain, semaine après semaine.</p>';
+    cles.forEach(sem => {
+      const sv = coachEtat.semaines[sem];
+      if (!sv || (!sv.synthese && !sv.regard)) return;
+      const st = sv.stats || {};
+      corps += '<h2>Semaine du ' + new Date(sem + 'T12:00:00').toLocaleDateString('fr-FR') + '</h2>';
+      corps += '<p class="brief-intention">' + (st.n || 0) + ' défis · ' + (st.actifs || 0) + ' participant(s) actif(s)' + (st.reussite ? ' · réussite ' + st.reussite + '/10' : '') + '</p>';
+      if ((sv.competences || []).length) corps += '<p>' + sv.competences.slice(0, 6).map(c => '<span class="ce-chip">' + esc(c.nom) + ' · ' + c.n + '</span>').join(' ') + '</p>';
+      if (sv.synthese) corps += '<p>' + esc(sv.synthese) + '</p>';
+      if ((sv.points || []).length) corps += '<ul>' + sv.points.map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>';
+      if (sv.regard) corps += '<p class="ch-regard-pdf"><i>Le regard du coach : ' + esc(sv.regard) + '</i></p>';
+    });
+    ouvrirImpression('Restitution coach SeedUp · ' + (campagneData.entreprise || '') + ' · ' + (campagneData.nom || codeCampagneCourant), corps);
+  }
+
+  // ===== Les compétences de l'équipe : trois réponses (Phase B) =====
+  // Entièrement déterministe, calculé en local sur les profils déjà chargés.
+  const FAM_COULEURS_CE = { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#2C97E0', VISION: '#5E59C7' };
+
+  function renderCompetencesEquipe(){
+    if (!window.Competences || !campagneData) return '';
+    const membres = (campagneData.repondants || [])
+      .filter(r => String(r.statut || '').toLowerCase().startsWith('termin'))
+      .filter(r => String(r.nom || '').toLowerCase().indexOf('test') < 0)
+      .map(r => ({ nom: r.nom || '', bigFive: r.bigFive, ecarts: r.naturelAdapte && r.naturelAdapte.ecarts }));
+    collectifCourant = Competences.collectif(membres);
+    if (!collectifCourant) return '';
+    const c = collectifCourant;
+    const pointFam = (f) => '<span class="ce-dot" style="background:' + (FAM_COULEURS_CE[f] || '#5E59C7') + '"></span>';
+    let h = '<div class="panel ce-panel"><div class="ce-head"><div><div class="panel-title">Les compétences de l\'équipe</div><div class="panel-sub">Trois réponses, calculées sur ' + c.effectif + ' profils : qui est fort où, ce que personne ne couvre, où la formation rapporte le plus.</div></div><button class="exp-btn exp-mini" onclick="exporterCompetencesEquipe()">Exporter (PDF)</button></div>';
+    // 1. Les référents naturels
+    h += '<div class="ce-titre">Les référents naturels</div><div class="ce-refs">';
+    c.referents.slice(0, 8).forEach(comp => {
+      h += '<div class="ce-ref-row">' + pointFam(comp.famille) + '<span class="ce-ref-comp">' + esc(comp.nom) + '</span><span class="ce-ref-noms">' +
+        comp.referents.map(x => '<span class="ce-chip">' + esc(x.nom) + ' · ' + Math.round(x.potentiel) + '</span>').join('') + '</span></div>';
+    });
+    if (!c.referents.length) h += '<div class="sup-vide">Aucun référent net ne se dégage encore.</div>';
+    h += '</div>';
+    // 2. Les compétences orphelines
+    h += '<div class="ce-titre">Les compétences orphelines</div>';
+    if (c.orphelines.length){
+      h += '<div class="ce-orph">' + c.orphelines.slice(0, 5).map(o => '<span class="ce-chip ce-chip-orph">' + esc(o.nom) + ' · potentiel max ' + Math.round(o.maxPot) + '</span>').join('') + '</div>';
+      h += '<p class="ce-note">Personne dans l\'équipe ne porte le potentiel de ' + (c.orphelines.length > 1 ? 'ces compétences' : 'cette compétence') + ' : le vrai risque structurel, à couvrir par recrutement, binôme externe ou externalisation.</p>';
+    } else {
+      h += '<p class="ce-note ce-note-ok">Aucune compétence orpheline : l\'équipe couvre l\'ensemble du référentiel. Un atout rare.</p>';
+    }
+    // 3. Le chantier de formation numéro un
+    if (c.chantiers.length){
+      const ch = c.chantiers[0];
+      const motif = ch.motif === 'potentiel_dormant'
+        ? 'Potentiel dormant moyen de +' + ch.dormant + ' points chez ' + ch.nbPorteurs + ' membre' + (ch.nbPorteurs > 1 ? 's' : '') + ' : le moteur est là, la formation prendra vite.'
+        : 'Compétence clé au niveau collectif de ' + Math.round(ch.exprMoyenne) + ' avec un potentiel présent : progression réaliste par la pratique guidée.';
+      h += '<div class="ce-titre">Le chantier de formation numéro un</div>';
+      h += '<div class="ce-chantier">' + pointFam(ch.famille) + '<div class="ce-chantier-corps"><div class="ce-chantier-nom">' + esc(ch.nom) + '</div><p class="ce-note">' + motif + '</p>' +
+        (c.chantiers.length > 1 ? '<div class="ce-runners">Ensuite : ' + c.chantiers.slice(1).map(x => '<span class="ce-chip">' + esc(x.nom) + '</span>').join(' ') + '</div>' : '') +
+        '</div>' +
+        (SUPER ? '<button class="analyse-cta-btn ce-btn" onclick="lancerBriefChantier()">Lancer le brief de campagne sur ce chantier</button>' : '') +
+        '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function lancerBriefChantier(){
+    if (!collectifCourant || !collectifCourant.chantiers.length) return;
+    axesForces = collectifCourant.chantiers.map(x => x.nom);
+    const zone = document.getElementById('brief-zone');
+    if (zone) zone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    genererBrief();
+  }
+
+  function exporterCompetencesEquipe(){
+    if (!collectifCourant) return;
+    const c = collectifCourant;
+    let corps = '<p>Analyse déterministe sur ' + c.effectif + ' profils terminés. Le potentiel vient de la nature, l\'expression du comportement au travail.</p>';
+    corps += '<h2>Les référents naturels</h2><ul>' + c.referents.map(comp => '<li><b>' + esc(comp.nom) + '</b> : ' + comp.referents.map(x => esc(x.nom) + ' (potentiel ' + Math.round(x.potentiel) + ')').join(', ') + '</li>').join('') + '</ul>';
+    corps += '<h2>Les compétences orphelines</h2>' + (c.orphelines.length
+      ? '<ul>' + c.orphelines.map(o => '<li><b>' + esc(o.nom) + '</b> : potentiel maximal ' + Math.round(o.maxPot) + ' dans l\'équipe</li>').join('') + '</ul><p>À couvrir par recrutement, binôme externe ou externalisation.</p>'
+      : '<p>Aucune : l\'équipe couvre l\'ensemble du référentiel.</p>');
+    if (c.chantiers.length){
+      corps += '<h2>Les chantiers de formation</h2><ul>' + c.chantiers.map((ch, i) => '<li><b>' + (i + 1) + '. ' + esc(ch.nom) + '</b> : ' + (ch.motif === 'potentiel_dormant' ? 'potentiel dormant moyen de +' + ch.dormant + ' points chez ' + ch.nbPorteurs + ' membre(s)' : 'niveau collectif ' + Math.round(ch.exprMoyenne) + ', potentiel présent') + '</li>').join('') + '</ul>';
+    }
+    ouvrirImpression('Compétences de l\'équipe · ' + (campagneData.entreprise || '') + ' · ' + (campagneData.nom || codeCampagneCourant), corps);
+  }
+
+  function chargerBriefDevSauve(idx){
+
+    const m = (typeof repsCourants !== 'undefined' && repsCourants[idx]) || (campagneData && campagneData.repondants ? campagneData.repondants[idx] : null);
+    if (!m || !m.email || !window.Competences) return;
+    fetch(PROG_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load_interactions', email: m.email }) })
+      .then(r => r.json())
+      .then(d => {
+        const bd = d && d.interactions && d.interactions.brief_dev;
+        const zone = document.getElementById('bd-zone');
+        if (!zone) return;
+        if (!bd || !bd.brief){
+          // Sans brief sauvegardé, la matrice déterministe est déjà consultable
+          if (m.bigFive && m.bigFive.O !== null && m.bigFive.O !== undefined){
+            const comps = Competences.scorer(m.bigFive, m.naturelAdapte && m.naturelAdapte.ecarts);
+            zone.innerHTML = '<button type="button" class="bd-mat-btn" id="bd-mat-btn" onclick="toggleMatrice()">Voir la matrice des 16 compétences</button>'
+              + '<div id="bd-matrice" style="display:none">' + matriceHtml({ _comps: comps }) + '</div>';
+          }
+          return;
+        }
+        if (bd.poste) document.querySelectorAll('.bd-poste').forEach(x => x.classList.toggle('on', x.getAttribute('data-p') === bd.poste));
+        briefDevCourant = bd.brief;
+        briefDevCourant._m = m;
+        briefDevCourant._poste = bd.posteNom || bd.poste || '';
+        briefDevCourant._pri = bd.pri || { appuis: [], opportunites: [], vigilances: [] };
+        briefDevCourant._seedupActif = (m.nbSeedup || 0) > 0;
+        briefDevCourant._date = bd.date || '';
+        briefDevCourant._comps = Competences.scorer(m.bigFive, m.naturelAdapte && m.naturelAdapte.ecarts);
+        briefDevCourant._evolution = calculerEvolution(m);
+        zone.innerHTML = rendreBriefDev(briefDevCourant) +
+          '<div class="bd-export"><button class="exp-btn exp-mini" onclick="exporterBriefDev()">Exporter en PDF</button></div>';
+      })
+      .catch(() => {});
+  }
+
+  // La preuve d'évolution : coût d'adaptation d'origine contre dernière re-mesure
+  function calculerEvolution(m){
+    const na = m.naturelAdapte;
+    if (!m.remesure || !na || typeof na.moyenneEcart !== 'number' || typeof m.remesure.moyenneEcart !== 'number') return null;
+    return {
+      avant: na.moyenneEcart, apres: m.remesure.moyenneEcart,
+      coutAvant: na.cout || '', coutApres: m.remesure.cout || '',
+      date: m.remesure.date ? new Date(m.remesure.date).toLocaleDateString('fr-FR') : '',
+    };
+  }
+
+  const ZONES_MAT = { appui: 'Appui', opportunite: 'Opportunité', neutre: 'Neutre', economie: 'Économie' };
+  function matriceHtml(b){
+    const comps = b._comps || [];
+    if (!comps.length) return '';
+    return comps.map(c =>
+      '<div class="bd-mat-row"><span class="bd-mat-nom">' + esc(c.nom) + '</span>' +
+      '<div class="bd-jauge-bar"><div class="bd-jauge-pot" style="width:' + Math.round(c.potentiel) + '%"></div><div class="bd-jauge-expr" style="left:' + Math.round(c.expression) + '%"></div></div>' +
+      '<span class="bd-mat-zone z-' + c.zone + '">' + (ZONES_MAT[c.zone] || c.zone) + '</span></div>'
+    ).join('');
+  }
+  function toggleMatrice(){
+    const d = document.getElementById('bd-matrice');
+    const b = document.getElementById('bd-mat-btn');
+    if (!d) return;
+    const ouvert = d.style.display !== 'none';
+    d.style.display = ouvert ? 'none' : 'block';
+    if (b) b.textContent = ouvert ? 'Voir la matrice des 16 compétences' : 'Masquer la matrice';
+  }
+
+  function jaugeComp(c){
+    return '<div class="bd-jauge"><span class="bd-jauge-lab">Potentiel ' + Math.round(c.potentiel) + '</span><div class="bd-jauge-bar"><div class="bd-jauge-pot" style="width:' + Math.round(c.potentiel) + '%"></div><div class="bd-jauge-expr" style="left:' + Math.round(c.expression) + '%"></div></div><span class="bd-jauge-lab">Expression ' + Math.round(c.expression) + '</span></div>';
+  }
+
+  function rendreBriefDev(b){
+    const pri = b._pri || { appuis: [], opportunites: [], vigilances: [] };
+    const trouve = (liste, nom) => liste.find(c => c.nom === nom) || null;
+    let h = '<div class="bd-brief">';
+    if (b._date) h += '<div class="bd-date">Brief du ' + esc(new Date(b._date).toLocaleDateString('fr-FR')) + ' · poste ' + esc(b._poste || '') + ' · regénérez pour actualiser</div>';
+    if (b._evolution) h += '<div class="bd-preuve">Preuve d\'évolution · coût d\'adaptation ' + b._evolution.avant + ' <span class="bd-preuve-fl">›</span> ' + b._evolution.apres + (b._evolution.coutApres ? ' (' + esc(b._evolution.coutApres) + ')' : '') + (b._evolution.date ? ' · re-mesuré le ' + esc(b._evolution.date) : '') + '</div>';
+    h += '<div class="bd-accroche">' + esc(b.accroche || '') + '</div>';
+    h += '<div class="bd-titre-sec">Forces d\'appui</div>';
+    (b.appuis || []).forEach(a => {
+      const c = trouve(pri.appuis, a.competence);
+      h += '<div class="bd-carte bd-appui"><div class="bd-comp">' + esc(a.competence) + '</div>' + (c ? jaugeComp(c) : '') + '<p class="bd-usage">' + esc(a.usage || '') + '</p></div>';
+    });
+    h += '<div class="bd-titre-sec">Opportunités à investir</div>';
+    (b.opportunites || []).forEach(o => {
+      const c = trouve(pri.opportunites, o.competence);
+      h += '<div class="bd-carte bd-opp"><div class="bd-comp">' + esc(o.competence) + '</div>' + (c ? jaugeComp(c) : '')
+        + '<p class="bd-pourquoi">' + esc(o.pourquoi || '') + '</p>'
+        + '<p class="bd-levier"><b>Levier :</b> ' + esc(o.levier || '') + '</p>'
+        + (o.offre ? '<span class="bd-offre">' + esc(o.offre) + '</span>' : '')
+        + '</div>';
+    });
+    if ((b.vigilances || []).length){
+      h += '<div class="bd-titre-sec">Vigilances de staffing</div>';
+      b.vigilances.forEach(v => {
+        h += '<div class="bd-carte bd-vigi"><div class="bd-comp">' + esc(v.competence) + '</div><p class="bd-usage">' + esc(v.strategie || '') + '</p></div>';
+      });
+    }
+    // Le bloc SeedUp : actif quand les défis existent, vitrine grisée sinon
+    const defisHtml = (b.opportunites || []).map(o =>
+      (o.defis && o.defis.length) ? '<div class="bd-defi-ligne"><b>' + esc(o.competence) + '</b> : ' + o.defis.map(esc).join(' · ') + '</div>' : ''
+    ).join('');
+    if (b._seedupActif){
+      h += '<div class="bd-seedup on"><div class="bd-seedup-head">SeedUp · Ancrage comportemental <span class="bd-badge-on">Actif · ' + ((b._m && b._m.nbSeedup) || 0) + ' défis réalisés</span></div>'
+        + '<p class="bd-seedup-txt">Les opportunités ci-dessus se travaillent sur le terrain. Défis types à pousser :</p>' + defisHtml + '</div>';
+    } else {
+      h += '<div class="bd-seedup off"><div class="bd-seedup-head">SeedUp · Ancrage comportemental <span class="bd-badge-off">Non activé sur cette campagne</span></div>'
+        + '<p class="bd-seedup-txt">Avec SeedUp, ces opportunités deviennent des défis de terrain de 5 minutes, personnalisés à son archétype, avec un débrief coach hebdomadaire et une preuve d\'évolution mesurée à 90 jours. Aperçu de ce que ' + esc((b._m && String(b._m.nom || '').split(' ')[0]) || 'la personne') + ' recevrait :</p>'
+        + defisHtml + '</div>';
+    }
+    h += '<div class="bd-conclusion">' + esc(b.conclusion || '') + '</div>';
+    h += '<button type="button" class="bd-mat-btn" id="bd-mat-btn" onclick="toggleMatrice()">Voir la matrice des 16 compétences</button>';
+    h += '<div id="bd-matrice" style="display:none">' + matriceHtml(b) + '</div>';
+    h += '</div>';
+    return h;
+  }
+
+  function exporterBriefDev(){
+    if (!briefDevCourant) return;
+    const m = briefDevCourant._m || {};
+    const corps = rendreBriefDev(briefDevCourant)
+      .replace('id="bd-matrice" style="display:none"', 'id="bd-matrice"')
+      .replace('>Voir la matrice des 16 compétences<', ' style="display:none">Matrice<');
+    ouvrirImpression('Brief de développement · ' + (m.nom || '') + ' · ' + (briefDevCourant._poste || ''), '<div class="bd-brief-pdf">' + corps + '</div>');
+  }
+
   async function telechargerPortraitMembre(idx){
     const m = repsCourants[idx];
     const btn = document.getElementById('fm-pdf-btn');
@@ -1926,6 +2454,8 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       </div>`;
     }
     html += `<div id="analyse-zone"></div>`;
+    html += renderCompetencesEquipe();
+    html += renderCoachHebdo();
     if (SUPER && idxTerm.length >= 2) {
       html += `
       <div class="analyse-cta brief-cta">
@@ -2060,7 +2590,12 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     const fams = { RELATION: 0, ACTION: 0, STRUCTURE: 0, VISION: 0 };
     reps.forEach(r => { const f = (r.famille || '').toUpperCase(); if (fams[f] !== undefined) fams[f]++; });
     let axes = [];
-    try { axes = (axesFormation(reps, fams) || []).map(a => (a && a.titre) ? a.titre : a).filter(Boolean).slice(0, 4); } catch (e) { axes = []; }
+    if (axesForces && axesForces.length){
+      axes = axesForces.slice(0, 4);
+      axesForces = null;
+    } else {
+      try { axes = (axesFormation(reps, fams) || []).map(a => (a && a.titre) ? a.titre : a).filter(Boolean).slice(0, 4); } catch (e) { axes = []; }
+    }
     let coutParNom = {};
     try {
       const ad = analyserEquipe(reps);
@@ -2584,6 +3119,48 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     if(!w){ alert('Autorisez les fenêtres pop-up pour exporter en PDF.'); return; }
     var styles = "body{font-family:'Poppins','Manrope',-apple-system,Segoe UI,Roboto,sans-serif;color:#1A1A2E;max-width:800px;margin:0 auto;padding:0 0 40px;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact;}"+
       ".exp-band{height:9px;background:linear-gradient(90deg,#F98272,#E290EC 55%,#5E59C7);}"+
+      ".brief-cap{padding:14px 16px;border-radius:14px;background:#F3F1FA;border-left:4px solid #5E59C7;margin:14px 0;}"+
+      ".brief-kicker{font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#5E59C7;}"+
+      ".brief-cap-txt{font-size:15px;font-weight:700;margin-top:3px;line-height:1.45;}"+
+      ".brief-intention{font-size:13px;color:#6B6B72;font-style:italic;margin:6px 0 10px;}"+
+      ".brief-defi{padding:11px 13px;border-radius:12px;background:#F8F7F4;margin-bottom:9px;page-break-inside:avoid;}"+
+      ".brief-defi-titre{font-size:13.5px;font-weight:800;color:#5E59C7;margin-bottom:4px;}"+
+      ".brief-reussite{font-size:12px;color:#6B6B72;font-weight:600;margin-bottom:7px;}"+
+      ".brief-decls{margin-top:5px;}"+
+      ".brief-decl{font-size:12px;line-height:1.5;background:#fff;border:1px solid #ECEAE3;border-radius:9px;padding:6px 9px;margin-bottom:4px;}"+
+      ".brief-decl-fam{display:inline-block;font-size:10px;font-weight:800;letter-spacing:0.05em;color:#5E59C7;margin-right:6px;}"+
+      ".brief-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0;}"+
+      ".brief-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:#6B6B72;padding:6px 8px;border-bottom:2px solid #EFEDE6;}"+
+      ".brief-table td{padding:7px 8px;border-bottom:1px solid #F0EEE8;}"+
+      ".bd-date{font-size:11.5px;color:#8A879B;margin-bottom:8px;}"+
+      ".bd-preuve{display:inline-block;font-size:12px;font-weight:800;color:#2F6B3E;background:#E9F3EC;border:1px solid #BCD9C4;border-radius:14px;padding:6px 12px;margin-bottom:10px;}"+
+      ".bd-accroche{font-size:14px;line-height:1.6;padding:12px 14px;border-radius:12px;background:#F3F1FA;border-left:4px solid #5E59C7;margin-bottom:12px;}"+
+      ".bd-titre-sec{font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:#5E59C7;margin:14px 0 8px;}"+
+      ".bd-carte{padding:11px 13px;border-radius:12px;margin-bottom:8px;background:#F8F7F4;page-break-inside:avoid;}"+
+      ".bd-appui{border-left:4px solid #4C8F5D;}.bd-opp{border-left:4px solid #E8951A;}.bd-vigi{border-left:4px solid #B0AEB8;}"+
+      ".bd-comp{font-size:13.5px;font-weight:800;margin-bottom:5px;}"+
+      ".bd-usage,.bd-pourquoi,.bd-levier{font-size:12.5px;line-height:1.55;margin:4px 0;}"+
+      ".bd-offre{display:inline-block;font-size:11px;font-weight:800;color:#5E59C7;background:#EEECf9;border-radius:12px;padding:4px 10px;margin-top:4px;}"+
+      ".bd-jauge{display:flex;align-items:center;gap:8px;margin:4px 0 7px;}"+
+      ".bd-jauge-lab{font-size:10px;font-weight:700;color:#6B6B72;white-space:nowrap;}"+
+      ".bd-jauge-bar{position:relative;flex:1;height:8px;border-radius:5px;background:#ECEAE3;}"+
+      ".bd-jauge-pot{position:absolute;top:0;left:0;bottom:0;border-radius:5px;background:#5E59C7;}"+
+      ".bd-jauge-expr{position:absolute;top:-3px;width:3px;height:14px;border-radius:2px;background:#F98272;}"+
+      ".bd-seedup{margin-top:14px;padding:12px 14px;border-radius:14px;page-break-inside:avoid;}"+
+      ".bd-seedup.on{background:#EEF6F0;border:1px solid #BCD9C4;}"+
+      ".bd-seedup.off{background:#F6F5F1;border:1.5px dashed #C9C5BA;}"+
+      ".bd-seedup-head{font-size:12.5px;font-weight:800;margin-bottom:6px;}"+
+      ".bd-badge-on{font-size:10px;font-weight:800;color:#fff;background:#4C8F5D;border-radius:12px;padding:3px 9px;margin-left:8px;}"+
+      ".bd-badge-off{font-size:10px;font-weight:800;color:#8A879B;background:#ECEAE3;border-radius:12px;padding:3px 9px;margin-left:8px;}"+
+      ".bd-seedup-txt{font-size:12px;line-height:1.55;color:#4A4A52;margin:0 0 7px;}"+
+      ".bd-defi-ligne{font-size:11.5px;line-height:1.5;padding:6px 9px;background:#fff;border-radius:9px;margin-bottom:4px;border:1px solid #ECEAE3;}"+
+      ".bd-conclusion{font-size:13px;line-height:1.6;font-style:italic;margin-top:12px;padding-top:10px;border-top:1px solid #ECEAE3;}"+
+      ".bd-mat-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #F0EEE8;page-break-inside:avoid;}"+
+      ".bd-mat-nom{flex:0 0 210px;font-size:12px;font-weight:600;}"+
+      ".bd-mat-zone{flex:0 0 86px;text-align:center;font-size:10px;font-weight:800;border-radius:10px;padding:3px 0;}"+
+      ".z-appui{background:#E4F0E7;color:#2F6B3E;}.z-opportunite{background:#FBEBD2;color:#8A5A00;}.z-neutre{background:#EFEDE6;color:#6B6B72;}.z-economie{background:#F5F4F0;color:#9A98A3;}"+
+      ".ce-chip{display:inline-block;font-size:11px;font-weight:700;color:#5E59C7;background:#EEECF9;border-radius:12px;padding:3px 10px;margin:0 3px 3px 0;}"+
+      ".ch-regard-pdf{font-size:12px;color:#6B6B72;}"+
       ".exp-wrap{padding:30px 42px 0;}"+
       ".exp-logo{font-size:13px;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:#5E59C7;}"+
       ".exp-logo span{color:#C9C3E8;margin-left:7px;}"+
