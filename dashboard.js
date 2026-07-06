@@ -6,8 +6,8 @@
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v64');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v64]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v68');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v68]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";
@@ -797,6 +797,8 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
   function ouvrirMembre(idx){
     const m = repsCourants[idx];
     if(!m) return;
+    membreFicheCourant = m;
+    setTimeout(function(){ try { majFitFiche(); } catch (e) { console.warn("[Sinéa]", e); } }, 0);
     const f=(m.famille||'').toUpperCase(); const col=FAM_COLORS[f]||'#999';
     const ctx=m.contextuel||{};
     const na=m.naturelAdapte||null;
@@ -880,7 +882,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
               <button type="button" class="bd-poste" data-p="custom" onclick="choisirPosteBrief(this)">Sur mesure</button>
             </div>
             <div class="bd-custom-lien"><a onclick="toggleEditeurPoste()">Définir le profil cible de l'entreprise</a></div>
-            <div id="bd-custom-editor" style="display:none"></div>\n            <div id="bd-custom-statut"></div>
+            <div id="bd-custom-editor" style="display:none"></div>\n            <div id="bd-custom-statut"></div>\n            <div id="bd-fit"></div>
             <button class="fm-pdf-btn bd-btn" id="bd-btn" onclick="genererBriefDev(${idx})">Générer le brief</button>
             <div id="bd-zone"></div>
           </div>
@@ -961,6 +963,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     document.querySelectorAll('.bd-poste').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-pressed', 'false'); });
     btn.classList.add('on');
     btn.setAttribute('aria-pressed', 'true');
+    try { majFitFiche(); } catch (e) {}
   }
 
   function genererBriefDev(idx){
@@ -1225,6 +1228,15 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     let h = '<div class="panel ce-panel"><div class="ce-head"><div><div class="panel-title">Tableau de bord de campagne</div><div class="panel-sub">La vue consolidée : qualité vécue, compétences, preuves et fil du coach.</div></div><div class="tb-actions"><button class="exp-btn exp-mini" onclick="exporterTableauCampagne()">Exporter (PDF)</button>' + (SUPER ? ' <button class="exp-btn exp-mini" id="btn-csv-camp" onclick="exporterCsvCampagne()">CSV de cette campagne</button>' : '') + '</div></div>';
     h += '<div class="sup-kpis tb-kpis">' + kpi(reps.length, 'Terminés') + kpi(nR !== null ? nR + '/5' : null, 'Ressemblance') + kpi(nU !== null ? nU + '/5' : null, 'Actions') + kpi(nC !== null ? nC + '/5' : null, 'Clarté') + kpi(pTot ? Math.round(100 * pOk / pTot) + '%' : null, 'Paris justes') + kpi(fiabs, 'Fiabilité') + kpi(couts !== null ? couts + ' $' : null, 'Coût moyen') + kpi(nbSd, 'Sur SeedUp') + '</div>';
     // La carte des compétences : potentiel (barre) contre expression (curseur)
+    if (window.Visuels && (coll.matrice || []).length){
+      const zonePour = (p, e) => (p >= 62 && e >= 55) ? 'appui' : (p >= 50 && e < 55) ? 'opportunite' : (e >= 55 && p < 62) ? 'economie' : 'neutre';
+      const compsEq = coll.matrice.map(cm => ({ id: cm.id, nom: cm.nom, famille: cm.famille || ((Competences.REFERENTIEL.find(r => r.id === cm.id) || {}).famille), potentiel: cm.potMoyen, expression: cm.exprMoyenne, zone: zonePour(cm.potMoyen, cm.exprMoyenne), score: cm.potMoyen }));
+      const tailles = {}; coll.matrice.forEach(cm => { tailles[cm.id] = cm.nbPorteurs || 1; });
+      const topGisements = coll.matrice.slice().sort((a, b2) => b2.dormant - a.dormant).slice(0, 5).map(cm => cm.id);
+      h += '<div class="ce-titre">La carte de l\'équipe</div><div class="bd-q16">'
+        + window.Visuels.quadrantSvg(compsEq, { compact: true, taille: tailles, labels: topGisements, titreX: 'Potentiel moyen de l\'équipe', titreY: 'Expression moyenne' })
+        + '</div><div class="sup-vide">La taille d\'un point suit le nombre de porteurs. Étiquettes : les cinq plus grands gisements.</div>';
+    }
     h += '<div class="ce-titre">La carte des compétences de l\'équipe</div><div class="tb-carte">';
     const matTriee = (coll.matrice || []).slice().sort((a, b2) => (b2.dormant * b2.nbPorteurs) - (a.dormant * a.nbPorteurs) || b2.dormant - a.dormant);
     const ligneMat = (c) => '<div class="bd-mat-row"><span class="bd-mat-nom">' + esc(c.nom) + '</span>'
@@ -1406,10 +1418,157 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
   }
 
   const ZONES_MAT = { appui: 'Appui', opportunite: 'Opportunité', neutre: 'Neutre', economie: 'Économie' };
+  function deltasBrief(b){
+    if (!b || !b._comps || !b._compsApres) return null;
+    const d = {};
+    b._compsApres.forEach(ap => {
+      const av = b._comps.find(x => x.id === ap.id);
+      if (av) d[ap.id] = { avant: av.expression, apres: ap.expression };
+    });
+    return d;
+  }
+
+  // ===== Sprint 2 : le fit au poste =====
+  // Cibles d'expression par importance : déterminante 75, utile 60, secondaire 45.
+  function cibleDe(coef){ return coef >= 1.2 ? 75 : (coef >= 0.85 ? 60 : 45); }
+  function coefsPoste(posteId){
+    if (posteId === 'custom') return chargerPosteCustom();
+    const p = window.Competences && Competences.POSTES && Competences.POSTES[posteId];
+    return p ? p.coefs : null;
+  }
+  function compsDe(m){
+    return (window.Competences && m && m.bigFive) ? Competences.scorer(m.bigFive, m.naturelAdapte && m.naturelAdapte.ecarts, m.speDims) : null;
+  }
+  function fitPoste(comps, coefs){
+    if (!comps || !comps.length || !coefs) return null;
+    let num = 0, den = 0; const gaps = [];
+    comps.forEach(c => {
+      const coef = coefs[c.id] || 1;
+      const cible = cibleDe(coef);
+      num += coef * Math.max(0, Math.min(1, c.expression / cible));
+      den += coef;
+      if (coef >= 1.2 && c.expression < cible) gaps.push({ nom: c.nom, exp: Math.round(c.expression), cible: cible, manque: cible - c.expression, moteur: c.potentiel >= cible });
+    });
+    gaps.sort((a, b) => b.manque - a.manque);
+    return den ? { score: Math.round(100 * num / den), gaps: gaps.slice(0, 3) } : null;
+  }
+  function palierFit(sc){ return sc >= 80 ? 'haut' : sc >= 60 ? 'mi' : 'bas'; }
+
+  // Le fit dans la fiche membre, recalculé au choix de la pastille de poste
+  let membreFicheCourant = null;
+  function majFitFiche(){
+    const zone = document.getElementById('bd-fit');
+    const m = membreFicheCourant;
+    if (!zone || !m) return;
+    const posteEl = document.querySelector('.bd-poste.on');
+    const poste = posteEl ? posteEl.getAttribute('data-p') : 'manager';
+    const coefs = coefsPoste(poste);
+    if (!coefs){
+      zone.innerHTML = poste === 'custom' ? '<div class="bd-fit-note">Définissez le profil cible sur mesure ci-dessus pour mesurer l\'adéquation.</div>' : '';
+      return;
+    }
+    const fit = fitPoste(compsDe(m), coefs);
+    if (!fit){ zone.innerHTML = ''; return; }
+    zone.innerHTML = '<div class="bd-fit"><span class="bd-fit-score s-' + palierFit(fit.score) + '">' + fit.score + '%</span><span class="bd-fit-lab">d\'adéquation au poste sélectionné</span></div>'
+      + (fit.gaps.length
+        ? '<div class="bd-fit-gaps">' + fit.gaps.map(g => '<span class="bd-gap">' + esc(g.nom) + ' <b>' + g.exp + '</b><i>/' + g.cible + '</i>' + (g.moteur ? '<u title="Le potentiel est là : développable par la pratique">moteur présent</u>' : '') + '</span>').join('') + '</div>'
+        : '<div class="bd-fit-gaps"><span class="bd-gap bd-gap-ok">Aucun écart sur les compétences déterminantes</span></div>');
+  }
+
+  // ===== Sprint 2 : la carte de chaleur de l'équipe =====
+  const ABREV_COMP = { ecoute_active: 'Écoute', cooperation: 'Coop.', communication_influence: 'Influ.', developpement_autres: 'Dévl.', orientation_resultats: 'Résul.', prise_decision: 'Décis.', initiative: 'Initi.', resilience: 'Résil.', organisation: 'Organ.', rigueur: 'Rigue.', fiabilite_suivi: 'Fiabi.', analyse: 'Analy.', vision_strategique: 'Visio.', creativite: 'Créat.', adaptabilite: 'Adapt.', apprentissage: 'Appre.' };
+  let heatTri = null;
+  function donneesHeat(){
+    return membresCompetences().map(r => {
+      const comps = compsDe(r);
+      if (!comps) return null;
+      const par = {}; comps.forEach(c => { par[c.id] = { e: c.expression, p: c.potentiel }; });
+      return { idx: repsCourants.indexOf(r), nom: r.nom || '', par: par };
+    }).filter(Boolean);
+  }
+  function heatTable(){
+    if (!window.Competences) return '';
+    const refs = Competences.REFERENTIEL;
+    let lignes = donneesHeat();
+    if (!lignes.length) return '';
+    if (heatTri) lignes = lignes.slice().sort((a, b) => ((b.par[heatTri] || {}).e || 0) - ((a.par[heatTri] || {}).e || 0));
+    else lignes = lignes.slice().sort((a, b) => a.nom.localeCompare(b.nom));
+    let h = '<table class="heat"><thead><tr><th class="heat-nom"></th>'
+      + refs.map(rf => '<th class="heat-th' + (heatTri === rf.id ? ' on' : '') + '" onclick="triHeat(\'' + rf.id + '\')" title="' + esc(rf.nom) + ' · cliquer pour trier"><span>' + (ABREV_COMP[rf.id] || rf.id) + '</span></th>').join('')
+      + '</tr></thead><tbody>';
+    lignes.forEach(l => {
+      h += '<tr><td class="heat-nom" onclick="ouvrirMembre(' + l.idx + ')">' + esc(l.nom) + '</td>'
+        + refs.map(rf => {
+          const v = l.par[rf.id] || { e: 0, p: 0 };
+          const a = (0.06 + 0.74 * Math.max(0, Math.min(100, v.e)) / 100).toFixed(2);
+          const dormant = v.p >= 62 && v.e < 55;
+          return '<td class="heat-c" style="background:rgba(94,89,199,' + a + ')" title="' + esc(rf.nom) + ' · expression ' + Math.round(v.e) + ' · potentiel ' + Math.round(v.p) + '">' + (dormant ? '<i class="heat-dot" title="Potentiel dormant"></i>' : '') + '</td>';
+        }).join('') + '</tr>';
+    });
+    return h + '</tbody></table>';
+  }
+  function triHeat(id){
+    heatTri = heatTri === id ? null : id;
+    const z = document.getElementById('tb-heat');
+    if (z) z.innerHTML = heatTable();
+  }
+  function renderHeatmapEquipe(){
+    if (!window.Competences) return '';
+    const t = heatTable();
+    if (!t) return '';
+    return '<div class="panel ce-panel"><div class="panel-title">La carte de chaleur de l\'équipe</div>'
+      + '<div class="panel-sub">Chaque cellule teinte l\'expression au travail. Le point ambré signale un potentiel dormant. Cliquez une colonne pour trier, un nom pour ouvrir la fiche.</div>'
+      + '<div class="heat-wrap" id="tb-heat">' + t + '</div>'
+      + '<div class="heat-leg"><span class="heat-leg-grad"></span><span>expression 0 › 100</span><i class="heat-dot"></i><span>potentiel dormant</span></div></div>';
+  }
+
+  // ===== Sprint 2 : l'adéquation au poste, l'arme du staffing =====
+  let fitPosteChoisi = null;
+  function renderFitListe(){
+    const coefs = coefsPoste(fitPosteChoisi);
+    if (!coefs){
+      return '<div class="empty">Le profil sur mesure de cette entreprise attend sa définition : ouvrez une fiche, pastille Sur mesure, Définir le profil cible.</div>';
+    }
+    const lignes = membresCompetences().map(r => {
+      const fit = fitPoste(compsDe(r), coefs);
+      return fit ? { idx: repsCourants.indexOf(r), nom: r.nom || '', fit: fit } : null;
+    }).filter(Boolean).sort((a, b) => b.fit.score - a.fit.score);
+    if (!lignes.length) return '<div class="empty">Aucun profil terminé à évaluer.</div>';
+    return lignes.map((l, i) =>
+      '<div class="fit-row" onclick="ouvrirMembre(' + l.idx + ')">'
+      + '<span class="fit-rang">' + (i + 1) + '</span>'
+      + '<span class="fit-nom">' + esc(l.nom) + '</span>'
+      + '<span class="fit-rail"><i class="fit-barre f-' + palierFit(l.fit.score) + '" style="width:' + l.fit.score + '%"></i></span>'
+      + '<span class="fit-score">' + l.fit.score + '%</span>'
+      + '<span class="fit-gaps">' + l.fit.gaps.slice(0, 2).map(g => '<em>' + esc(g.nom) + ' ' + g.exp + '/' + g.cible + '</em>').join('') + '</span>'
+      + '</div>').join('');
+  }
+  function renderFitPoste(){
+    if (!window.Competences) return '';
+    if (membresCompetences().length < 2) return '';
+    if (!fitPosteChoisi) fitPosteChoisi = posteCustomCourant ? 'custom' : 'manager';
+    const chips = [['manager', 'Manager'], ['commercial', 'Commercial'], ['expert', 'Expert'], ['custom', 'Sur mesure']]
+      .map(([id, lab]) => '<button type="button" class="bd-poste fitp' + (fitPosteChoisi === id ? ' on' : '') + '" data-p="' + id + '" aria-pressed="' + (fitPosteChoisi === id) + '" onclick="choisirFitPoste(this)">' + lab + '</button>').join('');
+    return '<div class="panel ce-panel"><div class="panel-title">L\'adéquation au poste</div>'
+      + '<div class="panel-sub">Le classement de l\'équipe face au référentiel du poste, avec les écarts sur les compétences déterminantes. Moteur présent signifie que le potentiel y est : la pratique fera le reste.</div>'
+      + '<div class="fit-chips">' + chips + '</div>'
+      + '<div id="fit-liste">' + renderFitListe() + '</div></div>';
+  }
+  function choisirFitPoste(btn){
+    fitPosteChoisi = btn.getAttribute('data-p');
+    document.querySelectorAll('.fitp').forEach(b => { b.classList.toggle('on', b === btn); b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+    const z = document.getElementById('fit-liste');
+    if (z) z.innerHTML = renderFitListe();
+  }
+
   function matriceHtml(b){
+    // La carte des 16 en tête, le détail ligne à ligne dessous
+    const enTete = (window.Visuels && b && b._comps)
+      ? '<div class="bd-q16">' + window.Visuels.quadrantSvg(b._comps, { compact: true, deltas: deltasBrief(b) }) + '</div>'
+      : '';
     const comps = b._comps || [];
     if (!comps.length) return '';
-    return comps.map(c =>
+    return enTete + comps.map(c =>
       '<div class="bd-mat-row"><span class="bd-mat-nom">' + esc(c.nom) + '</span>' +
       '<div class="bd-jauge-bar"><div class="bd-jauge-pot" style="width:' + Math.round(c.potentiel) + '%"></div><div class="bd-jauge-expr" style="left:' + Math.round(c.expression) + '%"></div></div>' +
       '<span class="tb-mat-val">' + Math.round(c.potentiel) + ' / ' + Math.round(c.expression) + '</span>' +
@@ -2011,6 +2170,8 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     }
     html += `<div id="analyse-zone"></div>`;
     html += renderTableauCampagne();
+    html += renderHeatmapEquipe();
+    html += renderFitPoste();
     html += renderCompetencesEquipe();
     html += renderCoachHebdo();
     if (SUPER && idxTerm.length >= 2) {
@@ -2740,6 +2901,8 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       ".pdf-date{font-size:11px;color:#8A879B;font-weight:600;}"+
       ".pdf-conf{font-size:10px;color:#B0AEB8;letter-spacing:0.04em;margin-bottom:10px;border-bottom:1px solid #EFEDE6;padding-bottom:8px;}"+
       "h3{font-size:14px;margin:16px 0 3px;}"+
+      ".q16,.dp2{width:100%;height:auto;display:block;}"+
+      ".bd-q16{margin:6px 0 14px;}"+
       ".brief-cap{padding:14px 16px;border-radius:14px;background:#F3F1FA;border-left:4px solid #5E59C7;margin:14px 0;}"+
       ".brief-kicker{font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#5E59C7;}"+
       ".brief-cap-txt{font-size:15px;font-weight:700;margin-top:3px;line-height:1.45;}"+

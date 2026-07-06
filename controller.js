@@ -1,3 +1,7 @@
+// Marqueur de version et garde d'erreurs globale (source unique)
+console.log("Sinea Profile v68 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v68]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
 // ============================================================
@@ -656,7 +660,7 @@ const App = (() => {
         poserRetourNea(carte);
         poserRemesure(data, carte);
         poserMiroir(data, carte);
-        try { poserCompetencesEspace(dataEspaceCourant); } catch (e) { console.warn("[Sinéa]", e); }
+        try { poserCompetencesEspace(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         poserSeedupEspace(carte);
       })
       .catch(() => {});
@@ -700,7 +704,7 @@ const App = (() => {
   // ---- Vos compétences : la lecture Sinéa dans l'espace apprenant ----
   // Déterministe, calculé en local depuis le profil déjà chargé : la personne
   // voit ses appuis et ses opportunités, et ses défis SeedUp prennent sens.
-  function poserCompetencesEspace(data){
+  function poserCompetencesEspace(data, carte){
     const slot = document.getElementById('espace-competences');
     if (!slot || !window.Competences || !data) return;
     const profil = data.analyses && data.analyses.socle && data.analyses.socle.profil;
@@ -710,23 +714,79 @@ const App = (() => {
     const comps = Competences.scorer(profil.scoresBigFive, ecarts, profil.speDims);
     const pri = Competences.prioriser(comps, poste);
     if (!pri.appuis.length && !pri.opportunites.length) return;
+    const refPar = {};
+    Competences.REFERENTIEL.forEach(function (r) { refPar[r.id] = r; });
+    // Les actions du plan déjà choisies, pour le pont
+    const actionsPlan = [];
+    Object.values(carte || {}).forEach(function (it) {
+      if (it && Array.isArray(it.pistes_libelles)) it.pistes_libelles.forEach(function (l) {
+        if (l && actionsPlan.indexOf(l) < 0) actionsPlan.push(l);
+      });
+    });
+    const seedupActif = !!(carte && carte.seedup && (carte.seedup.liste || []).length);
     const jauge = (c) => '<div class="esp-cp-jauge" title="Votre nature ' + Math.round(c.potentiel) + ' · Au travail ' + Math.round(c.expression) + '"><div class="esp-cp-pot" style="width:' + Math.round(c.potentiel) + '%"></div><div class="esp-cp-expr" style="left:' + Math.round(c.expression) + '%"></div></div><span class="esp-cp-val">' + Math.round(c.potentiel) + ' · ' + Math.round(c.expression) + '</span>';
+    function pontPour(c){
+      const action = actionsPlan.find(function (a) { const mm = Competences.matcherCompetence(a); return mm && mm.id === c.id; });
+      if (action) return 'Votre action « ' + echapValeur(action.length > 70 ? action.slice(0, 70) + '…' : action) + ' » la travaille déjà.';
+      const piste = (refPar[c.id] && refPar[c.id].progresser && refPar[c.id].progresser[0]) || '';
+      return (piste ? 'Première piste : ' + echapValeur(piste) : '') + (seedupActif ? ' Vos défis SeedUp cibleront cette compétence.' : '');
+    }
+    function ligne(c, avecPont){
+      const ref = refPar[c.id] || {};
+      return '<div class="esp-cp-item">'
+        + '<div class="esp-cp-ligne esp-cp-clic" onclick="App.toggleCompEspace(\'' + c.id + '\')"><span class="esp-cp-nom">' + echapValeur(c.nom) + '<span class="esp-cp-fleche" id="esp-cp-fl-' + c.id + '">▸</span></span>' + jauge(c) + '</div>'
+        + '<div class="esp-cp-det" id="esp-cp-det-' + c.id + '" style="display:none">'
+        + (ref.def ? '<p class="esp-cp-def">' + echapValeur(ref.def) + '</p>' : '')
+        + ((ref.progresser || []).length ? '<div class="esp-cp-prog-t">Pour progresser</div><ul class="esp-cp-prog">' + ref.progresser.map(function (p) { return '<li>' + echapValeur(p) + '</li>'; }).join('') + '</ul>' : '')
+        + (avecPont ? '<p class="esp-cp-pont-l">' + pontPour(c) + '</p>' : '')
+        + '</div></div>';
+    }
     let h = '<div class="esp-rem esp-cp">'
       + '<div class="esp-rem-kicker">Vos compétences · la lecture Sinéa</div>'
       + '<div class="esp-rem-titre">Là où votre nature vous porte</div>'
-      + '<p class="esp-cp-intro">Le potentiel vient de votre nature profonde, l\'expression de votre comportement au travail. Deux lectures, un même vous.</p>';
+      + '<p class="esp-cp-intro">Le potentiel vient de votre nature profonde, l\'expression de votre comportement au travail. Touchez une compétence pour voir ce qu\'elle recouvre et comment la faire grandir.</p>';
     if (pri.appuis.length){
-      h += '<div class="esp-cp-titre">Vos terrains d\'appui</div>' + pri.appuis.map(c =>
-        '<div class="esp-cp-ligne"><span class="esp-cp-nom">' + echapValeur(c.nom) + '</span>' + jauge(c) + '</div>').join('');
+      h += '<div class="esp-cp-titre">Vos terrains d\'appui</div>' + pri.appuis.map(function (c) { return ligne(c, false); }).join('');
     }
     if (pri.opportunites.length){
-      h += '<div class="esp-cp-titre">Vos opportunités à investir</div>' + pri.opportunites.map(c =>
-        '<div class="esp-cp-ligne"><span class="esp-cp-nom">' + echapValeur(c.nom) + '</span>' + jauge(c) + '</div>').join('')
-        + '<p class="esp-cp-pont">Le moteur est là, la pratique fera le reste : vos défis de terrain SeedUp travaillent précisément ces opportunités.</p>';
+      h += '<div class="esp-cp-titre">Vos opportunités à investir</div>' + pri.opportunites.map(function (c) { return ligne(c, true); }).join('')
+        + '<p class="esp-cp-pont">Le moteur est là, la pratique fera le reste' + (seedupActif ? ' : vos défis de terrain SeedUp travaillent précisément ces opportunités.' : '.') + '</p>';
     }
+    // La carte des 16, avec les flèches d'évolution si une re-mesure existe
+    let deltasQ = null;
+    try {
+      const remListe = carte && carte.remesure && Array.isArray(carte.remesure.liste) ? carte.remesure.liste : [];
+      const rem = remListe.length ? remListe[remListe.length - 1] : null;
+      if (rem && rem.ecarts) {
+        const apres = Competences.scorer(profil.scoresBigFive, rem.ecarts, profil.speDims);
+        deltasQ = {};
+        apres.forEach(function (c2) {
+          const av = comps.find(function (x) { return x.id === c2.id; });
+          if (av) deltasQ[c2.id] = { avant: av.expression, apres: c2.expression };
+        });
+      }
+    } catch (e) { console.warn("[Sinéa]", e); }
+    h += '<button type="button" class="esp-rem-btn esp-cp-mat-btn" onclick="App.toggleMatriceEspace()">Voir ma carte des 16</button>'
+      + '<div id="esp-cp-matrice" style="display:none">'
+      + (window.Visuels ? Visuels.quadrantSvg(comps, { deltas: deltasQ, compact: true }) : '')
+      + '</div>';
     h += '</div>';
     slot.innerHTML = h;
   }
+
+  function toggleCompEspace(id){
+    const d = document.getElementById('esp-cp-det-' + id);
+    const f = document.getElementById('esp-cp-fl-' + id);
+    if (!d) return;
+    const ouvert = d.style.display !== 'none';
+    d.style.display = ouvert ? 'none' : 'block';
+    if (f) f.textContent = ouvert ? '▸' : '▾';
+  }
+  function toggleMatriceEspace(){
+    const d = document.getElementById('esp-cp-matrice');
+    if (d) d.style.display = d.style.display === 'none' ? 'block' : 'none';
+  }
+
 
   // ---- Le jardin d'ancrage : les défis de terrain dans l'espace ----
   // SeedUp sème des graines : chaque défi ancré devient une plante, et le
@@ -1126,6 +1186,10 @@ const App = (() => {
     { d: 'c_communication_influence', label: 'Convaincre et embarquer', texte: 'Quand cette personne présente une idée, elle convainc et embarque son auditoire.' },
     { d: 'c_orientation_resultats', label: 'Aller au bout', texte: 'Cette personne va au bout de ce qu\'elle entreprend et conclut.' },
     { d: 'c_prise_decision', label: 'Trancher', texte: 'Cette personne tranche et assume ses décisions, même dans l\'incertitude.' },
+    { d: 'c_cooperation', label: 'Esprit d\'équipe', texte: 'Cette personne joue collectif : elle aide spontanément et partage l\'information.' },
+    { d: 'c_resilience', label: 'Solide sous pression', texte: 'Cette personne garde son calme et rebondit vite face aux difficultés.' },
+    { d: 'c_fiabilite_suivi', label: 'Tient ses engagements', texte: 'Ce qui est convenu avec cette personne est fait, dans les délais.' },
+    { d: 'conseil', type: 'texte', label: 'Un conseil pour grandir', texte: 'Si vous aviez un conseil à lui donner pour progresser, ce serait…' },
   ];
   const MIROIR_ANCRES = { 1: 'Pas du tout', 2: 'Plutôt pas', 3: 'Plutôt oui', 4: 'Tout à fait' };
   const MIROIR_CONV = { 1: 0.0, 2: 33.333, 3: 66.667, 4: 100.0 };
@@ -1145,6 +1209,32 @@ const App = (() => {
     return percu;
   }
 
+  function guideMiroirHtml(){
+    const msgs = [
+      { cible: 'À un pair', txt: "Salut ! Je viens de faire mon profil Sinéa et il me propose un miroir 360 : ton regard extérieur en 3 minutes, anonyme et agrégé avec d'autres. Ça m'aiderait vraiment à progresser. Voici le lien : [LIEN]. Merci !" },
+      { cible: 'À votre manager', txt: "Bonjour, dans le cadre de mon parcours Sinéa, je recueille quelques regards extérieurs sur mes compétences (3 minutes, réponses agrégées). Votre point de vue compterait beaucoup pour cibler mes axes de progression. Le lien : [LIEN]. Merci d'avance." },
+      { cible: 'À un collaborateur ou client interne', txt: "Bonjour, je travaille sur mon développement et j'aimerais votre regard honnête sur ma façon de collaborer (3 minutes, anonyme dans l'agrégat). Votre avis m'est précieux : [LIEN]. Merci beaucoup !" },
+    ];
+    return '<div class="esp-mir-guide">'
+      + '<p class="esp-mir-principe"><b>Le principe.</b> Vous vous êtes décrit ; le miroir recueille comment les autres vous vivent. L\'écart entre les deux est la matière la plus riche du développement : ce que vous sous-estimez, ce que vous surestimez, ce que tout le monde voit sauf vous.</p>'
+      + '<p class="esp-mir-principe"><b>À qui demander.</b> Visez 3 à 5 personnes qui vous voient vraiment travailler, en mélangeant les angles : votre manager, un ou deux pairs, quelqu\'un que vous encadrez ou un client interne. Les réponses sont agrégées : personne n\'est identifiable.</p>'
+      + '<div class="esp-mir-msgs">' + msgs.map(function (m) {
+        return '<div class="esp-mir-msg"><div class="esp-mir-msg-cible">' + m.cible + '</div><p class="esp-mir-msg-txt">' + m.txt.replace('[LIEN]', '<i>[votre lien]</i>') + '</p><button type="button" class="esp-rem-btn esp-mir-msg-btn" data-msg="' + echapValeur(m.txt) + '" onclick="App.copierMsgMiroir(this)">Copier ce message</button></div>';
+      }).join('') + '</div></div>';
+  }
+
+  function copierMsgMiroir(btn){
+    const inp = document.getElementById('esp-mir-input');
+    const lien = (inp && inp.value) || '';
+    const txt = String(btn.getAttribute('data-msg') || '').replace('[LIEN]', lien || '[créez votre lien ci-dessous]');
+    const fini = function(){ const av = btn.textContent; btn.textContent = 'Copié ✓'; setTimeout(function(){ btn.textContent = av; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(fini).catch(function(){});
+    else {
+      const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); fini(); } catch (e) {} ta.remove();
+    }
+  }
+
   function poserMiroir(data, carte) {
     const slot = document.getElementById('espace-miroir');
     if (!slot || !identite.email) return;
@@ -1160,7 +1250,7 @@ const App = (() => {
         <div class="esp-rem-kicker">Miroir 360</div>
         <div class="esp-rem-titre">Le regard de vos collègues</div>
         <p class="esp-rem-txt">Invitez deux collègues à répondre à cinq questions, une minute, réponses anonymes. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
-        <button type="button" class="esp-rem-btn" id="esp-mir-init">Créer mon lien d'invitation</button>
+        ${guideMiroirHtml()}<button type="button" class="esp-rem-btn" id="esp-mir-init">Créer mon lien d'invitation</button>
       </div>`;
       const b = document.getElementById('esp-mir-init');
       if (b) b.onclick = function () {
@@ -1180,7 +1270,7 @@ const App = (() => {
       return;
     }
     const lien = location.origin + location.pathname + '?miroir=' + jeton;
-    const blocLien = `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
+    const blocLien = guideMiroirHtml() + `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
     if (reponses.length < 2) {
       const attente = reponses.length === 1
         ? '1 réponse reçue. L\'analyse s\'ouvre à la deuxième, pour préserver l\'anonymat.'
@@ -1195,13 +1285,27 @@ const App = (() => {
       const percu = agregerMiroir(reponses);
       const vous = { E: na.adapte.E, A: na.adapte.A, C: na.adapte.C, S: (typeof na.adapte.N === 'number' ? Math.round((100 - na.adapte.N) * 10) / 10 : undefined), O: na.adapte.O };
       let maxDim = null, maxGap = 0;
-      const lignes = MIROIR_QUESTIONS.map(function (q) {
-        const p = percu[q.d], v = vous[q.d];
-        if (p === undefined || v === undefined) return '';
+      const vousComp = window.Competences ? Competences.expressionDepuis(vous) : {};
+      const tableau = [];
+      MIROIR_QUESTIONS.forEach(function (q) {
+        if (q.type === 'texte') return;
+        const p = percu[q.d];
+        const v = q.d.indexOf('c_') === 0 ? vousComp[q.d.slice(2)] : vous[q.d];
+        if (p === undefined || v === undefined) return;
         const g = Math.round((p - v) * 10) / 10;
         if (Math.abs(g) > Math.abs(maxGap)) { maxGap = g; maxDim = q; }
-        return `<div class="esp-mir-row" data-d="${q.d}"><span class="esp-mir-lab">${q.label}</span><span class="esp-mir-vals">Eux ${Math.round(p)} · Vous ${Math.round(v)}</span></div>`;
-      }).join('');
+        tableau.push({ q: q, p: p, v: v, g: g });
+      });
+      tableau.sort(function (a, b) { return Math.abs(b.g) - Math.abs(a.g); });
+      const lignes = '<div class="esp-cp-titre" style="margin-top:4px">Tous les regards, du plus grand écart au plus petit</div>'
+        + tableau.map(function (t, i) {
+          const delta = (t.g > 0 ? '+' : '') + Math.round(t.g);
+          return `<div class="esp-mir-row${i < 2 && Math.abs(t.g) >= 10 ? ' esp-mir-gapmax' : ''}" data-d="${t.q.d}"><span class="esp-mir-lab">${t.q.label}</span><span class="esp-mir-vals">Eux ${Math.round(t.p)} · Vous ${Math.round(t.v)} <span class="esp-mir-delta${t.g >= 0 ? ' pos' : ' neg'}">${delta}</span></span></div>`;
+        }).join('');
+      const conseilsRecus = reponses.map(function (rep) { return String((rep.r || {}).conseil || '').trim(); }).filter(function (t) { return t.length > 2; }).slice(0, 6);
+      const conseilsHtml = conseilsRecus.length
+        ? '<div class="esp-cp-titre" style="margin-top:14px">Les conseils reçus</div>' + conseilsRecus.map(function (t) { return '<p class="esp-mir-conseil">« ' + echapValeur(t) + ' »</p>'; }).join('')
+        : '';
       let phrase;
       if (Math.abs(maxGap) < 12) {
         phrase = 'Le regard de vos collègues rejoint votre propre lecture. Ce que vous pensez montrer, ils le voient : une belle cohérence entre intérieur et extérieur.';
@@ -1210,23 +1314,11 @@ const App = (() => {
       } else {
         phrase = `Vos collègues perçoivent moins de ${maxDim.label.toLowerCase()} que ce que vous pensez montrer. Cet écart dit quelque chose de précieux, angle mort ou réserve : explorez-le lors d'un prochain échange.`;
       }
-      // Les compétences vues par les pairs : items directs quand ils existent
-      let lignesComp = '';
-      if (window.Competences) {
-        const vousComp = Competences.expressionDepuis(vous);
-        lignesComp = MIROIR_QUESTIONS.filter(function (q) { return q.d.indexOf('c_') === 0 && percu[q.d] !== undefined; })
-          .map(function (q) {
-            const id = q.d.slice(2);
-            const v = vousComp[id];
-            return `<div class="esp-mir-row"><span class="esp-mir-lab">${q.label}</span><span class="esp-mir-vals">Eux ${Math.round(percu[q.d])}${v !== undefined ? ' · Vous ' + Math.round(v) : ''}</span></div>`;
-          }).join('');
-        if (lignesComp) lignesComp = '<div class="esp-cp-titre" style="margin-top:14px">Vos compétences, vues par eux</div>' + lignesComp;
-      }
       slot.innerHTML = `<div class="esp-rem esp-mir">
         <div class="esp-rem-kicker">Miroir 360 · ${reponses.length} regards</div>
         <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
         ${lignes}
-        ${lignesComp}
+        ${conseilsHtml}
         <div class="esp-nea" style="margin-top:12px"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span><div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>${phrase}</p></div></div>
         ${reponses.length < 5 ? '<p class="esp-rem-txt" style="margin:12px 0 8px">Ajoutez d\'autres regards pour affiner :</p>' + blocLien : ''}
       </div>`;
@@ -1246,6 +1338,9 @@ const App = (() => {
     const ov = document.createElement('div');
     ov.className = 'mir-page';
     const lignes = MIROIR_QUESTIONS.map(function (q) {
+      if (q.type === 'texte') {
+        return `<div class="mir-q mir-q-texte"><div class="mir-q-titre">${q.label}</div><p class="mir-q-txt">${q.texte}</p><textarea id="mir-conseil" class="mir-conseil" placeholder="Deux phrases suffisent, elles resteront anonymes dans l'agrégat..."></textarea></div>`;
+      }
       return '<div class="esp-rem-q"><p class="esp-rem-q-txt">' + q.texte + '</p><div class="esp-rem-opts">' +
         [1, 2, 3, 4].map(function (v) { return '<button type="button" class="esp-rem-opt" data-q="' + q.d + '" data-v="' + v + '">' + MIROIR_ANCRES[v] + '</button>'; }).join('') +
         '</div></div>';
@@ -1253,7 +1348,7 @@ const App = (() => {
     ov.innerHTML = '<div class="mir-card">' +
       '<div class="mir-head"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
       '<div><div class="esp-rem-kicker">Miroir Sinéa</div><div class="esp-rem-titre">Votre regard sur un collègue</div></div></div>' +
-      '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Neuf questions, deux minutes. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
+      '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Douze regards et un conseil, trois minutes. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
       lignes +
       '<button type="button" class="esp-rem-btn" id="mir-valider" disabled>Envoyer mon regard</button>' +
       '</div>';
@@ -1275,7 +1370,7 @@ const App = (() => {
       fetch(PROGRESSION_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'miroir_repondre', jeton: jeton, reponses: _mirRep }),
+        body: JSON.stringify({ action: 'miroir_repondre', jeton: jeton, reponses: Object.assign({}, _mirRep, { conseil: ((document.getElementById('mir-conseil') || {}).value || '').trim() || undefined }) }),
       })
         .then(function (r) { return r.json(); })
         .then(function (d) {
@@ -1386,9 +1481,15 @@ const App = (() => {
       if (analyses.commercial) faits++;
       if (analyses.manager) faits++;
       const pctGlobal = Math.round((faits / total) * 100);
-      progGlobalEl.innerHTML = `
-        <div class="espace-pg-head"><span>Votre parcours</span><span>${faits} exploration${faits > 1 ? 's' : ''} sur ${total}</span></div>
-        <div class="espace-pg-bar"><div class="espace-pg-fill" style="width:${pctGlobal}%"></div></div>`;
+      if (total <= 1){
+        progGlobalEl.innerHTML = '';
+        progGlobalEl.style.display = 'none';
+      } else {
+        const suite = faits >= total ? 'parcours complet' : 'la spécialisation métier vous attend';
+        progGlobalEl.innerHTML = `
+          <div class="espace-pg-head"><span>Votre parcours</span><span>${faits}/${total} · ${suite}</span></div>
+          <div class="espace-pg-bar"><div class="espace-pg-fill" style="width:${pctGlobal}%"></div></div>`;
+      }
     }
 
     // afficher le personnage de l'archétype dans l'en-tête
@@ -3346,7 +3447,7 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

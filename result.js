@@ -388,6 +388,25 @@ const Result = (() => {
   }
 
   // Visuel : classement complet des 20 archétypes avec barres de score par famille
+  // Vos compétences, la lecture Sinéa : le diagnostic juste avant le choix
+  // du plan, pour que les actions répondent aux opportunités identifiées.
+  function competencesRestitutionHtml(res){
+    if (!window.Competences || !res || !res.scoresBigFive) return '';
+    try {
+      const dims = res.speDims || {};
+      const poste = (dims.closing !== undefined || dims.objection !== undefined) ? 'commercial' : 'manager';
+      const comps = window.Competences.scorer(res.scoresBigFive, res.naturelAdapte && res.naturelAdapte.ecarts, dims);
+      const pri = window.Competences.prioriser(comps, poste);
+      if (!pri.appuis.length && !pri.opportunites.length) return '';
+      return `<div class="r-section-tag">Vos compétences, la lecture Sinéa</div>
+        <p class="r-hint">Le potentiel vient de votre nature, l'expression de votre comportement au travail. La carte situe vos seize compétences en quatre zones de jeu.</p>
+        <div class="r-card r-q16-card">
+          ${window.Visuels ? Visuels.quadrantSvg(comps) : ''}
+          <p class="r-comp-pont">Dans les pistes ci-dessous, choisissez au moins une action qui travaille vos opportunités : c'est là que l'effort rapporte le plus.</p>
+        </div>`;
+    } catch (e) { console.warn("[Sinéa]", e); return ''; }
+  }
+
   function classementComplet(res){
     const clTous = res.classement || [];
     if (!clTous.length) return '';
@@ -827,16 +846,9 @@ const Result = (() => {
         ${neaSection('Commençons par l\'essentiel : vous. Voici ce que vos réponses disent de votre façon de fonctionner.')}
         <div class="r-section-tag">Qui vous êtes</div>
         <div class="r-ia" id="ia-ouverture"><div class="r-ia-tag">Votre portrait</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">L'alchimie de vos forces</div>
+        <div class="r-section-tag">Comment vos forces jouent ensemble</div>
+        <div class="r-card r-blend-card"><div class="r-blend">${blendSegs}</div><div class="r-chips">${chips}</div></div>
         <div class="r-ia" id="ia-alchimie"><div class="r-ia-tag">Lecture croisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre combinaison</div>
-        <div class="r-card"><div class="r-blend">${blendSegs}</div><div class="r-chips">${chips}</div></div>
-        ${(res.classement && res.classement.length) ? `
-        <div class="r-section-tag">Votre affinité avec les 20 archétypes</div>
-        <p class="r-hint">Votre profil est une signature unique. Voici votre proximité avec chacun des 20 archétypes.</p>
-        <div class="r-card">${classementComplet(res)}</div>` : ''}
-        <div class="r-section-tag">Les dynamiques entre vos forces</div>
-        <p class="r-hint">Vos trois archétypes ne coexistent pas, ils interagissent deux à deux.</p>
         <div id="ia-dynamiques"><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos forces secondaires</div>
         <div class="r-secs-grid">${secHtml}</div>
@@ -845,6 +857,7 @@ const Result = (() => {
         <div class="r-ia" id="ia-bigfive"><div class="r-ia-tag">Ce que révèle le croisement de vos dimensions</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre naturel et votre adaptation au travail</div>
         <p class="r-hint">L'écart entre qui vous êtes spontanément et comment vous agissez au travail révèle où vous fournissez un effort.</p>
+        ${window.Visuels && res.naturelAdapte ? `<div class="r-card r-dp2-card">${Visuels.doubleProfilSvg(res.naturelAdapte)}</div>` : ''}
         ${carteNaturelAdapte(res)}
         <div class="r-ia" id="ia-naturel"><div class="r-ia-tag">Naturel et adaptation, dimension par dimension</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos tensions intérieures</div>
@@ -921,6 +934,7 @@ const Result = (() => {
         <div class="r-validables-grid">${levVal}</div>` : ''}
         <div class="r-section-tag">Votre moteur</div>
         <div class="r-validable r-val-moteur" id="v-moteur-0" onclick="Result.toggleValid('moteur',0)"><div class="r-val-check">✓</div><p>${dc.moteur||''}</p></div>
+        ${competencesRestitutionHtml(res)}
         <div class="r-section-tag">Vos pistes d'action</div>
         <div class="r-ia" id="ia-actions"><div class="r-ia-tag">L'IA propose, vous choisissez</div><p class="r-hint" style="margin-top:0">Sélectionnez les habitudes à développer.</p><div class="r-ia-loading"><span class="mini-spin"></span>Génération...</div></div>
         <div class="r-section-tag">Votre signature</div>
@@ -2597,8 +2611,8 @@ const Result = (() => {
   const TRAITS_FR_ESS = { E: "l'aisance sociale", A: "la chaleur relationnelle", C: "la rigueur", N: "la sensibilité émotionnelle", O: "la curiosité" };
   function poserEssentiel(res, c){
     if (document.getElementById('essentiel-bloc')) return;
-    const premiere = document.querySelector('.r-section');
-    if (!premiere || !res || !res.dominante) return;
+    const corpsR = document.getElementById('r-body');
+    if (!corpsR || !corpsR.firstChild || !res || !res.dominante) return;
     const sansGras = (t) => String(t || '').replace(/\*\*/g, '');
     const prem = (t) => { const m = sansGras(t).split(/(?<=\.)\s/); return (m[0] || '').trim(); };
     const famC = (window.Competences && window.Competences.COULEURS_FAMILLES) || { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#2C97E0', VISION: '#5E59C7' };
@@ -2631,10 +2645,26 @@ const Result = (() => {
       const fort = (f.signaux || []).some(x => x && x.niveau === 'fort');
       h += '<div class="ess-fiab">Fiabilité de la mesure : <b>' + f.score + '/100, ' + (f.niveau || '') + '</b>.' + (fort ? ' Un signal de cohérence a été détecté et retravaillé par vos précisions : l\'échange avec votre formateur affinera encore la lecture.' : '') + '</div>';
     }
+    h += '<p class="ess-mir">Le regard des autres compte aussi : le miroir 360 vous attend dans votre espace personnel.</p>';
     h += '<button type="button" class="ess-cta" onclick="document.getElementById(\'essentiel-bloc\').nextElementSibling.scrollIntoView({behavior:\'smooth\'})">Lire l\'analyse complète</button></div>';
     const zone = document.createElement('div');
     zone.innerHTML = h;
-    premiere.parentNode.insertBefore(zone.firstChild, premiere);
+    corpsR.insertBefore(zone.firstChild, corpsR.firstChild);
+    // La page Forces et vigilances, scannable en dix secondes, sous l'Essentiel
+    try {
+      if (window.Visuels && window.Competences && res.scoresBigFive && !document.getElementById('fv-bloc')) {
+        const dimsFV = res.speDims || {};
+        const compsFV = window.Competences.scorer(res.scoresBigFive, res.naturelAdapte && res.naturelAdapte.ecarts, dimsFV);
+        const priFV = window.Competences.prioriser(compsFV, (dimsFV.closing !== undefined || dimsFV.objection !== undefined) ? 'commercial' : 'manager');
+        const fvHtml = window.Visuels.forcesVigilancesHtml(compsFV, priFV);
+        if (fvHtml) {
+          const zfv = document.createElement('div');
+          zfv.innerHTML = '<div id="fv-bloc"><div class="r-section-tag">Vos forces et vos vigilances</div><div class="r-card">' + fvHtml + '</div></div>';
+          const blocEss = document.getElementById('essentiel-bloc');
+          blocEss.parentNode.insertBefore(zfv.firstChild, blocEss.nextSibling);
+        }
+      }
+    } catch (e) { console.warn('[Sinéa]', e); }
   }
 
   function setNote(v){

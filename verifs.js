@@ -26,6 +26,89 @@ const srcControleur = fs.readFileSync('controller.js', 'utf8');
 const mJardin = srcControleur.match(/  function jardinSvg\(nb, slugPerso, nouvelArbre\) \{[\s\S]*?\n  \}/);
 eval('function srcPerso(s){return s + ".webp";}\n' + mJardin[0]);
 
+console.log('\n== 0. Intégrité des pages ==');
+verifie('index.html commence par le DOCTYPE', fs.readFileSync('index.html', 'utf8').startsWith('<!DOCTYPE html>'));
+verifie('dashboard.html commence par le DOCTYPE', fs.readFileSync('dashboard.html', 'utf8').startsWith('<!DOCTYPE html>'));
+verifie("l'Essentiel s'ancre sur r-body", fs.readFileSync('result.js', 'utf8').includes("getElementById('r-body')"));
+
+console.log('\n== 0bis. Câblage des interfaces (la classe de bugs vécue) ==');
+// Chaque App.xxx appelé dans les gabarits du controller doit être exporté
+const srcCtrl = fs.readFileSync('controller.js', 'utf8');
+const appelsApp = [...new Set([...srcCtrl.matchAll(/App\.([a-zA-Z_]+)\(/g)].map(m => m[1]))];
+const iSrc = srcCtrl.lastIndexOf(', srcPerso');
+const iRet = srcCtrl.lastIndexOf('return {', iSrc);
+const iFin = srcCtrl.indexOf('};', iSrc);
+const exportApp = (iRet >= 0 && iFin > iRet) ? srcCtrl.slice(iRet, iFin) : '';
+appelsApp.forEach(fn => verifie("App." + fn + " est exporté", exportApp.includes(fn)));
+// Chaque onclick du dashboard doit correspondre à une fonction définie
+const srcDash = fs.readFileSync('dashboard.js', 'utf8') + fs.readFileSync('dashboard.html', 'utf8');
+const onclicks = [...new Set([...srcDash.matchAll(/onclick=\\?"([a-zA-Z_]+)\(/g)].map(m => m[1]))]
+  .filter(fn => !['if', 'event', 'App'].includes(fn));
+onclicks.forEach(fn => {
+  verifie('onclick ' + fn + ' a sa fonction', new RegExp('function ' + fn + '\\(').test(srcDash) || new RegExp('(let|const|var) ' + fn + '\\b').test(srcDash));
+});
+// Le miroir : 13 items dont la question ouverte, et le formulaire la gère
+const mQ = srcCtrl.match(/MIROIR_QUESTIONS = \[([\s\S]*?)\];/);
+verifie('miroir : 13 items', mQ && (mQ[1].match(/\{ d:/g) || []).length === 13);
+verifie('miroir : question ouverte typée texte', mQ && mQ[1].includes("type: 'texte'"));
+verifie('miroir : le formulaire gère le texte', srcCtrl.includes("q.type === 'texte'"));
+verifie("miroir : l'envoi embarque le conseil", srcCtrl.includes('conseil: ((document.getElementById'));
+
+console.log('\n== 0ter. Passe une de la restitution ==');
+const srcRes = fs.readFileSync('result.js', 'utf8');
+verifie('section Votre combinaison supprimée', srcRes.indexOf('>Votre combinaison<') < 0);
+verifie('section dynamiques fusionnée', srcRes.indexOf('>Les dynamiques entre vos forces<') < 0);
+verifie('affinité 20 retirée', srcRes.indexOf('affinité avec les 20') < 0);
+verifie('forces retitrées', srcRes.indexOf('Comment vos forces jouent ensemble') >= 0);
+verifie('compétences avant les pistes', srcRes.indexOf('competencesRestitutionHtml(res)') >= 0 && srcRes.indexOf('competencesRestitutionHtml(res)') < srcRes.indexOf("Vos pistes d"));
+verifie("teaser miroir dans l'Essentiel", srcRes.indexOf('ess-mir') >= 0);
+
+console.log('\n== 0quater. Les visuels signatures ==');
+eval(fs.readFileSync('visuels.js', 'utf8'));
+const V = window.Visuels;
+const compsV = C.scorer({ O: 58, C: 38, E: 72, A: 78, N: 45 }, { C: 18 });
+const qv = V.quadrantSvg(compsV, { deltas: { developpement_autres: { avant: 41, apres: 58 } } });
+verifie('quadrant : 16 points', (qv.match(/q16-pt/g) || []).length === 16);
+verifie('quadrant : 4 zones nommées', (qv.match(/APPUIS|OPPORTUNITÉS|SUR-RÉGIME|EN VEILLE/g) || []).length === 4);
+verifie('quadrant : flèche d\'évolution', (qv.match(/url\(#q16f\)/g) || []).length === 1);
+verifie('quadrant : groupes équilibrés', (qv.match(/<g /g) || []).length === (qv.match(/<\/g>/g) || []).length);
+const dpv = V.doubleProfilSvg({ naturel: { O: 76, C: 7, E: 64, A: 70, N: 55 }, adapte: { O: 34, C: 97, E: 60, A: 66, N: 40 } });
+verifie('double profil : 5 natures et 5 travail', (dpv.match(/dp2-nat/g) || []).length === 5 && (dpv.match(/dp2-adp/g) || []).length === 5);
+verifie('double profil : chips d\'écart', (dpv.match(/rx="8.5"/g) || []).length >= 2);
+const fvv = V.forcesVigilancesHtml(compsV, C.prioriser(compsV, 'manager'));
+verifie('forces : 5 pleines, 3 creuses max', ((fvv.match(/fv-barre/g) || []).length - (fvv.match(/fv-creuse/g) || []).length) === 5 && (fvv.match(/fv-creuse/g) || []).length <= 3);
+const idxH = fs.readFileSync('index.html', 'utf8');
+verifie('visuels.js chargé avant result.js', idxH.indexOf('visuels.js') > 0 && idxH.indexOf('visuels.js') < idxH.indexOf('result.js'));
+const dashH = fs.readFileSync('dashboard.html', 'utf8');
+verifie('visuels.js chargé avant dashboard.js', dashH.indexOf('visuels.js') > 0 && dashH.indexOf('visuels.js') < dashH.indexOf('"dashboard.js"'));
+verifie('restitution : forces et vigilances posées', srcRes.indexOf('forcesVigilancesHtml') >= 0);
+verifie('restitution : double profil posé', srcRes.indexOf('doubleProfilSvg') >= 0);
+verifie('restitution : quadrant posé', srcRes.indexOf('Visuels.quadrantSvg(comps)') >= 0);
+verifie('espace : quadrant avec deltas', srcCtrl.indexOf('quadrantSvg(comps, { deltas: deltasQ') >= 0);
+verifie('portail : quadrant fiche et équipe', (srcDash.match(/Visuels\.quadrantSvg/g) || []).length >= 2);
+verifie('portail : le quadrant sort bien de matriceHtml', srcDash.indexOf('return enTete + comps.map') >= 0);
+
+console.log('\n== 0quinquies. Sprint 2 : fit au poste et carte de chaleur ==');
+const fitSrc = srcDash;
+verifie('fit : moteur présent', fitSrc.indexOf('function fitPoste(') >= 0 && fitSrc.indexOf('cibleDe(') >= 0);
+verifie('fit : borné et déterministe (simulation)', (() => {
+  const cibleDe = (coef) => coef >= 1.2 ? 75 : (coef >= 0.85 ? 60 : 45);
+  const fitLocal = (comps, coefs) => { let n = 0, d = 0; comps.forEach(c => { const k = coefs[c.id] || 1; n += k * Math.max(0, Math.min(1, c.expression / cibleDe(k))); d += k; }); return Math.round(100 * n / d); };
+  const cc = compsV.map(c => ({ id: c.id, expression: c.expression }));
+  const a = fitLocal(cc, C.POSTES.manager.coefs), b = fitLocal(cc, C.POSTES.manager.coefs);
+  return a === b && a >= 0 && a <= 100;
+})());
+verifie('abréviations : 16 uniques', (() => {
+  const m = fitSrc.match(/ABREV_COMP = \{([^}]+)\}/);
+  if (!m) return false;
+  const vals = m[1].match(/'[^']+'/g);
+  return vals.length === 16 && new Set(vals).size === 16;
+})());
+verifie('heatmap : rendu, tri et dormant', fitSrc.indexOf('renderHeatmapEquipe') >= 0 && fitSrc.indexOf('function triHeat(') >= 0 && fitSrc.indexOf('heat-dot') >= 0);
+verifie('adéquation : panneau, chips et liste', fitSrc.indexOf('renderFitPoste') >= 0 && fitSrc.indexOf('choisirFitPoste') >= 0 && fitSrc.indexOf('renderFitListe') >= 0);
+verifie('fiche : zone fit posée et recalcul au clic', fitSrc.indexOf('id="bd-fit"') >= 0 && fitSrc.indexOf('membreFicheCourant = m;') >= 0 && fitSrc.split('majFitFiche()').length >= 3);
+verifie('assemblage : heatmap et fit dans la vue campagne', fitSrc.indexOf('renderHeatmapEquipe();') >= 0 && fitSrc.indexOf('renderFitPoste();') >= 0);
+
 console.log('\n== 1. Moteur de compétences : déterminisme et bornes ==');
 const bf = { O: 58, C: 38, E: 72, A: 78, N: 45 };
 const c1 = C.scorer(bf, { C: 18 });
