@@ -120,9 +120,14 @@
           <div class="espace-name" id="espace-name">Bonjour</div>
           <div class="espace-arch" id="espace-arch"></div>
           <div class="espace-accueil" id="espace-accueil"></div>
+          <div class="esp-nav" role="tablist">
+            <button type="button" class="esp-nav-b on" data-t="dev" aria-pressed="true" onclick="App.espTab('dev')">Mon développement</button>
+            <button type="button" class="esp-nav-b" data-t="miroir" aria-pressed="false" onclick="App.espTab('miroir')">Miroir 360</button>
+          </div>
+          <div id="espace-cockpit"></div>
           <div id="espace-nea"></div>
           <div id="espace-remesure"></div>
-          <div id="espace-miroir"></div>
+          <div id="espace-miroir" class="esp-hide"></div>
           <div id="espace-competences"></div>
           <div id="espace-seedup"></div>
         </div>

@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v68 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v68]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v71 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v71]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -660,6 +660,7 @@ const App = (() => {
         poserRetourNea(carte);
         poserRemesure(data, carte);
         poserMiroir(data, carte);
+        try { poserCockpit(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         try { poserCompetencesEspace(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         poserSeedupEspace(carte);
       })
@@ -704,6 +705,93 @@ const App = (() => {
   // ---- Vos compétences : la lecture Sinéa dans l'espace apprenant ----
   // Déterministe, calculé en local depuis le profil déjà chargé : la personne
   // voit ses appuis et ses opportunités, et ses défis SeedUp prennent sens.
+  // L'espace en deux onglets : le développement d'un côté, le miroir à part
+  function espTab(t){
+    const dev = ['espace-cockpit', 'espace-nea', 'espace-remesure', 'espace-competences', 'espace-seedup', 'espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat'];
+    const mir = ['espace-miroir'];
+    const cache = function (id, visible) { const e = document.getElementById(id); if (e) e.classList.toggle('esp-hide', !visible); };
+    dev.forEach(function (id) { cache(id, t === 'dev'); });
+    mir.forEach(function (id) { cache(id, t === 'miroir'); });
+    document.querySelectorAll('.esp-nav-b').forEach(function (b) {
+      const on = b.getAttribute('data-t') === t;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  // ===== Le cockpit : l'action du jour, la frise des 90 jours, les engagements =====
+  function poserCockpit(data, carte){
+    const slot = document.getElementById('espace-cockpit');
+    if (!slot || !data) return;
+    const socle = (data.analyses && data.analyses.socle) || {};
+    const dateSocle = (socle.date || (socle.profil && socle.profil.date)) ? new Date(socle.date || socle.profil.date).getTime() : null;
+    const jour = dateSocle ? Math.max(0, Math.round((Date.now() - dateSocle) / 86400000)) : null;
+    const sd = (carte && carte.seedup && Array.isArray(carte.seedup.liste)) ? carte.seedup.liste : [];
+    const remFaite = !!(carte && carte.remesure && Array.isArray(carte.remesure.liste) && carte.remesure.liste.length);
+    const mir = (carte && carte.miroir) || {};
+    const nbRegards = Array.isArray(mir.reponses) ? mir.reponses.length : 0;
+    const aJeton = !!mir.jeton;
+    const pistes = [];
+    Object.values(carte || {}).forEach(function (it) {
+      if (it && Array.isArray(it.pistes_libelles)) it.pistes_libelles.forEach(function (l) { if (l && pistes.indexOf(l) < 0) pistes.push(l); });
+    });
+    const joursAncres = Array.from(new Set(sd.map(function (x) { return String(x.d || '').slice(0, 10); }).filter(Boolean))).sort().reverse();
+    let serie = 0;
+    if (joursAncres.length) {
+      const d0 = new Date(); d0.setHours(12, 0, 0, 0);
+      for (let k = 0; k < 120; k++) {
+        const cle = new Date(d0.getTime() - k * 86400000).toISOString().slice(0, 10);
+        if (joursAncres.indexOf(cle) >= 0) serie++;
+        else if (k === 0) continue;
+        else break;
+      }
+    }
+    let act = null;
+    if (jour !== null && jour >= 83 && !remFaite) {
+      act = { t: 'Votre re-mesure des 90 jours est ouverte', p: 'Dix minutes pour mesurer le chemin parcouru depuis votre portrait.', cta: 'Faire ma re-mesure', fn: "App.cockpitVers('espace-remesure')" };
+    } else if (aJeton && nbRegards === 0) {
+      act = { t: 'Votre miroir attend ses premiers regards', p: 'Trois messages prêts à copier vous attendent, trois minutes pour vos collègues.', cta: 'Ouvrir le miroir', fn: "App.espTab('miroir')" };
+    } else if (!pistes.length) {
+      act = { t: 'Choisissez vos premières actions', p: 'Vos opportunités sont identifiées : reliez-les à des actions concrètes pour lancer le programme.', cta: 'Voir mes compétences', fn: "App.cockpitVers('espace-competences')" };
+    } else if (sd.length) {
+      const dernier = joursAncres.length ? Math.round((Date.now() - new Date(joursAncres[0] + 'T12:00:00').getTime()) / 86400000) : 99;
+      if (dernier >= 3) act = { t: 'Votre jardin attend sa prochaine pousse', p: 'Dernier défi ancré il y a ' + dernier + ' jours. Une petite action aujourd\'hui relance la dynamique.', cta: 'Voir mes défis', fn: "App.cockpitVers('espace-seedup')" };
+      else act = { t: 'La dynamique est en route', p: 'Continuez sur votre lancée, chaque défi ancré fait grandir le jardin.', cta: 'Voir mon jardin', fn: "App.cockpitVers('espace-seedup')" };
+    } else if (!aJeton && jour !== null && jour >= 7) {
+      act = { t: 'Et si vous demandiez un regard extérieur ?', p: 'Le miroir 360 confronte votre lecture à celle de vos collègues, en trois minutes pour eux.', cta: 'Découvrir le miroir', fn: "App.espTab('miroir')" };
+    }
+    let frise = '';
+    if (window.Visuels) {
+      frise = Visuels.frise90Svg([
+        { label: 'Portrait', pos: 0, fait: true },
+        { label: 'Plan choisi', pos: 8, fait: pistes.length > 0 },
+        { label: 'Miroir 360', pos: 34, fait: nbRegards >= 2 },
+        { label: 'Re-mesure', pos: 100, fait: remFaite },
+      ], jour !== null ? Math.min(jour, 90) : null);
+    }
+    let eng = '';
+    if (pistes.length && window.Competences) {
+      const compsDefis = new Set(sd.map(function (x) { const mm = Competences.matcherCompetence(x.t || ''); return mm && mm.id; }).filter(Boolean));
+      eng = '<div class="esp-cp-titre" style="margin-top:14px">Vos engagements</div>' + pistes.slice(0, 3).map(function (l) {
+        const mm = Competences.matcherCompetence(l);
+        const enCours = mm && compsDefis.has(mm.id);
+        return '<div class="ck-eng"><span class="ck-eng-etat' + (enCours ? ' on' : '') + '">' + (enCours ? '✓ en cours' : 'à lancer') + '</span><span class="ck-eng-txt">' + echapValeur(l) + (mm ? ' <i>· ' + echapValeur(mm.nom) + '</i>' : '') + '</span></div>';
+      }).join('');
+    }
+    if (!act && !frise && !eng) { slot.innerHTML = ''; return; }
+    const kick = 'Aujourd' + String.fromCharCode(39) + 'hui';
+    slot.innerHTML = '<div class="esp-rem ck">'
+      + (act
+        ? '<div class="esp-rem-kicker">' + kick + (serie >= 2 ? ' · série de ' + serie + ' jours' : '') + '</div><div class="esp-rem-titre">' + act.t + '</div><p class="ck-p">' + act.p + '</p><button type="button" class="esp-rem-btn" onclick="' + act.fn + '">' + act.cta + '</button>'
+        : '<div class="esp-rem-kicker">Votre programme des 90 jours</div>')
+      + frise + eng + '</div>';
+  }
+  function cockpitVers(id){
+    espTab('dev');
+    const e = document.getElementById(id);
+    if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function poserCompetencesEspace(data, carte){
     const slot = document.getElementById('espace-competences');
     if (!slot || !window.Competences || !data) return;
@@ -1302,6 +1390,7 @@ const App = (() => {
           const delta = (t.g > 0 ? '+' : '') + Math.round(t.g);
           return `<div class="esp-mir-row${i < 2 && Math.abs(t.g) >= 10 ? ' esp-mir-gapmax' : ''}" data-d="${t.q.d}"><span class="esp-mir-lab">${t.q.label}</span><span class="esp-mir-vals">Eux ${Math.round(t.p)} · Vous ${Math.round(t.v)} <span class="esp-mir-delta${t.g >= 0 ? ' pos' : ' neg'}">${delta}</span></span></div>`;
         }).join('');
+      const radarHtml = (window.Visuels && window.Visuels.radarMiroirSvg) ? Visuels.radarMiroirSvg(vous, percu) : '';
       const conseilsRecus = reponses.map(function (rep) { return String((rep.r || {}).conseil || '').trim(); }).filter(function (t) { return t.length > 2; }).slice(0, 6);
       const conseilsHtml = conseilsRecus.length
         ? '<div class="esp-cp-titre" style="margin-top:14px">Les conseils reçus</div>' + conseilsRecus.map(function (t) { return '<p class="esp-mir-conseil">« ' + echapValeur(t) + ' »</p>'; }).join('')
@@ -1317,6 +1406,7 @@ const App = (() => {
       slot.innerHTML = `<div class="esp-rem esp-mir">
         <div class="esp-rem-kicker">Miroir 360 · ${reponses.length} regards</div>
         <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
+        ${radarHtml}
         ${lignes}
         ${conseilsHtml}
         <div class="esp-nea" style="margin-top:12px"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span><div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>${phrase}</p></div></div>
@@ -3447,7 +3537,7 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, espTab, cockpitVers, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

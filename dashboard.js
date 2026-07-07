@@ -6,8 +6,8 @@
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v68');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v68]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v71');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v71]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";
@@ -1229,7 +1229,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     h += '<div class="sup-kpis tb-kpis">' + kpi(reps.length, 'Terminés') + kpi(nR !== null ? nR + '/5' : null, 'Ressemblance') + kpi(nU !== null ? nU + '/5' : null, 'Actions') + kpi(nC !== null ? nC + '/5' : null, 'Clarté') + kpi(pTot ? Math.round(100 * pOk / pTot) + '%' : null, 'Paris justes') + kpi(fiabs, 'Fiabilité') + kpi(couts !== null ? couts + ' $' : null, 'Coût moyen') + kpi(nbSd, 'Sur SeedUp') + '</div>';
     // La carte des compétences : potentiel (barre) contre expression (curseur)
     if (window.Visuels && (coll.matrice || []).length){
-      const zonePour = (p, e) => (p >= 62 && e >= 55) ? 'appui' : (p >= 50 && e < 55) ? 'opportunite' : (e >= 55 && p < 62) ? 'economie' : 'neutre';
+      const zonePour = (p, e) => window.Competences.zoneDe(p, e);
       const compsEq = coll.matrice.map(cm => ({ id: cm.id, nom: cm.nom, famille: cm.famille || ((Competences.REFERENTIEL.find(r => r.id === cm.id) || {}).famille), potentiel: cm.potMoyen, expression: cm.exprMoyenne, zone: zonePour(cm.potMoyen, cm.exprMoyenne), score: cm.potMoyen }));
       const tailles = {}; coll.matrice.forEach(cm => { tailles[cm.id] = cm.nbPorteurs || 1; });
       const topGisements = coll.matrice.slice().sort((a, b2) => b2.dormant - a.dormant).slice(0, 5).map(cm => cm.id);
@@ -1430,28 +1430,21 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
 
   // ===== Sprint 2 : le fit au poste =====
   // Cibles d'expression par importance : déterminante 75, utile 60, secondaire 45.
-  function cibleDe(coef){ return coef >= 1.2 ? 75 : (coef >= 0.85 ? 60 : 45); }
+  const cibleDe = (coef) => window.Competences.cibleDe(coef);
   function coefsPoste(posteId){
     if (posteId === 'custom') return chargerPosteCustom();
     const p = window.Competences && Competences.POSTES && Competences.POSTES[posteId];
     return p ? p.coefs : null;
   }
+  let compsCache = new WeakMap();   // par membre, remis à zéro à chaque campagne
   function compsDe(m){
-    return (window.Competences && m && m.bigFive) ? Competences.scorer(m.bigFive, m.naturelAdapte && m.naturelAdapte.ecarts, m.speDims) : null;
+    if (!window.Competences || !m || !m.bigFive) return null;
+    if (compsCache.has(m)) return compsCache.get(m);
+    const c = Competences.scorer(m.bigFive, m.naturelAdapte && m.naturelAdapte.ecarts, m.speDims);
+    compsCache.set(m, c);
+    return c;
   }
-  function fitPoste(comps, coefs){
-    if (!comps || !comps.length || !coefs) return null;
-    let num = 0, den = 0; const gaps = [];
-    comps.forEach(c => {
-      const coef = coefs[c.id] || 1;
-      const cible = cibleDe(coef);
-      num += coef * Math.max(0, Math.min(1, c.expression / cible));
-      den += coef;
-      if (coef >= 1.2 && c.expression < cible) gaps.push({ nom: c.nom, exp: Math.round(c.expression), cible: cible, manque: cible - c.expression, moteur: c.potentiel >= cible });
-    });
-    gaps.sort((a, b) => b.manque - a.manque);
-    return den ? { score: Math.round(100 * num / den), gaps: gaps.slice(0, 3) } : null;
-  }
+  const fitPoste = (comps, coefs) => window.Competences.fitPoste(comps, coefs);
   function palierFit(sc){ return sc >= 80 ? 'haut' : sc >= 60 ? 'mi' : 'bas'; }
 
   // Le fit dans la fiche membre, recalculé au choix de la pastille de poste
@@ -1501,7 +1494,8 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
         + refs.map(rf => {
           const v = l.par[rf.id] || { e: 0, p: 0 };
           const a = (0.06 + 0.74 * Math.max(0, Math.min(100, v.e)) / 100).toFixed(2);
-          const dormant = v.p >= 62 && v.e < 55;
+          const SEU = window.Competences.SEUILS;
+          const dormant = v.p >= SEU.potAppui && v.e < SEU.exprAppui;
           return '<td class="heat-c" style="background:rgba(94,89,199,' + a + ')" title="' + esc(rf.nom) + ' · expression ' + Math.round(v.e) + ' · potentiel ' + Math.round(v.p) + '">' + (dormant ? '<i class="heat-dot" title="Potentiel dormant"></i>' : '') + '</td>';
         }).join('') + '</tr>';
     });
@@ -1827,6 +1821,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
   function selectionAucun(){ selectionEquipe = new Set(); renderCampagneVue(); }
 
   function afficherCampagne(data){
+    compsCache = new WeakMap();
     // Le référentiel de poste de l'entreprise se charge en arrière-plan
     posteCustomCourant = null;
     if (data && data.entreprise){

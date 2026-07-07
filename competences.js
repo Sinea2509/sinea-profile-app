@@ -121,10 +121,7 @@
           expression = Math.round((expression * 0.6 + moyDims * 0.4) * 10) / 10;
         }
       }
-      let zone = 'neutre';
-      if (potentiel <= 40) zone = 'economie';
-      else if (potentiel >= 62 && expression >= 58) zone = 'appui';
-      else if (potentiel >= 60 && (potentiel - expression >= 8 || expression < 55)) zone = 'opportunite';
+      const zone = zoneDe(potentiel, expression);
       return { id: comp.id, nom: comp.nom, famille: comp.famille, potentiel, expression, zone };
     });
   }
@@ -273,5 +270,33 @@
   const COULEURS_FAMILLES = { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#2C97E0', VISION: '#5E59C7' };
   const COULEURS_FAMILLES_LISTE = ['#F98272', '#E8951A', '#3EADFF', '#5E59C7'];
 
-  window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence, expressionDepuis, NOTICE, COULEURS_FAMILLES, COULEURS_FAMILLES_LISTE };
+  // Les seuils du modèle, source unique pour le moteur, le quadrant,
+  // la carte de chaleur et l'adéquation au poste.
+  const SEUILS = { potAppui: 62, exprAppui: 58, potLevier: 50 };
+  function zoneDe(potentiel, expression) {
+    if (potentiel <= 40) return 'economie';
+    if (potentiel >= SEUILS.potAppui && expression >= SEUILS.exprAppui) return 'appui';
+    if (potentiel >= 60 && (potentiel - expression >= 8 || expression < 55)) return 'opportunite';
+    return 'neutre';
+  }
+
+  // ===== Le fit au poste, centralisé et testable =====
+  // Cibles d'expression par importance : déterminante 75, utile 60, secondaire 45.
+  function cibleDe(coef) { return coef >= 1.2 ? 75 : (coef >= 0.85 ? 60 : 45); }
+  function fitPoste(comps, coefs) {
+    if (!Array.isArray(comps) || !comps.length || !coefs) return null;
+    let num = 0, den = 0;
+    const gaps = [];
+    comps.forEach((c) => {
+      const coef = coefs[c.id] || 1;
+      const cible = cibleDe(coef);
+      num += coef * Math.max(0, Math.min(1, c.expression / cible));
+      den += coef;
+      if (coef >= 1.2 && c.expression < cible) gaps.push({ nom: c.nom, exp: Math.round(c.expression), cible: cible, manque: cible - c.expression, moteur: c.potentiel >= cible });
+    });
+    gaps.sort((a, b) => b.manque - a.manque);
+    return den ? { score: Math.round(100 * num / den), gaps: gaps.slice(0, 3) } : null;
+  }
+
+  window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence, expressionDepuis, NOTICE, COULEURS_FAMILLES, COULEURS_FAMILLES_LISTE, SEUILS, zoneDe, cibleDe, fitPoste };
 })();

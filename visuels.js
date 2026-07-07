@@ -33,7 +33,8 @@
     const fams = FAMS();
     const W = 640, H = opts.compact ? 470 : 540;
     const x0 = 64, x1 = 616, y0 = 40, y1 = H - 96;
-    const seuilX = 62, seuilY = 55;
+    const SEU = (window.Competences && window.Competences.SEUILS) || { potAppui: 62, exprAppui: 58 };
+    const seuilX = SEU.potAppui, seuilY = SEU.exprAppui;
     const px = (v) => Math.round(x0 + (x1 - x0) * Math.max(0, Math.min(100, v)) / 100);
     const py = (v) => Math.round(y1 - (y1 - y0) * Math.max(0, Math.min(100, v)) / 100);
     const sx = px(seuilX), sy = py(seuilY);
@@ -216,5 +217,80 @@
       + '</div>';
   }
 
-  window.Visuels = { quadrantSvg, doubleProfilSvg, forcesVigilancesHtml };
+  // ---------------------------------------------------------
+  // 4. LE RADAR DU MIROIR : Vous contre Eux, cinq axes
+  // Deux polygones superposés sur une toile pentagonale douce.
+  // ---------------------------------------------------------
+  function radarMiroirSvg(vous, eux) {
+    if (!vous || !eux) return '';
+    const AXES = [['E', 'Aisance sociale'], ['A', 'Chaleur'], ['C', 'Rigueur'], ['S', 'Solidité'], ['O', 'Curiosité']];
+    if (!AXES.every(([k]) => typeof vous[k] === 'number' && typeof eux[k] === 'number')) return '';
+    const W = 480, H = 380, cx = 240, cy = 196, R = 138;
+    const pt = (i, v) => {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / AXES.length;
+      const r = R * Math.max(0, Math.min(100, v)) / 100;
+      return [Math.round((cx + r * Math.cos(a)) * 10) / 10, Math.round((cy + r * Math.sin(a)) * 10) / 10];
+    };
+    const poly = (src) => AXES.map(([k], i) => pt(i, src[k]).join(',')).join(' ');
+    let s2 = '<svg class="radm" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Radar du miroir : votre lecture contre le regard agrégé des autres, sur cinq axes">';
+    // La toile : anneaux et rayons
+    [25, 50, 75, 100].forEach((n) => {
+      s2 += '<polygon points="' + AXES.map((_, i) => pt(i, n).join(',')).join(' ') + '" fill="none" stroke="#E6E3D9" stroke-width="' + (n === 100 ? 1.4 : 1) + '"/>';
+    });
+    AXES.forEach((_, i) => {
+      const [x, y] = pt(i, 100);
+      s2 += '<line x1="' + cx + '" y1="' + cy + '" x2="' + x + '" y2="' + y + '" stroke="#EFEDE4" stroke-width="1"/>';
+    });
+    // Les deux lectures
+    s2 += '<polygon class="radm-vous" points="' + poly(vous) + '" fill="rgba(94,89,199,0.16)" stroke="#5E59C7" stroke-width="2.2" stroke-linejoin="round"/>';
+    s2 += '<polygon class="radm-eux" points="' + poly(eux) + '" fill="rgba(249,130,114,0.13)" stroke="#F98272" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="7 4"/>';
+    AXES.forEach(([k], i) => {
+      const [xv, yv] = pt(i, vous[k]);
+      const [xe, ye] = pt(i, eux[k]);
+      s2 += '<circle cx="' + xv + '" cy="' + yv + '" r="4" fill="#5E59C7" stroke="#FDFCF8" stroke-width="1.6"/>';
+      s2 += '<circle cx="' + xe + '" cy="' + ye + '" r="4" fill="#F98272" stroke="#FDFCF8" stroke-width="1.6"/>';
+    });
+    // Les étiquettes d'axes
+    AXES.forEach(([k, lab], i) => {
+      const [x, y] = pt(i, 118);
+      const anc = Math.abs(x - cx) < 12 ? 'middle' : (x > cx ? 'start' : 'end');
+      s2 += '<text x="' + x + '" y="' + (y + 4) + '" text-anchor="' + anc + '" font-size="11.5" font-weight="700" fill="#4A4A52">' + lab + '</text>';
+    });
+    // La légende
+    s2 += '<line x1="26" y1="' + (H - 16) + '" x2="52" y2="' + (H - 16) + '" stroke="#5E59C7" stroke-width="2.6"/><text x="58" y="' + (H - 12) + '" font-size="11" font-weight="700" fill="#4A4A52">Votre lecture</text>'
+      + '<line x1="168" y1="' + (H - 16) + '" x2="194" y2="' + (H - 16) + '" stroke="#F98272" stroke-width="2.6" stroke-dasharray="7 4"/><text x="200" y="' + (H - 12) + '" font-size="11" font-weight="700" fill="#4A4A52">Le regard des autres</text>';
+    return s2 + '</svg>';
+  }
+
+  // ---------------------------------------------------------
+  // 5. LA FRISE DES 90 JOURS
+  // Le temps du programme : jalons faits et à venir, position du jour.
+  // jalons : [{ label, pos (0-100), fait (bool) }] ; jour : 0-90 ou null.
+  // ---------------------------------------------------------
+  function frise90Svg(jalons, jour) {
+    if (!Array.isArray(jalons) || !jalons.length) return '';
+    const W = 640, H = 108, x0 = 34, x1 = 606, y = 56;
+    const px = (p) => Math.round(x0 + (x1 - x0) * Math.max(0, Math.min(100, p)) / 100);
+    let s2 = '<svg class="fr90" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Votre frise des 90 jours du programme">';
+    s2 += '<line x1="' + x0 + '" y1="' + y + '" x2="' + x1 + '" y2="' + y + '" stroke="#ECEAE3" stroke-width="7" stroke-linecap="round"/>';
+    if (typeof jour === 'number') {
+      const xj = px(100 * jour / 90);
+      s2 += '<line x1="' + x0 + '" y1="' + y + '" x2="' + xj + '" y2="' + y + '" stroke="url(#fr90g)" stroke-width="7" stroke-linecap="round"/>'
+        + '<defs><linearGradient id="fr90g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F98272"/><stop offset="0.55" stop-color="#E8951A"/><stop offset="1" stop-color="#5E59C7"/></linearGradient></defs>'
+        + '<circle cx="' + xj + '" cy="' + y + '" r="7.5" fill="#1A1A2E" stroke="#FDFCF8" stroke-width="2.5"/>'
+        + '<text x="' + xj + '" y="' + (y - 30) + '" text-anchor="middle" font-size="11" font-weight="800" fill="#1A1A2E">Jour ' + Math.round(jour) + '</text>'
+        + '<line x1="' + xj + '" y1="' + (y - 24) + '" x2="' + xj + '" y2="' + (y - 11) + '" stroke="#B0AEB8" stroke-width="1"/>';
+    }
+    jalons.forEach((j, i) => {
+      const x = px(j.pos);
+      const haut = i % 2 === 0;
+      s2 += j.fait
+        ? '<circle cx="' + x + '" cy="' + y + '" r="8" fill="#5B9E6B"/><path d="M' + (x - 3.4) + ' ' + y + ' l2.4 2.6 l4.4 -5" stroke="#FDFCF8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+        : '<circle cx="' + x + '" cy="' + y + '" r="7" fill="#FDFCF8" stroke="#C9C6BB" stroke-width="2"/>';
+      s2 += '<text x="' + x + '" y="' + (haut ? y + 26 : y + 42) + '" text-anchor="middle" font-size="10.5" font-weight="700" fill="' + (j.fait ? '#3E7C4F' : '#8A879B') + '">' + j.label + '</text>';
+    });
+    return s2 + '</svg>';
+  }
+
+  window.Visuels = { quadrantSvg, doubleProfilSvg, forcesVigilancesHtml, radarMiroirSvg, frise90Svg };
 })();

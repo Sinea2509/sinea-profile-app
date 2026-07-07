@@ -90,14 +90,30 @@ verifie('portail : le quadrant sort bien de matriceHtml', srcDash.indexOf('retur
 
 console.log('\n== 0quinquies. Sprint 2 : fit au poste et carte de chaleur ==');
 const fitSrc = srcDash;
-verifie('fit : moteur présent', fitSrc.indexOf('function fitPoste(') >= 0 && fitSrc.indexOf('cibleDe(') >= 0);
-verifie('fit : borné et déterministe (simulation)', (() => {
-  const cibleDe = (coef) => coef >= 1.2 ? 75 : (coef >= 0.85 ? 60 : 45);
-  const fitLocal = (comps, coefs) => { let n = 0, d = 0; comps.forEach(c => { const k = coefs[c.id] || 1; n += k * Math.max(0, Math.min(1, c.expression / cibleDe(k))); d += k; }); return Math.round(100 * n / d); };
-  const cc = compsV.map(c => ({ id: c.id, expression: c.expression }));
-  const a = fitLocal(cc, C.POSTES.manager.coefs), b = fitLocal(cc, C.POSTES.manager.coefs);
-  return a === b && a >= 0 && a <= 100;
+verifie('fit : délégué au moteur central', fitSrc.indexOf('window.Competences.fitPoste') >= 0 && fitSrc.indexOf('window.Competences.cibleDe') >= 0);
+verifie('fit réel : borné, déterministe, gaps limités', (() => {
+  const f1 = C.fitPoste(compsV, C.POSTES.manager.coefs);
+  const f2 = C.fitPoste(compsV, C.POSTES.manager.coefs);
+  return f1 && f1.score === f2.score && f1.score >= 0 && f1.score <= 100 && f1.gaps.length <= 3;
 })());
+verifie('fit réel : moteur présent signalé sur potentiel dormant', (() => {
+  const cc = compsV.map(c => Object.assign({}, c));
+  const cible = cc.find(x => x.id === 'communication_influence');
+  cible.potentiel = 90; cible.expression = 40;
+  const f = C.fitPoste(cc, C.POSTES.manager.coefs);
+  return f.gaps.some(g => g.moteur === true);
+})());
+verifie('fit réel : les coefficients déplacent le score', (() => {
+  const bas = {}; C.REFERENTIEL.forEach(r => { bas[r.id] = 0.7; });
+  const haut = {}; C.REFERENTIEL.forEach(r => { haut[r.id] = 1.35; });
+  return C.fitPoste(compsV, bas).score !== C.fitPoste(compsV, haut).score;
+})());
+verifie('zoneDe : canonique, économie égale potentiel bas', C.zoneDe(30, 80) === 'economie' && C.zoneDe(70, 60) === 'appui' && C.zoneDe(65, 50) === 'opportunite' && C.zoneDe(55, 50) === 'neutre');
+verifie('scorer et zoneDe : zéro dérive possible', compsV.every(c => c.zone === C.zoneDe(c.potentiel, c.expression)));
+verifie('quadrant : seuils lus depuis le moteur', fs.readFileSync('visuels.js', 'utf8').indexOf('Competences.SEUILS') > 0);
+verifie('heatmap : dormant aligné sur les seuils', srcDash.indexOf('SEU.exprAppui') > 0);
+verifie('portail : compsDe mémoïsé par campagne', srcDash.indexOf('compsCache = new WeakMap()') >= 0);
+verifie('code mort : classementComplet purgé', srcRes.indexOf('classementComplet') < 0);
 verifie('abréviations : 16 uniques', (() => {
   const m = fitSrc.match(/ABREV_COMP = \{([^}]+)\}/);
   if (!m) return false;
@@ -108,6 +124,32 @@ verifie('heatmap : rendu, tri et dormant', fitSrc.indexOf('renderHeatmapEquipe')
 verifie('adéquation : panneau, chips et liste', fitSrc.indexOf('renderFitPoste') >= 0 && fitSrc.indexOf('choisirFitPoste') >= 0 && fitSrc.indexOf('renderFitListe') >= 0);
 verifie('fiche : zone fit posée et recalcul au clic', fitSrc.indexOf('id="bd-fit"') >= 0 && fitSrc.indexOf('membreFicheCourant = m;') >= 0 && fitSrc.split('majFitFiche()').length >= 3);
 verifie('assemblage : heatmap et fit dans la vue campagne', fitSrc.indexOf('renderHeatmapEquipe();') >= 0 && fitSrc.indexOf('renderFitPoste();') >= 0);
+
+console.log('\n== 0sexies. Raccordements réclamés ==');
+const idxH2 = fs.readFileSync('index.html', 'utf8');
+verifie('espace : nav deux onglets posée', idxH2.indexOf('esp-nav') > 0 && idxH2.indexOf("App.espTab('miroir')") > 0);
+verifie('espace : miroir masqué par défaut', idxH2.indexOf('id="espace-miroir" class="esp-hide"') > 0);
+verifie('espace : espTab exporté', exportApp.includes('espTab'));
+verifie('notation : bouton dans l\'Essentiel', srcRes.indexOf('Result.noterPortrait()') > 0);
+verifie('notation : fonction exportée', srcRes.indexOf('Result.noterPortrait = function') > 0);
+const cssTxt = fs.readFileSync('style.css', 'utf8');
+verifie('mobile : hero en colonne sous 700px', cssTxt.indexOf('.espace-hero{flex-direction:column') > 0);
+verifie('mobile : colonne texte protégée (min-width 0)', cssTxt.indexOf('.espace-hero-txt{min-width:0') > 0);
+
+console.log('\n== 0septies. Sprint 3 : le cockpit participant ==');
+const rad = V.radarMiroirSvg({ E: 72, A: 78, C: 38, S: 55, O: 58 }, { E: 60, A: 70, C: 52, S: 48, O: 66 });
+verifie('radar : deux polygones superposés', (rad.match(/<polygon class/g) || []).length === 2);
+verifie('radar : cinq axes étiquetés', ['Aisance sociale', 'Chaleur', 'Rigueur', 'Solidité', 'Curiosité'].every(l => rad.indexOf(l) > 0));
+verifie('radar : trait manquant, rendu vide', V.radarMiroirSvg({ E: 50 }, { E: 50 }) === '');
+const fr = V.frise90Svg([{ label: 'Portrait', pos: 0, fait: true }, { label: 'Re-mesure', pos: 100, fait: false }], 45);
+verifie('frise : jalon fait coché, jalon à venir creux', fr.indexOf('#5B9E6B') > 0 && fr.indexOf('stroke="#C9C6BB"') > 0);
+verifie('frise : curseur au bon jour', fr.indexOf('Jour 45') > 0);
+verifie('frise : sans date, sans curseur', V.frise90Svg([{ label: 'Portrait', pos: 0, fait: true }], null).indexOf('Jour') < 0);
+verifie('cockpit : posé et appelé', srcCtrl.indexOf('function poserCockpit(') > 0 && srcCtrl.indexOf('poserCockpit(dataEspaceCourant, carte)') > 0);
+verifie('cockpit : dans l\'onglet développement', srcCtrl.indexOf("'espace-cockpit', 'espace-nea'") > 0);
+verifie('cockpit : slot présent dans la page', idxH2.indexOf('id="espace-cockpit"') > 0);
+verifie('miroir : le radar entre dans l\'analyse', srcCtrl.indexOf('${radarHtml}') > 0 && srcCtrl.indexOf('radarMiroirSvg(vous, percu)') > 0);
+verifie('engagements : état relié aux défis', srcCtrl.indexOf('compsDefis.has(mm.id)') > 0);
 
 console.log('\n== 1. Moteur de compétences : déterminisme et bornes ==');
 const bf = { O: 58, C: 38, E: 72, A: 78, N: 45 };

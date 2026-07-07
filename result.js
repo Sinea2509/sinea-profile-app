@@ -407,31 +407,6 @@ const Result = (() => {
     } catch (e) { console.warn("[Sinéa]", e); return ''; }
   }
 
-  function classementComplet(res){
-    const clTous = res.classement || [];
-    if (!clTous.length) return '';
-    // On n'affiche que les profils réellement commentés : les 3 dominants.
-    // Lister les 20 sans les expliquer crée de la confusion plus que de la valeur.
-    const cl = clTous.slice(0, 3);
-    const scoreMax = cl[0].score || 1;
-    const scoreMin = cl[cl.length - 1].score || 0;
-    const amplitude = (scoreMax - scoreMin) || 1;
-    const lignes = cl.map((item, i) => {
-      const color = FAM[item.famille] || '#999';
-      // largeur relative : le dominant à 100%, les suivants proportionnellement
-      const pct = 60 + ((item.score - scoreMin) / amplitude) * 40;
-      const rang = i + 1;
-      return `
-        <div class="rk-row rk-top">
-          <div class="rk-rang">${rang}</div>
-          <div class="rk-body">
-            <div class="rk-nom">${item.nom}</div>
-            <div class="rk-bar-track"><div class="rk-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-          </div>
-        </div>`;
-    }).join('');
-    return `<div class="rk-list">${lignes}</div>`;
-  }
   function contenu(nom){ const s=dataSlug(nom); return (SINEA_DATA.contenu&&SINEA_DATA.contenu[s])||{}; }
   function rarete(nom){ const s=dataSlug(nom); return (SINEA_DATA.rarete&&SINEA_DATA.rarete[s])||{pct:'',niveau:''}; }
   // Rareté de la COMBINAISON dominant + secondaire (plus marquante que le dominant seul)
@@ -2645,6 +2620,7 @@ const Result = (() => {
       const fort = (f.signaux || []).some(x => x && x.niveau === 'fort');
       h += '<div class="ess-fiab">Fiabilité de la mesure : <b>' + f.score + '/100, ' + (f.niveau || '') + '</b>.' + (fort ? ' Un signal de cohérence a été détecté et retravaillé par vos précisions : l\'échange avec votre formateur affinera encore la lecture.' : '') + '</div>';
     }
+    h += '<button type="button" class="ess-avis" onclick="Result.noterPortrait()">Noter ce portrait · 30 secondes</button>';
     h += '<p class="ess-mir">Le regard des autres compte aussi : le miroir 360 vous attend dans votre espace personnel.</p>';
     h += '<button type="button" class="ess-cta" onclick="document.getElementById(\'essentiel-bloc\').nextElementSibling.scrollIntoView({behavior:\'smooth\'})">Lire l\'analyse complète</button></div>';
     const zone = document.createElement('div');
@@ -2791,4 +2767,5 @@ const Result = (() => {
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)
+Result.noterPortrait = function(){ try { showMoment3(); } catch (e) { console.warn('[Sinéa]', e); } };
 window.Result = Result;
