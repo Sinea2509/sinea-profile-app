@@ -292,11 +292,123 @@
       const cible = cibleDe(coef);
       num += coef * Math.max(0, Math.min(1, c.expression / cible));
       den += coef;
-      if (coef >= 1.2 && c.expression < cible) gaps.push({ nom: c.nom, exp: Math.round(c.expression), cible: cible, manque: cible - c.expression, moteur: c.potentiel >= cible });
+      if (coef >= 1.2 && c.expression < cible) gaps.push({ id: c.id, nom: c.nom, exp: Math.round(c.expression), cible: cible, manque: cible - c.expression, moteur: c.potentiel >= cible });
     });
     gaps.sort((a, b) => b.manque - a.manque);
     return den ? { score: Math.round(100 * num / den), gaps: gaps.slice(0, 3) } : null;
   }
 
-  window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence, expressionDepuis, NOTICE, COULEURS_FAMILLES, COULEURS_FAMILLES_LISTE, SEUILS, zoneDe, cibleDe, fitPoste };
+  // ============================================================
+  // LE CODEX VIVANT : la trajectoire de développement
+  // Quatre paliers vécus, du premier geste à la transmission.
+  // Chaque palier : [repère observable, micro-défi façon SeedUp].
+  // Plus deux questions d'entretien comportementales par compétence.
+  // ============================================================
+  const PALIERS_NOMS = ["Premier geste", "En routine", "Sous pression", "Transmis aux autres"];
+  function palierDe(expression) {
+    if (expression < 45) return 1;
+    if (expression < SEUILS.exprAppui) return 2;
+    if (expression < 72) return 3;
+    return 4;
+  }
+  const CODEX = {
+    ecoute_active: { paliers: [
+      ["Vous laissez l'autre finir ses phrases et vous posez une question avant de donner votre avis.", "Aujourd'hui, dans un échange, posez deux questions ouvertes avant toute suggestion."],
+      ["Reformuler est devenu un réflexe, vos interlocuteurs disent se sentir compris.", "Terminez trois conversations cette semaine par une reformulation en une phrase."],
+      ["En désaccord ou sous tension, vous écoutez encore avant de défendre votre position.", "Au prochain désaccord, reformulez la position adverse jusqu'au oui c'est ça, avant de répondre."],
+      ["Autour de vous, on s'écoute davantage parce que vous le modelez et le demandez.", "En réunion, donnez la parole à la personne la plus silencieuse et reformulez son idée."]],
+      entretien: ["Racontez-moi une conversation récente où vous avez changé d'avis en écoutant. Qu'avez-vous entendu exactement ?", "Décrivez un moment où quelqu'un se sentait incompris face à vous. Qu'avez-vous fait ?"] },
+    cooperation: { paliers: [
+      ["Vous partagez l'information utile quand on vous la demande.", "Partagez aujourd'hui une information utile avant qu'on vous la demande."],
+      ["Aider un collègue fait partie de votre semaine normale, même sans bénéfice direct.", "Proposez votre aide sur un dossier qui ne vous rapporte rien cette semaine."],
+      ["Quand les délais serrent, vous protégez le collectif au lieu de jouer votre partition seul.", "Sur votre prochaine urgence, demandez qui a besoin de quoi avant de foncer."],
+      ["Vous créez les binômes et les rituels qui font coopérer les autres.", "Montez un binôme entre deux collègues qui gagneraient à travailler ensemble."]],
+      entretien: ["Parlez-moi d'une fois où aider un collègue vous a coûté du temps sur vos propres objectifs. Comment avez-vous arbitré ?", "Racontez une situation où l'équipe a gagné grâce à une information que vous avez fait circuler."] },
+    communication_influence: { paliers: [
+      ["Vous préparez vos points clés avant les échanges qui comptent.", "Avant votre prochaine réunion, écrivez vos trois points clés sur une fiche."],
+      ["Vos messages sont structurés, l'enjeu d'abord, et on retient ce que vous dites.", "Ouvrez votre prochaine présentation par l'enjeu pour l'auditoire, jamais par le contexte."],
+      ["Face à un auditoire difficile ou une objection publique, vous gardez le cap et le sourire.", "À la prochaine objection, accueillez-la, reformulez-la, puis répondez en une idée."],
+      ["On vous demande de porter les messages sensibles et vous préparez les autres à convaincre.", "Coachez un collègue sur son prochain pitch, trois points, un enjeu, une répétition."]],
+      entretien: ["Racontez-moi la fois où vous avez fait changer d'avis un interlocuteur réticent. Comment vous y êtes-vous pris, étape par étape ?", "Décrivez une présentation qui s'est mal passée. Qu'avez-vous changé depuis ?"] },
+    developpement_autres: { paliers: [
+      ["Vous dites ce qui va et ce qui coince quand on vous le demande.", "Donnez aujourd'hui un feedback précis sur un fait des dernières 24 heures."],
+      ["Le feedback et la délégation responsabilisante font partie de votre pratique régulière.", "Déléguez cette semaine une tâche complète avec le pourquoi, en plus du quoi."],
+      ["Même débordé, vous ne reprenez pas la main, vous aidez l'autre à trouver son chemin.", "La prochaine fois qu'on vous apporte un problème, répondez par une question au lieu d'une solution."],
+      ["Vous faites grandir des gens qui font grandir des gens, et cela se voit dans l'équipe.", "Confiez à quelqu'un le soin de former un tiers sur ce que vous lui avez appris."]],
+      entretien: ["Parlez-moi de quelqu'un que vous avez fait progresser. Qu'avez-vous fait concrètement, et qu'est-ce que cette personne dirait de vous ?", "Racontez un feedback difficile que vous avez donné. Comment l'avez-vous préparé ?"] },
+    orientation_resultats: { paliers: [
+      ["Vous savez ce que vous devez livrer et pour quand.", "Écrivez ce matin le livrable précis de votre journée, une phrase."],
+      ["Vous priorisez par l'impact et vous finissez ce que vous commencez.", "Identifiez la tâche à plus fort impact de la semaine et faites-la en premier chaque matin."],
+      ["Quand tout presse, vous sacrifiez l'accessoire en le disant, jamais le résultat.", "Au prochain surcroît, annoncez explicitement ce que vous dépriorisez et pourquoi."],
+      ["Vous donnez à l'équipe des caps mesurables et le goût de les atteindre.", "Formulez pour votre équipe un objectif chiffré à quinze jours et affichez-le."]],
+      entretien: ["Racontez-moi un objectif que vous avez atteint contre vents et marées. Qu'avez-vous sacrifié en route ?", "Décrivez une fois où vous n'avez pas livré. Qu'est-ce qui s'est joué, et qu'avez-vous changé ?"] },
+    prise_decision: { paliers: [
+      ["Vous tranchez les petits sujets sans les faire remonter.", "Prenez aujourd'hui une décision que vous auriez normalement fait valider."],
+      ["Vous décidez avec les données disponibles et vous assumez le résultat.", "Sur votre prochaine décision, fixez-vous une échéance et tenez-la, information complète ou pas."],
+      ["Dans le flou ou l'urgence, vous posez un choix clair et vous l'expliquez.", "À la prochaine situation ambiguë, écrivez les deux options, choisissez en dix minutes, informez."],
+      ["Vous rendez les autres capables de décider, cadre clair et droit à l'erreur.", "Définissez avec un collègue le périmètre où il décide seul désormais."]],
+      entretien: ["Parlez-moi de la décision la plus inconfortable que vous ayez prise seul. Avec quelles informations, et qu'en est-il sorti ?", "Racontez une décision que vous avez trop retardée. Qu'est-ce que cela a coûté ?"] },
+    initiative: { paliers: [
+      ["Vous signalez les problèmes que vous voyez, sans attendre qu'on vous le demande.", "Signalez aujourd'hui un irritant que tout le monde contourne, avec une piste."],
+      ["Vous lancez des améliorations dans votre périmètre sans permission préalable.", "Améliorez cette semaine un processus qui vous agace, puis montrez le avant-après."],
+      ["Quand personne ne prend le sujet, vous le prenez, même hors de votre fiche de poste.", "Prenez le sujet orphelin de votre équipe et donnez-lui un premier pas cette semaine."],
+      ["Vous créez un climat où les autres osent proposer et essayer.", "À la prochaine idée d'un collègue, répondez par comment on teste petit plutôt que par oui mais."]],
+      entretien: ["Racontez-moi quelque chose que vous avez lancé sans qu'on vous le demande. Qu'est-ce qui vous a décidé ?", "Décrivez une initiative qui a échoué. Comment l'avez-vous assumée ?"] },
+    resilience: { paliers: [
+      ["Vous encaissez les contretemps sans les transformer en drame.", "Au prochain imprévu, écrivez la version factuelle en deux phrases avant d'en parler."],
+      ["Après un échec, vous rebondissez vite et vous en tirez une leçon utilisable.", "Sur votre dernier raté, formulez la leçon en une phrase et la prochaine action."],
+      ["Sous forte pression, vous restez stable et vous protégez votre énergie et celle des autres.", "Cette semaine, verrouillez un créneau de récupération non négociable et tenez-le."],
+      ["Vous êtes le point d'ancrage des autres dans les tempêtes.", "Au prochain coup dur d'équipe, ouvrez la réunion par ce qui reste solide, avant le problème."]],
+      entretien: ["Racontez-moi votre pire période professionnelle. Comment avez-vous tenu, concrètement, semaine après semaine ?", "Décrivez un échec qui vous a longtemps travaillé. Qu'en avez-vous fait ?"] },
+    organisation: { paliers: [
+      ["Vos journées ont une liste et vos engagements ont une trace.", "Ce soir, préparez la liste de demain, trois priorités maximum."],
+      ["Vous planifiez la semaine, anticipez les échéances et tenez vos délais.", "Bloquez dès maintenant dans l'agenda les créneaux de vos deux gros livrables de la semaine."],
+      ["Quand tout bouge, vous réorganisez vite sans rien laisser tomber au sol.", "Au prochain chamboulement, reconstruisez le plan en quinze minutes et communiquez-le."],
+      ["Vos méthodes structurent l'équipe, on s'appuie sur vos rituels.", "Installez un rituel simple d'équipe, quinze minutes de revue hebdomadaire, et animez-le trois semaines."]],
+      entretien: ["Décrivez-moi votre système d'organisation un lundi matin chargé. Concrètement, outil par outil.", "Racontez une période où vous avez jonglé avec trop de projets. Qu'avez-vous laissé tomber, et comment l'avez-vous choisi ?"] },
+    rigueur: { paliers: [
+      ["Vous relisez ce qui part et vous corrigez ce que vous voyez.", "Relisez votre prochain envoi important à voix basse avant de cliquer."],
+      ["Vos livrables partent propres, les détails qui comptent sont vérifiés.", "Créez une check-list de cinq points pour votre livrable récurrent et appliquez-la."],
+      ["Même dans l'urgence, vous tenez le niveau d'exigence sur ce qui ne pardonne pas.", "Sous le prochain délai serré, identifiez les deux vérifications non négociables et faites-les."],
+      ["Votre exigence élève le standard des autres sans les écraser.", "Transformez votre check-list en standard d'équipe et présentez-la en dix minutes."]],
+      entretien: ["Racontez-moi une erreur de détail qui a eu de grosses conséquences autour de vous. Qu'avez-vous mis en place ensuite ?", "Comment arbitrez-vous entre vite et parfait ? Donnez-moi un exemple récent des deux."] },
+    fiabilite_suivi: { paliers: [
+      ["Ce que vous promettez pour vendredi arrive vendredi.", "Ne promettez aujourd'hui que ce que vous pouvez tenir, et notez chaque engagement pris."],
+      ["Vos engagements sont suivis, relancés, soldés, sans qu'on vous coure après.", "Faites ce vendredi la revue de vos engagements ouverts et soldez ou renégociez chacun."],
+      ["Quand vous ne pouvez plus tenir, vous prévenez tôt et vous proposez un plan B.", "Au premier doute sur un délai, prévenez immédiatement avec une nouvelle date ferme."],
+      ["Votre parole fait référence, on cale les plans sur vos engagements.", "Aidez un collègue débordé à renégocier proprement un engagement intenable."]],
+      entretien: ["Parlez-moi d'un engagement que vous n'avez pas pu tenir. Quand l'avez-vous dit, et comment ?", "Comment suivez-vous vos promesses en cours ? Montrez-moi votre méthode réelle."] },
+    analyse: { paliers: [
+      ["Devant un problème, vous cherchez les faits avant les opinions.", "Sur le prochain problème, listez trois faits vérifiés avant toute hypothèse."],
+      ["Vous décomposez les sujets complexes et vos conclusions sont sourcées.", "Prenez votre dossier flou du moment et découpez-le en trois sous-questions."],
+      ["Sous pression, vous gardez la tête froide et vous distinguez le signal du bruit.", "Dans la prochaine urgence, posez par écrit qu'est-ce qu'on sait, qu'est-ce qu'on suppose."],
+      ["Vos grilles de lecture équipent les autres pour penser mieux.", "Formalisez votre méthode d'analyse en une page et partagez-la à l'équipe."]],
+      entretien: ["Racontez-moi un problème complexe que vous avez démêlé. Par où avez-vous commencé, et qu'avez-vous écarté ?", "Décrivez une fois où votre première analyse était fausse. Comment vous en êtes-vous aperçu ?"] },
+    vision_strategique: { paliers: [
+      ["Vous reliez votre travail quotidien aux enjeux d'ensemble.", "Pour votre tâche du jour, écrivez en une phrase à quel enjeu global elle sert."],
+      ["Vous anticipez à quelques mois et vos choix du présent préparent la suite.", "Bloquez trente minutes cette semaine pour écrire où votre périmètre doit être dans six mois."],
+      ["Dans le brouillard, vous maintenez un cap lisible et vous renoncez à ce qui en dévie.", "Identifiez une activité qui ne sert plus le cap et proposez son arrêt."],
+      ["Vous donnez aux autres une histoire du futur qui oriente leurs décisions.", "Racontez la vision à votre équipe en trois phrases, le point de départ, le cap, le premier pas."]],
+      entretien: ["Où voyez-vous votre métier dans trois ans, et qu'avez-vous déjà changé dans votre façon de travailler à cause de cela ?", "Racontez une décision court-termiste que vous avez refusée au nom de la suite. Qu'est-ce que cela a coûté sur le moment ?"] },
+    creativite: { paliers: [
+      ["Vous proposez des variantes quand la voie habituelle coince.", "Sur un irritant du jour, proposez une alternative, même imparfaite."],
+      ["Vous générez régulièrement des idées neuves et vous en testez certaines.", "Cette semaine, testez une idée en version minuscule, une heure maximum."],
+      ["Quand les contraintes étouffent, vous en faites un terrain de jeu.", "Prenez votre plus grosse contrainte actuelle et trouvez trois façons d'en faire un atout."],
+      ["Vous animez la créativité des autres, vos formats font émerger leurs idées.", "Animez quinze minutes de génération d'idées en équipe avec une règle, aucune critique avant dix idées."]],
+      entretien: ["Racontez-moi l'idée la plus inattendue que vous ayez fait aboutir. D'où venait-elle, et qui a fallu convaincre ?", "Décrivez une situation bloquée que vous avez débloquée par un angle inhabituel."] },
+    adaptabilite: { paliers: [
+      ["Vous acceptez les changements de plan sans friction excessive.", "Au prochain changement imposé, cherchez d'abord ce qu'il rend possible."],
+      ["Vous changez de méthode ou d'interlocuteur avec aisance, selon le contexte.", "Adaptez consciemment votre communication à deux interlocuteurs très différents aujourd'hui."],
+      ["Dans les grands virages, vous êtes rapidement opérationnel dans le nouveau monde.", "Sur le changement en cours, fixez-vous trois apprentissages à maîtriser sous quinze jours."],
+      ["Vous aidez les autres à traverser le changement, vous en êtes le passeur.", "Repérez la personne la plus bousculée par le changement et offrez-lui trente minutes."]],
+      entretien: ["Racontez-moi le plus gros changement subi de votre parcours. Qu'avez-vous fait la première semaine ?", "Décrivez une habitude de travail que vous avez abandonnée. Qu'est-ce qui vous a convaincu ?"] },
+    apprentissage: { paliers: [
+      ["Vous cherchez la réponse avant de demander, et vous retenez ce que vous trouvez.", "Sur la prochaine question, cherchez quinze minutes avant de solliciter quelqu'un."],
+      ["Vous apprenez en continu, un sujet en cours, des sources régulières.", "Choisissez le sujet du mois et bloquez deux créneaux de trente minutes par semaine."],
+      ["Vous apprenez vite sous contrainte, un nouveau domaine ne vous fait pas peur.", "Prenez une tâche légèrement au-dessus de votre niveau et livrez-la avec de l'aide."],
+      ["Vous transformez ce que vous apprenez en savoir d'équipe.", "Partagez en dix minutes votre dernier apprentissage utile au reste de l'équipe."]],
+      entretien: ["Qu'avez-vous appris de significatif ces six derniers mois, et comment l'avez-vous appris concrètement ?", "Racontez une compétence que vous avez dû acquérir en urgence. Votre méthode, jour par jour ?"] },
+  };
+
+    window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence, expressionDepuis, NOTICE, COULEURS_FAMILLES, COULEURS_FAMILLES_LISTE, SEUILS, zoneDe, cibleDe, fitPoste, DIMS_VERS_COMPETENCES, CODEX, PALIERS_NOMS, palierDe };
 })();

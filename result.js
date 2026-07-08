@@ -2769,13 +2769,58 @@ const Result = (() => {
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)
 Result.noterPortrait = function(){
   try {
-    showMoment3();
-    const scr = document.getElementById('screen-moment3');
-    if (scr && !scr.classList.contains('active')) {
-      document.querySelectorAll('.screen.active').forEach(function (s2) { s2.classList.remove('active'); });
-      scr.classList.add('active');
-      window.scrollTo(0, 0);
-    }
-  } catch (e) { console.error('[Sinéa] noterPortrait', e); alert('La notation ne parvient pas à s\'ouvrir sur ce portrait. Signalez-le, la console contient le détail.'); }
+    if (document.getElementById('noter-ov')) return;
+    const jeton = (function(){ try { return new URLSearchParams(window.location.search).get('token') || ''; } catch (e) { return ''; } })();
+    const ov = document.createElement('div');
+    ov.id = 'noter-ov';
+    ov.className = 'noter-ov';
+    const ligne = function (k, lab) { return '<div class="noter-q"><span class="noter-lab">' + lab + '</span><span class="noter-stars" data-k="' + k + '">' + [1, 2, 3, 4, 5].map(function (v) { return '<button type="button" data-v="' + v + '">★</button>'; }).join('') + '</span></div>'; };
+    ov.innerHTML = '<div class="noter-card"><button type="button" class="noter-x" aria-label="Fermer">×</button>'
+      + '<div class="noter-titre">Votre avis sur ce portrait</div>'
+      + '<p class="noter-sub">Trente secondes, trois étoiles, et vos mots si le cœur vous en dit.</p>'
+      + ligne('AVIS_RESSEMBLANCE', 'Ce portrait me ressemble')
+      + ligne('AVIS_UTILITE', 'Il me donne des actions concrètes')
+      + ligne('AVIS_CLARTE', 'Il est clair et agréable à lire')
+      + '<textarea class="noter-verbatim" id="noter-verbatim" placeholder="Ce qui vous a le plus marqué ? (facultatif)"></textarea>'
+      + '<button type="button" class="noter-envoyer" id="noter-envoyer" disabled>Envoyer mon avis</button>'
+      + '<p class="noter-etat" id="noter-etat"></p></div>';
+    document.body.appendChild(ov);
+    const notes = {};
+    ov.querySelectorAll('.noter-stars button').forEach(function (b) {
+      b.onclick = function(){
+        const grp = this.parentNode;
+        notes[grp.getAttribute('data-k')] = parseInt(this.getAttribute('data-v'), 10);
+        const v = parseInt(this.getAttribute('data-v'), 10);
+        grp.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', parseInt(x.getAttribute('data-v'), 10) <= v); });
+        if (Object.keys(notes).length >= 3) document.getElementById('noter-envoyer').disabled = false;
+      };
+    });
+    ov.querySelector('.noter-x').onclick = function(){ ov.remove(); };
+    ov.onclick = function (e) { if (e.target === ov) ov.remove(); };
+    document.getElementById('noter-envoyer').onclick = function(){
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours...';
+      const avis = Object.assign({}, notes, { AVIS_VERBATIM: (document.getElementById('noter-verbatim').value || '').trim() || undefined });
+      fetch(API_BASE + '/progression', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'avis_direct', jeton: jeton, type: (typeof res !== 'undefined' && res && res.type) || undefined, avis: avis }),
+      }).then(function (rp) { return rp.json(); }).then(function (d) {
+        if (d && d.ok) {
+          ov.querySelector('.noter-card').innerHTML = '<div class="noter-titre">Merci !</div><p class="noter-sub">Votre avis nourrit directement la qualité des prochains portraits.</p>';
+          setTimeout(function(){ ov.remove(); }, 2600);
+        } else {
+          document.getElementById('noter-etat').textContent = 'L' + String.fromCharCode(39) + 'envoi a échoué (' + ((d && (d.error || d.raison)) || 'inconnu') + '). Réessayez.';
+          btn.disabled = false;
+          btn.textContent = 'Envoyer mon avis';
+        }
+      }).catch(function(){
+        document.getElementById('noter-etat').textContent = 'Réseau indisponible, réessayez.';
+        btn.disabled = false;
+        btn.textContent = 'Envoyer mon avis';
+      });
+    };
+  } catch (e) { console.error('[Sinéa] noterPortrait', e); }
 };
 window.Result = Result;

@@ -3,11 +3,12 @@
   const ANALYSE_URL = API_BASE + "/analyse_equipe";
   const COMPAT_URL = API_BASE + "/compatibilite";
   const GRILLE_URL = API_BASE + "/grille_entretien";
+  const CODEX_URL = API_BASE + "/codex";
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v72');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v72]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v77');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v77]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";
@@ -1239,7 +1240,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     }
     h += '<div class="ce-titre">La carte des compétences de l\'équipe</div><div class="tb-carte">';
     const matTriee = (coll.matrice || []).slice().sort((a, b2) => (b2.dormant * b2.nbPorteurs) - (a.dormant * a.nbPorteurs) || b2.dormant - a.dormant);
-    const ligneMat = (c) => '<div class="bd-mat-row"><span class="bd-mat-nom">' + esc(c.nom) + '</span>'
+    const ligneMat = (c) => '<div class="bd-mat-row"><span class="bd-mat-nom bd-mat-cx" onclick="ouvrirCodex(&quot;' + c.id + '&quot;)" title="Ouvrir la fiche de cette compétence">' + esc(c.nom) + '</span>'
       + '<div class="bd-jauge-bar"><div class="bd-jauge-pot" style="width:' + Math.round(c.potMoyen) + '%"></div><div class="bd-jauge-expr" style="left:' + Math.round(c.exprMoyenne) + '%"></div></div>'
       + '<span class="tb-mat-val">' + Math.round(c.potMoyen) + ' / ' + Math.round(c.exprMoyenne) + '</span></div>';
     h += matTriee.slice(0, 8).map(ligneMat).join('');
@@ -1418,6 +1419,83 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
   }
 
   const ZONES_MAT = { appui: 'Appui', opportunite: 'Opportunité', neutre: 'Neutre', economie: 'Économie' };
+  // ===== Le codex des compétences : la fiche référence, façon bibliothèque =====
+  const DIMS_LIBELLES = { delegation: 'Délégation', feedback: 'Feedback', cadrage: 'Cadrage', posture: 'Posture', closing: 'Closing', objection: 'Objection' };
+  const TRAITS_FR = { O: 'Ouverture', C: 'Conscience', E: 'Extraversion', A: 'Agréabilité', N: 'Stabilité émotionnelle', S: 'Stabilité émotionnelle' };
+  function rejouerQ16(input){
+    const t = Math.max(0, Math.min(100, Number(input.value))) / 100;
+    const box = input.closest('.bd-q16') || document;
+    box.querySelectorAll('.q16-mv').forEach(g => {
+      const y0 = Number(g.getAttribute('data-cy0'));
+      const y1 = Number(g.getAttribute('data-cy1'));
+      const y = (y0 + (y1 - y0) * t).toFixed(1);
+      g.querySelectorAll('circle').forEach(c2 => c2.setAttribute('cy', y));
+    });
+  }
+
+  function chargerIncarne(id){
+    const zone = document.getElementById('cx-incarne');
+    if (!zone || !membreFicheCourant || !membreFicheCourant.email || !window.Competences) return;
+    const ref = Competences.REFERENTIEL.find(function (r2) { return r2.id === id; });
+    if (!ref) return;
+    zone.innerHTML = '<p class="cx-inc cx-inc-load">Néa observe le profil...</p>';
+    const poidsStr = Object.entries(ref.poids || {}).sort(function (a, b) { return b[1] - a[1]; }).map(function (p2) { return p2[0] + ' ' + Math.round(p2[1] * 100) + '%'; }).join(', ');
+    fetch(CODEX_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cle: cleAcces, email: membreFicheCourant.email, compId: id, compNom: ref.nom, compDef: ref.def || '', poids: poidsStr }),
+    }).then(function (r2) { return r2.json(); }).then(function (dj) {
+      if (dj && dj.ok && dj.txt) zone.innerHTML = '<p class="cx-inc">' + esc(dj.txt) + '</p>' + (dj.cache ? '<p class="cx-inc-cache">Servi depuis le cache, généré une seule fois.</p>' : '');
+      else zone.innerHTML = '<p class="cx-inc-err">Génération indisponible (' + esc((dj && dj.error) || 'inconnu') + ').</p>';
+    }).catch(function () { zone.innerHTML = '<p class="cx-inc-err">Réseau indisponible, réessayez.</p>'; });
+  }
+
+  function ouvrirCodex(id){
+    if (!window.Competences) return;
+    const ref = Competences.REFERENTIEL.find(r => r.id === id);
+    if (!ref) return;
+    const coul = (Competences.COULEURS_FAMILLES || {})[ref.famille] || '#8A879B';
+    const poids = Object.entries(ref.poids || {}).sort((a, b) => b[1] - a[1]).map(([t, p]) => (TRAITS_FR[t] || t) + ' ' + Math.round(p * 100) + '%').join(' · ');
+    const dims = Object.entries(Competences.DIMS_VERS_COMPETENCES || {}).filter(([, ids]) => (ids || []).indexOf(id) >= 0).map(([dk]) => DIMS_LIBELLES[dk] || dk);
+    let mesure = '', cc = null;
+    try {
+      const comps = membreFicheCourant ? compsDe(membreFicheCourant) : null;
+      cc = comps ? comps.find(x => x.id === id) : null;
+      if (cc) mesure = '<div class="cx-mesure"><span>Chez ' + esc(membreFicheCourant.prenom || membreFicheCourant.nom || 'ce membre') + '</span><b>nature ' + Math.round(cc.potentiel) + ' · travail ' + Math.round(cc.expression) + '</b><i class="bd-mat-zone z-' + cc.zone + '">' + (ZONES_MAT[cc.zone] || cc.zone) + '</i></div>';
+    } catch (e) {}
+    // La trajectoire de développement, quatre paliers vécus
+    const cx = Competences.CODEX && Competences.CODEX[id];
+    const palCourant = cc ? Competences.palierDe(cc.expression) : 0;
+    const trajectoire = cx
+      ? '<div class="cx-t">La trajectoire</div>' + cx.paliers.map(function (p2, i) {
+          const num = i + 1;
+          const etat = palCourant ? (num < palCourant ? ' fait' : (num === palCourant ? ' on' : '')) : '';
+          return '<div class="cx-pal' + etat + '"><b>' + num + '. ' + Competences.PALIERS_NOMS[i] + (num === palCourant ? ' · vous êtes ici' : '') + '</b><p>' + esc(p2[0]) + '</p><em>' + (num === palCourant ? 'Votre prochain pas : ' : 'Défi : ') + esc(p2[1]) + '</em></div>';
+        }).join('')
+      : '';
+    const entretienHtml = cx
+      ? '<div class="cx-t">À explorer en entretien ou en 1:1</div><ul class="cx-prog">' + cx.entretien.map(function (q2) { return '<li>' + esc(q2) + '</li>'; }).join('') + '</ul>'
+      : '';
+    const incarneHtml = (membreFicheCourant && membreFicheCourant.email)
+      ? '<div class="cx-t">Chez ' + esc(membreFicheCourant.prenom || 'cette personne') + ', en vrai</div><div id="cx-incarne"><button type="button" class="cx-inc-btn" onclick="chargerIncarne(&quot;' + id + '&quot;)">Écrire le regard incarné</button></div>'
+      : '';
+    const html = '<div class="fm-overlay" onclick="if(event.target===this)this.remove()"><div class="fm-card cx-card">'
+      + '<button class="fm-close" onclick="this.closest(&quot;.fm-overlay&quot;).remove()">×</button>'
+      + '<div class="cx-kicker" style="color:' + coul + '">' + esc(ref.famille) + '</div>'
+      + '<div class="cx-nom">' + esc(ref.nom) + '</div>'
+      + '<p class="cx-def">' + esc(ref.def || '') + '</p>'
+      + mesure
+      + '<div class="cx-t">Ce qui la nourrit</div><p class="cx-txt">' + poids + '</p>'
+      + (dims.length ? '<div class="cx-t">Dimensions métier liées</div><p class="cx-txt">' + dims.join(' · ') + '</p>' : '')
+      + '<div class="cx-t">Pour progresser</div><ul class="cx-prog">' + (ref.progresser || []).map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>'
+      + trajectoire
+      + entretienHtml
+      + incarneHtml
+      + '<p class="cx-note">Potentiel : la facilité intrinsèque, lue sur le profil naturel. Expression : le comportement déclaré au travail, affiné par les dimensions métier.</p>'
+      + '</div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+  }
+
   function deltasBrief(b){
     if (!b || !b._comps || !b._compsApres) return null;
     const d = {};
@@ -1460,12 +1538,29 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       zone.innerHTML = poste === 'custom' ? '<div class="bd-fit-note">Définissez le profil cible sur mesure ci-dessus pour mesurer l\'adéquation.</div>' : '';
       return;
     }
-    const fit = fitPoste(compsDe(m), coefs);
+    const compsM = compsDe(m);
+    const fit = fitPoste(compsM, coefs);
+    let projFiche = null;
+    try {
+      const engages = new Set((m.pistesLibelles || []).map(l2 => { const mm = Competences.matcherCompetence(l2 || ''); return mm && mm.id; }).filter(Boolean));
+      if (engages.size && compsM) {
+        const compsProj = compsM.map(c2 => engages.has(c2.id) ? Object.assign({}, c2, { expression: Math.min(100, Math.max(c2.expression, Math.min(c2.potentiel, c2.expression + 12))) }) : c2);
+        const f2 = fitPoste(compsProj, coefs);
+        if (f2 && fit && f2.score > fit.score) projFiche = f2.score;
+      }
+    } catch (e) {}
     if (!fit){ zone.innerHTML = ''; return; }
     zone.innerHTML = '<div class="bd-fit"><span class="bd-fit-score s-' + palierFit(fit.score) + '">' + fit.score + '%</span><span class="bd-fit-lab">d\'adéquation au poste sélectionné</span></div>'
       + (fit.gaps.length
         ? '<div class="bd-fit-gaps">' + fit.gaps.map(g => '<span class="bd-gap">' + esc(g.nom) + ' <b>' + g.exp + '</b><i>/' + g.cible + '</i>' + (g.moteur ? '<u title="Le potentiel est là : développable par la pratique">moteur présent</u>' : '') + '</span>').join('') + '</div>'
         : '<div class="bd-fit-gaps"><span class="bd-gap bd-gap-ok">Aucun écart sur les compétences déterminantes</span></div>');
+    if (projFiche) zone.insertAdjacentHTML('beforeend', '<div class="bd-fit-proj">À 90 jours, engagements tenus : <b>' + projFiche + '%</b></div>');
+    try {
+      if (fit && fit.gaps && fit.gaps.length && window.Competences && Competences.CODEX) {
+        const qs = fit.gaps.map(function (g) { const cx2 = Competences.CODEX[g.id]; return cx2 ? '<li><b>' + esc(g.nom) + '</b> · ' + esc(cx2.entretien[0]) + '</li>' : ''; }).join('');
+        if (qs) zone.insertAdjacentHTML('beforeend', '<div class="cx-t" style="margin-top:10px">À explorer en entretien ou en 1:1</div><ul class="cx-prog bd-fit-qs">' + qs + '</ul>');
+      }
+    } catch (e) {}
   }
 
   // ===== Sprint 2 : la carte de chaleur de l'équipe =====
@@ -1524,16 +1619,27 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       return '<div class="empty">Le profil sur mesure de cette entreprise attend sa définition : ouvrez une fiche, pastille Sur mesure, Définir le profil cible.</div>';
     }
     const lignes = membresCompetences().map(r => {
-      const fit = fitPoste(compsDe(r), coefs);
-      return fit ? { idx: repsCourants.indexOf(r), nom: r.nom || '', fit: fit } : null;
+      const comps = compsDe(r);
+      const fit = fitPoste(comps, coefs);
+      if (!fit) return null;
+      let proj = null;
+      try {
+        const engages = new Set((r.pistesLibelles || []).map(l2 => { const mm = Competences.matcherCompetence(l2 || ''); return mm && mm.id; }).filter(Boolean));
+        if (engages.size && comps) {
+          const compsProj = comps.map(c2 => engages.has(c2.id) ? Object.assign({}, c2, { expression: Math.min(100, Math.max(c2.expression, Math.min(c2.potentiel, c2.expression + 12))) }) : c2);
+          const f2 = fitPoste(compsProj, coefs);
+          if (f2 && f2.score > fit.score) proj = f2.score;
+        }
+      } catch (e) {}
+      return { idx: repsCourants.indexOf(r), nom: r.nom || '', fit: fit, proj: proj };
     }).filter(Boolean).sort((a, b) => b.fit.score - a.fit.score);
     if (!lignes.length) return '<div class="empty">Aucun profil terminé à évaluer.</div>';
     return lignes.map((l, i) =>
       '<div class="fit-row" onclick="ouvrirMembre(' + l.idx + ')">'
       + '<span class="fit-rang">' + (i + 1) + '</span>'
       + '<span class="fit-nom">' + esc(l.nom) + '</span>'
-      + '<span class="fit-rail"><i class="fit-barre f-' + palierFit(l.fit.score) + '" style="width:' + l.fit.score + '%"></i></span>'
-      + '<span class="fit-score">' + l.fit.score + '%</span>'
+      + '<span class="fit-rail">' + (l.proj ? '<i class="fit-proj" style="width:' + l.proj + '%"></i>' : '') + '<i class="fit-barre f-' + palierFit(l.fit.score) + '" style="width:' + l.fit.score + '%"></i></span>'
+      + '<span class="fit-score">' + l.fit.score + '%' + (l.proj ? '<em class="fit-projtag">→ ' + l.proj + '% à 90 j</em>' : '') + '</span>'
       + '<span class="fit-gaps">' + l.fit.gaps.slice(0, 2).map(g => '<em>' + esc(g.nom) + ' ' + g.exp + '/' + g.cible + '</em>').join('') + '</span>'
       + '</div>').join('');
   }
@@ -1557,13 +1663,16 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
 
   function matriceHtml(b){
     // La carte des 16 en tête, le détail ligne à ligne dessous
+    const dts = deltasBrief(b);
     const enTete = (window.Visuels && b && b._comps)
-      ? '<div class="bd-q16">' + window.Visuels.quadrantSvg(b._comps, { compact: true, deltas: deltasBrief(b) }) + '</div>'
+      ? '<div class="bd-q16">' + window.Visuels.quadrantSvg(b._comps, { compact: true, deltas: dts })
+        + (dts ? '<div class="q16-slider"><span>J0</span><input type="range" id="bd-q16-t" min="0" max="100" value="100" oninput="rejouerQ16(this)" aria-label="Rejouer les 90 jours"><span>J90</span></div>' : '')
+        + '</div>'
       : '';
     const comps = b._comps || [];
     if (!comps.length) return '';
     return enTete + comps.map(c =>
-      '<div class="bd-mat-row"><span class="bd-mat-nom">' + esc(c.nom) + '</span>' +
+      '<div class="bd-mat-row"><span class="bd-mat-nom bd-mat-cx" onclick="ouvrirCodex(&quot;' + c.id + '&quot;)" title="Ouvrir la fiche de cette compétence">' + esc(c.nom) + '</span>' +
       '<div class="bd-jauge-bar"><div class="bd-jauge-pot" style="width:' + Math.round(c.potentiel) + '%"></div><div class="bd-jauge-expr" style="left:' + Math.round(c.expression) + '%"></div></div>' +
       '<span class="tb-mat-val">' + Math.round(c.potentiel) + ' / ' + Math.round(c.expression) + '</span>' +
       ((b._regards && typeof b._regards.vals[c.id] === 'number') ? '<span class="bd-mat-oeil" title="Vu par ' + b._regards.n + ' regards">&#128065; ' + Math.round(b._regards.vals[c.id]) + '</span>' : '') +

@@ -113,10 +113,12 @@
     const taille = opts.taille || null;
     let pts = '', labels = [];
     comps.forEach((c, i) => {
-      const cx = px(c.potentiel), cy = py(deltas && deltas[c.id] && typeof deltas[c.id].apres === 'number' ? deltas[c.id].apres : c.expression);
+      const dAv = deltas && deltas[c.id] && typeof deltas[c.id].avant === 'number' && typeof deltas[c.id].apres === 'number' ? deltas[c.id] : null;
+      const cx = px(c.potentiel), cy = py(dAv ? dAv.apres : c.expression);
+      const attrsMv = dAv ? ' class="q16-pt q16-mv" data-cy0="' + py(dAv.avant) + '" data-cy1="' + cy + '"' : ' class="q16-pt"';
       const r = taille && taille[c.id] ? Math.min(13, 6 + taille[c.id] * 1.6) : 7;
       const coul = fams[c.famille] || '#8A879B';
-      pts += '<g class="q16-pt"' + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
+      pts += '<g' + attrsMv + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
         + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 2.5) + '" fill="#FDFCF8" opacity="0.95"/>'
         + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + coul + '"/>'
         + '<title>' + ech(c.nom) + ' · potentiel ' + Math.round(c.potentiel) + ' · expression ' + Math.round(c.expression) + '</title></g>';
@@ -244,7 +246,7 @@
   // 4. LE RADAR DU MIROIR : Vous contre Eux, cinq axes
   // Deux polygones superposés sur une toile pentagonale douce.
   // ---------------------------------------------------------
-  function radarMiroirSvg(vous, eux) {
+  function radarMiroirSvg(vous, eux, pari) {
     if (!vous || !eux) return '';
     const AXES = [['E', 'Aisance sociale'], ['A', 'Chaleur'], ['C', 'Rigueur'], ['S', 'Solidité'], ['O', 'Curiosité']];
     if (!AXES.every(([k]) => typeof vous[k] === 'number' && typeof eux[k] === 'number')) return '';
@@ -267,6 +269,8 @@
     // Les deux lectures
     s2 += '<polygon class="radm-vous" points="' + poly(vous) + '" fill="rgba(94,89,199,0.16)" stroke="#5E59C7" stroke-width="2.2" stroke-linejoin="round"/>';
     s2 += '<polygon class="radm-eux" points="' + poly(eux) + '" fill="rgba(249,130,114,0.13)" stroke="#F98272" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="7 4"/>';
+    const pariOk = pari && AXES.every(([k]) => typeof pari[k] === 'number');
+    if (pariOk) s2 += '<polygon class="radm-pari" points="' + poly(pari) + '" fill="none" stroke="#8A879B" stroke-width="1.8" stroke-linejoin="round" stroke-dasharray="2 5"/>';
     AXES.forEach(([k], i) => {
       const [xv, yv] = pt(i, vous[k]);
       const [xe, ye] = pt(i, eux[k]);
@@ -281,7 +285,8 @@
     });
     // La légende
     s2 += '<line x1="26" y1="' + (H - 16) + '" x2="52" y2="' + (H - 16) + '" stroke="#5E59C7" stroke-width="2.6"/><text x="58" y="' + (H - 12) + '" font-size="11" font-weight="700" fill="#4A4A52">Votre lecture</text>'
-      + '<line x1="168" y1="' + (H - 16) + '" x2="194" y2="' + (H - 16) + '" stroke="#F98272" stroke-width="2.6" stroke-dasharray="7 4"/><text x="200" y="' + (H - 12) + '" font-size="11" font-weight="700" fill="#4A4A52">Le regard des autres</text>';
+      + '<line x1="168" y1="' + (H - 16) + '" x2="194" y2="' + (H - 16) + '" stroke="#F98272" stroke-width="2.6" stroke-dasharray="7 4"/><text x="200" y="' + (H - 12) + '" font-size="11" font-weight="700" fill="#4A4A52">Le regard des autres</text>'
+      + (pariOk ? '<line x1="330" y1="' + (H - 16) + '" x2="356" y2="' + (H - 16) + '" stroke="#8A879B" stroke-width="1.8" stroke-dasharray="2 5"/><text x="362" y="' + (H - 12) + '" font-size="11" font-weight="700" fill="#4A4A52">Votre pari</text>' : '');
     return s2 + '</svg>';
   }
 
@@ -315,5 +320,21 @@
     return s2 + '</svg>';
   }
 
-  window.Visuels = { quadrantSvg, doubleProfilSvg, forcesVigilancesHtml, radarMiroirSvg, frise90Svg };
+  // Relie un input range au quadrant : rejoue les 90 jours en glissant.
+  function brancherCurseur(input, conteneur) {
+    if (!input) return;
+    const gs = (conteneur || document).querySelectorAll('.q16-mv');
+    if (!gs.length) return;
+    input.oninput = function () {
+      const t = Math.max(0, Math.min(100, Number(this.value))) / 100;
+      gs.forEach((g) => {
+        const y0 = Number(g.getAttribute('data-cy0'));
+        const y1 = Number(g.getAttribute('data-cy1'));
+        const y = (y0 + (y1 - y0) * t).toFixed(1);
+        g.querySelectorAll('circle').forEach((c2) => c2.setAttribute('cy', y));
+      });
+    };
+  }
+
+  window.Visuels = { quadrantSvg, doubleProfilSvg, forcesVigilancesHtml, radarMiroirSvg, frise90Svg, brancherCurseur };
 })();

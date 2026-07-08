@@ -148,7 +148,7 @@ verifie('frise : sans date, sans curseur', V.frise90Svg([{ label: 'Portrait', po
 verifie('cockpit : posé et appelé', srcCtrl.indexOf('function poserCockpit(') > 0 && srcCtrl.indexOf('poserCockpit(dataEspaceCourant, carte)') > 0);
 verifie('cockpit : dans l\'onglet développement', srcCtrl.indexOf("'espace-cockpit', 'espace-nea'") > 0);
 verifie('cockpit : slot présent dans la page', idxH2.indexOf('id="espace-cockpit"') > 0);
-verifie('miroir : le radar entre dans l\'analyse', srcCtrl.indexOf('${radarHtml}') > 0 && srcCtrl.indexOf('radarMiroirSvg(vous, percu)') > 0);
+verifie('miroir : le radar entre dans l\'analyse', srcCtrl.indexOf('${radarHtml}') > 0 && srcCtrl.indexOf('radarMiroirSvg(vous, percu') > 0);
 verifie('engagements : état relié aux défis', srcCtrl.indexOf('compsDefis.has(mm.id)') > 0);
 
 console.log('\n== 0octies. Retours terrain v72 ==');
@@ -157,16 +157,49 @@ verifie('quadrant : échelle zoomée sur la plage réelle', qz.indexOf('>0</text
 verifie('quadrant : seize points cliquables sur option', (V.quadrantSvg(compsV, { clic: 'X' }).match(/X\(&quot;/g) || []).length === 16);
 const fvv2 = V.forcesVigilancesHtml(compsV, C.prioriser(compsV, 'manager'));
 verifie('forces : intro pédagogique, définitions, familles', fvv2.indexOf('fv-intro') > 0 && (fvv2.match(/fv-def/g) || []).length >= 6 && (fvv2.match(/fv-dot/g) || []).length === 8);
-verifie('largeurs : restitution 1040, espace 1120', cssTxt2().indexOf('max-width:1040px') > 0 && cssTxt2().indexOf('.espace-wrap{max-width:1120px') > 0);
-verifie('largeur : portail 1380', fs.readFileSync('dashboard.html', 'utf8').indexOf('max-width:1380px') > 0);
-verifie('noter : bouton blindé avec repli', srcRes2().indexOf("classList.contains('active')") > 0);
+verifie('largeurs fluides : restitution et espace à 94vw', (cssTxt2().match(/min\(1680px, 94vw\)/g) || []).length >= 6);
+verifie('largeur fluide : portail à 96vw', fs.readFileSync('dashboard.html', 'utf8').indexOf('min(1720px, 96vw)') > 0);
+verifie('noter : overlay autonome, token, action avis_direct', srcRes2().indexOf('noter-ov') > 0 && srcRes2().indexOf("action: 'avis_direct'") > 0 && srcRes2().indexOf("get('token')") > 0);
+verifie('lecture : mesure typographique posée', cssTxt2().indexOf('.r-body > *{max-width:920px') > 0);
+verifie('espace : la carte Néa est lisible', cssTxt2().indexOf('.esp-nea{background:#FDFCF8') > 0);
+verifie('portail : le codex existe et la matrice y mène', srcDash.indexOf('function ouvrirCodex(') > 0 && srcDash.indexOf('bd-mat-cx') > 0);
+verifie('moteur : le mapping dimensions est exporté', !!C.DIMS_VERS_COMPETENCES && Object.keys(C.DIMS_VERS_COMPETENCES).length >= 4);
 verifie('miroir : la relation est demandée et envoyée', srcCtrl2().indexOf('relationHtml') > 0 && srcCtrl2().indexOf('relation: (function') > 0);
+verifie('miroir : l\'envoi se libère sur les questions notées, conseil optionnel', (() => {
+  const src = srcCtrl2();
+  const bon = src.indexOf("q2.type !== 'texte'") > 0 && src.indexOf('Object.keys(_mirRep).length >= nbNotees') > 0;
+  const ancien = src.indexOf('Object.keys(_mirRep).length >= MIROIR_QUESTIONS.length') >= 0;
+  return bon && !ancien;
+})());
 verifie('miroir : répartition et impact affichés', srcCtrl2().indexOf('${repartition}') > 0 && srcCtrl2().indexOf('esp-mir-impact') > 0);
 verifie('carte espace : le clic ouvre le détail', srcCtrl2().indexOf("clic: 'App.ouvrirCompDepuisCarte'") > 0 && srcCtrl2().indexOf('esp-cp-focus') > 0);
 verifie('frise : la note explique l\'avancée', srcCtrl2().indexOf('ck-note') > 0);
 function cssTxt2(){ return fs.readFileSync('style.css', 'utf8'); }
 function srcRes2(){ return fs.readFileSync('result.js', 'utf8'); }
 function srcCtrl2(){ return fs.readFileSync('controller.js', 'utf8'); }
+
+console.log('\n== 0nonies. Sprint A : les quatre armes déterministes ==');
+const rad3 = V.radarMiroirSvg({ E: 72, A: 78, C: 38, S: 55, O: 58 }, { E: 60, A: 70, C: 52, S: 48, O: 66 }, { E: 65, A: 80, C: 45, S: 50, O: 60 });
+verifie('radar : le pari fait un troisième polygone', (rad3.match(/<polygon class/g) || []).length === 3 && rad3.indexOf('Votre pari') > 0);
+const qmv = V.quadrantSvg(compsV, { deltas: { developpement_autres: { avant: 41, apres: 58 } } });
+verifie('quadrant : positions J0 et J90 embarquées', (qmv.match(/q16-mv/g) || []).length === 1 && qmv.indexOf('data-cy0') > 0);
+verifie('curseur : le brancheur est exporté', typeof V.brancherCurseur === 'function');
+verifie('espace : le pari est construit et scellé au back', srcCtrl2().indexOf('pariMiroirHtml') > 0 && srcCtrl2().indexOf("action: 'miroir_prediction'") > 0 && srcCtrl2().indexOf('Sceller mon pari') > 0);
+verifie('espace : la lucidité est calculée et affichée', srcCtrl2().indexOf('mir-luc-score') > 0 && srcCtrl2().indexOf('100 - moyEcart') > 0);
+verifie('espace : le radar reçoit le pari', srcCtrl2().indexOf('radarMiroirSvg(vous, percu, pariM)') > 0);
+verifie('espace : les regards se filtrent par relation', srcCtrl2().indexOf('filtrerMiroir') > 0 && srcCtrl2().indexOf('reponsesTous.filter') > 0);
+verifie('espace : le curseur des 90 jours est branché', srcCtrl2().indexOf('esp-q16-t') > 0 && srcCtrl2().indexOf('brancherCurseur(document.getElementById') > 0);
+verifie('portail : le fit projeté double la barre', srcDash.indexOf('fit-proj') > 0 && srcDash.indexOf('% à 90 j') > 0 && srcDash.indexOf('expression + 12') > 0);
+verifie('portail : la fiche projette et rejoue', srcDash.indexOf('bd-fit-proj') > 0 && srcDash.indexOf('function rejouerQ16(') > 0 && srcDash.indexOf('bd-q16-t') > 0);
+
+console.log('\n== 0decies. Sprint B : le codex vivant ==');
+verifie('codex : 16 trajectoires complètes, 4 paliers pleins', C.REFERENTIEL.every(r => { const cx = C.CODEX[r.id]; return cx && cx.paliers.length === 4 && cx.paliers.every(p => p[0].length >= 25 && p[1].length >= 25); }));
+verifie('codex : 2 questions d\'entretien par compétence', C.REFERENTIEL.every(r => C.CODEX[r.id].entretien.length === 2 && C.CODEX[r.id].entretien.every(q => q.length >= 30)));
+verifie('codex : palierDe borné 1 à 4', C.palierDe(10) === 1 && C.palierDe(50) === 2 && C.palierDe(65) === 3 && C.palierDe(90) === 4 && C.PALIERS_NOMS.length === 4);
+verifie('fit : les gaps portent leur identifiant', (() => { const f = C.fitPoste(compsV, C.POSTES.manager.coefs); return f.gaps.length > 0 && f.gaps.every(g => !!g.id); })());
+verifie('portail : trajectoire, entretien, incarné dans la modal', srcDash.indexOf('cx-pal') > 0 && srcDash.indexOf('chargerIncarne') > 0 && srcDash.indexOf('CODEX_URL') > 0 && srcDash.indexOf('cle: cleAcces') > 0);
+verifie('portail : questions d\'entretien contre les gaps de la fiche', srcDash.indexOf('bd-fit-qs') > 0 && srcDash.indexOf('cx2.entretien[0]') > 0);
+verifie('espace : la trajectoire vit dans la fiche focus', srcCtrl2().indexOf('fcx-pal') > 0 && srcCtrl2().indexOf('palierDe(c2.expression)') > 0);
 
 console.log('\n== 1. Moteur de compétences : déterminisme et bornes ==');
 const bf = { O: 58, C: 38, E: 72, A: 78, N: 45 };

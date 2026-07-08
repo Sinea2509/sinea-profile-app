@@ -1992,12 +1992,13 @@ img{max-width:100%;}
 
 /* ===== v72 : largeurs de lecture sur grand écran ===== */
 @media(min-width:1000px){
-  #screen-result .r-body{max-width:1040px;margin-left:auto;margin-right:auto;}
-  .r-selbar-in{max-width:1040px;}
-  #screen-result .r-essence{max-width:1040px;}
-  .r-seedup{max-width:1040px;}
-  .ess{max-width:1040px;}
-  .espace-wrap{max-width:1120px;}
+  #screen-result .r-body{max-width:min(1680px, 94vw);margin-left:auto;margin-right:auto;}
+  .r-selbar-in{max-width:min(1680px, 94vw);}
+  #screen-result .r-essence{max-width:min(1680px, 94vw);}
+  .r-seedup{max-width:min(1680px, 94vw);}
+  .ess{max-width:min(1680px, 94vw);}
+  #screen-result .r-hero{max-width:min(1680px, 94vw);margin-left:auto;margin-right:auto;}
+  .espace-wrap{max-width:min(1680px, 94vw);}
 }
 /* ===== v72 : forces pédagogiques, focus compétence, note de frise ===== */
 .fv-intro{font-size:13px;line-height:1.65;color:#4A4A52;margin:2px 0 16px;}
@@ -2014,3 +2015,63 @@ img{max-width:100%;}
 .mir-rels{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 2px;}
 .mir-rel{font-family:inherit;font-size:12px;font-weight:700;padding:8px 14px;border-radius:18px;border:1.5px solid #D8D5CC;background:#fff;color:#4A4A52;cursor:pointer;}
 .mir-rel.on{border-color:#5E59C7;background:rgba(94,89,199,0.1);color:#5E59C7;}
+
+/* ===== v75 : la mesure typographique, l'aération de lecture ===== */
+@media(min-width:1000px){
+  #screen-result .r-body > *{max-width:920px;margin-left:auto;margin-right:auto;}
+  #screen-result .r-body > #essentiel-bloc{max-width:1160px;}
+  #screen-result .r-body > #fv-bloc{max-width:1160px;}
+  #screen-result .r-body > .r-q16-card{max-width:min(1400px, 90vw);}
+  #screen-result .r-body > .r-dp2-card{max-width:min(1400px, 90vw);}
+}
+/* ===== v75 : l'overlay de notation autonome ===== */
+.noter-ov{position:fixed;inset:0;background:rgba(15,18,50,0.55);z-index:1200;display:flex;align-items:center;justify-content:center;padding:20px;}
+.noter-card{position:relative;background:#FDFCF8;border-radius:20px;padding:26px 26px 20px;max-width:480px;width:100%;box-shadow:0 30px 90px rgba(0,0,0,0.35);}
+.noter-x{position:absolute;top:10px;right:14px;border:none;background:none;font-size:22px;color:#8A879B;cursor:pointer;line-height:1;}
+.noter-titre{font-size:18px;font-weight:800;color:#1A1A2E;margin-bottom:4px;}
+.noter-sub{font-size:12.5px;color:#6B6B72;margin:0 0 14px;line-height:1.55;}
+.noter-q{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;}
+.noter-lab{font-size:13px;font-weight:600;color:#1A1A2E;}
+.noter-stars button{border:none;background:none;font-size:22px;color:#E3E0D6;cursor:pointer;padding:0 2px;transition:transform 0.1s;}
+.noter-stars button:hover{transform:scale(1.15);}
+.noter-stars button.on{color:#E8951A;}
+.noter-verbatim{width:100%;box-sizing:border-box;border:1px solid #E3E0D6;border-radius:12px;padding:10px 12px;font-family:inherit;font-size:12.5px;color:#1A1A2E;background:#fff;min-height:64px;resize:vertical;margin:10px 0 12px;}
+.noter-envoyer{width:100%;font-family:inherit;font-size:13.5px;font-weight:800;padding:12px;border-radius:13px;border:none;background:#5E59C7;color:#fff;cursor:pointer;}
+.noter-envoyer:disabled{background:#C9C6BB;cursor:not-allowed;}
+.noter-etat{font-size:11.5px;color:#B0442F;margin:8px 0 0;min-height:14px;}
+/* ===== v75 : la carte Néa enfin lisible sur le hero ===== */
+.esp-nea{background:#FDFCF8;border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;margin:12px 0;box-shadow:0 8px 24px rgba(15,18,50,0.18);}
+.esp-nea-img{flex:0 0 46px;}
+.esp-nea-img img{width:46px;height:46px;border-radius:50%;border:2.5px solid #5E59C7;background:#fff;display:block;}
+.esp-nea-label{font-size:10.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#5E59C7;margin-bottom:3px;}
+.esp-nea-txt{font-size:13px;line-height:1.6;color:#1A1A2E;font-style:normal;}
+
+/* ===== v76 : le pari du miroir, la lucidité, les filtres, le curseur ===== */
+.pari-bloc{background:#F8F7F4;border:1px solid #ECEAE3;border-radius:14px;padding:14px 16px;margin:12px 0;}
+.pari-p{font-size:12px;line-height:1.55;color:#6B6B72;margin:4px 0 10px;}
+.pari-l{display:flex;align-items:center;gap:10px;padding:4px 0;}
+.pari-l span{flex:0 0 128px;font-size:12px;font-weight:700;color:#1A1A2E;}
+.pari-l b{flex:0 0 30px;text-align:right;font-size:12px;color:#5E59C7;}
+.pari-r{flex:1;accent-color:#5E59C7;}
+.pari-etat{font-size:11px;color:#B0442F;margin:6px 0 0;min-height:12px;}
+.pari-vals{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:11.5px;color:#6B6B72;}
+.pari-vals b{color:#1A1A2E;}
+.mir-filtres{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 10px;}
+.mir-filtre{padding:6px 12px;font-size:11.5px;}
+.mir-luc{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:#F8F7F4;border-radius:12px;padding:10px 14px;margin:8px 0 10px;}
+.mir-luc-score{font-size:24px;font-weight:800;color:#5E59C7;}
+.mir-luc-score i{font-style:normal;font-size:13px;color:#8A879B;}
+.mir-luc-lab{font-size:11px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#6B6B72;}
+.mir-luc-lect{font-size:12px;color:#1A1A2E;width:100%;}
+.q16-slider{display:flex;align-items:center;gap:10px;margin:10px 0 2px;}
+.q16-slider span{font-size:11px;font-weight:800;color:#8A879B;}
+.q16-slider input{flex:1;accent-color:#5E59C7;}
+
+/* ===== v77 : la trajectoire dans la fiche focus ===== */
+.fcx-pal{padding:6px 10px;border-left:3px solid #E3E0D6;margin:4px 0;font-size:12px;color:#8A879B;}
+.fcx-pal b{font-weight:800;color:#6B6B72;display:block;}
+.fcx-pal.fait{border-left-color:#7CBB8A;}
+.fcx-pal.fait b{color:#3E7C4F;}
+.fcx-pal.on{border-left-color:#5E59C7;background:rgba(94,89,199,0.06);border-radius:0 10px 10px 0;color:#1A1A2E;}
+.fcx-pal.on b{color:#5E59C7;}
+.fcx-pal em{display:block;font-style:normal;font-size:11.5px;line-height:1.5;color:#1A1A2E;margin-top:3px;}
