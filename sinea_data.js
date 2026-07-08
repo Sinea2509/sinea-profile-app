@@ -19,18 +19,6 @@ const SINEA_DATA = {
    "texte": "Dans une discussion à plusieurs, je préfère observer plutôt que prendre la parole."
   },
   {
-   "id": "MINI_16",
-   "dimension": "extraversion",
-   "sens": "positif",
-   "texte": "Une journée riche en échanges et en rencontres me donne de l'énergie."
-  },
-  {
-   "id": "MINI_17",
-   "dimension": "extraversion",
-   "sens": "negatif",
-   "texte": "Après plusieurs heures entouré de monde, j'ai besoin de m'isoler pour récupérer."
-  },
-  {
    "id": "MINI_04",
    "dimension": "agreabilite",
    "sens": "positif",
@@ -47,18 +35,6 @@ const SINEA_DATA = {
    "dimension": "agreabilite",
    "sens": "negatif",
    "texte": "Je garde de la distance avec les états d'âme des autres."
-  },
-  {
-   "id": "MINI_18",
-   "dimension": "agreabilite",
-   "sens": "positif",
-   "texte": "J'accorde facilement ma confiance et je pars du bon côté des gens."
-  },
-  {
-   "id": "MINI_19",
-   "dimension": "agreabilite",
-   "sens": "negatif",
-   "texte": "Dans un désaccord, je défends mon point sans trop me soucier de ménager l'autre."
   },
   {
    "id": "MINI_07",
@@ -79,18 +55,6 @@ const SINEA_DATA = {
    "texte": "Je laisse souvent traîner ce que j'ai à faire."
   },
   {
-   "id": "MINI_20",
-   "dimension": "conscience",
-   "sens": "positif",
-   "texte": "J'aime que mon travail soit organisé, planifié, et que rien ne soit laissé au hasard."
-  },
-  {
-   "id": "MINI_21",
-   "dimension": "conscience",
-   "sens": "negatif",
-   "texte": "Il m'arrive de bâcler un détail pour aller plus vite."
-  },
-  {
    "id": "MINI_10",
    "dimension": "neuroticisme",
    "sens": "negatif",
@@ -109,18 +73,6 @@ const SINEA_DATA = {
    "texte": "Un imprévu peut me contrarier pour le reste de la journée."
   },
   {
-   "id": "MINI_22",
-   "dimension": "neuroticisme",
-   "sens": "positif",
-   "texte": "Avant un rendez-vous important, je me fais souvent du souci à l'avance."
-  },
-  {
-   "id": "MINI_23",
-   "dimension": "neuroticisme",
-   "sens": "negatif",
-   "texte": "Les critiques glissent sur moi sans trop m'affecter."
-  },
-  {
    "id": "MINI_13",
    "dimension": "ouverture",
    "sens": "positif",
@@ -131,24 +83,6 @@ const SINEA_DATA = {
    "dimension": "ouverture",
    "sens": "negatif",
    "texte": "Les grandes théories me lassent vite, je préfère le concret."
-  },
-  {
-   "id": "MINI_15",
-   "dimension": "ouverture",
-   "sens": "positif",
-   "texte": "J'aime explorer des approches inhabituelles, même sans garantie de résultat."
-  },
-  {
-   "id": "MINI_24",
-   "dimension": "ouverture",
-   "sens": "positif",
-   "texte": "J'aime comprendre comment les choses fonctionnent en profondeur, par curiosité."
-  },
-  {
-   "id": "MINI_25",
-   "dimension": "ouverture",
-   "sens": "negatif",
-   "texte": "Je préfère m'en tenir aux méthodes que je connais déjà plutôt que d'en essayer de nouvelles."
   }
  ],
  "mini_choix_force": [
@@ -223,45 +157,34 @@ const SINEA_DATA = {
    "items": [
     "MINI_01",
     "MINI_02",
-    "MINI_03",
-    "MINI_16",
-    "MINI_17"
+    "MINI_03"
    ]
   },
   "agreabilite": {
    "items": [
     "MINI_04",
     "MINI_05",
-    "MINI_06",
-    "MINI_18",
-    "MINI_19"
+    "MINI_06"
    ]
   },
   "conscience": {
    "items": [
     "MINI_07",
     "MINI_08",
-    "MINI_09",
-    "MINI_20",
-    "MINI_21"
+    "MINI_09"
    ]
   },
   "neuroticisme": {
    "items": [
     "MINI_10",
     "MINI_11",
-    "MINI_12",
-    "MINI_22",
-    "MINI_23"
+    "MINI_12"
    ]
   },
   "ouverture": {
    "items": [
     "MINI_13",
-    "MINI_14",
-    "MINI_15",
-    "MINI_24",
-    "MINI_25"
+    "MINI_14"
    ]
   }
  },
@@ -271,12 +194,7 @@ const SINEA_DATA = {
   "MINI_09",
   "MINI_10",
   "MINI_11",
-  "MINI_14",
-  "MINI_17",
-  "MINI_19",
-  "MINI_21",
-  "MINI_23",
-  "MINI_25"
+  "MINI_14"
  ],
  "mini_ancres": {
   "1": "Pas du tout moi",
@@ -1325,7 +1243,7 @@ const SINEA_DATA = {
    "id": "SINEA_REPART_01",
    "format": "repartition",
    "but": "Mesure directe du dosage entre les 4 familles. Vérification croisée du Big Five.",
-   "situation": "Répartissez 10 points selon votre façon naturelle d'avoir de l'impact au travail :",
+   "situation": "Pour finir, répartissez 10 points selon votre façon naturelle d'avoir de l'impact au travail :",
    "points_total": 10,
    "axes": [
     {
@@ -4035,25 +3953,6 @@ const SINEA_DATA = {
        "profil": "bienveillance"
       }
      ]
-    },
-    {
-     "id": "MGMT_EXIG_02",
-     "dimension": "exigence_bienveillance",
-     "situation": "Quand un collaborateur n'atteint pas ses objectifs, votre réflexe :",
-     "options": [
-      {
-       "texte": "Je remets la barre clairement et je demande un plan de rattrapage",
-       "profil": "exigence"
-      },
-      {
-       "texte": "Je comprends ce qui bloque, puis je redéfinis ensemble une attente exigeante",
-       "profil": "equilibre"
-      },
-      {
-       "texte": "Je m'assure d'abord qu'il va bien et je le rassure",
-       "profil": "bienveillance"
-      }
-     ]
     }
    ]
   }
@@ -5148,25 +5047,6 @@ const SINEA_DATA = {
        "profil": "eleveur"
       }
      ]
-    },
-    {
-     "id": "COM_CHASSE_02",
-     "dimension": "chasseur_eleveur",
-     "situation": "Une semaine type qui vous motive le plus :",
-     "options": [
-      {
-       "texte": "Décrocher des rendez-vous avec de nouveaux prospects",
-       "profil": "chasseur"
-      },
-      {
-       "texte": "Un mélange de prospection et de suivi de mes comptes",
-       "profil": "mixte"
-      },
-      {
-       "texte": "Approfondir mes comptes et faire grandir leur potentiel",
-       "profil": "eleveur"
-      }
-     ]
     }
    ]
   }
@@ -5211,61 +5091,60 @@ const SINEA_DATA = {
   ]
  },
  "questions_ouvertes": {
- "intention": {
-  "id": "intention",
-  "question": "En une phrase, qu'attendez-vous de ce bilan ?",
-  "placeholder": "Ce que vous aimeriez en retirer..."
- },
- "avant_bilan": {
-  "intro": "Avant de commencer, quelques mots sur vous. Vos réponses enrichissent votre portrait.",
+  "intro": "Quelques questions pour enrichir votre portrait. Vos mots seront analysés avec soin.",
   "questions": [
    {
     "id": "q1",
+    "position": "debut",
     "question": "Dans quel type de situation vous sentez-vous le plus à l'aise au travail ?",
     "placeholder": "Quelques mots suffisent..."
    },
    {
     "id": "q2",
+    "position": "milieu",
     "question": "Qu'est-ce qui vous met le plus en difficulté dans votre quotidien professionnel ?",
     "placeholder": "Votre réponse..."
-   }
-  ]
- },
- "fin_seedup": {
-  "intro": "Une dernière question, pour personnaliser vos défis.",
-  "questions": [
+   },
    {
     "id": "q3",
+    "position": "fin",
     "question": "Maintenant que vous découvrez votre profil, qu'aimeriez-vous développer ou faire évoluer ?",
     "placeholder": "Ce que vous aimeriez changer..."
    }
   ]
  },
- "avant_module_manager": {
-  "intro": "Avant ce module management, quelques mots sur votre réalité de manager.",
+ "questions_ouvertes_manager": {
   "questions": [
    {
     "id": "qm1",
+    "position": "debut",
     "question": "Quel est votre plus grand défi en tant que manager aujourd'hui ?",
     "placeholder": "Quelques mots suffisent..."
+   },
+   {
+    "id": "qm2",
+    "position": "fin",
+    "question": "Quelle posture managériale aimeriez-vous renforcer ?",
+    "placeholder": "Ce que vous aimeriez développer..."
    }
   ]
  },
- "avant_module_commercial": {
-  "intro": "Avant ce module commercial, quelques mots sur votre réalité de terrain.",
+ "questions_ouvertes_commercial": {
   "questions": [
    {
     "id": "qc1",
+    "position": "debut",
     "question": "Quel est l'aspect le plus difficile de votre métier commercial en ce moment ?",
     "placeholder": "Quelques mots suffisent..."
+   },
+   {
+    "id": "qc2",
+    "position": "fin",
+    "question": "Quelle compétence commerciale aimeriez-vous développer en priorité ?",
+    "placeholder": "Ce que vous aimeriez renforcer..."
    }
   ]
  },
- "restitution": {
-  "intro": "",
-  "questions": []
- }
-},
  "adapte": {
   "intro": "Ces situations concernent votre comportement réel au travail.",
   "questions": [
@@ -5276,22 +5155,10 @@ const SINEA_DATA = {
     "texte": "Au travail, je prends souvent la parole en groupe et je vais vers les autres, même quand cela me demande un effort."
    },
    {
-    "id": "ADP_E2",
-    "dimension": "extraversion",
-    "sens": "positif",
-    "texte": "Mon poste me demande d'être souvent en relation, en réunion ou en échange, plus que je ne le ferais spontanément."
-   },
-   {
     "id": "ADP_A",
     "dimension": "agreabilite",
     "sens": "positif",
     "texte": "Au travail, je privilégie l'harmonie et je cherche à ménager les autres, même quand j'aurais envie de trancher."
-   },
-   {
-    "id": "ADP_A2",
-    "dimension": "agreabilite",
-    "sens": "positif",
-    "texte": "Dans mon travail, je m'adapte aux attentes des autres et je lisse mes positions plus que je ne le ferais naturellement."
    },
    {
     "id": "ADP_C",
@@ -5300,59 +5167,19 @@ const SINEA_DATA = {
     "texte": "Au travail, je m'impose de la rigueur, de l'organisation et du suivi, même quand ce n'est pas mon réflexe naturel."
    },
    {
-    "id": "ADP_C2",
-    "dimension": "conscience",
-    "sens": "positif",
-    "texte": "Mon travail m'oblige à planifier, documenter et respecter des process plus que je ne le ferais de moi-même."
-   },
-   {
     "id": "ADP_N",
     "dimension": "neuroticisme",
     "sens": "positif",
     "texte": "Au travail, je dois fournir un effort pour rester calme et garder mon sang-froid sous pression."
    },
    {
-    "id": "ADP_N2",
-    "dimension": "neuroticisme",
-    "sens": "positif",
-    "texte": "Je masque souvent mes tensions ou mes doutes au travail pour afficher une assurance que je ne ressens pas toujours."
-   },
-   {
     "id": "ADP_O",
     "dimension": "ouverture",
     "sens": "positif",
     "texte": "Au travail, je me pousse à explorer des idées nouvelles et à sortir des sentiers battus, même quand la routine me rassure."
-   },
-   {
-    "id": "ADP_O2",
-    "dimension": "ouverture",
-    "sens": "positif",
-    "texte": "Mon poste m'amène à m'adapter au changement et à remettre en question mes habitudes plus que je ne le choisirais."
    }
   ]
  }
 };
 
-/* ===== Emblèmes : un objet symbolique par archétype (icône SVG teintable + phrase de Néa) ===== */
-window.SINEA_EMBLEMES = {
-  "Le Roc": { objet:"le bouclier", phrase:"Ce que vous protégez, vous le tenez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.5v5.5c0 4-3 6.8-7 8.5-4-1.7-7-4.5-7-8.5V5.5z"/></svg>' },
-  "La Tisseuse": { objet:"la navette", phrase:"Vous tissez les liens que les autres ne voient pas encore.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9c4 2.5 12 2.5 16 0"/><path d="M4 15c4-2.5 12-2.5 16 0"/><path d="M4 12h16"/></svg>' },
-  "Le Passeur": { objet:"le pont", phrase:"Vous reliez les rives et vous faites passer ce qui compte.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15a9 6 0 0 1 18 0"/><path d="M3 15h18"/><path d="M7 15v4"/><path d="M17 15v4"/><path d="M12 15v4"/></svg>' },
-  "Le Diplomate": { objet:"la balance", phrase:"Vous accordez les points de vue avec justesse.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15"/><path d="M7 19h10"/><path d="M5 7h14"/><path d="M5 7l-2.5 5a2.5 2.5 0 0 0 5 0z"/><path d="M19 7l-2.5 5a2.5 2.5 0 0 0 5 0z"/></svg>' },
-  "L'Ambassadeur": { objet:"l'étendard", phrase:"Vous portez haut les idées et vous rassemblez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M6 4h12l-3 3.5L18 11H6z"/></svg>' },
-  "Le Capitaine": { objet:"la boussole", phrase:"Vous donnez le cap et vous entraînez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-2 5-2-5 2-1z"/></svg>' },
-  "L'Indomptable": { objet:"l'éclair", phrase:"Vous ouvrez la voie et vous osez le premier.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h5l-1 9 8-12h-5z"/></svg>' },
-  "Le Champion": { objet:"le laurier", phrase:"Vous transformez l'effort en résultat.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M12 13c-3.2 0-5-2-5.2-5.2C10 7.6 12 9.6 12 13z"/><path d="M12 13c3.2 0 5-2 5.2-5.2C14 7.6 12 9.6 12 13z"/></svg>' },
-  "Le Pionnier": { objet:"le drapeau", phrase:"Vous plantez le premier jalon sur des terres neuves.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M6 4l11 2-3 3 3 3-11-2z"/></svg>' },
-  "Le Résilient": { objet:"l'arc", phrase:"Vous pliez sous la tension et vous revenez plus fort.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c7 3.5 7 14.5 0 18"/><path d="M6 3l13 9-13 9"/></svg>' },
-  "L'Architecte": { objet:"le compas", phrase:"Vous tracez la structure qui tient l'ensemble.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.5"/><path d="M12 6l-4.5 14"/><path d="M12 6l4.5 14"/><path d="M9 15h6"/></svg>' },
-  "La Sentinelle": { objet:"le rempart", phrase:"Vous protégez et vous anticipez ce qui vient.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10h3V7h3v3h4V7h3v3h3v10z"/></svg>' },
-  "Le Gardien": { objet:"la clé de voûte", phrase:"Vous tenez l'édifice par sa pièce maîtresse.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1.5 7h-9z"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>' },
-  "L'Orfèvre": { objet:"le burin", phrase:"Vous cisèlez le détail juste.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3l7 7-8.5 8.5L8 20l1.5-4.5z"/><path d="M11 8l5 5"/></svg>' },
-  "Le Stratège": { objet:"la pièce d'échecs", phrase:"Vous lisez plusieurs coups à l'avance.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M8.5 21c0-3 2-4 2-6h3c0 2 2 3 2 6"/><circle cx="12" cy="7" r="3"/></svg>' },
-  "Le Conteur": { objet:"le livre ouvert", phrase:"Vous donnez du sens et vous embarquez par le récit.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10 4.8 7 4.8 4.5 6v12C7 16.8 10 16.8 12 18c2-1.2 5-1.2 7.5 0V6C17 4.8 14 4.8 12 6z"/><path d="M12 6v12"/></svg>' },
-  "L'Étincelle": { objet:"la flamme", phrase:"Vous allumez les idées et l'élan créatif.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.5 3.5 4.5 5.5 4.5 9a4.5 4.5 0 0 1-9 0c0-1.8 .8-2.8 1.8-3.8.2 1.8 1.2 2.8 2.7 2.8 0-2.8-1-5 0-8z"/></svg>' },
-  "Le Veilleur": { objet:"la lanterne", phrase:"Vous percevez les signaux faibles avant tout le monde.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 21h5"/><path d="M8 8h8l.8 10H7.2z"/><path d="M10 8V5.5h4V8"/><path d="M12 3.5V5"/></svg>' },
-  "L'Explorateur": { objet:"la longue-vue", phrase:"Vous repoussez les horizons par curiosité.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5l9-3 3.5 1-1 3.5z"/><path d="M13 14l4-7.5 3 1.8-3.5 6.7z"/></svg>' },
-  "Le Révélateur": { objet:"le prisme", phrase:"Vous révélez le potentiel que chacun porte.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 19h18z"/><path d="M3 19l9-7 9 7"/></svg>' }
-};
+if (typeof module !== "undefined" && module.exports !== undefined) { module.exports = SINEA_DATA; }
