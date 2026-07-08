@@ -6,8 +6,8 @@
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v71');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v71]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v72');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v72]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";

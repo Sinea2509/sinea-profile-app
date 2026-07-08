@@ -2767,5 +2767,15 @@ const Result = (() => {
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)
-Result.noterPortrait = function(){ try { showMoment3(); } catch (e) { console.warn('[Sinéa]', e); } };
+Result.noterPortrait = function(){
+  try {
+    showMoment3();
+    const scr = document.getElementById('screen-moment3');
+    if (scr && !scr.classList.contains('active')) {
+      document.querySelectorAll('.screen.active').forEach(function (s2) { s2.classList.remove('active'); });
+      scr.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+  } catch (e) { console.error('[Sinéa] noterPortrait', e); alert('La notation ne parvient pas à s\'ouvrir sur ce portrait. Signalez-le, la console contient le détail.'); }
+};
 window.Result = Result;

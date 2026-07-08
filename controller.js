@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v71 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v71]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v72 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v72]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -20,6 +20,7 @@ const App = (() => {
   let result = null;
   let diagType = 'classic'; // type du PARCOURS en cours : 'classic'(socle) | 'manager' | 'commercial'
   let dataEspaceCourant = null;
+  let compsEspaceCourant = null;
   let monArchetype = ''; // archétype de la personne, pour la situer dans le codex
   // ===== Personnages : variante masculine / féminine (option B) =====
   // S'active des que les visuels <slug>_h.webp et <slug>_f.webp sont en ligne.
@@ -706,6 +707,25 @@ const App = (() => {
   // Déterministe, calculé en local depuis le profil déjà chargé : la personne
   // voit ses appuis et ses opportunités, et ses défis SeedUp prennent sens.
   // L'espace en deux onglets : le développement d'un côté, le miroir à part
+  function choisirRelMiroir(btn){
+    btn.parentNode.querySelectorAll('.mir-rel').forEach(function (b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+  function ouvrirCompDepuisCarte(id){
+    const zone = document.getElementById('esp-cp-focus');
+    if (!zone || !window.Competences || !compsEspaceCourant) return;
+    const c2 = compsEspaceCourant.find(function (x) { return x.id === id; });
+    const ref = window.Competences.REFERENTIEL.find(function (r2) { return r2.id === id; });
+    if (!c2 || !ref) return;
+    const coul = (window.Competences.COULEURS_FAMILLES || {})[c2.famille] || '#8A879B';
+    zone.innerHTML = '<div class="esp-cp-fcard"><button type="button" class="esp-cp-fx" onclick="document.getElementById(&quot;esp-cp-focus&quot;).innerHTML=&quot;&quot;">×</button>'
+      + '<div class="esp-cp-fnom"><i style="background:' + coul + '"></i>' + echapValeur(c2.nom) + '<span>nature ' + Math.round(c2.potentiel) + ' · travail ' + Math.round(c2.expression) + '</span></div>'
+      + (ref.def ? '<p class="esp-cp-def">' + echapValeur(ref.def) + '</p>' : '')
+      + ((ref.progresser || []).length ? '<div class="esp-cp-prog-t">Pour progresser</div><ul class="esp-cp-prog">' + ref.progresser.map(function (p2) { return '<li>' + echapValeur(p2) + '</li>'; }).join('') + '</ul>' : '')
+      + '</div>';
+    zone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   function espTab(t){
     const dev = ['espace-cockpit', 'espace-nea', 'espace-remesure', 'espace-competences', 'espace-seedup', 'espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat'];
     const mir = ['espace-miroir'];
@@ -784,7 +804,7 @@ const App = (() => {
       + (act
         ? '<div class="esp-rem-kicker">' + kick + (serie >= 2 ? ' · série de ' + serie + ' jours' : '') + '</div><div class="esp-rem-titre">' + act.t + '</div><p class="ck-p">' + act.p + '</p><button type="button" class="esp-rem-btn" onclick="' + act.fn + '">' + act.cta + '</button>'
         : '<div class="esp-rem-kicker">Votre programme des 90 jours</div>')
-      + frise + eng + '</div>';
+      + frise + (frise ? '<p class="ck-note">La frise avance seule, jour après jour, depuis la date de votre portrait.</p>' : '') + eng + '</div>';
   }
   function cockpitVers(id){
     espTab('dev');
@@ -802,6 +822,7 @@ const App = (() => {
     const comps = Competences.scorer(profil.scoresBigFive, ecarts, profil.speDims);
     const pri = Competences.prioriser(comps, poste);
     if (!pri.appuis.length && !pri.opportunites.length) return;
+    compsEspaceCourant = comps;
     const refPar = {};
     Competences.REFERENTIEL.forEach(function (r) { refPar[r.id] = r; });
     // Les actions du plan déjà choisies, pour le pont
@@ -856,7 +877,8 @@ const App = (() => {
     } catch (e) { console.warn("[Sinéa]", e); }
     h += '<button type="button" class="esp-rem-btn esp-cp-mat-btn" onclick="App.toggleMatriceEspace()">Voir ma carte des 16</button>'
       + '<div id="esp-cp-matrice" style="display:none">'
-      + (window.Visuels ? Visuels.quadrantSvg(comps, { deltas: deltasQ, compact: true }) : '')
+      + (window.Visuels ? Visuels.quadrantSvg(comps, { deltas: deltasQ, compact: true, clic: 'App.ouvrirCompDepuisCarte' }) : '')
+      + '<div id="esp-cp-focus"></div>'
       + '</div>';
     h += '</div>';
     slot.innerHTML = h;
@@ -1390,6 +1412,13 @@ const App = (() => {
           const delta = (t.g > 0 ? '+' : '') + Math.round(t.g);
           return `<div class="esp-mir-row${i < 2 && Math.abs(t.g) >= 10 ? ' esp-mir-gapmax' : ''}" data-d="${t.q.d}"><span class="esp-mir-lab">${t.q.label}</span><span class="esp-mir-vals">Eux ${Math.round(t.p)} · Vous ${Math.round(t.v)} <span class="esp-mir-delta${t.g >= 0 ? ' pos' : ' neg'}">${delta}</span></span></div>`;
         }).join('');
+      const RELS_MIR = { manager: 'manager', pair: 'pair', n1: 'personne encadrée', autre: 'autre' };
+      const compteRel = {};
+      reponses.forEach(function (rp) { const k2 = (rp.r || {}).relation; if (k2) compteRel[k2] = (compteRel[k2] || 0) + 1; });
+      const repartition = Object.keys(compteRel).length
+        ? ' · ' + Object.entries(compteRel).map(function (e2) { return e2[1] + ' ' + (RELS_MIR[e2[0]] || e2[0]) + (e2[1] > 1 ? 's' : ''); }).join(', ')
+        : '';
+      const impactHtml = '<p class="esp-mir-impact"><b>Ce que ces regards changent.</b> Ils confrontent votre lecture à la réalité perçue, nourrissent votre brief côté RH, et affûtent vos priorités : les plus grands écarts ci-dessous sont vos meilleures pistes de travail.</p>';
       const radarHtml = (window.Visuels && window.Visuels.radarMiroirSvg) ? Visuels.radarMiroirSvg(vous, percu) : '';
       const conseilsRecus = reponses.map(function (rep) { return String((rep.r || {}).conseil || '').trim(); }).filter(function (t) { return t.length > 2; }).slice(0, 6);
       const conseilsHtml = conseilsRecus.length
@@ -1404,8 +1433,9 @@ const App = (() => {
         phrase = `Vos collègues perçoivent moins de ${maxDim.label.toLowerCase()} que ce que vous pensez montrer. Cet écart dit quelque chose de précieux, angle mort ou réserve : explorez-le lors d'un prochain échange.`;
       }
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Miroir 360 · ${reponses.length} regards</div>
+        <div class="esp-rem-kicker">Miroir 360 · ${reponses.length} regards${repartition}</div>
         <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
+        ${impactHtml}
         ${radarHtml}
         ${lignes}
         ${conseilsHtml}
@@ -1435,10 +1465,15 @@ const App = (() => {
         [1, 2, 3, 4].map(function (v) { return '<button type="button" class="esp-rem-opt" data-q="' + q.d + '" data-v="' + v + '">' + MIROIR_ANCRES[v] + '</button>'; }).join('') +
         '</div></div>';
     }).join('');
+    const relationHtml = '<div class="mir-q"><div class="mir-q-titre">Votre relation avec cette personne</div><div class="mir-rels">'
+      + [['manager', 'Son manager'], ['pair', 'Un pair'], ['n1', 'Elle m' + String.fromCharCode(39) + 'encadre'], ['autre', 'Autre']].map(function (p2) {
+        return '<button type="button" class="mir-rel" data-r="' + p2[0] + '" onclick="App.choisirRelMiroir(this)">' + p2[1] + '</button>';
+      }).join('') + '</div></div>';
     ov.innerHTML = '<div class="mir-card">' +
       '<div class="mir-head"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
       '<div><div class="esp-rem-kicker">Miroir Sinéa</div><div class="esp-rem-titre">Votre regard sur un collègue</div></div></div>' +
       '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Douze regards et un conseil, trois minutes. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
+      relationHtml +
       lignes +
       '<button type="button" class="esp-rem-btn" id="mir-valider" disabled>Envoyer mon regard</button>' +
       '</div>';
@@ -1460,7 +1495,7 @@ const App = (() => {
       fetch(PROGRESSION_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'miroir_repondre', jeton: jeton, reponses: Object.assign({}, _mirRep, { conseil: ((document.getElementById('mir-conseil') || {}).value || '').trim() || undefined }) }),
+        body: JSON.stringify({ action: 'miroir_repondre', jeton: jeton, reponses: Object.assign({}, _mirRep, { conseil: ((document.getElementById('mir-conseil') || {}).value || '').trim() || undefined, relation: (function(){ const b = document.querySelector('.mir-rel.on'); return b ? b.getAttribute('data-r') : undefined; })() }) }),
       })
         .then(function (r) { return r.json(); })
         .then(function (d) {
@@ -3537,7 +3572,7 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, espTab, cockpitVers, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, choisirRelMiroir, ouvrirCompDepuisCarte, espTab, cockpitVers, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

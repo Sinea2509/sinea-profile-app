@@ -151,6 +151,23 @@ verifie('cockpit : slot présent dans la page', idxH2.indexOf('id="espace-cockpi
 verifie('miroir : le radar entre dans l\'analyse', srcCtrl.indexOf('${radarHtml}') > 0 && srcCtrl.indexOf('radarMiroirSvg(vous, percu)') > 0);
 verifie('engagements : état relié aux défis', srcCtrl.indexOf('compsDefis.has(mm.id)') > 0);
 
+console.log('\n== 0octies. Retours terrain v72 ==');
+const qz = V.quadrantSvg(compsV);
+verifie('quadrant : échelle zoomée sur la plage réelle', qz.indexOf('>0</text>') < 0 && qz.indexOf('>100</text>') < 0);
+verifie('quadrant : seize points cliquables sur option', (V.quadrantSvg(compsV, { clic: 'X' }).match(/X\(&quot;/g) || []).length === 16);
+const fvv2 = V.forcesVigilancesHtml(compsV, C.prioriser(compsV, 'manager'));
+verifie('forces : intro pédagogique, définitions, familles', fvv2.indexOf('fv-intro') > 0 && (fvv2.match(/fv-def/g) || []).length >= 6 && (fvv2.match(/fv-dot/g) || []).length === 8);
+verifie('largeurs : restitution 1040, espace 1120', cssTxt2().indexOf('max-width:1040px') > 0 && cssTxt2().indexOf('.espace-wrap{max-width:1120px') > 0);
+verifie('largeur : portail 1380', fs.readFileSync('dashboard.html', 'utf8').indexOf('max-width:1380px') > 0);
+verifie('noter : bouton blindé avec repli', srcRes2().indexOf("classList.contains('active')") > 0);
+verifie('miroir : la relation est demandée et envoyée', srcCtrl2().indexOf('relationHtml') > 0 && srcCtrl2().indexOf('relation: (function') > 0);
+verifie('miroir : répartition et impact affichés', srcCtrl2().indexOf('${repartition}') > 0 && srcCtrl2().indexOf('esp-mir-impact') > 0);
+verifie('carte espace : le clic ouvre le détail', srcCtrl2().indexOf("clic: 'App.ouvrirCompDepuisCarte'") > 0 && srcCtrl2().indexOf('esp-cp-focus') > 0);
+verifie('frise : la note explique l\'avancée', srcCtrl2().indexOf('ck-note') > 0);
+function cssTxt2(){ return fs.readFileSync('style.css', 'utf8'); }
+function srcRes2(){ return fs.readFileSync('result.js', 'utf8'); }
+function srcCtrl2(){ return fs.readFileSync('controller.js', 'utf8'); }
+
 console.log('\n== 1. Moteur de compétences : déterminisme et bornes ==');
 const bf = { O: 58, C: 38, E: 72, A: 78, N: 45 };
 const c1 = C.scorer(bf, { C: 18 });
