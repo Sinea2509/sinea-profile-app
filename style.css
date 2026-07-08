@@ -2018,11 +2018,14 @@ img{max-width:100%;}
 
 /* ===== v75 : la mesure typographique, l'aération de lecture ===== */
 @media(min-width:1000px){
-  #screen-result .r-body > *{max-width:920px;margin-left:auto;margin-right:auto;}
-  #screen-result .r-body > #essentiel-bloc{max-width:1160px;}
-  #screen-result .r-body > #fv-bloc{max-width:1160px;}
-  #screen-result .r-body > .r-q16-card{max-width:min(1400px, 90vw);}
-  #screen-result .r-body > .r-dp2-card{max-width:min(1400px, 90vw);}
+  .app{max-width:none;}
+  #screen-result{max-width:none;width:100%;}
+  #screen-result .r-body > *{max-width:min(1280px, 92vw);margin-left:auto;margin-right:auto;}
+  #screen-result .r-body > #essentiel-bloc{max-width:min(1280px, 92vw);}
+  #screen-result .r-body > #fv-bloc{max-width:min(1520px, 94vw);}
+  #screen-result .r-body > .r-q16-card{max-width:min(1520px, 94vw);}
+  #screen-result .r-body > .r-dp2-card{max-width:min(1520px, 94vw);}
+  #screen-result .r-body p, #screen-result .r-body .r-ia-txt{font-size:15.5px;line-height:1.75;}
 }
 /* ===== v75 : l'overlay de notation autonome ===== */
 .noter-ov{position:fixed;inset:0;background:rgba(15,18,50,0.55);z-index:1200;display:flex;align-items:center;justify-content:center;padding:20px;}
@@ -2075,3 +2078,36 @@ img{max-width:100%;}
 .fcx-pal.on{border-left-color:#5E59C7;background:rgba(94,89,199,0.06);border-radius:0 10px 10px 0;color:#1A1A2E;}
 .fcx-pal.on b{color:#5E59C7;}
 .fcx-pal em{display:block;font-style:normal;font-size:11.5px;line-height:1.5;color:#1A1A2E;margin-top:3px;}
+
+/* ===== v80 : le résumé d'accueil, le pari replié ===== */
+.acc-resume{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.28);border-radius:16px;padding:12px 16px;margin:12px 0;}
+.acc-chip{font-size:12px;font-weight:800;color:#fff;border:1.5px solid;border-radius:16px;padding:6px 13px;}
+.acc-txt{font-size:12.5px;color:#fff;opacity:0.92;}
+.acc-cta{margin-left:auto;}
+.pari-open{margin:2px 0 8px;}
+
+/* ===== v81 : les facettes dans la fiche focus ===== */
+.fcx-fac{background:#FBFAF6;border:1px solid #ECEAE3;border-radius:10px;padding:8px 11px;margin:5px 0;}
+.fcx-fac b{font-size:12px;color:#1A1A2E;display:block;}
+.fcx-fac span{font-size:11px;color:#6B6B72;line-height:1.45;display:block;margin:1px 0 3px;}
+.fcx-fac em{font-style:normal;font-size:10.5px;color:#8A5A00;}
+
+/* ===== v82 : la serre du parcours ===== */
+.ckl{background:#FDFCF8;border-radius:18px;padding:16px 18px;margin:12px 0;box-shadow:0 8px 24px rgba(15,18,50,0.16);}
+.ckl-tete{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.ckl-tete b{font-size:15px;font-weight:800;color:#1A1A2E;}
+.ckl-tete span{font-size:12px;font-weight:700;color:#5E59C7;}
+.ckl-bar{height:7px;background:#EFEDE6;border-radius:5px;margin:9px 0 6px;overflow:hidden;}
+.ckl-bar i{display:block;height:100%;background:linear-gradient(90deg,#7CBB8A,#5E59C7);border-radius:5px;transition:width 0.5s ease;}
+.ckl-serre{display:block;width:100%;height:auto;margin:2px 0 8px;}
+.ckl-row{display:flex;align-items:center;gap:9px;padding:6px 2px;border-top:1px solid #F1EFE8;}
+.ckl-row .ckl-ic{flex:0 0 18px;text-align:center;font-size:13px;color:#B9B4A6;}
+.ckl-row.fait .ckl-ic{color:#3E7C4F;font-weight:800;}
+.ckl-lab{flex:1;font-size:12.5px;color:#1A1A2E;}
+.ckl-row.fait .ckl-lab{color:#8A879B;text-decoration:line-through;text-decoration-color:rgba(138,135,155,0.45);}
+.ckl-lab i{font-style:normal;font-size:10.5px;color:#8A879B;}
+.ckl-cta{font-family:inherit;font-size:11px;font-weight:800;padding:6px 12px;border-radius:14px;border:1.5px solid #5E59C7;background:transparent;color:#5E59C7;cursor:pointer;}
+.ckl-cta:hover{background:rgba(94,89,199,0.08);}
+@keyframes cklBloom{from{opacity:0;transform:translateY(10px) scale(0.4);}to{opacity:1;transform:translateY(0) scale(1);}}
+.ckl-bloom{animation:cklBloom 0.5s ease-out both;}
+@media (prefers-reduced-motion: reduce){.ckl-bloom{animation:none;}}

@@ -410,5 +410,88 @@
       entretien: ["Qu'avez-vous appris de significatif ces six derniers mois, et comment l'avez-vous appris concrètement ?", "Racontez une compétence que vous avez dû acquérir en urgence. Votre méthode, jour par jour ?"] },
   };
 
-    window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence, expressionDepuis, NOTICE, COULEURS_FAMILLES, COULEURS_FAMILLES_LISTE, SEUILS, zoneDe, cibleDe, fitPoste, DIMS_VERS_COMPETENCES, CODEX, PALIERS_NOMS, palierDe };
+    // La projection à 90 jours : hypothèse d'ancrage tenu.
+  // Constante unique, à recalibrer sur les re-mesures réelles dès volume.
+  const BOOST_PROJECTION = 12;
+  function projeterComps(comps, idsEngages) {
+    if (!Array.isArray(comps) || !idsEngages) return comps;
+    return comps.map((c) => idsEngages.has(c.id)
+      ? Object.assign({}, c, { expression: Math.min(100, Math.max(c.expression, Math.min(c.potentiel, c.expression + BOOST_PROJECTION))) })
+      : c);
+  }
+
+  // ============================================================
+  // LES FACETTES : l'étage d'exhaustivité sans dilution
+  // Deux facettes contextuelles par compétence maîtresse. Elles
+  // héritent du calcul de leur mère (aucune mesure séparée) et
+  // portent chacune trois micro-défis pour la défithèque SeedUp.
+  // ============================================================
+  const FACETTES = {
+    ecoute_active: [
+      { id: "questionnement", nom: "Questionnement", def: "Faire émerger l'information et la réflexion par des questions ouvertes plutôt que par des affirmations.", defis: ["Dans votre prochain échange, remplacez votre premier conseil par une question ouverte.", "Préparez trois questions avant votre prochain point individuel, aucune fermée.", "Quand on vous demande votre avis aujourd'hui, répondez d'abord par : qu'en pensez-vous ?"] },
+      { id: "empathie_tension", nom: "Empathie en tension", def: "Rester connecté au ressenti de l'autre quand la conversation chauffe, sans abandonner le fond.", defis: ["Au prochain désaccord, nommez l'émotion perçue chez l'autre avant de répondre sur le fond.", "Face à une critique aujourd'hui, remerciez et reformulez avant toute défense.", "Repérez le moment où votre interlocuteur se ferme et posez la question : qu'est-ce qui coince pour vous ?"] },
+    ],
+    cooperation: [
+      { id: "travail_transverse", nom: "Travail transverse", def: "Coopérer efficacement au-delà de son équipe, avec d'autres métiers, d'autres priorités, d'autres langages.", defis: ["Identifiez cette semaine un interlocuteur d'un autre service et proposez-lui un café de trente minutes.", "Sur votre dossier en cours, demandez à un autre métier ce qui lui simplifierait la vie.", "Traduisez votre prochaine demande transverse dans le vocabulaire du destinataire, jamais dans le vôtre."] },
+      { id: "gestion_conflit", nom: "Gestion de conflit", def: "Aborder les désaccords de front et tôt, pour qu'ils restent des divergences et non des ruptures.", defis: ["Nommez aujourd'hui un différend que vous évitez et proposez quinze minutes pour en parler.", "Au prochain conflit, écrivez la position de l'autre en une phrase juste avant de défendre la vôtre.", "Séparez explicitement les faits des interprétations lors de votre prochaine friction."] },
+    ],
+    communication_influence: [
+      { id: "negociation", nom: "Négociation", def: "Construire des accords où chacun gagne quelque chose, en préparant ses positions et ses concessions.", defis: ["Avant votre prochaine négociation, écrivez votre idéal, votre acceptable et votre plancher.", "Demandez cette semaine quelque chose que vous n'osiez pas demander, en le justifiant par la valeur.", "À la prochaine objection de prix ou de délai, posez une question avant de concéder quoi que ce soit."] },
+      { id: "prise_parole", nom: "Prise de parole publique", def: "Tenir un auditoire, du point d'équipe à la plénière, avec un message structuré et incarné.", defis: ["Ouvrez votre prochaine intervention par une question ou un chiffre, jamais par du contexte.", "Répétez à voix haute les soixante premières secondes de votre prochaine présentation.", "En réunion cette semaine, prenez la parole dans les cinq premières minutes."] },
+    ],
+    developpement_autres: [
+      { id: "feedback", nom: "Feedback", def: "Donner des retours précis, factuels et réguliers, qui font progresser sans blesser.", defis: ["Donnez aujourd'hui un feedback positif précis, un fait, un impact, en moins de trente secondes.", "Sur le prochain point à corriger, décrivez le fait observé avant tout jugement.", "Demandez un feedback sur vous-même à une personne de votre choix cette semaine."] },
+      { id: "delegation", nom: "Délégation responsabilisante", def: "Confier des missions entières avec le pourquoi, le cadre et le droit à l'erreur, puis tenir la distance.", defis: ["Déléguez cette semaine une tâche que vous aimez faire, pas seulement celle qui vous pèse.", "Sur votre prochaine délégation, donnez l'intention et le délai, jamais la méthode.", "Quand on vous rapporte un problème délégué, répondez par : que proposes-tu ?"] },
+    ],
+    orientation_resultats: [
+      { id: "orientation_client", nom: "Orientation client", def: "Garder le client final, interne ou externe, comme juge de paix de la valeur produite.", defis: ["Sur votre livrable du jour, écrivez en une phrase ce que le client y gagne.", "Appelez un client ou utilisateur cette semaine pour lui demander ce qui l'agace le plus.", "À la prochaine décision d'équipe, posez la question : qu'est-ce que le client préférerait ?"] },
+      { id: "sens_urgence", nom: "Sens de l'urgence", def: "Distinguer ce qui doit être fait maintenant de ce qui peut attendre, et agir en conséquence.", defis: ["Ce matin, identifiez l'action qui perd de la valeur chaque heure et faites-la en premier.", "Répondez aujourd'hui même au message que vous repoussez depuis trois jours.", "Fixez un délai à la prochaine demande floue : pour quand en avez-vous vraiment besoin ?"] },
+    ],
+    prise_decision: [
+      { id: "arbitrage_incertitude", nom: "Arbitrage sous incertitude", def: "Décider avec des informations incomplètes, en explicitant les hypothèses et les risques acceptés.", defis: ["Sur votre décision en attente, listez ce que vous savez, ce que vous supposez, puis tranchez.", "Fixez-vous un budget d'information : deux sources, puis décision, pas une de plus.", "Écrivez le pire scénario réaliste de votre prochaine décision et son plan de secours en trois lignes."] },
+      { id: "courage_managerial", nom: "Courage managérial", def: "Dire et faire ce qui est juste même quand c'est inconfortable, recadrer, refuser, trancher.", defis: ["Dites non cette semaine à une demande que vous auriez acceptée par confort.", "Abordez en direct le sujet sensible que vous traitez d'habitude par écrit.", "Recadrez un comportement dans les vingt-quatre heures au lieu d'attendre le prochain entretien."] },
+    ],
+    initiative: [
+      { id: "intrapreneuriat", nom: "Intrapreneuriat", def: "Porter une idée comme un projet, avec un test, des alliés et une preuve, sans attendre de mandat.", defis: ["Transformez votre idée du moment en test d'une heure et fixez sa date cette semaine.", "Trouvez un allié pour votre idée et présentez-la lui en cinq minutes chrono.", "Écrivez la preuve minimale qui montrerait que votre idée vaut d'être poussée."] },
+      { id: "proactivite_commerciale", nom: "Proactivité commerciale", def: "Créer les opportunités plutôt que les attendre, relancer, proposer, ouvrir des portes.", defis: ["Relancez aujourd'hui trois contacts silencieux avec un message personnalisé chacun.", "Proposez à un client existant une idée qui l'aide, sans rien vendre cette fois.", "Bloquez trente minutes de prospection ou de réseau demain matin, avant les mails."] },
+    ],
+    resilience: [
+      { id: "gestion_stress", nom: "Gestion du stress", def: "Réguler sa pression au quotidien, par l'hygiène, les pauses et la mise à distance des pensées.", defis: ["Installez aujourd'hui une pause de cinq minutes sans écran entre deux réunions.", "Au prochain pic de stress, écrivez la pensée qui tourne, puis sa version factuelle.", "Verrouillez cette semaine une heure de récupération non négociable dans l'agenda."] },
+      { id: "rebond", nom: "Rebond après échec", def: "Transformer vite un raté en apprentissage et en action suivante, sans rumination ni déni.", defis: ["Sur votre dernier raté, écrivez en trois lignes : le fait, la leçon, la prochaine action.", "Racontez un échec récent à un pair et demandez-lui ce qu'il aurait fait.", "Dans les vingt-quatre heures après un refus, relancez une action du même type."] },
+    ],
+    organisation: [
+      { id: "gestion_priorites", nom: "Gestion des priorités", def: "Choisir consciemment ce qui passe devant, par l'impact, et assumer ce qui attend.", defis: ["Chaque matin cette semaine, écrivez vos trois priorités et barrez tout le reste.", "Identifiez la tâche que vous faites par habitude et qui ne produit plus rien : supprimez-la.", "Avant d'accepter une nouvelle demande aujourd'hui, nommez ce qu'elle fera glisser."] },
+      { id: "conduite_projet", nom: "Conduite de projet", def: "Faire aboutir un projet multi-acteurs, jalons, responsabilités et suivi visibles pour tous.", defis: ["Sur votre projet en cours, écrivez les trois prochains jalons datés et partagez-les.", "Clarifiez aujourd'hui qui décide quoi sur votre projet, en une ligne par personne.", "Installez un point de quinze minutes hebdomadaire avec un ordre du jour en trois questions."] },
+    ],
+    rigueur: [
+      { id: "qualite_livrable", nom: "Qualité du livrable", def: "Livrer propre du premier coup, orthographe, chiffres, formes, les détails qui font la confiance.", defis: ["Relisez votre prochain envoi important à voix basse avant de cliquer.", "Créez la check-list en cinq points de votre livrable récurrent et appliquez-la dès demain.", "Faites vérifier un chiffre clé par une seconde paire d'yeux avant votre prochaine diffusion."] },
+      { id: "conformite", nom: "Conformité", def: "Respecter les règles, procédures et engagements contractuels sans les vivre comme des ennemis.", defis: ["Identifiez la règle que vous contournez le plus et comprenez cette semaine pourquoi elle existe.", "Sur votre prochain dossier, vérifiez le point de conformité qui ne pardonne pas avant tout le reste.", "Signalez proprement une procédure inadaptée plutôt que de la contourner en silence."] },
+    ],
+    fiabilite_suivi: [
+      { id: "tenue_engagements", nom: "Tenue des engagements", def: "Faire de sa parole une monnaie fiable, promettre juste, livrer à l'heure, prévenir tôt.", defis: ["Aujourd'hui, ne promettez que ce que vous pouvez tenir et notez chaque engagement pris.", "Au premier doute sur un délai, prévenez immédiatement avec une nouvelle date ferme.", "Soldez ce vendredi vos engagements ouverts : fait, renégocié ou abandonné explicitement."] },
+      { id: "suivi_client", nom: "Suivi client", def: "Tenir le fil après la vente ou la livraison, nouvelles régulières, relances propres, mémoire des dossiers.", defis: ["Envoyez aujourd'hui des nouvelles à un client sans rien lui demander.", "Notez après chaque échange client les deux informations à retenir pour la prochaine fois.", "Programmez la relance au moment où vous raccrochez, jamais plus tard."] },
+    ],
+    analyse: [
+      { id: "esprit_critique", nom: "Esprit critique", def: "Interroger les évidences, les chiffres et les siennes propres, avant de conclure.", defis: ["Sur la prochaine affirmation entendue en réunion, demandez : qu'est-ce qui nous le prouve ?", "Cherchez activement un fait qui contredit votre hypothèse du moment.", "Sur un chiffre clé reçu cette semaine, remontez à sa source avant de le rediffuser."] },
+      { id: "culture_donnee", nom: "Culture de la donnée", def: "Faire parler les données disponibles, les lire, les croiser, les mettre en forme utile.", defis: ["Remplacez une opinion par une mesure dans votre prochain arbitrage.", "Construisez cette semaine un mini-tableau de trois indicateurs qui comptent pour votre activité.", "Avant votre prochaine réunion, préparez le chiffre qui répond à la question qui fâche."] },
+    ],
+    vision_strategique: [
+      { id: "sens_business", nom: "Sens du business", def: "Relier chaque décision à l'économie réelle, revenus, coûts, marges, valeur client.", defis: ["Sur votre action du jour, écrivez ce qu'elle rapporte ou économise, même approximativement.", "Demandez cette semaine à quelqu'un de la finance ce qui pèse vraiment dans le résultat.", "Au prochain choix d'équipe, posez la question : combien ça coûte, combien ça rapporte ?"] },
+      { id: "anticipation_risques", nom: "Anticipation des risques", def: "Voir venir ce qui peut dérailler et préparer les parades avant d'en avoir besoin.", defis: ["Sur votre projet en cours, listez les trois risques majeurs et une parade par risque.", "Posez à votre équipe la question : qu'est-ce qui pourrait nous surprendre le mois prochain ?", "Préparez le plan B de votre prochain jalon critique avant qu'on vous le demande."] },
+    ],
+    creativite: [
+      { id: "resolution_creative", nom: "Résolution créative", def: "Sortir des impasses par des angles inhabituels, analogies, inversions, contraintes fécondes.", defis: ["Sur le blocage du moment, demandez-vous : comment un autre métier le résoudrait-il ?", "Inversez le problème aujourd'hui : comment garantir l'échec ? Puis faites le contraire.", "Générez dix idées en dix minutes sur votre irritant, sans en juger aucune avant la fin."] },
+      { id: "amelioration_continue", nom: "Amélioration continue", def: "Traquer les petits progrès systématiques, chaque semaine un irritant en moins, un geste en mieux.", defis: ["Supprimez cette semaine une étape inutile d'un processus que vous subissez.", "Après votre prochaine livraison, notez une chose à faire mieux la prochaine fois, une seule.", "Chronométrez une tâche récurrente et gagnez dix pour cent dessus d'ici vendredi."] },
+    ],
+    adaptabilite: [
+      { id: "conduite_changement", nom: "Conduite du changement", def: "Aider un collectif à traverser un changement, sens, rythme, écoute des résistances.", defis: ["Sur le changement en cours, écrivez le pourquoi en deux phrases dites du point de vue de l'équipe.", "Allez écouter trente minutes la personne la plus réticente, sans argumenter.", "Célébrez publiquement cette semaine un premier pas réussi dans le nouveau monde."] },
+      { id: "agilite_interculturelle", nom: "Agilité interculturelle", def: "Ajuster ses codes à des cultures d'entreprise, de métier ou de pays différents.", defis: ["Avant votre prochain échange avec une autre culture, renseignez-vous sur un code qui compte pour elle.", "Adaptez consciemment votre style à deux interlocuteurs très différents aujourd'hui et notez l'effet.", "Demandez à un interlocuteur d'une autre culture ce qui le surprend dans vos façons de faire."] },
+    ],
+    apprentissage: [
+      { id: "veille_metier", nom: "Veille métier", def: "Rester à jour sur son domaine, sources choisies, rythme tenu, tri de l'utile.", defis: ["Choisissez deux sources de veille et bloquez vingt minutes hebdomadaires pour elles.", "Partagez à l'équipe cette semaine une trouvaille de veille en trois phrases.", "Désabonnez-vous aujourd'hui d'une source que vous ne lisez plus."] },
+      { id: "apprendre_apprendre", nom: "Apprendre à apprendre", def: "Maîtriser sa propre méthode d'acquisition, objectifs, pratique espacée, restitution.", defis: ["Sur votre sujet du mois, fixez un objectif d'apprentissage vérifiable en une phrase.", "Expliquez à quelqu'un ce que vous venez d'apprendre : si vous butez, réapprenez ce point.", "Programmez trois rappels espacés, à trois jours, une semaine, un mois, sur votre dernier apprentissage."] },
+    ],
+  };
+
+    window.Competences = { REFERENTIEL, POSTES, scorer, prioriser, collectif, matcherCompetence, expressionDepuis, NOTICE, COULEURS_FAMILLES, COULEURS_FAMILLES_LISTE, SEUILS, zoneDe, cibleDe, fitPoste, DIMS_VERS_COMPETENCES, CODEX, PALIERS_NOMS, palierDe, BOOST_PROJECTION, projeterComps, FACETTES };
 })();

@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v77 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v77]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v83 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v83]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -23,6 +23,7 @@ const App = (() => {
   let compsEspaceCourant = null;
   let carteEspaceCourant = null;
   let filtreMiroirRel = null;
+  let checklistCtx = null;
   let monArchetype = ''; // archétype de la personne, pour la situer dans le codex
   // ===== Personnages : variante masculine / féminine (option B) =====
   // S'active des que les visuels <slug>_h.webp et <slug>_f.webp sont en ligne.
@@ -663,6 +664,7 @@ const App = (() => {
         poserRetourNea(carte);
         poserRemesure(data, carte);
         poserMiroir(data, carte);
+        try { checklistCtx = { data: dataEspaceCourant, carte: carte }; poserChecklist(dataEspaceCourant, carte); } catch (e) { console.warn('[Sinéa]', e); }
         try { poserCockpit(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         try { poserCompetencesEspace(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         try { if (window.Visuels && Visuels.brancherCurseur) Visuels.brancherCurseur(document.getElementById('esp-q16-t'), document.getElementById('esp-cp-matrice')); } catch (e) {}
@@ -734,16 +736,19 @@ const App = (() => {
             return '<div class="fcx-pal' + etat + '"><b>' + num + '. ' + window.Competences.PALIERS_NOMS[i] + (num === pal ? ' · vous êtes ici' : '') + '</b>' + (num === pal ? '<em>Votre prochain pas : ' + echapValeur(p2[1]) + '</em>' : '') + '</div>';
           }).join('');
         })() : '')
+      + ((window.Competences.FACETTES && window.Competences.FACETTES[id]) ? '<div class="esp-cp-prog-t">Les deux facettes</div>' + window.Competences.FACETTES[id].map(function (f) { return '<div class="fcx-fac"><b>' + echapValeur(f.nom) + '</b><span>' + echapValeur(f.def) + '</span><em>Défi : ' + echapValeur(f.defis[0]) + '</em></div>'; }).join('') : '')
       + '</div>';
     zone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function espTab(t){
-    const dev = ['espace-cockpit', 'espace-nea', 'espace-remesure', 'espace-competences', 'espace-seedup', 'espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat'];
-    const mir = ['espace-miroir'];
+    const groupes = {
+      accueil: ['espace-accueil-resume', 'espace-checklist', 'espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat'],
+      dev: ['espace-cockpit', 'espace-nea', 'espace-remesure', 'espace-competences', 'espace-seedup'],
+      miroir: ['espace-miroir'],
+    };
     const cache = function (id, visible) { const e = document.getElementById(id); if (e) e.classList.toggle('esp-hide', !visible); };
-    dev.forEach(function (id) { cache(id, t === 'dev'); });
-    mir.forEach(function (id) { cache(id, t === 'miroir'); });
+    Object.keys(groupes).forEach(function (g) { groupes[g].forEach(function (id) { cache(id, t === g); }); });
     document.querySelectorAll('.esp-nav-b').forEach(function (b) {
       const on = b.getAttribute('data-t') === t;
       b.classList.toggle('on', on);
@@ -783,6 +788,8 @@ const App = (() => {
       act = { t: 'Votre re-mesure des 90 jours est ouverte', p: 'Dix minutes pour mesurer le chemin parcouru depuis votre portrait.', cta: 'Faire ma re-mesure', fn: "App.cockpitVers('espace-remesure')" };
     } else if (aJeton && nbRegards === 0) {
       act = { t: 'Votre miroir attend ses premiers regards', p: 'Trois messages prêts à copier vous attendent, trois minutes pour vos collègues.', cta: 'Ouvrir le miroir', fn: "App.espTab('miroir')" };
+    } else if (aJeton && !mir.prediction && nbRegards < 2) {
+      act = { t: 'Scellez votre pari du miroir', p: 'Trente secondes pour prédire le regard des autres. Comparé plus tard : votre score de lucidité.', cta: 'Faire mon pari', fn: "App.espTab('miroir')" };
     } else if (!pistes.length) {
       act = { t: 'Choisissez vos premières actions', p: 'Vos opportunités sont identifiées : reliez-les à des actions concrètes pour lancer le programme.', cta: 'Voir mes compétences', fn: "App.cockpitVers('espace-competences')" };
     } else if (sd.length) {
@@ -1358,6 +1365,64 @@ const App = (() => {
     }
   }
 
+  // ===== La serre du parcours : neuf étapes, des points, des plantes =====
+  function poserChecklist(data, carte) {
+    const slot = document.getElementById('espace-checklist');
+    if (!slot) return;
+    carte = carte || {};
+    const analyses = (data && data.analyses) || {};
+    const modP = analyses.socle ? 'socle' : (Object.keys(analyses)[0] || 'socle');
+    const sd = (carte.seedup && Array.isArray(carte.seedup.liste)) ? carte.seedup.liste : [];
+    const remFaite = !!(carte.remesure && Array.isArray(carte.remesure.liste) && carte.remesure.liste.length);
+    const mir = carte.miroir || {};
+    const nbRegards = Array.isArray(mir.reponses) ? mir.reponses.length : 0;
+    const aPlan = Object.values(carte).some(function (it) { return it && Array.isArray(it.pistes_libelles) && it.pistes_libelles.length; });
+    const aAvis = window.__avisFait === true || Object.values(carte).some(function (it) { return it && it.avis && (it.avis.AVIS_RESSEMBLANCE || it.avis.AVIS_UTILITE || it.avis.AVIS_CLARTE); });
+    const ITEMS = [
+      { id: 'lecture', label: 'Lire votre analyse en entier', pts: 10, fait: !!(carte.jalons && carte.jalons.lecture), cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
+      { id: 'voeux', label: 'Poser vos trois vœux au coach', pts: 15, fait: (Number(carte.voeux) || 0) >= 3, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
+      { id: 'avis', label: 'Évaluer votre portrait', pts: 10, fait: aAvis, cta: 'if(window.Result&&Result.noterPortrait)Result.noterPortrait()', lab: 'Noter · 30 s' },
+      { id: 'plan', label: 'Choisir les actions de votre plan', pts: 15, fait: aPlan, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Choisir' },
+      { id: 'defi1', label: 'Ancrer votre premier défi', pts: 15, fait: sd.length >= 1, cta: 'App.cockpitVers(&quot;espace-seedup&quot;)', lab: 'Ancrer' },
+      { id: 'miroir', label: 'Lancer votre miroir 360', pts: 10, fait: !!mir.jeton, cta: 'App.espTab(&quot;miroir&quot;)', lab: 'Lancer' },
+      { id: 'pari', label: 'Sceller votre pari', pts: 10, fait: !!mir.prediction, cta: 'App.espTab(&quot;miroir&quot;)', lab: 'Sceller' },
+      { id: 'regards2', label: 'Recevoir deux regards', pts: 15, fait: nbRegards >= 2, cta: 'App.espTab(&quot;miroir&quot;)', lab: 'Inviter' },
+      { id: 'remesure', label: 'Faire la re-mesure des 90 jours', pts: 30, fait: remFaite, cta: 'App.cockpitVers(&quot;espace-remesure&quot;)', lab: 'Mesurer' },
+    ];
+    const faits = ITEMS.filter(function (x) { return x.fait; });
+    const score = faits.reduce(function (a, x) { return a + x.pts; }, 0);
+    const TOTAL = ITEMS.reduce(function (a, x) { return a + x.pts; }, 0);
+    const CL = ['#F98272', '#E8951A', '#2C97E0', '#5E59C7'];
+    let serreSvg = '<svg class="ckl-serre" viewBox="0 0 540 92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+    ITEMS.forEach(function (x, i) {
+      const cx2 = 18 + i * 58;
+      serreSvg += '<path d="M' + (cx2 - 14) + ' 78 h28 l-4 12 h-20 z" fill="#E8DFC9"/>';
+      if (x.fait) {
+        const coul = CL[i % 4];
+        serreSvg += '<g class="ckl-bloom" style="animation-delay:' + (i * 0.06) + 's">'
+          + '<line x1="' + cx2 + '" y1="78" x2="' + cx2 + '" y2="48" stroke="#5B9E6B" stroke-width="2.5"/>'
+          + '<ellipse cx="' + (cx2 - 6) + '" cy="62" rx="6" ry="3" fill="#7CBB8A" transform="rotate(-28 ' + (cx2 - 6) + ' 62)"/>'
+          + [0, 72, 144, 216, 288].map(function (ang) { const r = ang * Math.PI / 180; return '<circle cx="' + (cx2 + 7 * Math.cos(r)).toFixed(1) + '" cy="' + (42 + 7 * Math.sin(r)).toFixed(1) + '" r="5" fill="' + coul + '"/>'; }).join('')
+          + '<circle cx="' + cx2 + '" cy="42" r="3.5" fill="#FFD34D"/></g>';
+      } else {
+        serreSvg += '<circle cx="' + cx2 + '" cy="74" r="3" fill="#B9B4A6"/>';
+      }
+    });
+    serreSvg += '</svg>';
+    const lignes = ITEMS.map(function (x) {
+      return '<div class="ckl-row' + (x.fait ? ' fait' : '') + '"><span class="ckl-ic">' + (x.fait ? '✓' : '○') + '</span>'
+        + '<span class="ckl-lab">' + x.label + ' <i>' + x.pts + ' pts</i></span>'
+        + (x.fait ? '' : '<button type="button" class="ckl-cta" onclick="' + x.cta + '">' + x.lab + '</button>') + '</div>';
+    }).join('');
+    slot.innerHTML = '<div class="ckl">'
+      + '<div class="ckl-tete"><b>Votre serre du parcours</b><span>' + faits.length + '/' + ITEMS.length + ' étapes · ' + score + ' points</span></div>'
+      + '<div class="ckl-bar"><i style="width:' + Math.round(score / TOTAL * 100) + '%"></i></div>'
+      + serreSvg + lignes + '</div>';
+  }
+  function majChecklist() {
+    if (checklistCtx) { try { poserChecklist(checklistCtx.data, checklistCtx.carte); } catch (e) { console.warn('[Sinéa]', e); } }
+  }
+
   // ===== Le pari du miroir : prédire le regard des autres avant de le recevoir =====
   const AXES_PARI = [['E', 'Aisance sociale'], ['A', 'Chaleur'], ['C', 'Rigueur'], ['S', 'Solidité'], ['O', 'Curiosité']];
   function pariMiroirHtml(mir){
@@ -1368,10 +1433,12 @@ const App = (() => {
     }
     return '<div class="pari-bloc"><div class="esp-cp-titre">Avant leurs regards, le vôtre : votre pari</div>'
       + '<p class="pari-p">Prédisez ce que leur regard moyen dira de vous. Scellé maintenant, comparé plus tard : votre score de lucidité.</p>'
+      + '<button type="button" class="esp-rem-btn pari-open" onclick="this.nextElementSibling.classList.toggle(&quot;esp-hide&quot;)">Faire mon pari · 30 s</button>'
+      + '<div class="pari-corps esp-hide">'
       + AXES_PARI.map(function (a) {
         return '<div class="pari-l"><span>' + a[1] + '</span><input type="range" min="0" max="100" value="55" data-k="' + a[0] + '" class="pari-r" oninput="this.nextElementSibling.textContent=this.value"><b>55</b></div>';
       }).join('')
-      + '<button type="button" class="esp-rem-btn" onclick="App.envoyerPariMiroir(this)">Sceller mon pari</button><p class="pari-etat"></p></div>';
+      + '<button type="button" class="esp-rem-btn" onclick="App.envoyerPariMiroir(this)">Sceller mon pari</button><p class="pari-etat"></p></div></div>';
   }
   function envoyerPariMiroir(btn){
     const mir = (carteEspaceCourant && carteEspaceCourant.miroir) || {};
@@ -1675,6 +1742,15 @@ const App = (() => {
       const phraseFam = ACCUEIL_ARCHETYPE[archetype] || ACCUEIL_FAMILLE[famKey] || "Voici votre espace personnel, le reflet de votre singularité.";
       const phraseAv = phraseAvancement(analyses, droitsTxt);
       accueilEl.innerHTML = `<span class="espace-accueil-fam">${phraseFam}</span> <span class="espace-accueil-av">${phraseAv}</span>`;
+      const resumeEl = document.getElementById('espace-accueil-resume');
+      if (resumeEl) {
+        const coulFam = (window.Competences && Competences.COULEURS_FAMILLES && Competences.COULEURS_FAMILLES[famKey]) || '#FDFCF8';
+        resumeEl.innerHTML = '<div class="acc-resume">'
+          + '<span class="acc-chip" style="border-color:' + coulFam + '">' + echapValeur(archetype || '') + (famKey ? ' · ' + famKey.charAt(0) + famKey.slice(1).toLowerCase() : '') + '</span>'
+          + '<span class="acc-txt">Votre action du jour vous attend.</span>'
+          + '<button type="button" class="esp-nav-b acc-cta" onclick="App.espTab(&quot;dev&quot;)">Ouvrir mon développement</button>'
+          + '</div>';
+      }
     }
 
     // Barre de progression globale du parcours
@@ -3655,7 +3731,7 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

@@ -127,10 +127,12 @@ verifie('assemblage : heatmap et fit dans la vue campagne', fitSrc.indexOf('rend
 
 console.log('\n== 0sexies. Raccordements réclamés ==');
 const idxH2 = fs.readFileSync('index.html', 'utf8');
-verifie('espace : nav deux onglets posée', idxH2.indexOf('esp-nav') > 0 && idxH2.indexOf("App.espTab('miroir')") > 0);
+verifie('espace : trois onglets, accueil en premier', (idxH2.match(/esp-nav-b/g) || []).length === 3 && idxH2.indexOf("data-t=\"accueil\" aria-pressed=\"true\"") > 0);
+verifie('espace : le développement attend son onglet', idxH2.indexOf('id="espace-cockpit" class="esp-hide"') > 0 && idxH2.indexOf('id="espace-seedup" class="esp-hide"') > 0);
+verifie('espace : trois groupes câblés', srcCtrl.indexOf('const groupes = {') > 0 && srcCtrl.indexOf("miroir: ['espace-miroir']") > 0);
 verifie('espace : miroir masqué par défaut', idxH2.indexOf('id="espace-miroir" class="esp-hide"') > 0);
 verifie('espace : espTab exporté', exportApp.includes('espTab'));
-verifie('notation : bouton dans l\'Essentiel', srcRes.indexOf('Result.noterPortrait()') > 0);
+verifie('notation : l\'overlay survit au départ du bouton', srcRes.indexOf('noter-ov') > 0 && srcRes.indexOf('Result.noterEtoile') > 0);
 verifie('notation : fonction exportée', srcRes.indexOf('Result.noterPortrait = function') > 0);
 const cssTxt = fs.readFileSync('style.css', 'utf8');
 verifie('mobile : hero en colonne sous 700px', cssTxt.indexOf('.espace-hero{flex-direction:column') > 0);
@@ -160,7 +162,8 @@ verifie('forces : intro pédagogique, définitions, familles', fvv2.indexOf('fv-
 verifie('largeurs fluides : restitution et espace à 94vw', (cssTxt2().match(/min\(1680px, 94vw\)/g) || []).length >= 6);
 verifie('largeur fluide : portail à 96vw', fs.readFileSync('dashboard.html', 'utf8').indexOf('min(1720px, 96vw)') > 0);
 verifie('noter : overlay autonome, token, action avis_direct', srcRes2().indexOf('noter-ov') > 0 && srcRes2().indexOf("action: 'avis_direct'") > 0 && srcRes2().indexOf("get('token')") > 0);
-verifie('lecture : mesure typographique posée', cssTxt2().indexOf('.r-body > *{max-width:920px') > 0);
+verifie('noter : étoiles en gestionnaires inline', srcRes2().indexOf('Result.noterEtoile(this)') > 0 && srcRes2().indexOf('Result.noterEtoile = function') > 0);
+verifie('lecture : le large rééquilibré, prose 1280, visuels 1520', cssTxt2().indexOf('.r-body > *{max-width:min(1280px, 92vw)') > 0 && cssTxt2().indexOf('.r-q16-card{max-width:min(1520px, 94vw)') > 0);
 verifie('espace : la carte Néa est lisible', cssTxt2().indexOf('.esp-nea{background:#FDFCF8') > 0);
 verifie('portail : le codex existe et la matrice y mène', srcDash.indexOf('function ouvrirCodex(') > 0 && srcDash.indexOf('bd-mat-cx') > 0);
 verifie('moteur : le mapping dimensions est exporté', !!C.DIMS_VERS_COMPETENCES && Object.keys(C.DIMS_VERS_COMPETENCES).length >= 4);
@@ -189,7 +192,7 @@ verifie('espace : la lucidité est calculée et affichée', srcCtrl2().indexOf('
 verifie('espace : le radar reçoit le pari', srcCtrl2().indexOf('radarMiroirSvg(vous, percu, pariM)') > 0);
 verifie('espace : les regards se filtrent par relation', srcCtrl2().indexOf('filtrerMiroir') > 0 && srcCtrl2().indexOf('reponsesTous.filter') > 0);
 verifie('espace : le curseur des 90 jours est branché', srcCtrl2().indexOf('esp-q16-t') > 0 && srcCtrl2().indexOf('brancherCurseur(document.getElementById') > 0);
-verifie('portail : le fit projeté double la barre', srcDash.indexOf('fit-proj') > 0 && srcDash.indexOf('% à 90 j') > 0 && srcDash.indexOf('expression + 12') > 0);
+verifie('portail : le fit projeté double la barre', srcDash.indexOf('fit-proj') > 0 && srcDash.indexOf('% à 90 j') > 0 && srcDash.indexOf('Competences.projeterComps') > 0);
 verifie('portail : la fiche projette et rejoue', srcDash.indexOf('bd-fit-proj') > 0 && srcDash.indexOf('function rejouerQ16(') > 0 && srcDash.indexOf('bd-q16-t') > 0);
 
 console.log('\n== 0decies. Sprint B : le codex vivant ==');
@@ -200,6 +203,63 @@ verifie('fit : les gaps portent leur identifiant', (() => { const f = C.fitPoste
 verifie('portail : trajectoire, entretien, incarné dans la modal', srcDash.indexOf('cx-pal') > 0 && srcDash.indexOf('chargerIncarne') > 0 && srcDash.indexOf('CODEX_URL') > 0 && srcDash.indexOf('cle: cleAcces') > 0);
 verifie('portail : questions d\'entretien contre les gaps de la fiche', srcDash.indexOf('bd-fit-qs') > 0 && srcDash.indexOf('cx2.entretien[0]') > 0);
 verifie('espace : la trajectoire vit dans la fiche focus', srcCtrl2().indexOf('fcx-pal') > 0 && srcCtrl2().indexOf('palierDe(c2.expression)') > 0);
+
+console.log('\n== 0undecies. Portail : les onglets narratifs ==');
+verifie('organiseur : cinq onglets et bascule', srcDash.indexOf('function organiserOnglets(') > 0 && srcDash.indexOf('function ptTab(') > 0 && (srcDash.match(/\['(pilotage|equipe|dynamiques|competences|coach)'/g) || []).length === 5);
+verifie('organiseur : appelé après le rendu de la campagne', srcDash.indexOf("organiserOnglets(document.getElementById('content'))") > 0);
+verifie('bandeau essentiel : quatre faits calculés', srcDash.indexOf('stripEssentielHtml') > 0 && srcDash.indexOf('potentiels dormants') > 0 && srcDash.indexOf('Meilleur fit') > 0);
+verifie('codex : la grille des seize est visible', srcDash.indexOf('renderCodexGrid') > 0 && srcDash.indexOf('cxg-c') > 0 && srcDash.indexOf('La bibliothèque vivante') > 0);
+verifie('organiseur : idempotent au re-rendu', srcDash.indexOf("cont.querySelector('.pt-nav')") > 0);
+
+console.log('\n== 0duodecies. Retouches de pertinence ==');
+verifie('projection : centralisée et bornée par le potentiel', (() => {
+  const eng = new Set(['communication_influence']);
+  const avant = compsV.find(c => c.id === 'communication_influence');
+  const ap = C.projeterComps(compsV, eng).find(c => c.id === 'communication_influence');
+  return typeof C.BOOST_PROJECTION === 'number' && ap.expression <= Math.max(avant.expression, avant.potentiel) && ap.expression >= avant.expression;
+})());
+verifie('portail : la projection délègue au moteur', (srcDash.match(/Competences\.projeterComps/g) || []).length === 2);
+verifie('projection : étiquetée hypothèse aux deux endroits', srcDash.indexOf('Hypothèse : engagements tenus') > 0 && srcDash.indexOf("hypothèse d\\'ancrage") > 0);
+verifie('bandeau : fit conditionné au poste sur mesure', srcDash.indexOf('posteCustomCourant ? coefsPoste') > 0 && srcDash.indexOf('Fit manager moyen') < 0);
+verifie('bandeau : la qualité vécue entre en scène', srcDash.indexOf('Qualité vécue') > 0);
+verifie('cockpit : le pari a sa place dans les priorités', srcCtrl2().indexOf('Scellez votre pari du miroir') > 0);
+verifie('miroir : le pari est replié par défaut', srcCtrl2().indexOf('pari-open') > 0 && srcCtrl2().indexOf('pari-corps esp-hide') > 0);
+verifie('accueil : le résumé est posé et rangé', idxH2.indexOf('id="espace-accueil-resume"') > 0 && srcCtrl2().indexOf('acc-resume') > 0 && srcCtrl2().indexOf("accueil: ['espace-accueil-resume'") > 0);
+
+console.log('\n== 0terdecies. Les facettes et la défithèque ==');
+verifie('facettes : 32, deux par compétence, ids uniques', (() => {
+  let n = 0; const ids = [];
+  const ok = C.REFERENTIEL.every(r => { const f = C.FACETTES[r.id]; if (!f || f.length !== 2) return false; f.forEach(x => { n++; ids.push(x.id); }); return true; });
+  return ok && n === 32 && new Set(ids).size === 32;
+})());
+verifie('défithèque : 160 micro-défis exactement', (() => {
+  let n = 64;
+  Object.values(C.FACETTES).forEach(f => f.forEach(x => { n += x.defis.length; }));
+  return n === 160 && Object.values(C.FACETTES).every(f => f.every(x => x.defis.length === 3 && x.defis.every(d2 => d2.length >= 25) && x.def.length >= 30));
+})());
+verifie('portail : les facettes entrent dans la modal', srcDash.indexOf('cx-fac') > 0 && srcDash.indexOf('facettesHtml') > 0);
+verifie('espace : les facettes entrent dans la fiche focus', srcCtrl2().indexOf('fcx-fac') > 0 && srcCtrl2().indexOf('FACETTES[id]') > 0);
+
+console.log('\n== 0quaterdecies. La serre du parcours ==');
+verifie('serre : le slot vit dans l\'accueil', idxH2.indexOf('id="espace-checklist"') > 0 && srcCtrl2().indexOf("'espace-accueil-resume', 'espace-checklist'") > 0);
+verifie('serre : posée au chargement et rafraîchissable', srcCtrl2().indexOf('function poserChecklist(') > 0 && srcCtrl2().indexOf('checklistCtx = { data: dataEspaceCourant') > 0 && srcCtrl2().indexOf('function majChecklist()') > 0);
+verifie('serre : neuf étapes pour 130 points', (() => {
+  const src = srcCtrl2();
+  const m = src.match(/pts: (\d+), fait:/g) || [];
+  const somme = m.reduce((a, x) => a + parseInt(x.match(/\d+/)[0], 10), 0);
+  return m.length === 9 && somme === 130;
+})());
+verifie('serre : les détections lisent les vraies sources', srcCtrl2().indexOf('carte.jalons && carte.jalons.lecture') > 0 && srcCtrl2().indexOf('Number(carte.voeux)') > 0 && srcCtrl2().indexOf('mir.prediction') > 0 && srcCtrl2().indexOf('pistes_libelles') > 0);
+verifie('serre : la notation s\'ouvre depuis l\'étape', srcCtrl2().indexOf('Result.noterPortrait()') > 0);
+verifie('serre : les plantes poussent en SVG', srcCtrl2().indexOf('ckl-serre') > 0 && srcCtrl2().indexOf('ckl-bloom') > 0 && cssTxt2().indexOf('@keyframes cklBloom') > 0);
+verifie('restitution : le bouton de notation a quitté l\'Essentiel', srcRes2().indexOf('ess-avis') < 0 && srcRes2().indexOf('Result.noterPortrait = function') > 0);
+verifie('restitution : le jalon de lecture est auto', srcRes2().indexOf("jalon: 'lecture'") > 0 && srcRes2().indexOf('fin-lecture') > 0 && srcRes2().indexOf('IntersectionObserver') > 0);
+verifie('restitution : un avis rafraîchit la serre', srcRes2().indexOf('__avisFait = true') > 0 && srcRes2().indexOf('App.majChecklist()') > 0);
+
+console.log('\n== 0quindecies. La mission au coach ==');
+verifie('coach : endpoint et modal câblés', srcDash.indexOf('COACH_ENVOI_URL') > 0 && srcDash.indexOf('function ouvrirEnvoiCoach(') > 0 && srcDash.indexOf('function envoyerCoach(') > 0);
+verifie('coach : deux portes, la fiche et le bandeau', (srcDash.match(/ouvrirEnvoiCoach\(/g) || []).length >= 3 && srcDash.indexOf("ouvrirEnvoiCoach('apprenant'") > 0 && srcDash.indexOf('ouvrirEnvoiCoach(&quot;groupe&quot;)') > 0);
+verifie('coach : le payload porte la clé et la campagne', srcDash.indexOf('cle: cleAcces') > 0 && srcDash.indexOf('campagne: entrepriseCourante') > 0);
 
 console.log('\n== 1. Moteur de compétences : déterminisme et bornes ==');
 const bf = { O: 58, C: 38, E: 72, A: 78, N: 45 };

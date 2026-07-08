@@ -2620,12 +2620,30 @@ const Result = (() => {
       const fort = (f.signaux || []).some(x => x && x.niveau === 'fort');
       h += '<div class="ess-fiab">Fiabilité de la mesure : <b>' + f.score + '/100, ' + (f.niveau || '') + '</b>.' + (fort ? ' Un signal de cohérence a été détecté et retravaillé par vos précisions : l\'échange avec votre formateur affinera encore la lecture.' : '') + '</div>';
     }
-    h += '<button type="button" class="ess-avis" onclick="Result.noterPortrait()">Noter ce portrait · 30 secondes</button>';
     h += '<p class="ess-mir">Le regard des autres compte aussi : le miroir 360 vous attend dans votre espace personnel.</p>';
     h += '<button type="button" class="ess-cta" onclick="document.getElementById(\'essentiel-bloc\').nextElementSibling.scrollIntoView({behavior:\'smooth\'})">Lire l\'analyse complète</button></div>';
     const zone = document.createElement('div');
     zone.innerHTML = h;
     corpsR.insertBefore(zone.firstChild, corpsR.firstChild);
+    // Le jalon de lecture : quand la fin du portrait entre à l'écran
+    try {
+      if (!window.__jalonLecture && 'IntersectionObserver' in window) {
+        const jetonL = new URLSearchParams(window.location.search).get('token') || '';
+        if (jetonL) {
+          window.__jalonLecture = true;
+          const sentinelle = document.createElement('div');
+          sentinelle.id = 'fin-lecture';
+          corpsR.appendChild(sentinelle);
+          const obsL = new IntersectionObserver(function (entries) {
+            if (entries.some(function (e2) { return e2.isIntersecting; })) {
+              obsL.disconnect();
+              fetch(API_BASE + '/progression', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'jalon', jeton: jetonL, jalon: 'lecture' }) }).catch(function () {});
+            }
+          }, { threshold: 0.1 });
+          obsL.observe(sentinelle);
+        }
+      }
+    } catch (e) {}
     // La page Forces et vigilances, scannable en dix secondes, sous l'Essentiel
     try {
       if (window.Visuels && window.Competences && res.scoresBigFive && !document.getElementById('fv-bloc')) {
@@ -2767,6 +2785,17 @@ const Result = (() => {
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)
+let notesAvis = {};
+Result.noterEtoile = function(btn){
+  try {
+    const grp = btn.parentNode;
+    const v = parseInt(btn.getAttribute('data-v'), 10);
+    notesAvis[grp.getAttribute('data-k')] = v;
+    grp.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', parseInt(x.getAttribute('data-v'), 10) <= v); });
+    const env = document.getElementById('noter-envoyer');
+    if (env && Object.keys(notesAvis).length >= 3) env.disabled = false;
+  } catch (e) { console.error('[Sinéa] noterEtoile', e); }
+};
 Result.noterPortrait = function(){
   try {
     if (document.getElementById('noter-ov')) return;
@@ -2774,7 +2803,7 @@ Result.noterPortrait = function(){
     const ov = document.createElement('div');
     ov.id = 'noter-ov';
     ov.className = 'noter-ov';
-    const ligne = function (k, lab) { return '<div class="noter-q"><span class="noter-lab">' + lab + '</span><span class="noter-stars" data-k="' + k + '">' + [1, 2, 3, 4, 5].map(function (v) { return '<button type="button" data-v="' + v + '">★</button>'; }).join('') + '</span></div>'; };
+    const ligne = function (k, lab) { return '<div class="noter-q"><span class="noter-lab">' + lab + '</span><span class="noter-stars" data-k="' + k + '">' + [1, 2, 3, 4, 5].map(function (v) { return '<button type="button" data-v="' + v + '" onclick="Result.noterEtoile(this)">★</button>'; }).join('') + '</span></div>'; };
     ov.innerHTML = '<div class="noter-card"><button type="button" class="noter-x" aria-label="Fermer">×</button>'
       + '<div class="noter-titre">Votre avis sur ce portrait</div>'
       + '<p class="noter-sub">Trente secondes, trois étoiles, et vos mots si le cœur vous en dit.</p>'
@@ -2785,23 +2814,14 @@ Result.noterPortrait = function(){
       + '<button type="button" class="noter-envoyer" id="noter-envoyer" disabled>Envoyer mon avis</button>'
       + '<p class="noter-etat" id="noter-etat"></p></div>';
     document.body.appendChild(ov);
-    const notes = {};
-    ov.querySelectorAll('.noter-stars button').forEach(function (b) {
-      b.onclick = function(){
-        const grp = this.parentNode;
-        notes[grp.getAttribute('data-k')] = parseInt(this.getAttribute('data-v'), 10);
-        const v = parseInt(this.getAttribute('data-v'), 10);
-        grp.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', parseInt(x.getAttribute('data-v'), 10) <= v); });
-        if (Object.keys(notes).length >= 3) document.getElementById('noter-envoyer').disabled = false;
-      };
-    });
+    notesAvis = {};
     ov.querySelector('.noter-x').onclick = function(){ ov.remove(); };
     ov.onclick = function (e) { if (e.target === ov) ov.remove(); };
     document.getElementById('noter-envoyer').onclick = function(){
       const btn = this;
       btn.disabled = true;
       btn.textContent = 'Envoi en cours...';
-      const avis = Object.assign({}, notes, { AVIS_VERBATIM: (document.getElementById('noter-verbatim').value || '').trim() || undefined });
+      const avis = Object.assign({}, notesAvis, { AVIS_VERBATIM: (document.getElementById('noter-verbatim').value || '').trim() || undefined });
       fetch(API_BASE + '/progression', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2809,6 +2829,8 @@ Result.noterPortrait = function(){
       }).then(function (rp) { return rp.json(); }).then(function (d) {
         if (d && d.ok) {
           ov.querySelector('.noter-card').innerHTML = '<div class="noter-titre">Merci !</div><p class="noter-sub">Votre avis nourrit directement la qualité des prochains portraits.</p>';
+          window.__avisFait = true;
+          try { if (window.App && App.majChecklist) App.majChecklist(); } catch (e) {}
           setTimeout(function(){ ov.remove(); }, 2600);
         } else {
           document.getElementById('noter-etat').textContent = 'L' + String.fromCharCode(39) + 'envoi a échoué (' + ((d && (d.error || d.raison)) || 'inconnu') + '). Réessayez.';
