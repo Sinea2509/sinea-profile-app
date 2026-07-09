@@ -2099,7 +2099,7 @@ img{max-width:100%;}
 .ckl-tete span{font-size:12px;font-weight:700;color:#5E59C7;}
 .ckl-bar{height:7px;background:#EFEDE6;border-radius:5px;margin:9px 0 6px;overflow:hidden;}
 .ckl-bar i{display:block;height:100%;background:linear-gradient(90deg,#7CBB8A,#5E59C7);border-radius:5px;transition:width 0.5s ease;}
-.ckl-serre{display:block;width:100%;height:auto;margin:2px 0 8px;}
+.ckl-serre{display:block;width:100%;max-width:560px;height:auto;margin:2px auto 8px;}
 .ckl-row{display:flex;align-items:center;gap:9px;padding:6px 2px;border-top:1px solid #F1EFE8;}
 .ckl-row .ckl-ic{flex:0 0 18px;text-align:center;font-size:13px;color:#B9B4A6;}
 .ckl-row.fait .ckl-ic{color:#3E7C4F;font-weight:800;}
@@ -2111,3 +2111,27 @@ img{max-width:100%;}
 @keyframes cklBloom{from{opacity:0;transform:translateY(10px) scale(0.4);}to{opacity:1;transform:translateY(0) scale(1);}}
 .ckl-bloom{animation:cklBloom 0.5s ease-out both;}
 @media (prefers-reduced-motion: reduce){.ckl-bloom{animation:none;}}
+
+/* ===== v85 : l'espace au cordeau sur mobile ===== */
+@media (max-width: 640px){
+  .espace-hero{flex-direction:column;padding:20px 15px;gap:10px;}
+  .espace-hero-perso{margin:0 auto;}
+  .espace-hero-perso img, .espace-hero-perso span{width:96px;height:96px;}
+  .esp-nav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;}
+  .esp-nav::-webkit-scrollbar{display:none;}
+  .esp-nav-b{white-space:nowrap;flex:0 0 auto;}
+  .acc-resume{padding:10px 12px;gap:9px;}
+  .acc-cta{margin-left:0;width:100%;text-align:center;}
+  .ckl{padding:13px 13px;}
+  .ckl-row{flex-wrap:wrap;row-gap:5px;}
+  .ckl-cta{margin-left:27px;}
+  .esp-rem{padding:16px 14px;}
+  .esp-nea{padding:11px 12px;gap:9px;}
+  .esp-nea-img img{width:38px;height:38px;}
+  .pari-l span{flex:0 0 100px;font-size:11px;}
+  .mir-luc{padding:9px 11px;gap:8px;}
+  .mir-luc-score{font-size:20px;}
+  #espace-miroir svg, #esp-cp-matrice svg, .ckl-serre{max-width:100%;height:auto;}
+  .fcx-pal, .fcx-fac{padding:6px 9px;}
+  .q16-slider span{font-size:10px;}
+}

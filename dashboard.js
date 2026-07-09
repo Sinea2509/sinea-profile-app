@@ -5,12 +5,14 @@
   const GRILLE_URL = API_BASE + "/grille_entretien";
   const CODEX_URL = API_BASE + "/codex";
   const COACH_ENVOI_URL = API_BASE + "/coach_envoi";
+  const LIEN_URL = API_BASE + "/lien_apprenant";
+  const DIAG_URL = API_BASE + "/diag_env";
   let entrepriseCourante = "";
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v83');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v83]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v86');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v86]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";
@@ -871,6 +873,8 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
             <div style="flex:1"><div class="fm-nom">${esc(m.nom||'')}</div><div class="fm-arch" style="color:${col}">${esc(m.dominante||'')} · ${esc(FAM_LABELS[f]||f)}</div></div>
             ${m.email ? `<button class="fm-pdf-btn" id="fm-pdf-btn" onclick="telechargerPortraitMembre(${idx})">Portrait PDF</button>` : ''}
             ${m.email ? `<button class="fm-pdf-btn" onclick="ouvrirEnvoiCoach('apprenant', ${idx})">Envoyer au coach</button>` : ''}
+            ${m.email ? `<button class="fm-pdf-btn" onclick="voirCommeApprenant(${idx}, this)">Voir comme lui</button>` : ''}
+            ${m.email ? `<button class="fm-pdf-btn" onclick="copierLienApprenant(${idx}, this)">Copier son lien</button>` : ''}
           </div>
           <div class="fm-section"><div class="fm-section-titre">Comment le manager</div>${mgrHtml}</div>
           ${fiabHtml}
@@ -1426,6 +1430,42 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
   const DIMS_LIBELLES = { delegation: 'Délégation', feedback: 'Feedback', cadrage: 'Cadrage', posture: 'Posture', closing: 'Closing', objection: 'Objection' };
   const TRAITS_FR = { O: 'Ouverture', C: 'Conscience', E: 'Extraversion', A: 'Agréabilité', N: 'Stabilité émotionnelle', S: 'Stabilité émotionnelle' };
   // ===== La mission au coach : un apprenant ou tout le groupe =====
+  // ===== L'incarnation : ouvrir l'espace d'un apprenant comme si on était lui =====
+  function copierLienApprenant(idx, btn){
+    const m = repsCourants[idx];
+    if (!m || !m.email) return;
+    const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    fetch(LIEN_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cle: cleAcces, email: m.email }) })
+      .then(function (r2) { return r2.json(); })
+      .then(function (dj) {
+        if (dj && dj.ok && dj.lien) {
+          const fini = function () { if (btn) { btn.textContent = 'Copié ✓'; setTimeout(function () { btn.disabled = false; btn.textContent = label; }, 1800); } };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(dj.lien).then(fini, function () { window.prompt('Copiez le lien :', dj.lien); fini(); });
+          else { window.prompt('Copiez le lien :', dj.lien); fini(); }
+        } else {
+          if (btn) { btn.disabled = false; btn.textContent = label; }
+          alert((dj && dj.error) || 'Lien indisponible.');
+        }
+      })
+      .catch(function () { if (btn) { btn.disabled = false; btn.textContent = label; } alert('Réseau indisponible.'); });
+  }
+
+  function voirCommeApprenant(idx, btn){
+    const m = repsCourants[idx];
+    if (!m || !m.email) return;
+    const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Ouverture...'; }
+    fetch(LIEN_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cle: cleAcces, email: m.email }) })
+      .then(function (r2) { return r2.json(); })
+      .then(function (dj) {
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+        if (dj && dj.ok && dj.lien) window.open(dj.lien, '_blank');
+        else alert((dj && dj.error) || 'Lien indisponible.');
+      })
+      .catch(function () { if (btn) { btn.disabled = false; btn.textContent = label; } alert('Réseau indisponible.'); });
+  }
+
   function ouvrirEnvoiCoach(mode, idx){
     const m = mode === 'apprenant' ? repsCourants[idx] : null;
     if (mode === 'apprenant' && (!m || !m.email)) return;
@@ -1443,11 +1483,31 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       + '<label class="ec-lab">Votre message <i>(facultatif, en tête de l\'email)</i></label><textarea id="ec-msg" class="ec-in ec-txt" placeholder="Contexte de la mission, dates, attentes..."></textarea>'
       + '<button type="button" class="ec-btn" id="ec-btn" onclick="envoyerCoach(&quot;' + mode + '&quot;,' + (idx == null ? 'null' : idx) + ')">Envoyer la mission</button>'
       + '<p class="ec-etat" id="ec-etat"></p>'
+      + '<button type="button" class="ec-diag" onclick="testerConfigEnvoi()">Vérifier la configuration d\'envoi</button>'
+      + '<p class="ec-diag-r" id="ec-diag-r"></p>'
       + '</div></div>';
     document.body.insertAdjacentHTML('beforeend', html);
     const inp = document.getElementById('ec-email');
     if (inp) inp.focus();
   }
+  function testerConfigEnvoi(){
+    const zone = document.getElementById('ec-diag-r');
+    if (!zone) return;
+    zone.textContent = 'Interrogation du back...';
+    fetch(DIAG_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cle: cleAcces }) })
+      .then(function (r2) { return r2.json(); })
+      .then(function (dj) {
+        if (!dj || !dj.presentes) { zone.textContent = (dj && dj.error) || 'Vérificateur indisponible : déployez le back v42.'; return; }
+        const p = dj.presentes;
+        zone.innerHTML = 'Brevo : <b>' + (p.BREVO_API_KEY ? 'configurée ✓' : 'ABSENTE sur ce back ✗') + '</b>'
+          + ' · Expéditeur : <b>' + (p.BREVO_EXPEDITEUR ? 'personnalisé' : 'défaut Sinéa') + '</b>'
+          + ' · PDFShift : <b>' + (p.PDFSHIFT_API_KEY ? '✓' : '✗') + '</b>'
+          + ' · IA : <b>' + (p.ANTHROPIC_API_KEY ? '✓' : '✗') + '</b>'
+          + (p.BREVO_API_KEY ? '' : '<br/>La clé Brevo vit ailleurs (autre projet Vercel ou autre nom). Ajoutez BREVO_API_KEY au projet du back puis redéployez.');
+      })
+      .catch(function () { zone.textContent = 'Réseau indisponible.'; });
+  }
+
   function envoyerCoach(mode, idx){
     const email = (document.getElementById('ec-email') || {}).value || '';
     const etat = document.getElementById('ec-etat');
@@ -1928,6 +1988,21 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     ouvrirImpression('Brief de développement · ' + (m.nom || '') + ' · ' + (briefDevCourant._poste || ''), '<div class="bd-brief-pdf">' + corps + '</div>');
   }
 
+  // La matière calculée du portail, embarquée dans le portrait PDF
+  function extraPortrait(m){
+    try {
+      const comps = compsDe(m);
+      if (!comps || !window.Visuels) return {};
+      const fam = { RELATION: [], ACTION: [], STRUCTURE: [], VISION: [] };
+      comps.forEach(function (c2) { if (fam[c2.famille]) fam[c2.famille].push(c2.potentiel); });
+      const familles = {};
+      Object.keys(fam).forEach(function (k) { familles[k] = fam[k].length ? Math.round(fam[k].reduce(function (a, b) { return a + b; }, 0) / fam[k].length) : 0; });
+      const zones = { appui: 0, levier: 0, gisement: 0, economie: 0 };
+      comps.forEach(function (c2) { if (zones[c2.zone] != null) zones[c2.zone]++; });
+      return { familles: familles, zones: zones, pistes: (m.pistesLibelles || []).slice(0, 6), quadrant: Visuels.quadrantSvg(comps, { compact: true }) };
+    } catch (e) { return {}; }
+  }
+
   async function telechargerPortraitMembre(idx){
     const m = repsCourants[idx];
     const btn = document.getElementById('fm-pdf-btn');
@@ -1935,7 +2010,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     const texte = btn.textContent;
     btn.textContent = 'Génération…'; btn.disabled = true;
     try{
-      const rep = await fetch(PDF_PORTRAIT_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cle: cleAcces, email: m.email }) });
+      const rep = await fetch(PDF_PORTRAIT_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cle: cleAcces, email: m.email, extra: extraPortrait(m) }) });
       if(!rep.ok) throw new Error('indisponible');
       const blob = await rep.blob();
       const url = URL.createObjectURL(blob);
