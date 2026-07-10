@@ -11,8 +11,8 @@
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v86');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v86]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v112');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v112]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";
@@ -1233,7 +1233,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     const couts = moyDe(reps.map(r => r.coutUsd));
     const nbSd = reps.filter(r => (r.nbSeedup || 0) > 0).length;
     const kpi = (n, l) => '<div class="sup-kpi"><div class="sup-kpi-n">' + (n === null || n === undefined ? '·' : n) + '</div><div class="sup-kpi-l">' + l + '</div></div>';
-    let h = '<div class="panel ce-panel"><div class="ce-head"><div><div class="panel-title">Tableau de bord de campagne</div><div class="panel-sub">La vue consolidée : qualité vécue, compétences, preuves et fil du coach.</div></div><div class="tb-actions"><button class="exp-btn exp-mini" onclick="exporterTableauCampagne()">Exporter (PDF)</button>' + (SUPER ? ' <button class="exp-btn exp-mini" id="btn-csv-camp" onclick="exporterCsvCampagne()">CSV de cette campagne</button>' : '') + '</div></div>';
+    let h = '<div class="panel ce-panel"><div class="ce-head"><div><div class="panel-title">Tableau de bord de campagne</div><div class="panel-sub">La vue consolidée : qualité vécue, compétences, preuves et fil du coach.</div></div><div class="tb-actions"><button class="exp-btn exp-mini" onclick="exporterTableauCampagne()">Exporter (PDF)</button>' + ' <button class="exp-btn exp-mini" id="btn-csv-camp" onclick="exporterCsvCampagne()">CSV de cette campagne</button>' + '</div></div>';
     h += '<div class="sup-kpis tb-kpis">' + kpi(reps.length, 'Terminés') + kpi(nR !== null ? nR + '/5' : null, 'Ressemblance') + kpi(nU !== null ? nU + '/5' : null, 'Actions') + kpi(nC !== null ? nC + '/5' : null, 'Clarté') + kpi(pTot ? Math.round(100 * pOk / pTot) + '%' : null, 'Paris justes') + kpi(fiabs, 'Fiabilité') + kpi(couts !== null ? couts + ' $' : null, 'Coût moyen') + kpi(nbSd, 'Sur SeedUp') + '</div>';
     // La carte des compétences : potentiel (barre) contre expression (curseur)
     if (window.Visuels && (coll.matrice || []).length){
@@ -2145,6 +2145,38 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     const out=[]; (repsTous||[]).forEach((r,i)=>{ if(String(r.statut||'').toLowerCase().startsWith('termin')) out.push(i); });
     return out;
   }
+  function trierMembres(btn){
+    const mode = btn.getAttribute('data-tri');
+    document.querySelectorAll('.tri-btn').forEach(function (b) { b.classList.toggle('on', b === btn); });
+    const grid = document.querySelector('#content .membres-grid');
+    if (!grid) return;
+    const items = Array.from(grid.querySelectorAll('.membre'));
+    const rangFam = function (f) { const i = FAM_ORDER.indexOf(f); return i < 0 ? 99 : i; };
+    items.sort(function (a, b) {
+      if (mode === 'nom') return (a.getAttribute('data-nom') || '').localeCompare(b.getAttribute('data-nom') || '');
+      if (mode === 'famille') {
+        const df = rangFam(a.getAttribute('data-fam')) - rangFam(b.getAttribute('data-fam'));
+        return df !== 0 ? df : (a.getAttribute('data-nom') || '').localeCompare(b.getAttribute('data-nom') || '');
+      }
+      return Number(a.getAttribute('data-ordre') || 0) - Number(b.getAttribute('data-ordre') || 0);
+    });
+    items.forEach(function (m) { grid.appendChild(m); });
+  }
+  function copierRelance(lien){
+    const txt = "Bonjour, votre profil Sinéa vous attend. Douze minutes suffisent pour découvrir votre archétype et vos leviers. Voici votre lien " + lien;
+    const fini = function(){ const z = document.getElementById('attente-ok'); if (z){ z.textContent = 'Copié ✓'; setTimeout(function(){ z.textContent = ''; }, 2200); } };
+    if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(fini).catch(function(){}); return; }
+    const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    ta.remove(); fini();
+  }
+  function filtrerMembres(q){
+    const norme = String(q || '').toLowerCase().trim();
+    document.querySelectorAll('#content .membre').forEach(function (m) {
+      const t = (m.textContent || '').toLowerCase();
+      m.style.display = (!norme || t.indexOf(norme) >= 0) ? '' : 'none';
+    });
+  }
   function toggleMembre(i){
     if(!selectionEquipe) return;
     if(selectionEquipe.has(i)) selectionEquipe.delete(i); else selectionEquipe.add(i);
@@ -2462,6 +2494,8 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
         <button class="sel-btn" onclick="selectionTous()">Tout cocher</button>
         <button class="sel-btn" onclick="selectionAucun()">Tout décocher</button>
       </div>
+      <div class="membres-filtre"><input type="search" id="membres-filtre" placeholder="Filtrer par nom ou archétype…" oninput="filtrerMembres(this.value)"></div>
+      <div class="membres-tri"><span class="tri-lab">Trier</span><button class="tri-btn on" data-tri="defaut" onclick="trierMembres(this)">Arrivée</button><button class="tri-btn" data-tri="nom" onclick="trierMembres(this)">Nom</button><button class="tri-btn" data-tri="famille" onclick="trierMembres(this)">Famille</button></div>
       <div class="membres-grid">`;
     repsCourants = repsTous;
     if (fichePendingEmail){
@@ -2474,9 +2508,23 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       if(!String(r.statut||'').toLowerCase().startsWith('termin')) continue;
       const f=(r.famille||'').toUpperCase(); const col=FAM_COLORS[f]||'#999';
       const coche = selectionEquipe.has(ri);
-      html += `<div class="membre membre-clic ${coche?'':'membre-exclu'}"><label class="membre-check" onclick="event.stopPropagation()"><input type="checkbox" ${coche?'checked':''} onchange="toggleMembre(${ri})"></label><div class="membre-corps" onclick="ouvrirMembre(${ri})"><div class="membre-ava" style="background:${col}">${esc(initiales(r.nom))}</div><div class="membre-info"><div class="membre-nom">${esc(r.nom||'')}</div><div class="membre-arch">${esc(r.dominante||'')}</div></div><span class="membre-fleche">›</span></div></div>`;
+      html += `<div class="membre membre-clic ${coche?'':'membre-exclu'}" data-ordre="${ri}" data-fam="${f}" data-nom="${esc((r.nom||'').toLowerCase())}"><label class="membre-check" onclick="event.stopPropagation()"><input type="checkbox" ${coche?'checked':''} onchange="toggleMembre(${ri})"></label><div class="membre-corps" onclick="ouvrirMembre(${ri})"><div class="membre-ava" style="background:${col}">${esc(initiales(r.nom))}</div><div class="membre-info"><div class="membre-nom">${esc(r.nom||'')}</div><div class="membre-arch">${esc(r.dominante||'')}</div></div><span class="membre-fleche">›</span></div></div>`;
     }
     html += `</div></div>`;
+
+    const enAttente = repsTous.filter(function (r) { return !String(r.statut || '').toLowerCase().startsWith('termin'); });
+    if (enAttente.length){
+      const lienCamp = API_BASE.replace('/api', '') + '/?token=' + encodeURIComponent(camp.code || codeCampagneCourant || '');
+      html += `
+      <div class="section-label">En attente (${enAttente.length})</div>
+      <div class="attente-bloc">
+        <div class="attente-chips">${enAttente.map(function (r) { return `<span class="attente-chip">${esc(r.prenom || r.nom || r.email || '')}</span>`; }).join('')}</div>
+        <div class="attente-actions">
+          <button class="attente-copier" onclick="copierRelance('${esc(lienCamp)}')">Copier un message de relance</button>
+          <span class="attente-ok" id="attente-ok"></span>
+        </div>
+      </div>`;
+    }
 
     // ==== Mode recrutement : profil cible + adéquation des candidats ====
     const modeRecrut = (camp.mode==='recrutement') || !!camp.profilCible || vueRecrutementForcee;

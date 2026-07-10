@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v86 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v86]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v112 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v112]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -638,6 +638,8 @@ const App = (() => {
     const scr = document.getElementById('screen-espace');
     scr.classList.add('active');
     // charger les données depuis le serveur
+    // porte d'audit : les bancs Chrome injectent une identité de test ici
+    if (!identite.email && window.__auditEmail) identite.email = window.__auditEmail;
     if (!identite.email) return;
     fetch(PROGRESSION_URL, {
       method: 'POST',
@@ -712,11 +714,30 @@ const App = (() => {
   // Déterministe, calculé en local depuis le profil déjà chargé : la personne
   // voit ses appuis et ses opportunités, et ses défis SeedUp prennent sens.
   // L'espace en deux onglets : le développement d'un côté, le miroir à part
+  function majValiderMiroir(){
+    const btn = document.getElementById('mir-valider');
+    if (!btn) return;
+    const nb = MIROIR_QUESTIONS.filter(function (q2) { return q2.type !== 'texte'; }).length;
+    const k = Object.keys(_mirRep).length;
+    const rel = !!document.querySelector('.mir-page .mir-rel.on');
+    const pret = k >= nb && rel;
+    btn.disabled = !pret;
+    btn.textContent = pret ? 'Envoyer mon regard' : (k < nb ? 'Envoyer mon regard · ' + k + '/' + nb : 'Choisissez votre relation ci-dessus');
+  }
   function choisirRelMiroir(btn){
     btn.parentNode.querySelectorAll('.mir-rel').forEach(function (b) { b.classList.remove('on'); });
     btn.classList.add('on');
+    majValiderMiroir();
   }
   function ouvrirCompDepuisCarte(id){
+    try {
+      const sv = document.querySelector('#esp-cp-matrice svg');
+      if (sv) {
+        sv.querySelectorAll('.q16-sel').forEach(function (g2) { g2.classList.remove('q16-sel'); });
+        const g3 = sv.querySelector('g[data-comp="' + id + '"]');
+        if (g3) g3.classList.add('q16-sel');
+      }
+    } catch (e) {}
     const zone = document.getElementById('esp-cp-focus');
     if (!zone || !window.Competences || !compsEspaceCourant) return;
     const c2 = compsEspaceCourant.find(function (x) { return x.id === id; });
@@ -743,8 +764,8 @@ const App = (() => {
 
   function espTab(t){
     const groupes = {
-      accueil: ['espace-accueil-resume', 'espace-checklist', 'espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat'],
-      dev: ['espace-cockpit', 'espace-nea', 'espace-remesure', 'espace-competences', 'espace-seedup'],
+      accueil: ['espace-accueil-resume', 'espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat'],
+      dev: ['espace-cockpit', 'espace-checklist', 'espace-nea', 'espace-remesure', 'espace-competences', 'espace-seedup'],
       miroir: ['espace-miroir'],
     };
     const cache = function (id, visible) { const e = document.getElementById(id); if (e) e.classList.toggle('esp-hide', !visible); };
@@ -756,7 +777,7 @@ const App = (() => {
     });
   }
 
-  // ===== Le cockpit : l'action du jour, la frise des 90 jours, les engagements =====
+  // ===== Le cockpit : l'action du jour et les engagements, le jardin juste dessous =====
   function poserCockpit(data, carte){
     const slot = document.getElementById('espace-cockpit');
     if (!slot || !data) return;
@@ -787,9 +808,9 @@ const App = (() => {
     if (jour !== null && jour >= 83 && !remFaite) {
       act = { t: 'Votre re-mesure des 90 jours est ouverte', p: 'Dix minutes pour mesurer le chemin parcouru depuis votre portrait.', cta: 'Faire ma re-mesure', fn: "App.cockpitVers('espace-remesure')" };
     } else if (aJeton && nbRegards === 0) {
-      act = { t: 'Votre miroir attend ses premiers regards', p: 'Trois messages prêts à copier vous attendent, trois minutes pour vos collègues.', cta: 'Ouvrir le miroir', fn: "App.espTab('miroir')" };
+      act = { t: 'Votre Feedback 360 attend ses premiers regards', p: 'Trois messages prêts à copier vous attendent, trois minutes pour vos collègues.', cta: 'Ouvrir les invitations', fn: "App.allerFeedback('inviter')" };
     } else if (aJeton && !mir.prediction && nbRegards < 2) {
-      act = { t: 'Scellez votre pari du miroir', p: 'Trente secondes pour prédire le regard des autres. Comparé plus tard : votre score de lucidité.', cta: 'Faire mon pari', fn: "App.espTab('miroir')" };
+      act = { t: 'Faites votre pronostic Feedback 360', p: 'Trente secondes pour prédire le regard des autres. À l\'arrivée de leurs réponses : votre score de lucidité.', cta: 'Faire mon pronostic', fn: "App.allerFeedback('pari')" };
     } else if (!pistes.length) {
       act = { t: 'Choisissez vos premières actions', p: 'Vos opportunités sont identifiées : reliez-les à des actions concrètes pour lancer le programme.', cta: 'Voir mes compétences', fn: "App.cockpitVers('espace-competences')" };
     } else if (sd.length) {
@@ -797,16 +818,9 @@ const App = (() => {
       if (dernier >= 3) act = { t: 'Votre jardin attend sa prochaine pousse', p: 'Dernier défi ancré il y a ' + dernier + ' jours. Une petite action aujourd\'hui relance la dynamique.', cta: 'Voir mes défis', fn: "App.cockpitVers('espace-seedup')" };
       else act = { t: 'La dynamique est en route', p: 'Continuez sur votre lancée, chaque défi ancré fait grandir le jardin.', cta: 'Voir mon jardin', fn: "App.cockpitVers('espace-seedup')" };
     } else if (!aJeton && jour !== null && jour >= 7) {
-      act = { t: 'Et si vous demandiez un regard extérieur ?', p: 'Le miroir 360 confronte votre lecture à celle de vos collègues, en trois minutes pour eux.', cta: 'Découvrir le miroir', fn: "App.espTab('miroir')" };
+      act = { t: 'Et si vous demandiez un regard extérieur ?', p: 'Le Feedback 360 confronte votre lecture à celle de vos collègues, en trois minutes pour eux.', cta: 'Découvrir le Feedback 360', fn: "App.allerFeedback('haut')" };
     }
-    let frise = '';
     if (window.Visuels) {
-      frise = Visuels.frise90Svg([
-        { label: 'Portrait', pos: 0, fait: true },
-        { label: 'Plan choisi', pos: 8, fait: pistes.length > 0 },
-        { label: 'Miroir 360', pos: 34, fait: nbRegards >= 2 },
-        { label: 'Re-mesure', pos: 100, fait: remFaite },
-      ], jour !== null ? Math.min(jour, 90) : null);
     }
     let eng = '';
     if (pistes.length && window.Competences) {
@@ -817,13 +831,13 @@ const App = (() => {
         return '<div class="ck-eng"><span class="ck-eng-etat' + (enCours ? ' on' : '') + '">' + (enCours ? '✓ en cours' : 'à lancer') + '</span><span class="ck-eng-txt">' + echapValeur(l) + (mm ? ' <i>· ' + echapValeur(mm.nom) + '</i>' : '') + '</span></div>';
       }).join('');
     }
-    if (!act && !frise && !eng) { slot.innerHTML = ''; return; }
+    if (!act && !eng) { slot.innerHTML = ''; return; }
     const kick = 'Aujourd' + String.fromCharCode(39) + 'hui';
     slot.innerHTML = '<div class="esp-rem ck">'
       + (act
         ? '<div class="esp-rem-kicker">' + kick + (serie >= 2 ? ' · série de ' + serie + ' jours' : '') + '</div><div class="esp-rem-titre">' + act.t + '</div><p class="ck-p">' + act.p + '</p><button type="button" class="esp-rem-btn" onclick="' + act.fn + '">' + act.cta + '</button>'
         : '<div class="esp-rem-kicker">Votre programme des 90 jours</div>')
-      + frise + (frise ? '<p class="ck-note">La frise avance seule, jour après jour, depuis la date de votre portrait.</p>' : '') + eng + '</div>';
+      + eng + '</div>';
   }
   function cockpitVers(id){
     espTab('dev');
@@ -894,9 +908,15 @@ const App = (() => {
         });
       }
     } catch (e) { console.warn("[Sinéa]", e); }
-    h += '<button type="button" class="esp-rem-btn esp-cp-mat-btn" onclick="App.toggleMatriceEspace()">Voir ma carte des 16</button>'
+    h += '<button type="button" class="esp-rem-btn esp-cp-mat-btn" onclick="App.toggleMatriceEspace()">Découvrir ma Constellation</button>'
       + '<div id="esp-cp-matrice" style="display:none">'
-      + (window.Visuels ? Visuels.quadrantSvg(comps, { deltas: deltasQ, compact: true, clic: 'App.ouvrirCompDepuisCarte' }) : '')
+      + '<div class="cstl"><div class="cstl-tete"><b>Ma Constellation</b><span>Seize compétences, trente-deux facettes. Les étoiles étiquetées sont celles qui comptent pour vous, touchez les autres pour les découvrir.</span><button type="button" class="ckl-cta" onclick="App.ouvrirGlossaire()">Le glossaire · 16 + 32</button></div>'
+      + '<div class="cstl-grid"><div class="cstl-carte">'
+      + (window.Visuels ? Visuels.quadrantSvg(comps, { deltas: deltasQ, compact: true, clic: 'App.ouvrirCompDepuisCarte', labels: idsAValeur(comps) }) : '')
+      + '<span class="cstl-hint">Glissez la carte pour explorer ses seize étoiles</span>'
+      + '<span class="cstl-aide">Touchez une étoile : sa fiche s\'ouvre juste dessous.</span>'
+      + '</div><div class="cstl-lecture">' + lectureCarte(comps) + '</div></div>'
+      + '</div>'
       + (deltasQ ? '<div class="q16-slider"><span>J0</span><input type="range" id="esp-q16-t" min="0" max="100" value="100" aria-label="Rejouer les 90 jours"><span>J90</span></div>' : '')
       + '<div id="esp-cp-focus"></div>'
       + '</div>';
@@ -911,6 +931,31 @@ const App = (() => {
     const ouvert = d.style.display !== 'none';
     d.style.display = ouvert ? 'none' : 'block';
     if (f) f.textContent = ouvert ? '▸' : '▾';
+  }
+  // ===== La lecture de la carte : ce que la Constellation dit, en clair =====
+  function idsAValeur(comps){
+    const appuis = comps.filter(function (x) { return x.zone === 'appui'; }).sort(function (a, b) { return (b.potentiel + b.expression) - (a.potentiel + a.expression); }).slice(0, 3);
+    const opps = comps.filter(function (x) { return x.zone === 'opportunite'; }).sort(function (a, b) { return (b.potentiel - b.expression) - (a.potentiel - a.expression); }).slice(0, 2);
+    return appuis.concat(opps).map(function (x) { return x.id; });
+  }
+  function chipCarte(c2, coul){
+    return '<button type="button" class="cl-chip" style="border-color:' + coul + ';color:' + coul + '" onclick="App.ouvrirCompDepuisCarte(&quot;' + c2.id + '&quot;)">' + echapValeur(c2.nom) + '</button>';
+  }
+  function lectureCarte(comps){
+    const appuis = comps.filter(function (x) { return x.zone === 'appui'; }).sort(function (a, b) { return (b.potentiel + b.expression) - (a.potentiel + a.expression); }).slice(0, 3);
+    const opps = comps.filter(function (x) { return x.zone === 'opportunite'; }).sort(function (a, b) { return (b.potentiel - b.expression) - (a.potentiel - a.expression); }).slice(0, 2);
+    const nVeille = comps.filter(function (x) { return x.zone === 'economie'; }).length;
+    let h = '<div class="cl-kicker">La lecture de votre carte</div>';
+    if (appuis.length) {
+      h += '<div class="cl-bloc"><div class="cl-t" style="color:#3EAD8B">Vos appuis signature</div><div class="cl-chips">' + appuis.map(function (x) { return chipCarte(x, '#3EAD8B'); }).join('') + '</div><p class="cl-p">Nature et pratique alignées au plus haut : confiez-leur du poids, faites-les voir.</p></div>';
+    }
+    if (opps.length) {
+      h += '<div class="cl-bloc"><div class="cl-t" style="color:#E08A3C">Vos opportunités rentables</div><div class="cl-chips">' + opps.map(function (x) { return chipCarte(x, '#E08A3C'); }).join('') + '</div><p class="cl-p">' + opps.map(function (x) { return echapValeur(x.nom) + ' : potentiel ' + Math.round(x.potentiel) + ', exprimé ' + Math.round(x.expression); }).join(' · ') + '. Le moteur est là, quatre-vingt-dix jours de pratique suffisent à le faire parler.</p></div>';
+    }
+    if (!appuis.length && !opps.length) h += '<p class="cl-p">Votre carte est équilibrée : touchez les étoiles pour explorer chaque compétence.</p>';
+    if (nVeille) h += '<p class="cl-veille">' + nVeille + ' compétence' + (nVeille > 1 ? 's' : '') + ' en veille : normal, personne ne brille sur seize fronts.</p>';
+    h += '<p class="cl-p cl-fin">Chaque étoile a sa fiche : trajectoire en quatre paliers et deux facettes à travailler.</p>';
+    return h;
   }
   function toggleMatriceEspace(){
     const d = document.getElementById('esp-cp-matrice');
@@ -1353,12 +1398,26 @@ const App = (() => {
       }).join('') + '</div></div>';
   }
 
+  // ===== L'atterrissage précis dans le Feedback 360 =====
+  function allerFeedback(cible){
+    espTab('miroir');
+    setTimeout(function () {
+      if (cible === 'pari') {
+        const corps = document.querySelector('.pari-corps');
+        if (corps && corps.classList.contains('esp-hide')) corps.classList.remove('esp-hide');
+      }
+      const sel = cible === 'pari' ? '.pari-open' : cible === 'inviter' ? '.esp-mir-msg' : '#espace-miroir';
+      const el = document.querySelector(sel) || document.getElementById('espace-miroir');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: cible === 'haut' ? 'start' : 'center' });
+    }, 140);
+  }
   function copierMsgMiroir(btn){
     const inp = document.getElementById('esp-mir-input');
     const lien = (inp && inp.value) || '';
     const txt = String(btn.getAttribute('data-msg') || '').replace('[LIEN]', lien || '[créez votre lien ci-dessous]');
-    const fini = function(){ const av = btn.textContent; btn.textContent = 'Copié ✓'; setTimeout(function(){ btn.textContent = av; }, 2000); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(fini).catch(function(){});
+    const fini = function(lib){ const av = btn.textContent; btn.textContent = lib || 'Copié ✓'; setTimeout(function(){ btn.textContent = av; }, 2000); };
+    if (navigator.share) { navigator.share({ text: txt }).then(function () { fini('Partagé ✓'); }).catch(function () {}); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { fini(); }).catch(function(){});
     else {
       const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
       try { document.execCommand('copy'); fini(); } catch (e) {} ta.remove();
@@ -1370,6 +1429,8 @@ const App = (() => {
     const slot = document.getElementById('espace-checklist');
     if (!slot) return;
     carte = carte || {};
+    checklistCtx = { data: data, carte: carte };
+    const jal = carte.jalons || {};
     const analyses = (data && data.analyses) || {};
     const modP = analyses.socle ? 'socle' : (Object.keys(analyses)[0] || 'socle');
     const sd = (carte.seedup && Array.isArray(carte.seedup.liste)) ? carte.seedup.liste : [];
@@ -1379,45 +1440,144 @@ const App = (() => {
     const aPlan = Object.values(carte).some(function (it) { return it && Array.isArray(it.pistes_libelles) && it.pistes_libelles.length; });
     const aAvis = window.__avisFait === true || Object.values(carte).some(function (it) { return it && it.avis && (it.avis.AVIS_RESSEMBLANCE || it.avis.AVIS_UTILITE || it.avis.AVIS_CLARTE); });
     const ITEMS = [
-      { id: 'lecture', label: 'Lire votre analyse en entier', pts: 10, fait: !!(carte.jalons && carte.jalons.lecture), cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
-      { id: 'voeux', label: 'Poser vos trois vœux au coach', pts: 15, fait: (Number(carte.voeux) || 0) >= 3, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
-      { id: 'avis', label: 'Évaluer votre portrait', pts: 10, fait: aAvis, cta: 'if(window.Result&&Result.noterPortrait)Result.noterPortrait()', lab: 'Noter · 30 s' },
-      { id: 'plan', label: 'Choisir les actions de votre plan', pts: 15, fait: aPlan, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Choisir' },
-      { id: 'defi1', label: 'Ancrer votre premier défi', pts: 15, fait: sd.length >= 1, cta: 'App.cockpitVers(&quot;espace-seedup&quot;)', lab: 'Ancrer' },
-      { id: 'miroir', label: 'Lancer votre miroir 360', pts: 10, fait: !!mir.jeton, cta: 'App.espTab(&quot;miroir&quot;)', lab: 'Lancer' },
-      { id: 'pari', label: 'Sceller votre pari', pts: 10, fait: !!mir.prediction, cta: 'App.espTab(&quot;miroir&quot;)', lab: 'Sceller' },
-      { id: 'regards2', label: 'Recevoir deux regards', pts: 15, fait: nbRegards >= 2, cta: 'App.espTab(&quot;miroir&quot;)', lab: 'Inviter' },
-      { id: 'remesure', label: 'Faire la re-mesure des 90 jours', pts: 30, fait: remFaite, cta: 'App.cockpitVers(&quot;espace-remesure&quot;)', lab: 'Mesurer' },
+      { id: 'lecture', label: 'Lire votre analyse', pts: 10, fait: !!jal.lecture || false, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
+      { id: 'voeux', label: 'Trois questions au coach', pts: 15, fait: !!jal.voeux || (Number(carte.voeux) || 0) >= 3, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
+      { id: 'avis', label: 'Noter votre portrait', pts: 10, fait: !!jal.avis || aAvis, cta: 'if(window.Result&&Result.noterPortrait)Result.noterPortrait()', lab: 'Noter · 30 s' },
+      { id: 'plan', label: 'Choisir votre plan d\'action', pts: 15, fait: !!jal.plan || aPlan, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Choisir' },
+      { id: 'defi1', label: 'Ancrer un premier défi', pts: 15, fait: !!jal.defi1 || sd.length >= 1, cta: 'App.cockpitVers(&quot;espace-seedup&quot;)', lab: 'Ancrer' },
+      { id: 'miroir', label: 'Lancer votre Feedback 360', pts: 10, fait: !!jal.miroir || !!mir.jeton, cta: 'App.allerFeedback(&quot;haut&quot;)', lab: 'Lancer' },
+      { id: 'pari', label: 'Faire votre pronostic', pts: 10, fait: !!jal.pari || !!mir.prediction, cta: 'App.allerFeedback(&quot;pari&quot;)', lab: 'Pronostiquer' },
+      { id: 'regards2', label: 'Recevoir deux regards', pts: 15, fait: !!jal.regards2 || nbRegards >= 2, cta: 'App.allerFeedback(&quot;inviter&quot;)', lab: 'Inviter' },
+      { id: 'remesure', label: 'Re-mesure des 90 jours', pts: 30, fait: !!jal.remesure || remFaite, cta: 'App.cockpitVers(&quot;espace-remesure&quot;)', lab: 'Mesurer' },
     ];
     const faits = ITEMS.filter(function (x) { return x.fait; });
+    const aFaire = ITEMS.filter(function (x) { return !x.fait; });
     const score = faits.reduce(function (a, x) { return a + x.pts; }, 0);
     const TOTAL = ITEMS.reduce(function (a, x) { return a + x.pts; }, 0);
-    const CL = ['#F98272', '#E8951A', '#2C97E0', '#5E59C7'];
-    let serreSvg = '<svg class="ckl-serre" viewBox="0 0 540 92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
-    ITEMS.forEach(function (x, i) {
-      const cx2 = 18 + i * 58;
-      serreSvg += '<path d="M' + (cx2 - 14) + ' 78 h28 l-4 12 h-20 z" fill="#E8DFC9"/>';
-      if (x.fait) {
-        const coul = CL[i % 4];
-        serreSvg += '<g class="ckl-bloom" style="animation-delay:' + (i * 0.06) + 's">'
-          + '<line x1="' + cx2 + '" y1="78" x2="' + cx2 + '" y2="48" stroke="#5B9E6B" stroke-width="2.5"/>'
-          + '<ellipse cx="' + (cx2 - 6) + '" cy="62" rx="6" ry="3" fill="#7CBB8A" transform="rotate(-28 ' + (cx2 - 6) + ' 62)"/>'
-          + [0, 72, 144, 216, 288].map(function (ang) { const r = ang * Math.PI / 180; return '<circle cx="' + (cx2 + 7 * Math.cos(r)).toFixed(1) + '" cy="' + (42 + 7 * Math.sin(r)).toFixed(1) + '" r="5" fill="' + coul + '"/>'; }).join('')
-          + '<circle cx="' + cx2 + '" cy="42" r="3.5" fill="#FFD34D"/></g>';
-      } else {
-        serreSvg += '<circle cx="' + cx2 + '" cy="74" r="3" fill="#B9B4A6"/>';
-      }
+
+    // ---- Le jardin d'aube : la scène signature des 90 jours ----
+    // Nuit violette vers aube corail, soleil levant, fleurs lumineuses.
+    const PALETTE_J = [['#FFB3A6', '#F98272'], ['#FFE0A3', '#F5A623'], ['#BDE3FF', '#5FB0F0'], ['#D9CBFF', '#8E7CE0'], ['#FFC2D6', '#F291AB']];
+    const BASE_J = [[36, 116], [96, 112], [156, 109], [216, 107], [276, 106], [336, 107], [396, 109], [456, 112], [516, 116]];
+    const HAUT_J = [26, 32, 28, 36, 30, 38, 32, 36, 50];
+    let defsJ = '<defs><linearGradient id="jgd-ciel" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0" stop-color="#2E2955"/><stop offset="0.42" stop-color="#6C5CE7"/><stop offset="0.74" stop-color="#C86A8A"/><stop offset="1" stop-color="#F5C6A5"/></linearGradient>'
+      + '<linearGradient id="jgd-col" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F5D46"/><stop offset="1" stop-color="#1F3D30"/></linearGradient>'
+      + '<radialGradient id="jgd-sol" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#FFD34D" stop-opacity="0.95"/><stop offset="1" stop-color="#FFD34D" stop-opacity="0"/></radialGradient>';
+    PALETTE_J.forEach(function (p2, k) {
+      defsJ += '<linearGradient id="jgd-p' + k + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + p2[0] + '"/><stop offset="1" stop-color="' + p2[1] + '"/></linearGradient>'
+        + '<radialGradient id="jgd-h' + k + '" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="' + p2[1] + '" stop-opacity="0.55"/><stop offset="1" stop-color="' + p2[1] + '" stop-opacity="0"/></radialGradient>';
     });
+    defsJ += '</defs>';
+    const fleurJ = function (i, fait) {
+      const bx = BASE_J[i][0], by = BASE_J[i][1];
+      const ty = by - HAUT_J[i];
+      const cr = 7;
+      if (!fait) {
+        return '<g opacity="0.85"><path d="M' + bx + ' ' + by + ' Q ' + (bx - 3) + ' ' + (by - 8) + ' ' + bx + ' ' + (by - 14) + '" stroke="#8B84B8" stroke-width="2" fill="none" stroke-linecap="round"/>'
+          + '<path d="M' + bx + ' ' + (by - 13) + ' q-3.4 -5 0 -9 q3.4 4 0 9 z" fill="#8B84B8"/></g>';
+      }
+      const k = i % PALETTE_J.length;
+      const finale = i === BASE_J.length - 1 && nEclos === BASE_J.length;
+      let f2 = '<g class="ckl-bloom" style="animation-delay:' + (i * 0.07) + 's">'
+        + '<path d="M' + bx + ' ' + by + ' Q ' + (bx + (i % 2 ? 5 : -5)) + ' ' + ((by + ty) / 2) + ' ' + bx + ' ' + (ty + cr) + '" stroke="#BFE8C6" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+        + '<path d="M' + bx + ' ' + (by - 10) + ' q-8 -2 -10 -9 q9 0 10 9 z" fill="#8FCF9E" opacity="0.9"/>'
+        + '<circle cx="' + bx + '" cy="' + ty + '" r="' + (finale ? 19 : 13) + '" fill="url(#jgd-h' + k + ')"/>';
+      const nP = finale ? 6 : 5;
+      for (let q2 = 0; q2 < nP; q2++) {
+        const a3 = -90 + q2 * 360 / nP;
+        f2 += '<ellipse cx="' + bx + '" cy="' + (ty - (finale ? 5.4 : 4.6)) + '" rx="3.5" ry="' + (finale ? 8 : 6.8) + '" fill="url(#jgd-p' + k + ')" stroke="rgba(255,255,255,0.4)" stroke-width="0.7" transform="rotate(' + (a3 + 90) + ' ' + bx + ' ' + ty + ')"/>';
+      }
+      if (finale) {
+        for (let q3 = 0; q3 < 5; q3++) {
+          const a4 = -54 + q3 * 72;
+          f2 += '<ellipse cx="' + bx + '" cy="' + (ty - 3.4) + '" rx="2.4" ry="4.8" fill="' + PALETTE_J[k][0] + '" transform="rotate(' + (a4 + 90) + ' ' + bx + ' ' + ty + ')"/>';
+        }
+      }
+      f2 += '<circle cx="' + bx + '" cy="' + ty + '" r="' + (finale ? 3.4 : 2.6) + '" fill="#FFD34D"/></g>';
+      return f2;
+    };
+    const nEclos = faits.length;
+    const prog = nEclos / ITEMS.length;
+    let serreSvg = '<svg class="ckl-serre" viewBox="0 0 560 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' + defsJ
+      + '<rect x="0" y="0" width="560" height="150" fill="url(#jgd-ciel)"/>'
+      + '<g opacity="' + (0.8 * (1 - prog)).toFixed(2) + '"><circle cx="66" cy="22" r="1.3" fill="#fff"/><circle cx="118" cy="14" r="1" fill="#fff" opacity="0.8"/><circle cx="34" cy="40" r="1" fill="#fff" opacity="0.65"/><circle cx="502" cy="26" r="1.1" fill="#fff" opacity="0.7"/></g>'
+      + (function () {
+          const sy = 112 - Math.round(72 * prog);
+          return '<circle cx="430" cy="' + sy + '" r="' + Math.round(26 + 16 * prog) + '" fill="url(#jgd-sol)"/><circle cx="430" cy="' + sy + '" r="' + (10 + Math.round(5 * prog)) + '" fill="#FFD34D" opacity="0.95"/>';
+        })()
+      + '<path d="M0 106 Q 140 84 280 100 T 560 96 V150 H0 Z" fill="#3E3768" opacity="0.55"/>'
+      + '<path d="M0 118 Q 120 104 250 112 T 560 114 V150 H0 Z" fill="url(#jgd-col)"/>';
+    ITEMS.forEach(function (x, i) { serreSvg += fleurJ(i, i < nEclos); });
     serreSvg += '</svg>';
-    const lignes = ITEMS.map(function (x) {
-      return '<div class="ckl-row' + (x.fait ? ' fait' : '') + '"><span class="ckl-ic">' + (x.fait ? '✓' : '○') + '</span>'
+
+    const prochaines = aFaire.slice(0, 3).map(function (x) {
+      return '<div class="ckl-row"><span class="ckl-ic">○</span>'
         + '<span class="ckl-lab">' + x.label + ' <i>' + x.pts + ' pts</i></span>'
-        + (x.fait ? '' : '<button type="button" class="ckl-cta" onclick="' + x.cta + '">' + x.lab + '</button>') + '</div>';
+        + '<button type="button" class="ckl-cta" onclick="' + x.cta + '">' + x.lab + '</button>'
+        + '<button type="button" class="ckl-deja" onclick="App.marquerFait(&quot;' + x.id + '&quot;, this)">Déjà fait ?</button></div>';
     }).join('');
+    const chipsFaits = faits.length
+      ? '<div class="ckl-faits">' + faits.map(function (x) { return '<span class="ckl-fait-chip">✓ ' + x.label + '</span>'; }).join('') + '</div>'
+      : '';
     slot.innerHTML = '<div class="ckl">'
-      + '<div class="ckl-tete"><b>Votre serre du parcours</b><span>' + faits.length + '/' + ITEMS.length + ' étapes · ' + score + ' points</span></div>'
+      + '<div class="ckl-tete"><b>Votre jardin des 90 jours</b><span>' + faits.length + '/' + ITEMS.length + ' · ' + score + ' points</span></div>'
       + '<div class="ckl-bar"><i style="width:' + Math.round(score / TOTAL * 100) + '%"></i></div>'
-      + serreSvg + lignes + '</div>';
+      + serreSvg
+      + (aFaire.length ? '<div class="ckl-next-t">Vos prochaines pousses</div>' + prochaines : '<p class="ckl-plus">Jardin complet. Bravo, les 130 points sont à vous.</p>')
+      + (aFaire.length > 3 ? '<p class="ckl-plus">Et ' + (aFaire.length - 3) + ' autres pousses suivront, une à la fois.</p>' : '')
+      + chipsFaits
+      + '</div>';
+  }
+  function coupeMot(txt, n){
+    if (txt.length <= n) return txt;
+    return txt.slice(0, n).replace(/\s+\S*$/, '') + '…';
+  }
+  const ZONES_GLOS = { appui: ['Appui', '#3EAD8B'], opportunite: ['Opportunité', '#E08A3C'], neutre: ['Équilibre', '#5E59C7'], economie: ['En veille', '#8A879B'] };
+  function chipDe(id){
+    const cE = (compsEspaceCourant || []).filter(function (x) { return x.id === id; })[0];
+    if (!cE || !ZONES_GLOS[cE.zone]) return '';
+    const z = ZONES_GLOS[cE.zone];
+    return '<em class="glos-z" style="background:' + z[1] + '1f;color:' + z[1] + '">' + z[0] + '</em>';
+  }
+  function ouvrirGlossaire(){
+    if (document.getElementById('glos-ov') || !window.Competences) return;
+    const ov = document.createElement('div');
+    ov.id = 'glos-ov';
+    ov.className = 'noter-ov';
+    ov.innerHTML = '<div class="glos-card"><button type="button" class="noter-x" onclick="this.closest(&quot;.noter-ov&quot;).remove()">×</button>'
+      + '<div class="noter-titre">Le glossaire · 16 compétences, 32 facettes</div>'
+      + '<p class="noter-sub">Touchez une compétence : sa définition, votre mesure, sa trajectoire et ses facettes.</p>'
+      + '<div class="glos-grid">' + Competences.REFERENTIEL.map(function (r) {
+          const coul = (Competences.COULEURS_FAMILLES || {})[r.famille] || '#8A879B';
+          return '<button type="button" class="glos-c" onclick="App.choisirGlossaire(&quot;' + r.id + '&quot;)"><i style="background:' + coul + '"></i><b>' + echapValeur(r.nom) + '</b>' + chipDe(r.id) + '<span>' + echapValeur(coupeMot(r.def || '', 64)) + '</span><span class="glos-f">' + ((Competences.FACETTES && Competences.FACETTES[r.id]) || []).map(function (f2) { return echapValeur(f2.nom); }).join(' · ') + '</span></button>';
+        }).join('') + '</div></div>';
+    ov.onclick = function (e) { if (e.target === ov) ov.remove(); };
+    document.body.appendChild(ov);
+  }
+  function choisirGlossaire(id){
+    const ov = document.getElementById('glos-ov');
+    if (ov) ov.remove();
+    try {
+      const mat = document.getElementById('esp-cp-matrice');
+      if (mat && getComputedStyle(mat).display === 'none') toggleMatriceEspace();
+    } catch (e) {}
+    ouvrirCompDepuisCarte(id);
+    setTimeout(function () {
+      const f = document.getElementById('esp-cp-focus');
+      if (f && f.innerHTML.trim()) f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 90);
+  }
+  function marquerFait(id, el){
+    try {
+      if (checklistCtx) {
+        checklistCtx.carte.jalons = checklistCtx.carte.jalons || {};
+        checklistCtx.carte.jalons[id] = new Date().toISOString();
+        majChecklist();
+      }
+      const jeton = new URLSearchParams(window.location.search).get('token') || '';
+      if (jeton) fetch(PROGRESSION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'jalon', jeton: jeton, jalon: id }) }).catch(function () {});
+    } catch (e) { console.warn('[Sinéa]', e); }
   }
   function majChecklist() {
     if (checklistCtx) { try { poserChecklist(checklistCtx.data, checklistCtx.carte); } catch (e) { console.warn('[Sinéa]', e); } }
@@ -1428,12 +1588,13 @@ const App = (() => {
   function pariMiroirHtml(mir){
     if (mir && mir.prediction) {
       const p = mir.prediction;
-      return '<div class="pari-bloc pari-scelle"><div class="esp-cp-titre">Votre pari est scellé</div><p class="pari-p">Vous découvrirez votre score de lucidité dès deux regards reçus.</p><div class="pari-vals">'
+      return '<div class="pari-bloc pari-scelle"><div class="esp-cp-titre">Votre pronostic est scellé</div><p class="pari-p">Vous découvrirez votre score de lucidité dès deux regards reçus.</p><div class="pari-vals">'
         + AXES_PARI.map(function (a) { return '<span>' + a[1] + ' <b>' + (typeof p[a[0]] === 'number' ? p[a[0]] : '·') + '</b></span>'; }).join('') + '</div></div>';
     }
-    return '<div class="pari-bloc"><div class="esp-cp-titre">Avant leurs regards, le vôtre : votre pari</div>'
-      + '<p class="pari-p">Prédisez ce que leur regard moyen dira de vous. Scellé maintenant, comparé plus tard : votre score de lucidité.</p>'
-      + '<button type="button" class="esp-rem-btn pari-open" onclick="this.nextElementSibling.classList.toggle(&quot;esp-hide&quot;)">Faire mon pari · 30 s</button>'
+    return '<div class="pari-bloc"><div class="esp-cp-titre">Avant leurs regards, le vôtre</div>'
+      + '<p class="pari-p">Trente secondes, cinq curseurs, avant que leurs réponses n\'arrivent.</p>'
+      + '<p class="pari-why"><b>Pourquoi un pronostic ?</b> Prédisez le regard de vos collègues avant leurs réponses. L\'écart entre votre prédiction et leur perception devient votre <b>score de lucidité</b> : vos angles morts et vos forces cachées, chiffrés.</p>'
+      + '<button type="button" class="esp-rem-btn pari-open" onclick="this.nextElementSibling.classList.toggle(&quot;esp-hide&quot;)">Sceller mon pronostic · 30 s</button>'
       + '<div class="pari-corps esp-hide">'
       + AXES_PARI.map(function (a) {
         return '<div class="pari-l"><span>' + a[1] + '</span><input type="range" min="0" max="100" value="55" data-k="' + a[0] + '" class="pari-r" oninput="this.nextElementSibling.textContent=this.value"><b>55</b></div>';
@@ -1485,7 +1646,7 @@ const App = (() => {
     const reponses = filtreMiroirRel ? reponsesTous.filter(function (rp) { return (rp.r || {}).relation === filtreMiroirRel; }) : reponsesTous;
     if (!jeton) {
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Miroir 360</div>
+        <div class="esp-rem-kicker">Mon Feedback 360</div>
         <div class="esp-rem-titre">Le regard de vos collègues</div>
         <p class="esp-rem-txt">Invitez deux collègues à répondre à cinq questions, une minute, réponses anonymes. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
         ${guideMiroirHtml()}<button type="button" class="esp-rem-btn" id="esp-mir-init">Créer mon lien d'invitation</button>
@@ -1500,7 +1661,7 @@ const App = (() => {
         })
           .then(r => r.json())
           .then(d => {
-            if (d && d.ok && d.jeton) { carte.miroir = { jeton: d.jeton, reponses: [] }; poserMiroir(data, carte); }
+            if (d && d.ok && d.jeton) { carte.miroir = { jeton: d.jeton, reponses: [], cree: (new Date()).toISOString().slice(0, 10) }; poserMiroir(data, carte); }
             else b.disabled = false;
           })
           .catch(function () { b.disabled = false; });
@@ -1508,16 +1669,17 @@ const App = (() => {
       return;
     }
     const lien = location.origin + location.pathname + '?miroir=' + jeton;
-    const blocLien = guideMiroirHtml() + `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>` + pariMiroirHtml(mir);
+    const pariHtml = pariMiroirHtml(mir);
+    const blocLien = guideMiroirHtml() + `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
     if (reponses.length < 2) {
       const attente = reponses.length === 1
         ? '1 réponse reçue. L\'analyse s\'ouvre à la deuxième, pour préserver l\'anonymat.'
         : 'Aucune réponse pour l\'instant. Envoyez ce lien à deux collègues, leurs réponses restent anonymes.';
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Miroir 360</div>
+        <div class="esp-rem-kicker">Mon Feedback 360</div>
         <div class="esp-rem-titre">Le regard de vos collègues</div>
         <p class="esp-rem-txt">${attente}</p>
-        ${blocLien}
+        ${mir.prediction ? blocLien + pariHtml : pariHtml + blocLien}
       </div>`;
     } else {
       const percu = agregerMiroir(reponses);
@@ -1580,11 +1742,12 @@ const App = (() => {
         phrase = `Vos collègues perçoivent moins de ${maxDim.label.toLowerCase()} que ce que vous pensez montrer. Cet écart dit quelque chose de précieux, angle mort ou réserve : explorez-le lors d'un prochain échange.`;
       }
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Miroir 360 · ${reponses.length} regards${repartition}</div>
+        <div class="esp-rem-kicker">Mon Feedback 360 · ${reponses.length} regards${repartition}</div>
         <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
         ${chipsRel}
         ${impactHtml}
         ${radarHtml}
+        ${mir.prediction ? '' : pariHtml}
         ${lucHtml}
         ${lignes}
         ${conseilsHtml}
@@ -1599,7 +1762,38 @@ const App = (() => {
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(lien).then(fini).catch(function () { if (inp) { inp.select(); document.execCommand('copy'); fini(); } });
       else if (inp) { inp.select(); document.execCommand('copy'); fini(); }
     };
+    if (jeton) {
+      try { slot.insertAdjacentHTML('afterbegin', mirEtapesHtml(mir, reponsesTous)); } catch (e) {}
+      if (navigator.share) { try { slot.querySelectorAll('.esp-mir-msg-btn').forEach(function (b2) { if (b2.textContent.indexOf('Copier') === 0) b2.textContent = 'Partager ce message'; }); } catch (e) {} }
+    }
   }
+
+  // Le fil des quatre étapes du Feedback 360, cliquable
+  function mirEtapesHtml(mir, reponses){
+    const n = reponses.length;
+    const etapes = [
+      { lab: 'Lien créé', ok: true, cible: '.esp-mir-msg' },
+      { lab: 'Pronostic', ok: !!mir.prediction, cible: '__pari' },
+      { lab: n + ' regard' + (n > 1 ? 's' : '') + ' / 2', ok: n >= 2, cible: '.esp-mir-msg' },
+      { lab: 'Analyse', ok: n >= 2, cible: '.mir-luc' },
+    ];
+    return '<div class="mir-etapes">' + etapes.map(function (e2) {
+      return '<button type="button" class="mir-et' + (e2.ok ? ' ok' : '') + '" onclick="App.mirAller(&quot;' + e2.cible + '&quot;)">' + (e2.ok ? '✓ ' : '') + e2.lab + '</button>';
+    }).join('') + '</div>'
+      + (n < 2 ? '<p class="mir-note">' + ageLienMiroir(mir) + 'Encore ' + (2 - n) + ' regard' + (2 - n > 1 ? 's' : '') + ' et votre analyse s\'ouvre. Un message suffit à relancer.</p>' : '');
+  }
+  function ageLienMiroir(mir){
+    if (!mir.cree) return '';
+    const jours = Math.floor((Date.now() - Date.parse(mir.cree)) / 86400000);
+    if (!(jours >= 7)) return '';
+    return 'Lien créé il y a ' + jours + ' jours. ';
+  }
+  function mirAller(cible){
+    if (cible === '__pari') { allerFeedback('pari'); return; }
+    const el = document.querySelector(cible);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
 
   // ---- Le formulaire collègue : ouvert par lien ?miroir=jeton, sans compte ----
   function rendreFormMiroir(jeton) {
@@ -1620,11 +1814,11 @@ const App = (() => {
       }).join('') + '</div></div>';
     ov.innerHTML = '<div class="mir-card">' +
       '<div class="mir-head"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
-      '<div><div class="esp-rem-kicker">Miroir Sinéa</div><div class="esp-rem-titre">Votre regard sur un collègue</div></div></div>' +
+      '<div><div class="esp-rem-kicker">Feedback 360 · Sinéa</div><div class="esp-rem-titre">Votre regard sur un collègue</div></div></div>' +
       '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Douze regards et un conseil, trois minutes. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
       relationHtml +
       lignes +
-      '<button type="button" class="esp-rem-btn" id="mir-valider" disabled>Envoyer mon regard</button>' +
+      '<button type="button" class="esp-rem-btn" id="mir-valider" disabled>Envoyer mon regard · 0/12</button>' +
       '</div>';
     document.body.appendChild(ov);
     ov.querySelectorAll('.esp-rem-opt').forEach(function (b) {
@@ -1633,9 +1827,7 @@ const App = (() => {
         _mirRep[q] = parseInt(this.getAttribute('data-v'), 10);
         ov.querySelectorAll('.esp-rem-opt[data-q="' + q + '"]').forEach(function (x) { x.classList.remove('on'); });
         this.classList.add('on');
-        const btn = document.getElementById('mir-valider');
-        const nbNotees = MIROIR_QUESTIONS.filter(function (q2) { return q2.type !== 'texte'; }).length;
-        if (btn && Object.keys(_mirRep).length >= nbNotees) btn.disabled = false;
+        majValiderMiroir();
       };
     });
     const val = document.getElementById('mir-valider');
@@ -2084,6 +2276,48 @@ const App = (() => {
   // ---- PLAN D'ACTION : page dédiée dans l'espace perso ----
   // Recharge le profil (pour personnaliser) + les interactions (ce que la personne a coché),
   // puis met en page une feuille de route motivante, du socle vers l'action.
+  // La synthèse vivante du plan : l'avancement d'un regard, mis à jour à chaque clic
+  function majPlanSynthese(scr){
+    const zone = scr.querySelector('#plan-synth');
+    if (!zone) return;
+    const statuts = Array.from(scr.querySelectorAll('.plan-statut')).map(function (b) { return b.textContent.trim().toLowerCase(); });
+    const total = statuts.length;
+    if (!total) { zone.innerHTML = ''; return; }
+    const acquis = statuts.filter(function (x) { return x.indexOf('fait') === 0; }).length;
+    const cours = statuts.filter(function (x) { return x.indexOf('cours') >= 0; }).length;
+    const faire = total - acquis - cours;
+    const pct = Math.round((acquis / total) * 100);
+    zone.innerHTML = '<div class="plan-synth-tete"><b>' + acquis + ' fait' + (acquis > 1 ? 's' : '') + '</b><span>' + cours + ' en cours · ' + faire + ' à venir</span><i>' + pct + '%</i></div>'
+      + '<div class="plan-synth-bar"><i style="width:' + pct + '%"></i></div>';
+  }
+  function soignerPlan(scr){
+    const hero = scr.querySelector('.plan-hero');
+    if (hero && !scr.querySelector('#plan-synth')) hero.insertAdjacentHTML('afterend', '<div id="plan-synth" class="plan-synth"></div>');
+    majPlanSynthese(scr);
+    if (!scr.__synthEcoute) {
+      scr.__synthEcoute = true;
+      scr.addEventListener('click', function (e) {
+        const bs = e.target.closest && e.target.closest('.plan-statut');
+        if (bs) setTimeout(function () {
+          majPlanSynthese(scr);
+          if (bs.textContent.trim().indexOf('Fait') === 0) {
+            const pcF = bs.closest('.planc');
+            if (pcF) { pcF.classList.add('planc-fete'); setTimeout(function () { pcF.classList.remove('planc-fete'); }, 950); }
+          }
+        }, 30);
+      });
+    }
+    if (!scr.__synthObs) {
+      scr.__synthObs = new MutationObserver(function () {
+        if (!scr.querySelector('#plan-synth')) {
+          const h2 = scr.querySelector('.plan-hero');
+          if (h2) { h2.insertAdjacentHTML('afterend', '<div id="plan-synth" class="plan-synth"></div>'); majPlanSynthese(scr); }
+        }
+      });
+      scr.__synthObs.observe(scr, { childList: true, subtree: true });
+    }
+  }
+
   function ouvrirPlanAction(mod) {
     // On prépare tout de suite l'écran pour ne JAMAIS laisser un écran vide, même en cas de souci.
     let scr = document.getElementById('screen-plan');
@@ -2133,6 +2367,7 @@ const App = (() => {
       const inter = interactionsTout[mod] || interactionsTout.socle || {};
       const suiviSauve = (suiviTout[mod] && suiviTout[mod].suivi) || [];
       afficherPagePlan(mod, profil, inter, suiviSauve);
+      try { soignerPlan(scr); } catch (e) { console.warn('[Sinéa]', e); }
     }).catch(function () {
       // au lieu d'une alerte, message clair dans la page + bouton réessayer
       scr.innerHTML = '<div class="plan-scroll">' +
@@ -2302,6 +2537,7 @@ const App = (() => {
           '<button class="plan-statut ' + classeStatut(statut) + '" data-statut="' + i + '">' + libStatut(statut) + '</button>' +
           '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti="' + i + '" title="Laisser un ressenti">' + (aRessenti ? '✏️ Mon ressenti' : '💬 Laisser un ressenti') + '</button>' +
         '</div>' +
+        (aRessenti ? '<div class="planc-note">« ' + echapValeur(a.ressenti.trim()) + ' »</div>' : '') +
       '</div>';
     }).join('');
 
@@ -2415,6 +2651,15 @@ const App = (() => {
       // refléter l'icône "ressenti rempli" sur les boutons de cette action
       scr.querySelectorAll('[data-ressenti="' + i + '"]').forEach(b => { b.classList.toggle('a-note', !!a.ressenti); b.textContent = a.ressenti ? '✏️' : '💬'; });
       scr.querySelectorAll('[data-ressenti-m="' + i + '"]').forEach(b => { b.classList.toggle('a-note', !!a.ressenti); b.textContent = a.ressenti ? '✏️ Modifier mon ressenti' : '💬 Laisser un ressenti'; });
+      const bStat = scr.querySelector('[data-statut="' + i + '"]');
+      const pcNote = bStat && bStat.closest('.planc');
+      if (pcNote) {
+        let note = pcNote.querySelector('.planc-note');
+        if (a.ressenti) {
+          if (!note) { pcNote.insertAdjacentHTML('beforeend', '<div class="planc-note"></div>'); note = pcNote.querySelector('.planc-note'); }
+          note.textContent = '« ' + a.ressenti + ' »';
+        } else if (note) note.remove();
+      }
       sauverSuiviPlan(mod, actions);
       fermer();
     };
@@ -2476,7 +2721,7 @@ const App = (() => {
         }
         document.getElementById('screen-espace').classList.remove('active');
         document.getElementById('screen-result').classList.add('active');
-        Result.render(res);
+        try { Result.render(res); } catch (e) { console.error('[Sinéa]', e); alert("Une partie de l'analyse n'a pas pu s'afficher. Rechargez la page, et contactez-nous si cela persiste."); }
         if (Result.setEmail) Result.setEmail(identite.email || '');
       })
       .catch(() => alert('Impossible de charger votre analyse pour le moment.'));
@@ -3731,7 +3976,7 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

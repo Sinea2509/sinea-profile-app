@@ -148,7 +148,7 @@ verifie('frise : jalon fait coché, jalon à venir creux', fr.indexOf('#5B9E6B')
 verifie('frise : curseur au bon jour', fr.indexOf('Jour 45') > 0);
 verifie('frise : sans date, sans curseur', V.frise90Svg([{ label: 'Portrait', pos: 0, fait: true }], null).indexOf('Jour') < 0);
 verifie('cockpit : posé et appelé', srcCtrl.indexOf('function poserCockpit(') > 0 && srcCtrl.indexOf('poserCockpit(dataEspaceCourant, carte)') > 0);
-verifie('cockpit : dans l\'onglet développement', srcCtrl.indexOf("'espace-cockpit', 'espace-nea'") > 0);
+verifie('cockpit : dans l\'onglet développement', srcCtrl.indexOf("dev: ['espace-cockpit', 'espace-checklist', 'espace-nea'") > 0);
 verifie('cockpit : slot présent dans la page', idxH2.indexOf('id="espace-cockpit"') > 0);
 verifie('miroir : le radar entre dans l\'analyse', srcCtrl.indexOf('${radarHtml}') > 0 && srcCtrl.indexOf('radarMiroirSvg(vous, percu') > 0);
 verifie('engagements : état relié aux défis', srcCtrl.indexOf('compsDefis.has(mm.id)') > 0);
@@ -163,20 +163,16 @@ verifie('largeurs fluides : restitution et espace à 94vw', (cssTxt2().match(/mi
 verifie('largeur fluide : portail à 96vw', fs.readFileSync('dashboard.html', 'utf8').indexOf('min(1720px, 96vw)') > 0);
 verifie('noter : overlay autonome, token, action avis_direct', srcRes2().indexOf('noter-ov') > 0 && srcRes2().indexOf("action: 'avis_direct'") > 0 && srcRes2().indexOf("get('token')") > 0);
 verifie('noter : étoiles en gestionnaires inline', srcRes2().indexOf('Result.noterEtoile(this)') > 0 && srcRes2().indexOf('Result.noterEtoile = function') > 0);
+verifie('restitution : l\'envoi d\'avis vit hors capsule avec son URL', srcRes2().indexOf("fetch('https://sinea-profile-ia.vercel.app/api/progression'") > 0);
 verifie('lecture : le large rééquilibré, prose 1280, visuels 1520', cssTxt2().indexOf('.r-body > *{max-width:min(1280px, 92vw)') > 0 && cssTxt2().indexOf('.r-q16-card{max-width:min(1520px, 94vw)') > 0);
 verifie('espace : la carte Néa est lisible', cssTxt2().indexOf('.esp-nea{background:#FDFCF8') > 0);
 verifie('portail : le codex existe et la matrice y mène', srcDash.indexOf('function ouvrirCodex(') > 0 && srcDash.indexOf('bd-mat-cx') > 0);
 verifie('moteur : le mapping dimensions est exporté', !!C.DIMS_VERS_COMPETENCES && Object.keys(C.DIMS_VERS_COMPETENCES).length >= 4);
 verifie('miroir : la relation est demandée et envoyée', srcCtrl2().indexOf('relationHtml') > 0 && srcCtrl2().indexOf('relation: (function') > 0);
-verifie('miroir : l\'envoi se libère sur les questions notées, conseil optionnel', (() => {
-  const src = srcCtrl2();
-  const bon = src.indexOf("q2.type !== 'texte'") > 0 && src.indexOf('Object.keys(_mirRep).length >= nbNotees') > 0;
-  const ancien = src.indexOf('Object.keys(_mirRep).length >= MIROIR_QUESTIONS.length') >= 0;
-  return bon && !ancien;
-})());
+verifie('miroir : l\'envoi se libère sur notes et relation, conseil optionnel', srcCtrl2().indexOf("type !== 'texte'") > 0 && srcCtrl2().indexOf('k >= nb && rel') > 0);
 verifie('miroir : répartition et impact affichés', srcCtrl2().indexOf('${repartition}') > 0 && srcCtrl2().indexOf('esp-mir-impact') > 0);
 verifie('carte espace : le clic ouvre le détail', srcCtrl2().indexOf("clic: 'App.ouvrirCompDepuisCarte'") > 0 && srcCtrl2().indexOf('esp-cp-focus') > 0);
-verifie('frise : la note explique l\'avancée', srcCtrl2().indexOf('ck-note') > 0);
+verifie('cockpit : la frise a cédé la place au jardin', srcCtrl2().indexOf('frise90Svg') < 0 && srcCtrl2().indexOf('class="ck-note"') < 0 && srcCtrl2().indexOf('let frise') < 0);
 function cssTxt2(){ return fs.readFileSync('style.css', 'utf8'); }
 function srcRes2(){ return fs.readFileSync('result.js', 'utf8'); }
 function srcCtrl2(){ return fs.readFileSync('controller.js', 'utf8'); }
@@ -222,7 +218,7 @@ verifie('portail : la projection délègue au moteur', (srcDash.match(/Competenc
 verifie('projection : étiquetée hypothèse aux deux endroits', srcDash.indexOf('Hypothèse : engagements tenus') > 0 && srcDash.indexOf("hypothèse d\\'ancrage") > 0);
 verifie('bandeau : fit conditionné au poste sur mesure', srcDash.indexOf('posteCustomCourant ? coefsPoste') > 0 && srcDash.indexOf('Fit manager moyen') < 0);
 verifie('bandeau : la qualité vécue entre en scène', srcDash.indexOf('Qualité vécue') > 0);
-verifie('cockpit : le pari a sa place dans les priorités', srcCtrl2().indexOf('Scellez votre pari du miroir') > 0);
+verifie('cockpit : le pronostic a sa place dans les priorités', srcCtrl2().indexOf('pronostic Feedback 360') > 0);
 verifie('miroir : le pari est replié par défaut', srcCtrl2().indexOf('pari-open') > 0 && srcCtrl2().indexOf('pari-corps esp-hide') > 0);
 verifie('accueil : le résumé est posé et rangé', idxH2.indexOf('id="espace-accueil-resume"') > 0 && srcCtrl2().indexOf('acc-resume') > 0 && srcCtrl2().indexOf("accueil: ['espace-accueil-resume'") > 0);
 
@@ -241,7 +237,7 @@ verifie('portail : les facettes entrent dans la modal', srcDash.indexOf('cx-fac'
 verifie('espace : les facettes entrent dans la fiche focus', srcCtrl2().indexOf('fcx-fac') > 0 && srcCtrl2().indexOf('FACETTES[id]') > 0);
 
 console.log('\n== 0quaterdecies. La serre du parcours ==');
-verifie('serre : le slot vit dans l\'accueil', idxH2.indexOf('id="espace-checklist"') > 0 && srcCtrl2().indexOf("'espace-accueil-resume', 'espace-checklist'") > 0);
+verifie('jardin : le slot vit dans Mon développement', idxH2.indexOf('espace-cockpit" class="esp-hide"></div>\n          <div id="espace-checklist"') > 0 && srcCtrl2().indexOf("'espace-cockpit', 'espace-checklist'") > 0);
 verifie('serre : posée au chargement et rafraîchissable', srcCtrl2().indexOf('function poserChecklist(') > 0 && srcCtrl2().indexOf('checklistCtx = { data: dataEspaceCourant') > 0 && srcCtrl2().indexOf('function majChecklist()') > 0);
 verifie('serre : neuf étapes pour 130 points', (() => {
   const src = srcCtrl2();
@@ -249,8 +245,46 @@ verifie('serre : neuf étapes pour 130 points', (() => {
   const somme = m.reduce((a, x) => a + parseInt(x.match(/\d+/)[0], 10), 0);
   return m.length === 9 && somme === 130;
 })());
-verifie('serre : les détections lisent les vraies sources', srcCtrl2().indexOf('carte.jalons && carte.jalons.lecture') > 0 && srcCtrl2().indexOf('Number(carte.voeux)') > 0 && srcCtrl2().indexOf('mir.prediction') > 0 && srcCtrl2().indexOf('pistes_libelles') > 0);
-verifie('serre : la notation s\'ouvre depuis l\'étape', srcCtrl2().indexOf('Result.noterPortrait()') > 0);
+verifie('jardin : les détections lisent les vraies sources', srcCtrl2().indexOf('const jal = carte.jalons || {}') > 0 && srcCtrl2().indexOf('Number(carte.voeux)') > 0 && srcCtrl2().indexOf('mir.prediction') > 0 && srcCtrl2().indexOf('pistes_libelles') > 0);
+verifie('jardin : la notation s\'ouvre depuis l\'étape', srcCtrl2().indexOf('Result.noterPortrait()') > 0);
+verifie('jardin : la scène d\'aube, ciel, soleil, fleurs en dégradés', srcCtrl2().indexOf('jgd-ciel') > 0 && srcCtrl2().indexOf('radialGradient') > 0 && srcCtrl2().indexOf('#2E2955') > 0 && srcCtrl2().indexOf('url(#jgd-sol)') > 0 && srcCtrl2().indexOf('#FFD34D') > 0);
+verifie('jardin : le soleil monte avec la progression', srcCtrl2().indexOf('112 - Math.round(72 * prog)') > 0 && srcCtrl2().indexOf('1 - prog') > 0);
+verifie('jardin : l\'éclosion suit la gauche vers la droite', srcCtrl2().indexOf('i < nEclos') > 0 && srcCtrl2().indexOf('nEclos === BASE_J.length') > 0);
+verifie('jardin : panoramique bord à bord', cssTxt2().indexOf('width:calc(100% + 36px)') > 0 && cssTxt2().indexOf('.ckl{overflow:hidden;}') > 0);
+verifie('jardin : trois prochaines pousses et rattrapage', srcCtrl2().indexOf('aFaire.slice(0, 3)') > 0 && srcCtrl2().indexOf('Déjà fait ?') > 0 && srcCtrl2().indexOf('function marquerFait(') > 0);
+verifie('jardin : les jalons manuels comptent partout', (srcCtrl2().match(/!!jal\./g) || []).length === 9);
+verifie('feedback 360 : le nom est partout à l\'écran', idxH2.indexOf('Mon Feedback 360') > 0 && (srcCtrl2().match(/Mon Feedback 360/g) || []).length >= 3 && srcCtrl2().indexOf('pronostic Feedback 360') > 0);
+verifie('feedback 360 : chaque porte dépose au geste précis', srcCtrl2().indexOf('function allerFeedback(') > 0 && (srcCtrl2().match(/allerFeedback/g) || []).length >= 8 && srcCtrl2().indexOf("App.espTab('miroir')") < 0 && srcCtrl2().indexOf('espTab(&quot;miroir&quot;)') < 0);
+verifie('feedback 360 : le fil des quatre étapes guide et téléporte', srcCtrl2().indexOf('function mirEtapesHtml(') > 0 && srcCtrl2().indexOf("insertAdjacentHTML('afterbegin', mirEtapesHtml") > 0 && srcCtrl2().indexOf('function mirAller(') > 0 && cssTxt2().indexOf('.mir-etapes{display:flex') > 0);
+verifie('feedback 360 : cibles au standard, filtre actif lisible', cssTxt2().indexOf('.esp-mir-msg-btn{min-height:40px;}') > 0 && cssTxt2().indexOf('.mir-rel.on{background:#5E59C7;color:#fff') > 0 && cssTxt2().indexOf('.mir-et{min-height:44px;}') > 0);
+verifie('feedback 360 : le pari précède les invitations tant qu\'il attend', srcCtrl2().indexOf('mir.prediction ? blocLien + pariHtml : pariHtml + blocLien') > 0 && srcCtrl2().indexOf("mir.prediction ? '' : pariHtml") > 0 && srcCtrl2().indexOf('mir-note') > 0);
+verifie('pronostic : le pourquoi vit au point d\'action', srcCtrl2().indexOf('pari-why') > 0 && srcCtrl2().indexOf('score de lucidité') > 0 && srcCtrl2().indexOf('Sceller mon pronostic · 30 s') > 0 && srcCtrl2().indexOf('Faire mon pari') < 0);
+verifie('répondant : relation exigée, compteur vivant, nom unifié', srcCtrl2().indexOf('function majValiderMiroir(') > 0 && (srcCtrl2().match(/majValiderMiroir\(\)/g) || []).length >= 2 && srcCtrl2().indexOf('Choisissez votre relation ci-dessus') > 0 && srcCtrl2().indexOf('Feedback 360 · Sinéa') > 0 && srcCtrl2().indexOf('Miroir Sinéa') < 0);
+verifie('répondant : options au standard tactile', cssTxt2().indexOf('.esp-rem-opt{min-height:40px;}') > 0 && cssTxt2().indexOf('.esp-rem-opt{min-height:44px;}') > 0);
+verifie('plan : cibles, contrastes et hero blindé', cssTxt2().indexOf('.plan-hero{background:linear-gradient(135deg,#221D45') > 0 && cssTxt2().indexOf('.plan-statut{min-height:40px;color:#4A4757;}') > 0 && cssTxt2().indexOf('.plan-statut{min-height:44px;}') > 0 && cssTxt2().indexOf('.planc-lab{font-size:11px;}') > 0);
+verifie('plan : la synthèse vit et écoute les statuts', srcCtrl2().indexOf('function majPlanSynthese(') > 0 && srcCtrl2().indexOf('function soignerPlan(') > 0 && srcCtrl2().indexOf('soignerPlan(scr)') > 0 && cssTxt2().indexOf('.plan-synth-bar') > 0 && srcCtrl2().indexOf("' fait' + (acquis > 1") > 0 && srcCtrl2().indexOf('__synthObs') > 0 && srcCtrl2().indexOf('MutationObserver') > 0);
+verifie('plan : le ressenti se lit sur la carte, en direct', (srcCtrl2().match(/planc-note/g) || []).length >= 3 && cssTxt2().indexOf('.planc-note{') > 0);
+verifie('restitution : les cartes annexes survivent aux analyses partielles', srcRes2().indexOf("if (!na.naturel) return '';") > 0 && srcRes2().indexOf('radar = radar || {};') > 0);
+verifie('restitution : le rendu encapsulé garde un message honnête', srcCtrl2().indexOf("try { Result.render(res); } catch (e)") > 0);
+verifie('restitution : les chargements orphelins se replient en mode figé', srcRes2().indexOf('r-ia-fige') > 0 && srcRes2().indexOf('res.contenuFige) setTimeout') > 0);
+verifie('restitution : la barre de lecture accompagne le défilement', srcRes2().indexOf('function installerBarreLecture(') > 0 && srcRes2().indexOf('installerBarreLecture,') > 0 && cssTxt2().indexOf('#r-lecture-bar') > 0);
+verifie('restitution : cibles et encres au standard', cssTxt2().indexOf('.r-topbar-espace{min-height:40px;}') > 0 && cssTxt2().indexOf('.r-ia-tag{font-size:11px;color:#4B47A0;}') > 0 && cssTxt2().indexOf('.r-rare{background-color:#221D45;}') > 0 && cssTxt2().indexOf('.r-chat-sugg{min-height:44px;}') > 0);
+verifie('restitution : le sommaire flotte, liste et téléporte', srcRes2().indexOf('function installerSommaireFlottant(') > 0 && srcRes2().indexOf('installerBarreLecture(); installerSommaireFlottant();') > 0 && srcRes2().indexOf('installerBarreLecture, installerSommaireFlottant,') > 0 && cssTxt2().indexOf('#r-toc-flot{position:fixed') > 0 && cssTxt2().indexOf('#r-toc-panel.ouvert{display:block;}') > 0);
+verifie('dashboard RH : le filtre des membres vit et agit', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('function filtrerMembres(') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('id="membres-filtre"') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.membres-filtre input{') > 0);
+verifie('dashboard RH : cibles et encres au standard', require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.pt-s-btn{min-height:40px;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('#content .stat-lab{color:#4A4757;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.pt-b,.pt-s-btn,.exp-btn,.bd-mat-btn,.bd-mat-nom{min-height:44px;}') > 0);
+verifie('dashboard RH : les retardataires sont nommés et relançables', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('function copierRelance(') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('En attente (') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.attente-copier{') > 0);
+verifie('dashboard RH : l\'export CSV vit pour le RH aussi', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('id="btn-csv-camp"') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('SUPER ? \' <button class="exp-btn exp-mini" id="btn-csv-camp"') < 0);
+verifie('dashboard RH : la liste se trie par nom et par famille', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('function trierMembres(') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('data-fam=') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.tri-btn.on{') > 0);
+verifie('super admin : onglets au standard, badge blindé', require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.sup-onglet{min-height:40px;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.sup-onglet{min-height:44px;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('background-color:#5E59C7;background-image:linear-gradient') > 0);
+verifie('feedback 360 : partage natif et repli copie', srcCtrl2().indexOf('navigator.share({ text: txt })') > 0 && srcCtrl2().indexOf("fini('Partagé ✓')") > 0 && srcCtrl2().indexOf('Partager ce message') > 0);
+verifie('feedback 360 : la relance connaît l\'âge du lien', srcCtrl2().indexOf('function ageLienMiroir(') > 0 && srcCtrl2().indexOf("cree: (new Date()).toISOString().slice(0, 10)") > 0 && srcCtrl2().indexOf('Lien créé il y a') > 0);
+verifie('plan : la fête du Fait', srcCtrl2().indexOf('planc-fete') > 0 && cssTxt2().indexOf('@keyframes plancFete') > 0);
+verifie('constellation : cadre premium et glossaire', srcCtrl2().indexOf('Ma Constellation') > 0 && srcCtrl2().indexOf('Découvrir ma Constellation') > 0 && srcCtrl2().indexOf('function ouvrirGlossaire(') > 0 && srcCtrl2().indexOf('glos-grid') > 0 && srcCtrl2().indexOf("getComputedStyle(mat).display === 'none'") > 0 && cssTxt2().indexOf('.cstl svg{display:block;max-width:620px') > 0 && cssTxt2().indexOf('.cstl svg{min-width:640px;}') > 0 && srcCtrl2().indexOf('cstl-hint') > 0);
+verifie('glossaire : coupe au mot et pastille de zone personnelle', srcCtrl2().indexOf('function coupeMot(') > 0 && srcCtrl2().indexOf('ZONES_GLOS') > 0 && srcCtrl2().indexOf('chipDe(r.id)') > 0);
+verifie('carte : les étiquettes vont à la valeur, la lecture accompagne', srcCtrl2().indexOf('function idsAValeur(') > 0 && srcCtrl2().indexOf('labels: idsAValeur(comps)') > 0 && srcCtrl2().indexOf('function lectureCarte(') > 0 && srcCtrl2().indexOf('La lecture de votre carte') > 0 && cssTxt2().indexOf('.cstl-grid{display:grid') > 0);
+verifie('glossaire : les trente-deux facettes se montrent', srcCtrl2().indexOf('glos-f') > 0 && srcCtrl2().indexOf('Competences.FACETTES[r.id]') > 0 && srcCtrl2().indexOf('16 compétences, 32 facettes') > 0);
+verifie('constellation : l\'étoile choisie s\'allume et la fiche défile', require("fs").readFileSync("visuels.js", "utf8").indexOf("data-comp=") > 0 && srcCtrl2().indexOf("g[data-comp=") > 0 && srcCtrl2().indexOf('q16-sel') > 0 && srcCtrl2().indexOf("behavior: 'smooth', block: 'center'") > 0);
+verifie('personnage : médaillon haut droit, hors du flux', cssTxt2().indexOf('.espace-hero-perso{position:absolute;top:16px;right:18px') > 0 && cssTxt2().indexOf('width:92px;height:92px') > 0 && cssTxt2().indexOf('width:56px;height:56px') > 0);
 verifie('serre : les plantes poussent en SVG', srcCtrl2().indexOf('ckl-serre') > 0 && srcCtrl2().indexOf('ckl-bloom') > 0 && cssTxt2().indexOf('@keyframes cklBloom') > 0);
 verifie('restitution : le bouton de notation a quitté l\'Essentiel', srcRes2().indexOf('ess-avis') < 0 && srcRes2().indexOf('Result.noterPortrait = function') > 0);
 verifie('restitution : le jalon de lecture est auto', srcRes2().indexOf("jalon: 'lecture'") > 0 && srcRes2().indexOf('fin-lecture') > 0 && srcRes2().indexOf('IntersectionObserver') > 0);
@@ -264,6 +298,11 @@ verifie('incarnation : le bouton ouvre l\'espace de l\'apprenant', srcDash.index
 verifie('portrait PDF : le portail embarque compétences, familles et plan', srcDash.indexOf('function extraPortrait(') > 0 && srcDash.indexOf('extra: extraPortrait(m)') > 0 && srcDash.indexOf('quadrant: Visuels.quadrantSvg') > 0);
 verifie('incarnation : le lien se copie aussi', srcDash.indexOf('function copierLienApprenant(') > 0 && srcDash.indexOf('Copier son lien') > 0 && srcDash.indexOf('navigator.clipboard') > 0);
 verifie('mobile : l\'espace a son bloc au cordeau', cssTxt2().indexOf('@media (max-width: 640px)') > 0 && cssTxt2().indexOf('.esp-nav{overflow-x:auto') > 0 && cssTxt2().indexOf('.ckl-serre{max-width:100%') > 0);
+verifie('mobile : la colonne résiste à la navigation', cssTxt2().indexOf('.espace-hero-txt{width:100%;min-width:0;}') > 0);
+verifie('audit : navigation collante sur fond de verre', cssTxt2().indexOf('.esp-nav{position:sticky;top:10px') > 0 && cssTxt2().indexOf('backdrop-filter:blur(10px)') > 0);
+verifie('audit : cibles tactiles remontées, 44 en mobile', cssTxt2().indexOf('.ckl-deja{font-size:11.5px;color:#6E6A85;padding:9px 10px;min-height:40px') > 0 && cssTxt2().indexOf('.ckl-cta{min-height:44px;}') > 0);
+verifie('audit : contrastes et focus clavier', cssTxt2().indexOf('.ckl-next-t{font-size:11px;color:#6E6A85;}') > 0 && cssTxt2().indexOf(':focus-visible') > 0 && cssTxt2().indexOf('outline:2px solid #FFD34D') > 0);
+verifie('audit : la porte des bancs est documentée', srcCtrl2().indexOf('window.__auditEmail') > 0);
 verifie('diag : le vérificateur d\'envoi vit dans la modal coach', srcDash.indexOf('DIAG_URL') > 0 && srcDash.indexOf('function testerConfigEnvoi(') > 0 && srcDash.indexOf('ABSENTE sur ce back') > 0);
 
 console.log('\n== 1. Moteur de compétences : déterminisme et bornes ==');

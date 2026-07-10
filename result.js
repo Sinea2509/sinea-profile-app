@@ -102,6 +102,7 @@ const Result = (() => {
   function carteNaturelAdapte(res){
     const na = res.naturelAdapte;
     if (!na || !na.adapte || !Object.keys(na.adapte).length) return '';
+    if (!na.naturel) return '';
     const lignes = ['E','A','C','N','O'].filter(d => na.adapte[d] !== undefined).map(d => {
       const [name, low, high] = BF_INFO[d];
       // pour N on inverse l'affichage (cohérent avec les jauges : N affiché en "stabilité")
@@ -430,6 +431,7 @@ const Result = (() => {
   function initiale(nom){ return nom.replace(/^(La |Le |L')/,'').charAt(0); }
 
   function radarSvg(radar, color){
+    radar = radar || {};
     const fams=['RELATION','ACTION','STRUCTURE','VISION'], labels=['REL','ACT','STR','VIS'];
     const vals=fams.map(f=>radar[f]||0); const cx=120,cy=120,R=72,n=4;
     const ang=i=>(2*Math.PI*i/n)-Math.PI/2; let p='';
@@ -2260,6 +2262,12 @@ const Result = (() => {
       const c = res.contenuFige ? res.contenuFige : await callWorker(res);
       if (c && c._usage) coutPortrait = c._usage;
       try { poserEssentiel(res, c); } catch (e) { console.warn("[Sinéa]", e); }
+      try { installerBarreLecture(); installerSommaireFlottant(); } catch (e) {}
+      if (res.contenuFige) setTimeout(() => {
+        document.querySelectorAll('#screen-result .r-ia-loading').forEach(el => {
+          el.outerHTML = '<p class="r-ia-fige">Cette section ne fait pas partie de cette analyse sauvegardée.</p>';
+        });
+      }, 600);
       // Sauvegarder l'analyse générée (figée) pour la revoir depuis l'espace perso
       if (!res.contenuFige) {
         try {
@@ -2781,7 +2789,58 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
-  return { telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
+  function installerSommaireFlottant(){
+    const scr = document.getElementById('screen-result');
+    if (!scr || scr.__tocFlot) return;
+    const items = Array.from(scr.querySelectorAll('.r-toc-i'));
+    if (!items.length) return;
+    scr.__tocFlot = true;
+    const bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.id = 'r-toc-flot';
+    bouton.textContent = '☰ Sommaire';
+    const panel = document.createElement('div');
+    panel.id = 'r-toc-panel';
+    panel.innerHTML = items.map(function (a) {
+      const cible = (a.getAttribute('href') || '').replace('#', '');
+      const lab = (a.querySelector('span:last-child') || a).textContent.trim();
+      return '<button type="button" class="r-toc-flot-i" data-cible="' + cible + '">' + lab + '</button>';
+    }).join('');
+    scr.appendChild(bouton);
+    scr.appendChild(panel);
+    bouton.addEventListener('click', function (e) { e.stopPropagation(); panel.classList.toggle('ouvert'); });
+    panel.addEventListener('click', function (e) {
+      const b = e.target.closest('.r-toc-flot-i');
+      if (!b) return;
+      const el = document.getElementById(b.getAttribute('data-cible'));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      panel.classList.remove('ouvert');
+    });
+    document.addEventListener('click', function (e) {
+      if (!panel.contains(e.target) && e.target !== bouton) panel.classList.remove('ouvert');
+    });
+  }
+
+  function installerBarreLecture(){
+    const scr = document.getElementById('screen-result');
+    if (!scr || scr.__lectureBar) return;
+    scr.__lectureBar = true;
+    const bar = document.createElement('div');
+    bar.id = 'r-lecture-bar';
+    bar.innerHTML = '<i></i>';
+    scr.appendChild(bar);
+    const jauge = bar.firstChild;
+    const lire = function () {
+      const scrScrolle = scr.scrollHeight > scr.clientHeight + 40;
+      const haut = scrScrolle ? scr.scrollTop : (window.scrollY || document.documentElement.scrollTop || 0);
+      const max = scrScrolle ? (scr.scrollHeight - scr.clientHeight) : (document.documentElement.scrollHeight - window.innerHeight);
+      jauge.style.width = (max > 0 ? Math.min(100, Math.round((haut / max) * 100)) : 0) + '%';
+    };
+    scr.addEventListener('scroll', lire, { passive: true });
+    window.addEventListener('scroll', lire, { passive: true });
+  }
+
+  return { installerBarreLecture, installerSommaireFlottant, telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)
@@ -2822,7 +2881,7 @@ Result.noterPortrait = function(){
       btn.disabled = true;
       btn.textContent = 'Envoi en cours...';
       const avis = Object.assign({}, notesAvis, { AVIS_VERBATIM: (document.getElementById('noter-verbatim').value || '').trim() || undefined });
-      fetch(API_BASE + '/progression', {
+      fetch('https://sinea-profile-ia.vercel.app/api/progression', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'avis_direct', jeton: jeton, type: (typeof res !== 'undefined' && res && res.type) || undefined, avis: avis }),

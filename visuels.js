@@ -118,7 +118,7 @@
       const attrsMv = dAv ? ' class="q16-pt q16-mv" data-cy0="' + py(dAv.avant) + '" data-cy1="' + cy + '"' : ' class="q16-pt"';
       const r = taille && taille[c.id] ? Math.min(13, 6 + taille[c.id] * 1.6) : 7;
       const coul = fams[c.famille] || '#8A879B';
-      pts += '<g' + attrsMv + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
+      pts += '<g' + attrsMv + ' data-comp="' + c.id + '"' + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
         + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 2.5) + '" fill="#FDFCF8" opacity="0.95"/>'
         + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + coul + '"/>'
         + '<title>' + ech(c.nom) + ' · potentiel ' + Math.round(c.potentiel) + ' · expression ' + Math.round(c.expression) + '</title></g>';

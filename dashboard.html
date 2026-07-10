@@ -465,7 +465,7 @@
   .reco-cta:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(84,116,245,0.28);}
 
 /* ===== v44 : super admin + brief de campagne SeedUp ===== */
-.super-badge{display:inline-block;margin:0 0 14px;padding:7px 14px;border-radius:20px;background:linear-gradient(120deg,#5E59C7,#7B76D9);color:#fff;font-size:12px;font-weight:700;letter-spacing:0.04em;}
+.super-badge{display:inline-block;margin:0 0 14px;padding:7px 14px;border-radius:20px;background-color:#5E59C7;background-image:linear-gradient(120deg,#5E59C7,#7B76D9);color:#fff;font-size:12px;font-weight:700;letter-spacing:0.04em;}
 .brief-cta{margin-top:14px;}
 .brief-card{margin:18px 0;padding:24px 24px 20px;border-radius:18px;background:#fff;border:1px solid #ECEAE3;box-shadow:0 2px 12px rgba(0,0,0,0.05);}
 .brief-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px;}
@@ -835,6 +835,46 @@ tbody .heat-nom:hover{color:#5E59C7;text-decoration:underline;}
 .ec-diag:hover{color:#5E59C7;}
 .ec-diag-r{font-size:11.5px;color:#1A1A2E;margin:6px 0 0;line-height:1.6;min-height:14px;}
 .ec-diag-r b{color:#5E59C7;}
+</style>
+<style id="v109-standard">
+/* v109 : le dashboard RH au standard */
+.breadcrumb a{display:inline-flex;align-items:center;min-height:40px;padding:8px 6px;}
+.pt-b{min-height:40px;}
+.pt-s-btn{min-height:40px;}
+.exp-btn{min-height:40px;}
+.bd-mat-btn{min-height:40px;}
+.bd-mat-nom{min-height:40px;display:flex;align-items:center;}
+#content .stat-lab{color:#4A4757;}
+#content .camp-badge{font-size:11px;background:#ECEAF8;color:#4B47A0;}
+.pt-s-k{font-size:11px;}
+.sup-kpi-l{font-size:11px;}
+.carto-axe-x{font-size:11px;}
+.carto-axe-y{font-size:11px;}
+.carto-quad{font-size:11px;}
+.membres-filtre{margin:0 0 12px;}
+.membres-filtre input{width:100%;max-width:420px;font-family:inherit;font-size:13.5px;padding:11px 14px;min-height:44px;border:1.5px solid #E2DFD6;border-radius:12px;background:#fff;color:#2A2733;}
+.membres-filtre input:focus{outline:2px solid #5E59C7;outline-offset:1px;border-color:#5E59C7;}
+/* v110 : les retardataires visibles et relançables */
+.attente-bloc{background:#FFF9EE;border:1px solid #F1E4C8;border-radius:14px;padding:14px 16px;margin:0 0 18px;}
+.attente-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;}
+.attente-chip{font-size:12px;font-weight:700;color:#7A5A17;background:#FBEFD4;border-radius:12px;padding:7px 12px;}
+.attente-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.attente-copier{font-family:inherit;font-size:13px;font-weight:800;min-height:44px;padding:10px 16px;border:none;border-radius:12px;background:#221D45;color:#F5F4F0;cursor:pointer;}
+.attente-copier:focus-visible{outline:2px solid #FFD34D;outline-offset:2px;}
+.attente-ok{font-size:12.5px;font-weight:800;color:#2E7D5B;}
+/* v111 : le tri de la liste des membres */
+.membres-tri{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 12px;}
+.tri-lab{font-size:12px;font-weight:800;color:#6E6A85;}
+.tri-btn{font-family:inherit;font-size:12.5px;font-weight:800;min-height:40px;padding:8px 14px;border:1.5px solid #E2DFD6;border-radius:12px;background:#fff;color:#4A4757;cursor:pointer;}
+.tri-btn.on{background:#5E59C7;border-color:#5E59C7;color:#fff;}
+/* v112 : les onglets super au standard */
+.sup-onglet{min-height:40px;}
+@media (max-width:640px){
+  .sup-onglet{min-height:44px;}
+  .tri-btn{min-height:44px;}
+  .breadcrumb a{min-height:44px;}
+  .pt-b,.pt-s-btn,.exp-btn,.bd-mat-btn,.bd-mat-nom{min-height:44px;}
+}
 </style>
 </head>
 <body>
