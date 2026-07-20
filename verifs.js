@@ -82,7 +82,7 @@ verifie('visuels.js chargé avant result.js', idxH.indexOf('visuels.js') > 0 && 
 const dashH = fs.readFileSync('dashboard.html', 'utf8');
 verifie('visuels.js chargé avant dashboard.js', dashH.indexOf('visuels.js') > 0 && dashH.indexOf('visuels.js') < dashH.indexOf('"dashboard.js"'));
 verifie('restitution : forces et vigilances posées', srcRes.indexOf('forcesVigilancesHtml') >= 0);
-verifie('restitution : double profil posé', srcRes.indexOf('doubleProfilSvg') >= 0);
+verifie('restitution : le naturel et l\'adaptation vivent en une seule carte', srcRes2().indexOf('carteNaturelAdapte(') > 0 && srcRes2().indexOf('r-dp2-card') < 0);
 verifie('restitution : quadrant posé', srcRes.indexOf('Visuels.quadrantSvg(comps)') >= 0);
 verifie('espace : quadrant avec deltas', srcCtrl.indexOf('quadrantSvg(comps, { deltas: deltasQ') >= 0);
 verifie('portail : quadrant fiche et équipe', (srcDash.match(/Visuels\.quadrantSvg/g) || []).length >= 2);
@@ -270,9 +270,67 @@ verifie('restitution : les chargements orphelins se replient en mode figé', src
 verifie('restitution : la barre de lecture accompagne le défilement', srcRes2().indexOf('function installerBarreLecture(') > 0 && srcRes2().indexOf('installerBarreLecture,') > 0 && cssTxt2().indexOf('#r-lecture-bar') > 0);
 verifie('restitution : cibles et encres au standard', cssTxt2().indexOf('.r-topbar-espace{min-height:40px;}') > 0 && cssTxt2().indexOf('.r-ia-tag{font-size:11px;color:#4B47A0;}') > 0 && cssTxt2().indexOf('.r-rare{background-color:#221D45;}') > 0 && cssTxt2().indexOf('.r-chat-sugg{min-height:44px;}') > 0);
 verifie('restitution : le sommaire flotte, liste et téléporte', srcRes2().indexOf('function installerSommaireFlottant(') > 0 && srcRes2().indexOf('installerBarreLecture(); installerSommaireFlottant();') > 0 && srcRes2().indexOf('installerBarreLecture, installerSommaireFlottant,') > 0 && cssTxt2().indexOf('#r-toc-flot{position:fixed') > 0 && cssTxt2().indexOf('#r-toc-panel.ouvert{display:block;}') > 0);
+verifie('restitution terrain : bouton autonome, largeurs unies, radar ample, doublon retiré', require('fs').readFileSync('style.css', 'utf8').indexOf('.r-topbar-espace{background:#221D45') > 0 && require('fs').readFileSync('style.css', 'utf8').indexOf('#screen-result .r-bloc{padding-left:23px') > 0 && require('fs').readFileSync('style.css', 'utf8').indexOf('.r-radar-svg{width:100%') > 0 && require('fs').readFileSync('result.js', 'utf8').indexOf('r-dp2-card') < 0 && require('fs').readFileSync('result.js', 'utf8').indexOf('class="r-radar-svg"') > 0);
+verifie('restitution : les devises parlent en tendances, à l\'infinitif', srcRes2().indexOf('"Relier les personnes et faire tenir les liens."') > 0 && srcRes2().indexOf('Je relie les personnes') < 0 && srcRes2().indexOf('Je suis le moteur') < 0);
+verifie('compétences : le zoom respire et les points sont fins', require('fs').readFileSync('visuels.js', 'utf8').indexOf('hi - lo < 16') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('r * 0.72') > 0);
+verifie('espace : la constellation et le jardin expliquent leur intention', srcCtrl2().indexOf('Vers la droite grandit votre potentiel naturel') > 0 && srcCtrl2().indexOf('jr-pourquoi') > 0 && srcCtrl2().indexOf('cinq défis font éclore une étape') > 0 && cssTxt2().indexOf('.jr-pourquoi{') > 0);
+verifie('fiabilité : le verdict post-affinage reste honnête face aux signaux forts', srcCtrl2().indexOf('fortsRestants') > 0 && srcCtrl2().indexOf('Une variabilité de réponses reste visible') > 0);
+verifie('restitution : la notation du portrait est accessible en relecture', srcRes2().indexOf('ouvrirNotation: showMoment3') > 0 && srcRes2().indexOf('Noter ce portrait') > 0 && cssTxt2().indexOf('.r-noter-btn{') > 0);
+verifie('matrices : tooltip riche, lecture carto et données portées par les points', require('fs').readFileSync('visuels.js', 'utf8').indexOf('data-pot=') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('function brancherTooltip(') > 0 && cssTxt2().indexOf('.qt-tip{') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('carto-lecture') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('orientation relation') > 0);
+(function () {
+  if (!window.Visuels) { eval(fs.readFileSync('visuels.js', 'utf8')); }
+  const VZ = window.Visuels, CZ = window.Competences;
+  const SX = CZ.SEUILS.potAppui, SYv = CZ.SEUILS.exprAppui;
+  const mk = (id, p, e) => ({ id: id, nom: id.toUpperCase(), famille: 'RELATION', potentiel: p, expression: e, zone: CZ.zoneDe(p, e) });
+  const comps = [mk('qa', 80, 75), mk('qb', 22, 26), mk('qc', 76, 32), mk('qd', 45, 72), mk('qe', 55, 50), mk('qf', 90, 88)];
+  const svg = VZ.quadrantSvg(comps);
+  const rects = Array.from(svg.matchAll(/<rect x="(\d+)" y="(\d+)"/g)).map(m => ({ x: +m[1], y: +m[2] }));
+  const sx = rects[1].x, sy = rects[2].y;
+  let geoOk = true, mono = true, dernierCx = -1;
+  comps.slice().sort((a, b) => a.potentiel - b.potentiel).forEach(c => {
+    const m = svg.match(new RegExp('data-comp="' + c.id + '"[\\s\\S]*?<circle cx="(\\d+)" cy="(\\d+)"'));
+    if (!m) { geoOk = false; return; }
+    const cx = +m[1], cy = +m[2];
+    if (Math.abs(c.potentiel - SX) > 2 && ((cx >= sx) !== (c.potentiel >= SX))) geoOk = false;
+    if (Math.abs(c.expression - SYv) > 2 && ((cy <= sy) !== (c.expression >= SYv))) geoOk = false;
+    if (cx < dernierCx) mono = false;
+    dernierCx = cx;
+  });
+  verifie('matrices : chaque point tombe dans le quadrant de sa zone', geoOk);
+  verifie('matrices : le potentiel ordonne les points de gauche à droite', mono);
+  const haut = CZ.scorer({ O: 100, C: 100, E: 100, A: 100, N: 0 }, null, null);
+  const basx = CZ.scorer({ O: 0, C: 0, E: 0, A: 0, N: 100 }, null, null);
+  const bornes = haut.concat(basx).every(c => c.potentiel >= 0 && c.potentiel <= 100 && c.expression >= 0 && c.expression <= 100);
+  const pot = (bf) => CZ.scorer(bf, null, null).find(c => c.id === 'communication_influence').potentiel;
+  const monotone = pot({ O: 50, C: 50, E: 90, A: 50, N: 50 }) > pot({ O: 50, C: 50, E: 20, A: 50, N: 50 });
+  const avant = CZ.scorer({ O: 60, C: 40, E: 55, A: 65, N: 45 }, { E: -20, C: 10 }, null);
+  const apres = CZ.projeterComps(avant, new Set(avant.map(c => c.id)));
+  const projSaine = apres.every((c, i) => c.expression >= avant[i].expression && c.expression <= Math.max(avant[i].potentiel, avant[i].expression));
+  verifie('matrices : les scores restent bornés aux extrêmes', bornes);
+  verifie('matrices : le potentiel suit le trait qui le porte', monotone);
+  verifie('matrices : la projection élève sans jamais dépasser le potentiel', projSaine);
+verifie('résilience : les envois échoués se retiennent et se renvoient au retour du réseau', srcCtrl2().indexOf('interEnAttente') > 0 && srcCtrl2().indexOf('function bandeauHorsLigne(') > 0 && srcCtrl2().indexOf('Rechargez la page dans un instant') > 0 && srcCtrl2().indexOf('gardez cet onglet ouvert') > 0 && srcCtrl2().indexOf('tentative < 4') > 0 && srcCtrl2().indexOf('sync-bandeau') > 0 && srcCtrl2().indexOf("addEventListener('online'") > 0 && cssTxt2().indexOf('#sync-bandeau{') > 0);
+verifie('identité web : description, aperçu de partage, couleur et favicon sur les deux pages', ['index.html', 'dashboard.html'].every(function (f) { const t = require('fs').readFileSync(f, 'utf8'); return t.indexOf('og:title') > 0 && t.indexOf('name="description"') > 0 && t.indexOf('theme-color') > 0 && t.indexOf('rel="icon"') > 0; }));
+})();
+(function () {
+  const inv = new Set(SINEA_DATA.mini_inverses);
+  const tranche = {}, chaos = {};
+  const cyc = [1, 4, 2, 3];
+  SINEA_DATA.mini_items.forEach(function (it, i2) {
+    const haut = (i2 % 4 === 0) ? 3 : 4;
+    const bas = (i2 % 4 === 0) ? 2 : 1;
+    tranche[it.id] = inv.has(it.id) ? bas : haut;
+    chaos[it.id] = cyc[i2 % 4];
+  });
+  const fT = Engine.scorerFiabilite(tranche, {});
+  const fC = Engine.scorerFiabilite(chaos, {});
+  verifie('fiabilité : un répondant tranché obtient la confiance du moteur', fT.score >= 85 && fT.niveau === 'élevée');
+  verifie('fiabilité : un remplissage cyclique déclenche le signal hasard', fC.score <= fT.score - 14 && fC.signaux.some(function (s2) { return s2.type === 'hasard'; }));
+})();
+verifie('compétences : zones expliquées, légende vivante, définitions au clic', srcRes2().indexOf('q16-zones') > 0 && srcRes2().indexOf('q16-legende') > 0 && srcRes2().indexOf('function brancherQ16(') > 0 && srcRes2().indexOf('installerSommaireFlottant(); brancherQ16();') > 0 && cssTxt2().indexOf('svg.q16.q16-focus g[data-comp]') > 0);
 verifie('dashboard RH : le filtre des membres vit et agit', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('function filtrerMembres(') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('id="membres-filtre"') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.membres-filtre input{') > 0);
 verifie('dashboard RH : cibles et encres au standard', require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.pt-s-btn{min-height:40px;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('#content .stat-lab{color:#4A4757;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.pt-b,.pt-s-btn,.exp-btn,.bd-mat-btn,.bd-mat-nom{min-height:44px;}') > 0);
-verifie('dashboard RH : les retardataires sont nommés et relançables', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('function copierRelance(') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('En attente (') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.attente-copier{') > 0);
+verifie('dashboard RH : les retardataires sont nommés et relançables', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('function copierRelance(') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('FRONT_APP + \'/?token=\'') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('En attente (') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.attente-copier{') > 0);
 verifie('dashboard RH : l\'export CSV vit pour le RH aussi', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('id="btn-csv-camp"') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('SUPER ? \' <button class="exp-btn exp-mini" id="btn-csv-camp"') < 0);
 verifie('dashboard RH : la liste se trie par nom et par famille', require('fs').readFileSync('dashboard.js', 'utf8').indexOf('function trierMembres(') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('data-fam=') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.tri-btn.on{') > 0);
 verifie('super admin : onglets au standard, badge blindé', require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.sup-onglet{min-height:40px;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('.sup-onglet{min-height:44px;}') > 0 && require('fs').readFileSync('dashboard.html', 'utf8').indexOf('background-color:#5E59C7;background-image:linear-gradient') > 0);

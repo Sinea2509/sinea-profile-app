@@ -3,6 +3,7 @@
   const ANALYSE_URL = API_BASE + "/analyse_equipe";
   const COMPAT_URL = API_BASE + "/compatibilite";
   const GRILLE_URL = API_BASE + "/grille_entretien";
+  const FRONT_APP = "https://sinea-profile-app.vercel.app";
   const CODEX_URL = API_BASE + "/codex";
   const COACH_ENVOI_URL = API_BASE + "/coach_envoi";
   const LIEN_URL = API_BASE + "/lien_apprenant";
@@ -11,8 +12,8 @@
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v112');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v112]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v120');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v120]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";
@@ -2309,6 +2310,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
         <div class="panel duo-visuel">
           <div class="panel-title">Positionnement des membres</div>
           <div class="panel-sub">Chaque membre placé selon son orientation et son énergie.</div>
+          <p class="carto-lecture">Chaque point est un membre, plac\u00e9 par son profil. L'horizontale va de l'orientation relation \u00e0 l'orientation t\u00e2che, la verticale de la r\u00e9flexion pos\u00e9e \u00e0 l'\u00e9nergie d'action. Survolez un point pour lire le membre et sa position.</p>
           <div class="carto-wrap">
             <div class="carto-axe-y haut">Action</div>
             <div class="carto-axe-y bas">Réflexion</div>
@@ -2514,7 +2516,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
 
     const enAttente = repsTous.filter(function (r) { return !String(r.statut || '').toLowerCase().startsWith('termin'); });
     if (enAttente.length){
-      const lienCamp = API_BASE.replace('/api', '') + '/?token=' + encodeURIComponent(camp.code || codeCampagneCourant || '');
+      const lienCamp = FRONT_APP + '/?token=' + encodeURIComponent(camp.code || codeCampagneCourant || '');
       html += `
       <div class="section-label">En attente (${enAttente.length})</div>
       <div class="attente-bloc">
@@ -2645,7 +2647,7 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
     });
     const labelsCarto={id:'labelsCarto',afterDatasetsDraw:function(chart){var cx=chart.ctx;cx.save();cx.font='600 11px Manrope, sans-serif';cx.fillStyle='#4A4A55';cx.textAlign='center';chart.data.datasets.forEach(function(ds,di){var meta=chart.getDatasetMeta(di);if(meta.hidden)return;meta.data.forEach(function(pt,i){var nom=(((ds.data[i]||{}).nom)||'').split(' ')[0];if(nom)cx.fillText(nom,pt.x,pt.y-13);});});cx.restore();}};
     const c3=document.getElementById('chartCarto');
-    if(c3) charts.carto=new Chart(c3,{type:'scatter',data:{datasets:Object.values(datasetsByFam)},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:14}},scales:{x:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}},y:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}}},plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:12}},tooltip:{callbacks:{label:c=>c.raw.nom}}},animation:{duration:800}},plugins:[labelsCarto]});
+    if(c3) charts.carto=new Chart(c3,{type:'scatter',data:{datasets:Object.values(datasetsByFam)},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:14}},scales:{x:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}},y:{min:0,max:100,grid:{color:'#F0EDF7'},ticks:{display:false},border:{display:false}}},plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},usePointStyle:true,padding:12}},tooltip:{callbacks:{label:(c)=>{const p=c.raw;const lx=p.x<45?'orientation relation':(p.x>55?'orientation t\u00e2che':'\u00e9quilibre relation-t\u00e2che');const ly=p.y>55?"\u00e9nergie d'action":(p.y<45?'r\u00e9flexion pos\u00e9e':'tempo \u00e9quilibr\u00e9');return [p.nom, lx+' \u00b7 '+ly];}}}},animation:{duration:800}},plugins:[labelsCarto]});
   }
 
   // ====== ANALYSE STRATÉGIQUE ======

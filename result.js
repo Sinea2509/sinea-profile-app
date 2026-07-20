@@ -402,8 +402,18 @@ const Result = (() => {
       return `<div class="r-section-tag">Vos compétences, la lecture Sinéa</div>
         <p class="r-hint">Le potentiel vient de votre nature, l'expression de votre comportement au travail. La carte situe vos seize compétences en quatre zones de jeu.</p>
         <div class="r-card r-q16-card">
-          ${window.Visuels ? Visuels.quadrantSvg(comps) : ''}
-          <p class="r-comp-pont">Dans les pistes ci-dessous, choisissez au moins une action qui travaille vos opportunités : c'est là que l'effort rapporte le plus.</p>
+          <div class="q16-zones">
+            <div class="q16-zone q16-z-appui"><b>Appui</b> · potentiel élevé et expression au rendez-vous, vos forces visibles au quotidien.</div>
+            <div class="q16-zone q16-z-oppo"><b>Opportunité</b> · le potentiel dépasse l'expression, l'endroit où l'effort rapporte le plus.</div>
+            <div class="q16-zone q16-z-sur"><b>Sur-régime</b> · l'expression dépasse le potentiel, tenez la posture en surveillant l'énergie qu'elle coûte.</div>
+            <div class="q16-zone q16-z-veille"><b>Veille</b> · potentiel et expression en retrait, terrain d'observation, sans urgence.</div>
+          </div>
+          <div class="q16-flex">
+            ${window.Visuels ? Visuels.quadrantSvg(comps) : ''}
+            <div class="q16-legende">${comps.map(c2 => `<button type="button" class="q16-leg-i" data-comp="${c2.id}"><i style="background:${(window.Competences && Competences.COULEURS_FAMILLES && Competences.COULEURS_FAMILLES[c2.famille]) || '#999'}"></i>${echapHtml(c2.nom)}</button>`).join('')}</div>
+          </div>
+          <div id="q16-def" class="q16-def"></div>
+          <p class="r-comp-pont">Survolez une compétence de la liste pour l'allumer sur la carte, touchez-la pour lire sa définition. Dans les pistes ci-dessous, choisissez au moins une action qui travaille vos opportunités : c'est là que l'effort rapporte le plus.</p>
         </div>`;
     } catch (e) { console.warn("[Sinéa]", e); return ''; }
   }
@@ -441,7 +451,7 @@ const Result = (() => {
     p+=`<polygon points="${dp}" fill="${color}33" stroke="${color}" stroke-width="2.5"/>`;
     vals.forEach((v,i)=>{ const x=cx+Math.cos(ang(i))*R*(v/100),y=cy+Math.sin(ang(i))*R*(v/100); p+=`<circle cx="${x}" cy="${y}" r="4" fill="${color}"/>`; });
     labels.forEach((l,i)=>{ const lr=R+22,x=cx+Math.cos(ang(i))*lr,y=cy+Math.sin(ang(i))*lr; const a=Math.abs(Math.cos(ang(i)))<0.3?'middle':(Math.cos(ang(i))>0?'start':'end'); p+=`<text x="${x}" y="${y+4}" text-anchor="${a}" font-size="11" font-weight="600" font-family="Manrope" fill="#747474">${l}</text>`; });
-    return `<svg viewBox="0 0 240 240" width="220" height="220">${p}</svg>`;
+    return `<svg class="r-radar-svg" viewBox="0 0 240 240">${p}</svg>`;
   }
   // Radar des styles commerciaux / leadership (n branches selon le référentiel)
   function radarStyleSpe(res, color){
@@ -834,7 +844,6 @@ const Result = (() => {
         <div class="r-ia" id="ia-bigfive"><div class="r-ia-tag">Ce que révèle le croisement de vos dimensions</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Votre naturel et votre adaptation au travail</div>
         <p class="r-hint">L'écart entre qui vous êtes spontanément et comment vous agissez au travail révèle où vous fournissez un effort.</p>
-        ${window.Visuels && res.naturelAdapte ? `<div class="r-card r-dp2-card">${Visuels.doubleProfilSvg(res.naturelAdapte)}</div>` : ''}
         ${carteNaturelAdapte(res)}
         <div class="r-ia" id="ia-naturel"><div class="r-ia-tag">Naturel et adaptation, dimension par dimension</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-section-tag">Vos tensions intérieures</div>
@@ -968,6 +977,7 @@ const Result = (() => {
       <div class="r-fin-cta">
         <h3>Votre portrait est prêt</h3>
         <p>Retrouvez votre analyse et la suite de votre parcours dans votre espace.</p>
+        <div class="r-noter"><span class="r-noter-txt">Votre avis compte pour affiner Sinéa Profile.</span><button type="button" class="r-noter-btn" onclick="Result.ouvrirNotation()">Noter ce portrait</button></div>
         <button class="btn-primary btn-light r-cta-espace" onclick="App.goToEspace()">Accéder à mon espace</button>
       </div>
     `;
@@ -1980,26 +1990,26 @@ const Result = (() => {
     VISION:   { c1: '#5E59C7', c2: '#8E89E8', label: 'Vision' },
   };
   const PHRASES_CARTE = {
-    "La Tisseuse": "Je relie les personnes et fais tenir les liens.",
-    "Le Passeur": "Je relie les personnes et transmets ce qui compte.",
-    "Le Roc": "Je suis le point d'appui sur lequel on compte.",
-    "Le Diplomate": "J'accorde les points de vue avec finesse.",
-    "L'Ambassadeur": "Je porte haut les idées et rassemble.",
-    "Le Capitaine": "Je donne le cap et j'entraîne vers le but.",
-    "L'Indomptable": "J'ouvre la voie et j'ose là où d'autres hésitent.",
-    "Le Champion": "Je suis le moteur qui entraîne vers le résultat.",
-    "Le Pionnier": "J'explore et j'ouvre des chemins neufs.",
-    "Le Résilient": "Je rebondis et je tiens dans la durée.",
-    "L'Architecte": "Je construis la structure et la vision d'ensemble.",
-    "La Sentinelle": "Je protège et j'anticipe ce qui vient.",
-    "Le Gardien": "Je veille à la justesse et à la solidité.",
-    "L'Orfèvre": "Je cisèle le détail juste et le travail bien fait.",
-    "Le Stratège": "Je lis loin et je pose les bons coups.",
-    "Le Conteur": "Je donne du sens et j'embarque par le récit.",
-    "L'Étincelle": "J'allume les idées et l'énergie créative.",
-    "Le Veilleur": "Je perçois les signaux faibles avant les autres.",
-    "L'Explorateur": "Je repousse les horizons par curiosité.",
-    "Le Révélateur": "Je fais émerger le potentiel des autres.",
+    "La Tisseuse": "Relier les personnes et faire tenir les liens.",
+    "Le Passeur": "Relier les personnes et transmettre ce qui compte.",
+    "Le Roc": "Tenir le point d'appui sur lequel on compte.",
+    "Le Diplomate": "Accorder les points de vue avec finesse.",
+    "L'Ambassadeur": "Porter haut les idées et rassembler.",
+    "Le Capitaine": "Donner le cap et entraîner vers le but.",
+    "L'Indomptable": "Ouvrir la voie et oser là où d'autres hésitent.",
+    "Le Champion": "Entraîner l'équipe vers le résultat.",
+    "Le Pionnier": "Explorer et ouvrir des chemins neufs.",
+    "Le Résilient": "Rebondir et tenir dans la durée.",
+    "L'Architecte": "Construire la structure et la vision d'ensemble.",
+    "La Sentinelle": "Protéger et anticiper ce qui vient.",
+    "Le Gardien": "Veiller à la justesse et à la solidité.",
+    "L'Orfèvre": "Ciseler le détail juste et le travail bien fait.",
+    "Le Stratège": "Lire loin et poser les bons coups.",
+    "Le Conteur": "Donner du sens et embarquer par le récit.",
+    "L'Étincelle": "Allumer les idées et l'énergie créative.",
+    "Le Veilleur": "Percevoir les signaux faibles avant les autres.",
+    "L'Explorateur": "Repousser les horizons par curiosité.",
+    "Le Révélateur": "Faire émerger le potentiel des autres.",
   };
 
   function genererCarte(archetype, famille, slug, prenom, epithete) {
@@ -2262,7 +2272,7 @@ const Result = (() => {
       const c = res.contenuFige ? res.contenuFige : await callWorker(res);
       if (c && c._usage) coutPortrait = c._usage;
       try { poserEssentiel(res, c); } catch (e) { console.warn("[Sinéa]", e); }
-      try { installerBarreLecture(); installerSommaireFlottant(); } catch (e) {}
+      try { installerBarreLecture(); installerSommaireFlottant(); brancherQ16(); } catch (e) {}
       if (res.contenuFige) setTimeout(() => {
         document.querySelectorAll('#screen-result .r-ia-loading').forEach(el => {
           el.outerHTML = '<p class="r-ia-fige">Cette section ne fait pas partie de cette analyse sauvegardée.</p>';
@@ -2789,6 +2799,27 @@ const Result = (() => {
     window.scrollTo(0, 0);
   }
 
+  function brancherQ16(){
+    const carte = document.querySelector('#screen-result .r-q16-card');
+    if (!carte || carte.__q16) return;
+    carte.__q16 = true;
+    const svg = carte.querySelector('svg.q16');
+    const allumer = function (id, on) {
+      carte.querySelectorAll('[data-comp="' + id + '"]').forEach(function (el) { el.classList.toggle('q16-hi', on); });
+      if (svg) svg.classList.toggle('q16-focus', on);
+    };
+    carte.addEventListener('mouseover', function (e) { const el = e.target.closest && e.target.closest('[data-comp]'); if (el) allumer(el.getAttribute('data-comp'), true); });
+    carte.addEventListener('mouseout', function (e) { const el = e.target.closest && e.target.closest('[data-comp]'); if (el) allumer(el.getAttribute('data-comp'), false); });
+    if (window.Visuels && Visuels.brancherTooltip) Visuels.brancherTooltip(carte);
+    carte.addEventListener('click', function (e) {
+      const el = e.target.closest && e.target.closest('[data-comp]');
+      if (!el) return;
+      const id = el.getAttribute('data-comp');
+      const ref = (window.Competences && Competences.REFERENTIEL || []).find(function (r2) { return r2.id === id; });
+      const zone = carte.querySelector('#q16-def');
+      if (ref && zone) zone.innerHTML = '<b>' + echapHtml(ref.nom) + '</b> · ' + echapHtml(ref.def);
+    });
+  }
   function installerSommaireFlottant(){
     const scr = document.getElementById('screen-result');
     if (!scr || scr.__tocFlot) return;
@@ -2840,7 +2871,7 @@ const Result = (() => {
     window.addEventListener('scroll', lire, { passive: true });
   }
 
-  return { installerBarreLecture, installerSommaireFlottant, telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
+  return { installerBarreLecture, installerSommaireFlottant, telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, ouvrirNotation: showMoment3, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

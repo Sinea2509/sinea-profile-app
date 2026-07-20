@@ -378,13 +378,13 @@ function scorerFiabilite(repMini, tempsReponses) {
   let niveau, message;
   if (score >= 85) { niveau = 'élevée'; message = 'Le profil est très cohérent : les réponses concordent et se confirment mutuellement.'; }
   else if (score >= 80) { niveau = 'bonne'; message = 'Le profil est cohérent dans l\'ensemble. Résultats fiables.'; }
+  else if (score >= 60) { niveau = 'moyenne'; message = 'Le profil présente des tensions internes. Les résultats donnent une tendance, à confirmer par un échange.'; }
+  else { niveau = 'faible'; message = 'La cohérence des réponses est faible, signe d\'un remplissage rapide ou peu réfléchi. À interpréter avec beaucoup de prudence.'; }
   const aSignalFort = signaux.some(s2 => s2 && s2.niveau === 'fort');
   if (aSignalFort && score >= 80) {
     niveau = 'correcte';
     message = 'Le profil est globalement cohérent, avec un signal interne à surveiller' + (traitIncoherent ? ' sur le trait ' + traitIncoherent : '') + '. Résultats utilisables, à confirmer par l\'échange.';
   }
-  else if (score >= 60) { niveau = 'moyenne'; message = 'Le profil présente des tensions internes. Les résultats donnent une tendance, à confirmer par un échange.'; }
-  else { niveau = 'faible'; message = 'La cohérence des réponses est faible, signe d\'un remplissage rapide ou peu réfléchi. À interpréter avec beaucoup de prudence.'; }
 
   return { score, niveau, message, signaux, traitTension: traitIncoherent };
 }

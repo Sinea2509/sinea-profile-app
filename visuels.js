@@ -45,7 +45,7 @@
       let hi = Math.max.apply(null, vals.concat([seuil])) + 7;
       lo = Math.max(0, Math.floor(lo / 5) * 5);
       hi = Math.min(100, Math.ceil(hi / 5) * 5);
-      if (hi - lo < 30) { const c2 = (hi + lo) / 2; lo = Math.max(0, c2 - 15); hi = Math.min(100, c2 + 15); }
+      if (hi - lo < 16) { const c2 = (hi + lo) / 2; lo = Math.max(0, c2 - 8); hi = Math.min(100, c2 + 8); }
       return [lo, hi];
     };
     const [dx0, dx1] = domaine(valsX, seuilX);
@@ -118,9 +118,9 @@
       const attrsMv = dAv ? ' class="q16-pt q16-mv" data-cy0="' + py(dAv.avant) + '" data-cy1="' + cy + '"' : ' class="q16-pt"';
       const r = taille && taille[c.id] ? Math.min(13, 6 + taille[c.id] * 1.6) : 7;
       const coul = fams[c.famille] || '#8A879B';
-      pts += '<g' + attrsMv + ' data-comp="' + c.id + '"' + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
-        + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 2.5) + '" fill="#FDFCF8" opacity="0.95"/>'
-        + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + coul + '"/>'
+      pts += '<g' + attrsMv + ' data-comp="' + c.id + '" data-pot="' + Math.round(c.potentiel) + '" data-expr="' + Math.round(c.expression) + '" data-zone="' + (c.zone || '') + '"' + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
+        + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.72 + 1.6).toFixed(1) + '" fill="#FDFCF8" opacity="0.95"/>'
+        + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.72).toFixed(1) + '" fill="' + coul + '"/>'
         + '<title>' + ech(c.nom) + ' · potentiel ' + Math.round(c.potentiel) + ' · expression ' + Math.round(c.expression) + '</title></g>';
       if (setLabels.has(c.id)) labels.push({ c: c, cx: cx, cy: cy, r: r });
     });
@@ -160,6 +160,27 @@
   // Cinq rails. Un disque violet pour la nature, un losange corail pour
   // le travail, reliés par un pont teinté selon le sens de l'effort.
   // ---------------------------------------------------------
+  function brancherTooltip(container) {
+    if (!container || container.__qtip) return;
+    container.__qtip = true;
+    let tip = document.querySelector('.qt-tip');
+    if (!tip) { tip = document.createElement('div'); tip.className = 'qt-tip'; document.body.appendChild(tip); }
+    container.querySelectorAll('[data-comp]').forEach(function (g) {
+      const t = g.querySelector('title');
+      if (t) { g.setAttribute('data-nom', (t.textContent || '').split(' \u00b7 ')[0]); g.setAttribute('aria-label', t.textContent || ''); t.remove(); }
+    });
+    const ZONES = { appui: 'Appui, force visible au quotidien', opportunite: "Opportunit\u00e9, l'effort rapporte ici", economie: "Veille, terrain d'observation", neutre: 'Zone m\u00e9diane' };
+    container.addEventListener('mousemove', function (e) {
+      const g = e.target.closest && e.target.closest('[data-comp]');
+      if (!g || !g.hasAttribute('data-pot')) { tip.style.display = 'none'; return; }
+      tip.innerHTML = '<b>' + ech(g.getAttribute('data-nom') || g.getAttribute('data-comp')) + '</b><span>Potentiel ' + g.getAttribute('data-pot') + ' \u00b7 Expression ' + g.getAttribute('data-expr') + '</span><i>' + (ZONES[g.getAttribute('data-zone')] || '') + '</i>';
+      tip.style.display = 'block';
+      tip.style.left = Math.min(window.innerWidth - 200, e.clientX + 14) + 'px';
+      tip.style.top = (e.clientY + 16) + 'px';
+    });
+    container.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+  }
+
   function doubleProfilSvg(na) {
     if (!na || !na.naturel || !na.adapte) return '';
     const TRAITS = [
@@ -336,5 +357,5 @@
     };
   }
 
-  window.Visuels = { quadrantSvg, doubleProfilSvg, forcesVigilancesHtml, radarMiroirSvg, frise90Svg, brancherCurseur };
+  window.Visuels = { brancherTooltip, quadrantSvg, doubleProfilSvg, forcesVigilancesHtml, radarMiroirSvg, frise90Svg, brancherCurseur };
 })();

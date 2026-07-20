@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v112 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v112]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v120 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v120]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -90,8 +90,34 @@ const App = (() => {
         type_analyse: interactions.diagType && interactions.diagType !== 'classic' ? interactions.diagType : 'socle',
         interactions: interactions,
       }),
-    }).catch(() => {});
+    }).then(function (r) {
+      if (r && r.ok) { interEnAttente = null; masquerSyncBandeau(); }
+      else { retenirEchecSync(interactions); }
+    }).catch(function () { retenirEchecSync(interactions); });
   }
+
+  let interEnAttente = null;
+  function bandeauHorsLigne(txt) {
+    let b = document.getElementById('sync-bandeau');
+    if (!b) {
+      b = document.createElement('div');
+      b.id = 'sync-bandeau';
+      document.body.appendChild(b);
+    }
+    b.textContent = txt;
+    b.style.display = 'block';
+  }
+  function retenirEchecSync(interactions) {
+    interEnAttente = interactions;
+    bandeauHorsLigne('Hors connexion. Vos derniers choix seront renvoy\u00e9s automatiquement.');
+  }
+  function masquerSyncBandeau() {
+    const b = document.getElementById('sync-bandeau');
+    if (b) b.style.display = 'none';
+  }
+  window.addEventListener('online', function () {
+    if (interEnAttente) envoyerInteractions(interEnAttente);
+  });
 
   // Sauvegarde l'analyse IA générée (texte figé) pour pouvoir la revoir plus tard
   function sauverAnalyse(typeAnalyse, contenu) {
@@ -165,11 +191,23 @@ const App = (() => {
     // Les réponses brutes et les temps de réponse partent avec le résultat :
     // c'est la matière première de la future validation psychométrique (Phase 2).
     const complet = Object.assign({}, result, { reponsesBrutes: answers, tempsReponses: answersTime });
-    fetch(ENREGISTRER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, profil, resultatComplet: complet, campagne: nomCampagne }),
-    }).catch(() => {}); // silencieux : ne bloque pas l'expérience
+    const corps = JSON.stringify({ token, profil, resultatComplet: complet, campagne: nomCampagne });
+    // L'enregistrement se bat : relances espacées puis retour du réseau,
+    // avec un bandeau honnête pendant l'attente. Douze minutes de réponses
+    // méritent mieux qu'un échec silencieux.
+    let tentative = 0;
+    const replanifier = function () {
+      bandeauHorsLigne('Connexion instable. Votre r\u00e9sultat sera renvoy\u00e9 automatiquement, gardez cet onglet ouvert un instant.');
+      if (tentative < 4) setTimeout(envoyer, [0, 2000, 6000, 15000][tentative] || 15000);
+    };
+    const envoyer = function () {
+      tentative++;
+      fetch(ENREGISTRER_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: corps })
+        .then(function (r) { if (r && r.ok) { masquerSyncBandeau(); } else { replanifier(); } })
+        .catch(replanifier);
+    };
+    window.addEventListener('online', function () { if (tentative >= 1) envoyer(); });
+    envoyer();
   }
 
   // Détermine le bon type d'affichage selon le format de la question
@@ -648,7 +686,7 @@ const App = (() => {
     })
       .then(r => r.json())
       .then(data => { renderEspace(data || {}); chargerSuiteEspace(data || {}); })
-      .catch(() => renderEspace({}));
+      .catch(() => { renderEspace({}); bandeauHorsLigne('Connexion au serveur impossible. Rechargez la page dans un instant.'); });
   }
 
   // La suite de l'espace : un seul chargement des interactions, qui nourrit
@@ -669,7 +707,7 @@ const App = (() => {
         try { checklistCtx = { data: dataEspaceCourant, carte: carte }; poserChecklist(dataEspaceCourant, carte); } catch (e) { console.warn('[Sinéa]', e); }
         try { poserCockpit(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         try { poserCompetencesEspace(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
-        try { if (window.Visuels && Visuels.brancherCurseur) Visuels.brancherCurseur(document.getElementById('esp-q16-t'), document.getElementById('esp-cp-matrice')); } catch (e) {}
+        try { if (window.Visuels && Visuels.brancherCurseur) Visuels.brancherCurseur(document.getElementById('esp-q16-t'), document.getElementById('esp-cp-matrice')); if (window.Visuels && Visuels.brancherTooltip) Visuels.brancherTooltip(document.getElementById('esp-cp-matrice')); } catch (e) {}
         poserSeedupEspace(carte);
       })
       .catch(() => {});
@@ -910,7 +948,7 @@ const App = (() => {
     } catch (e) { console.warn("[Sinéa]", e); }
     h += '<button type="button" class="esp-rem-btn esp-cp-mat-btn" onclick="App.toggleMatriceEspace()">Découvrir ma Constellation</button>'
       + '<div id="esp-cp-matrice" style="display:none">'
-      + '<div class="cstl"><div class="cstl-tete"><b>Ma Constellation</b><span>Seize compétences, trente-deux facettes. Les étoiles étiquetées sont celles qui comptent pour vous, touchez les autres pour les découvrir.</span><button type="button" class="ckl-cta" onclick="App.ouvrirGlossaire()">Le glossaire · 16 + 32</button></div>'
+      + '<div class="cstl"><div class="cstl-tete"><b>Ma Constellation</b><span>Seize compétences, trente-deux facettes. Vers la droite grandit votre potentiel naturel, vers le haut votre expression au travail. Vos appuis brillent en haut à droite, vos opportunités attendent en bas à droite, là où vos progrès se verront. Les étoiles étiquetées comptent pour vous, touchez les autres pour les découvrir.</span><button type="button" class="ckl-cta" onclick="App.ouvrirGlossaire()">Le glossaire · 16 + 32</button></div>'
       + '<div class="cstl-grid"><div class="cstl-carte">'
       + (window.Visuels ? Visuels.quadrantSvg(comps, { deltas: deltasQ, compact: true, clic: 'App.ouvrirCompDepuisCarte', labels: idsAValeur(comps) }) : '')
       + '<span class="cstl-hint">Glissez la carte pour explorer ses seize étoiles</span>'
@@ -1222,6 +1260,7 @@ const App = (() => {
     slot.innerHTML = '<div class="esp-rem esp-sd">'
       + '<div class="esp-rem-kicker">SeedUp · Votre jardin d\'ancrage</div>'
       + '<div class="esp-rem-titre">' + etape.label + '</div>'
+      + '<p class="jr-pourquoi">Quatre-vingt-dix jours pour transformer votre portrait en habitudes. Chaque défi de terrain ancré fait grandir ce jardin, cinq défis font éclore une étape, et le jardin raconte votre progression d\'un regard.</p>'
       + '<div class="jr-wrap">' + (fete ? '<div class="jr-etape">Étape franchie · ' + (etape.arbres * 5) + ' défis ancrés</div>' : '') + confetti + jardinSvg(liste.length, slugP, fete) + '</div>'
       + '<div class="esp-sd-stats">' + liste.length + ' défi' + (liste.length > 1 ? 's' : '') + ' planté' + (liste.length > 1 ? 's' : '')
       + (moyR !== null ? ' · réussite moyenne ' + moyR + '/10' : '')
@@ -3731,9 +3770,17 @@ const App = (() => {
                 // la fiabilité a été levée par la confirmation : on la remonte au-dessus du seuil
                 if (result.fiabilite) {
                   result.fiabilite.score = Math.max(result.fiabilite.score, 76);
-                  result.fiabilite.niveau = 'bonne';
-                  result.fiabilite.message = 'Profil confirmé par vos précisions. Résultats fiables.';
                   result.fiabilite.affine = true;
+                  // le verdict reste honnête : la confirmation lève le doute sur LE trait
+                  // testé, jamais sur un signal global de cohérence encore présent.
+                  const fortsRestants = (result.fiabilite.signaux || []).filter(function (s) { return s && s.niveau === 'fort'; });
+                  if (fortsRestants.length) {
+                    result.fiabilite.niveau = 'correcte';
+                    result.fiabilite.message = 'Vos précisions ont confirmé le trait en tension. Une variabilité de réponses reste visible, lisez les scores comme des tendances et confirmez-les par l\'échange.';
+                  } else {
+                    result.fiabilite.niveau = 'bonne';
+                    result.fiabilite.message = 'Profil confirmé par vos précisions. Résultats fiables.';
+                  }
                 }
               }
             } catch (e) { console.warn("[Sinéa]", e); }
@@ -3976,7 +4023,7 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { enregistrerResultat, start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)
