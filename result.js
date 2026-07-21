@@ -750,6 +750,16 @@ const Result = (() => {
     document.getElementById('r-verb').textContent=verbe(dom.nom);
     chargerSignature(res);
     document.getElementById('r-hero').style.setProperty('--fam-color',color);
+    document.getElementById('screen-result').style.setProperty('--fam-color',color);
+    try {
+      const heroC = document.getElementById('r-hero');
+      let carteP = document.getElementById('r-hero-carte');
+      const slugC = (res && res.dominante && SINEA_DATA.images) ? SINEA_DATA.images[res.dominante.nom] : '';
+      if (slugC && window.App && App.srcPerso) {
+        if (!carteP) { carteP = document.createElement('div'); carteP.id = 'r-hero-carte'; carteP.className = 'r-hero-carte'; heroC.appendChild(carteP); }
+        carteP.innerHTML = '<img src="' + App.srcPerso(slugC) + '" alt="' + (res.dominante.nom || '') + '"/>';
+      }
+    } catch (e) {}
     var _spb=document.getElementById('b-spe'); if(_spb)_spb.style.setProperty('--fam-color',color);
     initRevelationBlocs();
     const portrait=document.getElementById('r-portrait-img'); portrait.src=img(dom.nom); portrait.alt=dom.nom;
@@ -974,9 +984,10 @@ const Result = (() => {
         <div class="r-compat-grid" id="compat-grid"></div>
       </div>
 
-      <div class="r-fin-cta">
-        <h3>Votre portrait est prêt</h3>
-        <p>Retrouvez votre analyse et la suite de votre parcours dans votre espace.</p>
+      <div class="r-fin-cta r-cloture">
+        <div class="r-cloture-kicker">Fin de lecture</div>
+        <h3 class="r-cloture-titre">Ce portrait est le vôtre.</h3>
+        <p>Il vit désormais dans votre espace, avec votre plan d'action et votre coach.</p>
         <div class="r-noter"><span class="r-noter-txt">Votre avis compte pour affiner Sinéa Profile.</span><button type="button" class="r-noter-btn" onclick="Result.ouvrirNotation()">Noter ce portrait</button></div>
         <button class="btn-primary btn-light r-cta-espace" onclick="App.goToEspace()">Accéder à mon espace</button>
       </div>
@@ -1499,7 +1510,7 @@ const Result = (() => {
         '<div class="r-selbar-in">' +
           '<div class="r-selbar-hint">Cochez les forces, les points à travailler et les leviers à explorer que vous voulez retrouver dans votre plan, puis validez.</div>' +
           '<div class="r-selbar-row">' +
-            '<div class="r-selbar-txt"><span class="r-selbar-count" id="r-selbar-count">' + recap + '</span><span class="r-selbar-lab">retenus pour votre plan d\'action</span></div>' +
+            '<div class="r-selbar-txt"><span class="r-selbar-count" id="r-selbar-count">' + recap + '</span><span class="r-selbar-lab">pour votre plan d\'action</span></div>' +
             '<button class="r-selbar-btn" id="r-selbar-btn">Valider mes choix</button>' +
           '</div>' +
         '</div>';
@@ -2049,21 +2060,21 @@ const Result = (() => {
       // logo Sinéa en haut
       ctx.textAlign = 'center';
       ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.font = '700 38px Poppins, Arial, sans-serif';
+      ctx.font = '700 38px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillText('SINÉA', taille/2, 92);
-      ctx.font = '500 22px Poppins, Arial, sans-serif';
+      ctx.font = '500 22px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
       ctx.fillText('PROFIL', taille/2, 124);
 
       // prénom de la personne (si disponible)
       if (prenom) {
-        ctx.font = '600 30px Poppins, Arial, sans-serif';
+        ctx.font = '600 30px "Bricolage Grotesque", Poppins, Arial, sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.fillText(prenom, taille/2, taille*0.6);
       }
 
       // intitulé : Mon archétype
-      ctx.font = '700 25px Poppins, Arial, sans-serif';
+      ctx.font = '700 25px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.72)';
       if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
       ctx.fillText('MON ARCHÉTYPE', taille/2, taille*0.658);
@@ -2071,24 +2082,24 @@ const Result = (() => {
 
       // nom de l'archétype (grand)
       ctx.fillStyle = '#FFFFFF';
-      ctx.font = '800 76px Poppins, Arial, sans-serif';
+      ctx.font = '800 76px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillText(archetype, taille/2, taille*0.715);
 
       // épithète métier (facette unisexe selon le style, si module passé)
       if (epithete) {
-        ctx.font = 'italic 600 33px Poppins, Arial, sans-serif';
+        ctx.font = 'italic 600 33px "Bricolage Grotesque", Poppins, Arial, sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.95)';
         ctx.fillText(epithete, taille/2, taille*0.76);
       }
 
       // famille (pastille)
-      ctx.font = '600 30px Poppins, Arial, sans-serif';
+      ctx.font = '600 30px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.fillText('Famille ' + fam.label, taille/2, taille*(epithete ? 0.805 : 0.77));
 
       // phrase signature (avec retour à la ligne automatique)
       const phrase = PHRASES_CARTE[archetype] || '';
-      ctx.font = '400 34px Poppins, Arial, sans-serif';
+      ctx.font = '400 34px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
       const mots = phrase.split(' ');
       let ligne = ''; let y = taille*(epithete ? 0.865 : 0.84); const maxW = taille*0.82; const lh = 46;
@@ -2102,7 +2113,7 @@ const Result = (() => {
       lignes.forEach((l, i) => ctx.fillText(l, taille/2, y + i*lh));
 
       // mention bas
-      ctx.font = '500 24px Poppins, Arial, sans-serif';
+      ctx.font = '500 24px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.6)';
       ctx.fillText('sineaformation.fr', taille/2, taille - 48);
 
@@ -2548,6 +2559,8 @@ const Result = (() => {
   }
 
   function showMoment3(){
+    const sb0 = document.getElementById('r-selbar');
+    if (sb0) sb0.classList.remove('on');
     const m3 = SINEA_DATA.moment3;
     let scr = document.getElementById('screen-moment3');
     if (!scr) {
@@ -2718,6 +2731,8 @@ const Result = (() => {
   const DEFIS_URL = API_BASE + "/defis";
 
   async function showDefis(){
+    const sb0 = document.getElementById('r-selbar');
+    if (sb0) sb0.classList.remove('on');
     let scr = document.getElementById('screen-defis');
     if (!scr) {
       scr = document.createElement('section');

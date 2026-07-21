@@ -800,7 +800,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 #screen-espace{position:absolute;inset:0;z-index:50;display:none;background:var(--c-beige);overflow-y:auto;}
 #screen-espace.active{display:block;}
 .espace-wrap{max-width:760px;margin:0 auto;padding:28px 20px 60px;}
-.espace-hero{background:radial-gradient(circle at 30% 20%, #F98272 0%, #6E3D82 55%, #0F1232 100%);border-radius:24px;padding:34px 30px;color:#fff;margin-bottom:24px;}
+.espace-hero{background:linear-gradient(140deg,#221D45 0%,#3A2F66 52%,var(--fam,#5E59C7) 155%);border-radius:24px;padding:34px 30px;color:#fff;margin-bottom:64px;}
 .espace-hi{font-size:14px;font-weight:600;opacity:0.85;letter-spacing:0.04em;}
 .espace-name{font-size:30px;font-weight:800;letter-spacing:-0.02em;margin:6px 0 16px;}
 .espace-arch{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.16);border-radius:30px;padding:8px 16px;font-size:15px;font-weight:700;}
@@ -972,11 +972,18 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
    ============================================================ */
 .espace-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;}
 .espace-hero-txt{flex:1;min-width:0;}
-.espace-hero-perso{flex-shrink:0;width:120px;display:flex;align-items:flex-end;justify-content:center;}
-.espace-hero-perso img{width:120px;height:auto;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.3));}
+.espace-hero-perso-vide{}
+.espace-hero-perso-vide{}
+.espace-hero-txt{position:relative;z-index:1;padding-right:min(310px,25vw);}
+@media (max-width:900px){
+  .espace-hero{margin-bottom:34px;}
+  .espace-hero-perso-vide{}
+  .espace-hero-perso-vide{}
+  .espace-hero-txt{padding-right:0;}
+}
 @media (max-width:520px){
-  .espace-hero-perso{width:88px;}
-  .espace-hero-perso img{width:88px;}
+  .espace-hero-perso-vide{}
+  .espace-hero-perso-vide{}
 }
 
 /* ============================================================
@@ -998,15 +1005,15 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .espace-accueil-av{opacity:0.82;}
 
 /* Personnage détouré, rond et élégant */
-.espace-hero-perso img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.25);box-shadow:0 8px 28px rgba(0,0,0,0.35);}
-@media (max-width:520px){ .espace-hero-perso img{width:90px;height:90px;} }
+.espace-hero-perso-vide{}
+@media (max-width:520px){ .espace-hero-perso-vide{} }
 
 /* Barre de progression globale */
 .espace-prog-globale{background:#fff;border-radius:16px;padding:18px 20px;box-shadow:var(--shadow-card);margin-bottom:24px;}
 .espace-pg-head{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--c-dark-grey);margin-bottom:10px;}
 .espace-pg-head span:last-child{color:var(--c-purple-text);}
 .espace-pg-bar{height:9px;background:#EFEDE7;border-radius:10px;overflow:hidden;}
-.espace-pg-fill{height:100%;background:linear-gradient(90deg, var(--c-corail), var(--c-purple));border-radius:10px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+.espace-pg-fill{height:100%;background:linear-gradient(90deg,#5E59C7,#8884F0);border-radius:10px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
 
 /* Animations douces : apparition en fondu */
 @keyframes espaceFadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
@@ -1119,13 +1126,14 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
    ============================================================ */
 /* En-tête de l'espace perso : ajout du pattern de marque */
 .espace-hero{position:relative;overflow:visible;}
-.espace-hero::before{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:300px;opacity:0.15;pointer-events:none;}
+.espace-hero::before{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:300px;opacity:0.06;pointer-events:none;border-radius:24px;}
 .espace-hero > *{position:relative;z-index:1;}
 
 /* Vitrine "Mes résultats" : liseré subtil */
 .esp-resultat{position:relative;overflow:hidden;}
 .esp-resultat::after{content:"";position:absolute;inset:0;background-image:url("pattern.webp");background-size:260px;opacity:0.1;pointer-events:none;}
-.esp-resultat .esp-res-in, .esp-resultat .esp-res-glow{position:relative;z-index:1;}
+.esp-resultat .esp-res-in{position:relative;z-index:1;}
+.esp-resultat .esp-res-glow{position:absolute;z-index:1;}
 
 /* Titre de section dans l'espace perso */
 .espace-section-titre{font-size:13px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--c-purple-text);margin:28px 0 14px;}
@@ -1192,9 +1200,9 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Personnage dans la carte résultat (Mes résultats) */
 .esp-res-in{display:flex;align-items:center;gap:16px;}
 .esp-res-texte{flex:1;min-width:0;}
-.esp-res-perso{flex-shrink:0;width:96px;}
-.esp-res-perso img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.35);box-shadow:0 6px 20px rgba(0,0,0,0.25);}
-@media (max-width:520px){ .esp-res-perso{width:68px;} .esp-res-perso img{width:68px;height:68px;} }
+.esp-res-perso-vide{}
+.esp-res-perso-vide{}
+@media (max-width:520px){ .esp-res-perso-vide{} .esp-res-perso-vide{} }
 
 /* Bandeau d'accès rapide vers la partie spé (commercial/manager) */
 .r-acces-rapide{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;background:linear-gradient(135deg, var(--c-purple), var(--c-purple-text));color:#fff;border-radius:14px;padding:15px 20px;text-decoration:none;font-weight:700;font-size:15px;transition:transform 0.2s, box-shadow 0.2s;box-shadow:0 6px 20px rgba(94,89,199,0.25);}
@@ -1423,7 +1431,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 
 /* ===== v13 : barre de progression du parcours plus visible (degrade vif + brillance qui avance) ===== */
 .q-bar{height:9px;background:#E8E6E0;border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);}
-.q-bar-fill{height:100%;width:5%;background:linear-gradient(90deg,#F98272,#8884F0,#E290EC);background-size:200% 100%;border-radius:6px;box-shadow:0 1px 8px rgba(136,132,240,0.4);transition:width 0.45s ease;animation:qBarShimmer 2.6s linear infinite;}
+.q-bar-fill{height:100%;width:5%;background:linear-gradient(90deg,#5E59C7,#8884F0,#B9B6F5);background-size:200% 100%;border-radius:6px;box-shadow:0 1px 8px rgba(136,132,240,0.4);transition:width 0.45s ease;animation:qBarShimmer 2.6s linear infinite;}
 @keyframes qBarShimmer{0%{background-position:0% 50%;}100%{background-position:200% 50%;}}
 
 /* ===== v15 : blocs de synthese de combinaison (dimensions profondes + pilotage) ===== */
@@ -1444,7 +1452,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* ===== v16 : barre de progression du parcours — correction de la largeur (invisible car sans largeur dans le flex) ===== */
 .q-progress-head{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:9px;margin-bottom:0;}
 .q-bar{width:100%;height:9px;background:#E6E3DC;border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);}
-.q-bar-fill{height:100%;min-width:14px;background:linear-gradient(90deg,#F98272,#8884F0,#E290EC);background-size:200% 100%;border-radius:6px;box-shadow:0 1px 8px rgba(136,132,240,0.45);transition:width 0.5s cubic-bezier(0.22,1,0.36,1);animation:qBarShimmer 2.6s linear infinite;}
+.q-bar-fill{height:100%;min-width:14px;background:linear-gradient(90deg,#5E59C7,#8884F0,#B9B6F5);background-size:200% 100%;border-radius:6px;box-shadow:0 1px 8px rgba(136,132,240,0.45);transition:width 0.5s cubic-bezier(0.22,1,0.36,1);animation:qBarShimmer 2.6s linear infinite;}
 
 /* ===== v16 : desktop — redonner de la vie et de la presence a la page parcours ===== */
 @media (min-width:768px){
@@ -1472,10 +1480,10 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .esp-res-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,0.18);}
 
 /* ===== v17 : personnage de l'encart resultats — plus grand et plus vivant ===== */
-.esp-res-perso{width:132px;}
-.esp-res-perso img{width:132px;height:132px;border:3px solid rgba(255,255,255,0.5);box-shadow:0 12px 32px rgba(0,0,0,0.28);animation:espResFloat 5.5s ease-in-out infinite;}
+.esp-res-perso-vide{}
+.esp-res-perso-vide{}
 @keyframes espResFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
-@media (max-width:520px){ .esp-res-perso{width:96px;} .esp-res-perso img{width:96px;height:96px;} }
+@media (max-width:520px){ .esp-res-perso-vide{} .esp-res-perso-vide{} }
 
 /* ===== v18 : halo dore de genie sur Nea a l'etape des trois voeux ===== */
 .coach-intro-card.genie .coach-intro-nea{animation:genieGlow 2.4s ease-in-out infinite;}
@@ -1520,7 +1528,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* ===== v22 : feuille de route — largeur desktop (sinon colonne mobile perdue dans le vide) ===== */
 @media (min-width:768px){
   .plan-scroll{max-width:880px;padding:36px 32px 80px;}
-  .plan-hero{max-width:600px;margin-left:auto;margin-right:auto;}
+  .plan-hero{max-width:100%;margin-left:auto;margin-right:auto;}
 }
 
 /* ===== v24 : la graine réagit visiblement à chaque palier de croissance ===== */
@@ -1905,7 +1913,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .esp-cp-mat-btn{margin-top:12px;}
 #esp-cp-matrice{margin-top:8px;padding-top:6px;border-top:1px solid #ECEAE3;}
 .espace-pg-bar{height:10px;border-radius:6px;background:#ECEAE3;overflow:hidden;}
-.espace-pg-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#F98272,#E8951A 40%,#5E59C7);transition:width 0.6s ease;}
+.espace-pg-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#5E59C7,#8884F0);transition:width 0.6s ease;}
 .espace-pg-head{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;color:#1A1A2E;margin-bottom:7px;}
 .espace-pg-head span:last-child{color:#6B6B72;font-weight:600;font-size:12px;}
 
@@ -1974,8 +1982,8 @@ img{max-width:100%;}
 .espace-hero-txt{min-width:0;flex:1;}
 @media(max-width:700px){
   .espace-hero{flex-direction:column;align-items:stretch;padding:24px 16px;}
-  .espace-hero-perso{align-self:center;order:-1;}
-  .espace-hero-perso img{width:118px;height:auto;}
+  .espace-hero-perso-vide{}
+  .espace-hero-perso-vide{}
   .esp-nav{justify-content:center;}
 }
 
@@ -2115,8 +2123,8 @@ img{max-width:100%;}
 /* ===== v85 : l'espace au cordeau sur mobile ===== */
 @media (max-width: 640px){
   .espace-hero{flex-direction:column;padding:20px 15px;gap:10px;}
-  .espace-hero-perso{margin:0 auto;}
-  .espace-hero-perso img, .espace-hero-perso span{width:96px;height:96px;}
+  .espace-hero-perso-vide{}
+  .espace-hero-perso-vide{}
   .esp-nav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:none;}
   .esp-nav::-webkit-scrollbar{display:none;}
   .esp-nav-b{white-space:nowrap;flex:0 0 auto;}
@@ -2156,26 +2164,26 @@ img{max-width:100%;}
 .glos-c b{font-size:12px;font-weight:800;color:#1A1A2E;}
 .glos-c span{display:block;font-size:10.5px;line-height:1.45;color:#8A879B;margin-top:3px;}
 @media (min-width: 768px){
-  .espace-hero-perso img, .espace-hero-perso > span{width:170px;height:170px;}
+  .espace-hero-perso-vide{}
 }
 
 /* ===== v89 : le personnage en majesté ===== */
 .espace-hero{align-items:center;}
-.espace-hero-perso{position:relative;flex:0 0 auto;margin-left:26px;animation:persoFloat 7s ease-in-out infinite;}
-.espace-hero-perso::before{content:'';position:absolute;inset:-16px;border-radius:50%;background:radial-gradient(circle, rgba(255,255,255,0.22), transparent 68%);}
-.espace-hero-perso img, .espace-hero-perso > span{position:relative;border:3px solid rgba(255,255,255,0.5);box-shadow:0 24px 60px rgba(20,15,50,0.35);border-radius:50%;}
+.espace-hero-perso-vide{}
+.espace-hero-perso-vide{}
+.espace-hero-perso-vide{}
 @keyframes persoFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
-@media (prefers-reduced-motion: reduce){.espace-hero-perso{animation:none;}}
+@media (prefers-reduced-motion: reduce){.espace-hero-perso-vide{}}
 
 /* ===== v90 : le personnage en médaillon, haut droit, hors du flux ===== */
 .espace-hero{position:relative;}
-.espace-hero-perso{position:absolute;top:16px;right:18px;margin:0;flex:none;}
-.espace-hero-perso img, .espace-hero-perso > span{width:92px;height:92px;}
-.espace-hero-perso::before{inset:-10px;}
+.espace-hero-perso-vide{}
+.espace-hero-perso-vide{}
+.espace-hero-perso-vide{}
 #espace-accueil{padding-right:112px;}
 @media (max-width: 640px){
-  .espace-hero-perso{top:12px;right:12px;}
-  .espace-hero-perso img, .espace-hero-perso > span{width:56px;height:56px;}
+  .espace-hero-perso-vide{}
+  .espace-hero-perso-vide{}
   #espace-accueil{padding-right:70px;}
 }
 
@@ -2391,3 +2399,66 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 
 /* ===== v120 : la synchronisation honnête ===== */
 #sync-bandeau{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:420;display:none;background:#3A3357;color:#F5EFD9;font-size:12.5px;font-weight:700;padding:10px 16px;border-radius:12px;box-shadow:0 8px 26px rgba(34,29,69,0.35);max-width:92vw;text-align:center;}
+
+/* ===== v121 : le plan honnête sur son mode express ===== */
+.plan-repli{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#FFF6DE;border:1px solid #F1E0B0;border-radius:14px;padding:12px 16px;margin:0 0 18px;font-size:13px;font-weight:700;color:#7A5A17;}
+.plan-repli-btn{font-family:inherit;font-size:12.5px;font-weight:800;min-height:44px;padding:9px 16px;border:none;border-radius:12px;background:#221D45;color:#F5F4F0;cursor:pointer;}
+
+/* ===== v122 : la direction artistique, le personnage en majesté ===== */
+.r-hero-carte{position:absolute;right:44px;bottom:32px;width:min(240px,18vw);z-index:2;}
+.r-hero-carte img{width:100%;height:auto;display:block;border-radius:24px;border:3px solid rgba(255,255,255,0.25);box-shadow:0 26px 60px rgba(15,12,40,0.5);transform:rotate(-2.4deg);}
+@media (max-width:1100px){ .r-hero-carte{display:none;} }
+#screen-result{counter-reset:chapitre;}
+#screen-result .r-bloc-head .r-bloc-tag::before, #screen-result .r-section-tag::before{counter-increment:chapitre;content:counter(chapitre,decimal-leading-zero) " · ";letter-spacing:0.05em;}
+#screen-result .r-bloc-head h2{font-size:25px;letter-spacing:-0.01em;line-height:1.2;}
+#screen-result .r-ia > p:first-of-type{font-size:19px;line-height:1.55;color:#26233A;}
+#screen-result .r-ia p{line-height:1.7;}
+@media (max-width:640px){
+  #screen-result .r-bloc-head h2{font-size:21px;}
+  #screen-result .r-ia > p:first-of-type{font-size:17px;}
+}
+
+/* ===== v122b : le personnage en majesté, règles finales et souveraines ===== */
+.espace-hero-perso{position:absolute;right:34px;bottom:-46px;top:auto;left:auto;width:min(280px,23vw);height:auto;margin:0;z-index:2;animation:none;}
+.espace-hero-perso::before{content:none;}
+.espace-hero-perso img{width:100%;height:auto;display:block;object-fit:unset;border-radius:26px;border:3px solid rgba(255,255,255,0.22);box-shadow:0 30px 64px rgba(15,12,40,0.5);transform:rotate(2.4deg);}
+@media (max-width:900px){
+  .espace-hero-perso{top:-22px;right:12px;bottom:auto;width:110px;}
+  .espace-hero-perso img{border-radius:18px;border-width:2px;transform:rotate(3deg);}
+}
+#screen-result{counter-reset:chapitre;}
+#screen-result .r-bloc-head .r-bloc-tag::before, #screen-result .r-section-tag::before{counter-increment:chapitre;content:counter(chapitre,decimal-leading-zero) " \00b7  ";letter-spacing:0.05em;display:inline;}
+
+/* ===== v123 : la navigation respire, le portrait partout, la rareté en scène ===== */
+.esp-nav{position:sticky;top:10px;z-index:60;margin:0 0 18px;padding:8px;background:rgba(245,244,240,0.9);backdrop-filter:blur(10px);border:1px solid #E7E4DB;border-radius:18px;width:fit-content;display:flex;gap:8px;flex-wrap:wrap;}
+.esp-nav-b{border:1px solid #E2DFD6;background:#fff;color:#4A4757;}
+.esp-nav-b:hover{background:#F1EFE8;}
+.esp-nav-b.on{background:#221D45;color:#F5F4F0;border-color:#221D45;}
+@media (max-width:640px){ .esp-nav{width:100%;justify-content:center;top:6px;} }
+.esp-resultat{overflow:visible;}
+.esp-resultat::after{border-radius:18px;}
+.esp-res-perso{flex-shrink:0;width:150px;margin:-30px -4px -30px 0;}
+.esp-res-perso img{width:100%;height:auto;display:block;border-radius:20px;border:3px solid rgba(255,255,255,0.3);box-shadow:0 18px 44px rgba(15,12,40,0.4);transform:rotate(2deg);}
+@media (max-width:640px){ .esp-res-perso{width:98px;margin:-14px 0;} .esp-res-perso img{border-radius:14px;} }
+.r-rare{padding:38px 26px;}
+.r-rare-num{font-size:64px;letter-spacing:-0.02em;line-height:1;}
+.r-rare-txt{font-size:15px;margin-top:10px;max-width:520px;margin-left:auto;margin-right:auto;}
+@media (max-width:640px){ .r-rare-num{font-size:44px;} }
+
+/* ===== v124 : la voix typographique et la clôture ===== */
+:root{--font-display:'Bricolage Grotesque', var(--font);}
+.espace-name{font-family:var(--font-display);font-size:34px;letter-spacing:-0.015em;}
+.plan-hero-titre{font-family:var(--font-display);}
+#r-archetype{font-family:var(--font-display);letter-spacing:-0.01em;}
+#screen-result .r-bloc-head h2, .r-me-title{font-family:var(--font-display);letter-spacing:-0.012em;}
+.r-rare-num{font-family:var(--font-display);}
+.esp-res-title{font-family:var(--font-display);font-size:21px;}
+.r-cloture{background:linear-gradient(140deg,#221D45 0%, var(--fam-color,#5E59C7) 165%);border-radius:24px;padding:38px 30px;color:#F5F4F0;text-align:center;position:relative;overflow:hidden;}
+.r-cloture-kicker{font-size:11.5px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.75;margin-bottom:8px;}
+.r-cloture-titre{font-family:var(--font-display);font-size:30px;letter-spacing:-0.01em;margin:0 0 8px;color:#fff;}
+.r-cloture p{opacity:0.85;max-width:520px;margin:0 auto 18px;}
+.r-cloture .r-noter{margin-bottom:12px;}
+
+/* ===== v125 : le tunnel prend la voix ===== */
+.cover-inner h1{font-family:var(--font-display);letter-spacing:-0.015em;}
+#screen-chapter h1, #screen-chapter h2, .chap-titre, .chap-title{font-family:var(--font-display);letter-spacing:-0.012em;}

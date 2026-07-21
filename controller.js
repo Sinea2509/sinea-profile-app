@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v120 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v120]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v125 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v125]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -2018,6 +2018,8 @@ const App = (() => {
         persoEl.style.display = 'none';
       }
     }
+    const heroFam = document.getElementById('espace-hero');
+    if (heroFam) heroFam.style.setProperty('--fam', famille === 'RELATION' ? '#F98272' : famille === 'ACTION' ? '#F5A623' : famille === 'STRUCTURE' ? '#3EADFF' : '#5E59C7');
     const archEl = document.getElementById('espace-arch');
     if (archetype) {
       const initiale = archetype.replace(/^(Le |La |L'|Les )/, '').charAt(0);
@@ -2486,6 +2488,7 @@ const App = (() => {
         // les elements coches, pour que le plan ne soit jamais vide
         if (!actions.length) {
           actions = construireReplisPlan(forces, vigilances, objectifs);
+          signalerRepliPlan(mod);
         }
         rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(actions, suiviSauve), synthese);
       })
@@ -2493,6 +2496,7 @@ const App = (() => {
         // repli : si l'IA échoue, on affiche au moins les éléments cochés
         const repli = construireReplisPlan(forces, vigilances, objectifs);
         rendrePlanActions(scr, mod, heroHtml, fusionnerSuivi(repli, suiviSauve), '');
+        signalerRepliPlan(mod);
       });
   }
 
@@ -2517,10 +2521,51 @@ const App = (() => {
   // repli local si l'IA est indisponible : objectifs simples sans SMART généré
   function construireReplisPlan(forces, vigilances, objectifs) {
     const out = [];
-    forces.forEach(f => out.push({ thematique: 'Force', type: 'Capitaliser', horizon: 'Bientôt', objectif: f, premier_pas: 'Repérez cette semaine une situation où mobiliser ce point.', indicateur: 'Vous l\'activez consciemment au moins une fois.' }));
-    vigilances.forEach(v => out.push({ thematique: 'Progression', type: 'Progresser', horizon: 'Maintenant', objectif: v, premier_pas: 'Choisissez une occasion proche pour vous y exercer.', indicateur: 'Vous observez un premier ajustement concret.' }));
-    objectifs.forEach(o => out.push({ thematique: 'Développement', type: 'Explorer', horizon: 'Plus tard', objectif: o, premier_pas: 'Réservez un moment pour vous documenter ou en parler.', indicateur: 'Vous franchissez une première étape visible.' }));
+    const pasF = [
+      'Choisissez une situation de la semaine pour jouer cette force à dessein.',
+      'Racontez à un collègue une situation récente où cette force a fait la différence.',
+      'Notez deux occasions où cette force peut servir votre équipe cette semaine.',
+    ];
+    const indF = [
+      "Vous l'avez activée consciemment au moins une fois.",
+      "Quelqu'un vous en a fait la remarque, ou vous l'avez notée quelque part.",
+      'Vous savez dire où elle a joué cette semaine.',
+    ];
+    const pasV = [
+      'Choisissez une occasion proche, à faible enjeu, pour vous y exercer.',
+      'Repérez le déclencheur habituel et préparez une réponse simple à l\'avance.',
+      'Demandez à une personne de confiance de vous signaler la prochaine occasion.',
+    ];
+    const indV = [
+      'Vous observez un premier ajustement concret.',
+      'La situation type se passe un cran mieux que d\'habitude.',
+      'Vous avez tenu votre réponse préparée au moins une fois.',
+    ];
+    const pasO = [
+      'Réservez trente minutes pour vous documenter ou en parler.',
+      'Identifiez une personne ressource et posez-lui une première question.',
+      'Listez trois façons concrètes de commencer, puis choisissez-en une.',
+    ];
+    const indO = [
+      'Vous franchissez une première étape visible.',
+      'Vous avez une date posée pour la suite.',
+      'Vous savez décrire votre prochain pas.',
+    ];
+    forces.forEach((f, i) => out.push({ thematique: 'Force', type: 'Capitaliser', horizon: 'Bientôt', objectif: f, premier_pas: pasF[i % 3], indicateur: indF[i % 3] }));
+    vigilances.forEach((v, i) => out.push({ thematique: 'Progression', type: 'Progresser', horizon: 'Maintenant', objectif: v, premier_pas: pasV[i % 3], indicateur: indV[i % 3] }));
+    objectifs.forEach((o, i) => out.push({ thematique: 'Développement', type: 'Explorer', horizon: 'Plus tard', objectif: o, premier_pas: pasO[i % 3], indicateur: indO[i % 3] }));
     return out;
+  }
+  function signalerRepliPlan(mod) {
+    setTimeout(function () {
+      const sc2 = document.querySelector('#screen-plan .plan-scroll');
+      if (!sc2 || document.getElementById('plan-repli')) return;
+      const d = document.createElement('div');
+      d.id = 'plan-repli';
+      d.className = 'plan-repli';
+      d.innerHTML = 'Version express de votre feuille de route. <button type="button" class="plan-repli-btn" onclick="App.ouvrirPlanDepuisResto(\'' + mod + '\')">Générer la version personnalisée</button>';
+      sc2.insertBefore(d, sc2.children[1] || null);
+    }, 80);
   }
 
   // construit le tableau (desktop) + cartes (mobile) des actions, avec priorité modifiable
@@ -2719,6 +2764,8 @@ const App = (() => {
 
   // active l'écran plan et branche les boutons communs (retour, revoir, seedup)
   function activerScreenPlan(scr, mod) {
+    const sb = document.getElementById('r-selbar');
+    if (sb) sb.classList.remove('on');
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
     scr.classList.add('active');
     // la barre de sélection appartient à la restitution : on la retire sur le plan
