@@ -351,6 +351,7 @@ verifie('session : la persistance arrive avec sa sortie', srcCtrl2().indexOf("lo
 verifie('droits : une analyse trouvée vaut preuve du droit', srcCtrl2().indexOf('function deduireDroits(') > 0 && srcCtrl2().indexOf('deduireDroits(data.droits || droits') > 0 && srcCtrl2().indexOf("['socle', 'commercial', 'manager'].forEach(function (m) {") > 0);
 verifie('espace : une fiche connue sans portrait le dit clairement', srcCtrl2().indexOf('Portrait introuvable') > 0 && srcCtrl2().indexOf('vos réponses sont souvent récupérables') > 0 && cssTxt2().indexOf('.esp-vide{') > 0);
 verifie('session : le bouton est à l\'écran et stylé', idxH2.indexOf('App.seDeconnecter()') > 0 && idxH2.indexOf('Me déconnecter') > 0 && cssTxt2().indexOf('.esp-quit{') > 0);
+verifie('session : le bouton passe devant le personnage', (function () { const m = cssTxt2().match(/\.esp-quit\{[^}]*\}/); const p = cssTxt2().match(/\.espace-hero-perso\{[^}]*\}/); if (!m || !p) return false; const zq = parseInt((m[0].match(/z-index:(\d+)/) || [])[1] || '0', 10); const zp = parseInt((p[0].match(/z-index:(\d+)/) || [])[1] || '0', 10); return zq > zp; })());
 verifie('souvenir : la carte à partager parle Bricolage', srcRes2().indexOf('px "Bricolage Grotesque", Poppins,') > 0);
 })();
 (function () {

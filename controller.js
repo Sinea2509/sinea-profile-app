@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v134 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v134]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v135 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v135]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
