@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v125 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v125]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v132 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v132]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -679,6 +679,7 @@ const App = (() => {
     // porte d'audit : les bancs Chrome injectent une identité de test ici
     if (!identite.email && window.__auditEmail) identite.email = window.__auditEmail;
     if (!identite.email) return;
+    try { localStorage.setItem('sinea_identite', JSON.stringify({ email: identite.email, prenom: identite.prenom || '', ts: Date.now() })); } catch (e) {}
     fetch(PROGRESSION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -700,6 +701,7 @@ const App = (() => {
     })
       .then(r => r.json())
       .then(d => {
+        try { if (d && d.suivi_plan) data.suivi_plan = d.suivi_plan; } catch (e) {}
         const carte = (d && d.interactions) || {};
         poserRetourNea(carte);
         poserRemesure(data, carte);
@@ -707,6 +709,7 @@ const App = (() => {
         try { checklistCtx = { data: dataEspaceCourant, carte: carte }; poserChecklist(dataEspaceCourant, carte); } catch (e) { console.warn('[Sinéa]', e); }
         try { poserCockpit(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         try { poserCompetencesEspace(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
+        try { const bt = document.querySelector('.esp-nav .esp-nav-b.on'); espTab(bt ? bt.getAttribute('data-t') : 'accueil'); } catch (e) {}
         try { if (window.Visuels && Visuels.brancherCurseur) Visuels.brancherCurseur(document.getElementById('esp-q16-t'), document.getElementById('esp-cp-matrice')); if (window.Visuels && Visuels.brancherTooltip) Visuels.brancherTooltip(document.getElementById('esp-cp-matrice')); } catch (e) {}
         poserSeedupEspace(carte);
       })
@@ -716,6 +719,15 @@ const App = (() => {
   // Le retour commenté : Néa lit les interactions enregistrées, tous parcours
   // confondus (socle, manager, commercial), et accueille la personne avec un
   // mot sur sa progression réelle.
+  function relanceNea() {
+    try {
+      const p = comptePlan((typeof dataEspaceCourant !== 'undefined' && dataEspaceCourant) || null);
+      if (!p.total) return '';
+      if (p.prochaine) return '<div class="nea-relance"><div class="nea-r-k">Néa vous relance</div><p>Vous avez engagé <b>« ' + p.prochaine + ' »</b>. Où en êtes-vous cette semaine ?</p><button type="button" class="nea-r-btn" onclick="App.ouvrirPlanDepuisResto(\'' + p.mod + '\')">Ouvrir mon plan</button></div>';
+      return '<div class="nea-relance"><div class="nea-r-k">Néa vous félicite</div><p>Toutes vos pistes engagées sont menées au bout. Le moment est bon pour en choisir une nouvelle.</p><button type="button" class="nea-r-btn" onclick="App.ouvrirPlanDepuisResto(\'' + p.mod + '\')">Ouvrir mon plan</button></div>';
+    } catch (e) { return ''; }
+  }
+
   function poserRetourNea(carte) {
     const slot = document.getElementById('espace-nea');
     if (!slot) return;
@@ -742,7 +754,7 @@ const App = (() => {
     } else {
       phrase = 'Me revoici. Votre portrait vous attend, et votre plan d\'action est le meilleur endroit pour transformer la lecture en mouvement.';
     }
-    slot.innerHTML = '<div class="esp-nea">' +
+    slot.innerHTML = relanceNea() +  '<div class="esp-nea">' +
       '<span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
       '<div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>' + phrase + '</p></div>' +
       '</div>';
@@ -802,8 +814,8 @@ const App = (() => {
 
   function espTab(t){
     const groupes = {
-      accueil: ['espace-accueil-resume', 'espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat'],
-      dev: ['espace-cockpit', 'espace-checklist', 'espace-nea', 'espace-remesure', 'espace-competences', 'espace-seedup'],
+      accueil: ['espace-prog-globale', 'espace-resultats', 'espace-cards', 'espace-compat', 'espace-remesure', 'espace-competences'],
+      dev: ['espace-accueil-resume', 'espace-cockpit', 'espace-checklist', 'espace-nea', 'espace-seedup'],
       miroir: ['espace-miroir'],
     };
     const cache = function (id, visible) { const e = document.getElementById(id); if (e) e.classList.toggle('esp-hide', !visible); };
@@ -1007,6 +1019,22 @@ const App = (() => {
   // Le bloc n'apparaît que si des données SeedUp existent pour la personne.
   // Le rythme du jardin : tous les cinq défis, les pousses se consolident
   // en un arbre, l'étape franchie devient un repère permanent du visuel.
+  function comptePlan(data) {
+    const out = { faites: 0, total: 0, mod: 'socle', prochaine: '' };
+    try {
+      const tout = (data && data.suivi_plan) || {};
+      Object.keys(tout).forEach(function (m) {
+        const liste = (tout[m] && tout[m].suivi) || [];
+        liste.forEach(function (p) {
+          out.total++;
+          if (p.statut === 'Fait') out.faites++;
+          else if (!out.prochaine && p.objectif) { out.prochaine = String(p.objectif).slice(0, 110); out.mod = m; }
+        });
+      });
+    } catch (e) {}
+    return out;
+  }
+
   const NOMS_ETAPES_JARDIN = ['Premières pousses', 'Le premier arbre', 'Le bosquet', 'Le jardin s\'enracine', 'Le jardin s\'épanouit', 'Jardin luxuriant'];
   function etapeJardin(nb) {
     const arbres = Math.floor(nb / 5);
@@ -1177,12 +1205,13 @@ const App = (() => {
   }
 
   function poserSeedupEspace(carte) {
+    const planInfo = comptePlan((typeof dataEspaceCourant !== 'undefined' && dataEspaceCourant) || null);
     const slot = document.getElementById('espace-seedup');
     if (!slot) return;
     slot.innerHTML = '';
     const sd = carte.seedup || {};
     const liste = Array.isArray(sd.liste) ? sd.liste.slice() : [];
-    if (!liste.length) return;
+    if (!liste.length && planInfo.total === 0) return;
     liste.sort(function (a, b) { return String(b.d || '').localeCompare(String(a.d || '')); });
     const reussites = liste.map(function (x) { return x.r; }).filter(function (v) { return typeof v === 'number'; });
     const moyR = reussites.length ? Math.round(reussites.reduce(function (a, b) { return a + b; }, 0) / reussites.length * 10) / 10 : null;
@@ -1261,7 +1290,8 @@ const App = (() => {
       + '<div class="esp-rem-kicker">SeedUp · Votre jardin d\'ancrage</div>'
       + '<div class="esp-rem-titre">' + etape.label + '</div>'
       + '<p class="jr-pourquoi">Quatre-vingt-dix jours pour transformer votre portrait en habitudes. Chaque défi de terrain ancré fait grandir ce jardin, cinq défis font éclore une étape, et le jardin raconte votre progression d\'un regard.</p>'
-      + '<div class="jr-wrap">' + (fete ? '<div class="jr-etape">Étape franchie · ' + (etape.arbres * 5) + ' défis ancrés</div>' : '') + confetti + jardinSvg(liste.length, slugP, fete) + '</div>'
+      + '<div class="jr-wrap">' + (fete ? '<div class="jr-etape">Étape franchie · ' + (etape.arbres * 5) + ' défis ancrés</div>' : '') + confetti + jardinSvg((planInfo.total > 0 ? planInfo.faites : liste.length), slugP, fete) + '</div>'
+      + (planInfo.total > 0 ? '<p class="jr-plan-note">Chaque piste de votre plan menée au bout fait grandir ce jardin (' + planInfo.faites + ' piste' + (planInfo.faites > 1 ? 's' : '') + ' sur ' + planInfo.total + '). <button type="button" class="jr-plan-btn" onclick="App.ouvrirPlanDepuisResto(\'' + planInfo.mod + '\')">Ouvrir mon plan</button></p>' : '')
       + '<div class="esp-sd-stats">' + liste.length + ' défi' + (liste.length > 1 ? 's' : '') + ' planté' + (liste.length > 1 ? 's' : '')
       + (moyR !== null ? ' · réussite moyenne ' + moyR + '/10' : '')
       + ' · ' + suivantTxt
@@ -1410,6 +1440,119 @@ const App = (() => {
   let _mirRep = {};
 
   // Perception agrégée par dimension, avec le même adoucissement doux que le profil adapté
+  const COMPS_360 = ['c_developpement_autres', 'c_communication_influence', 'c_orientation_resultats', 'c_prise_decision', 'c_cooperation', 'c_resilience', 'c_fiabilite_suivi'];
+  function croiserRegards(reponsesTous) {
+    const out = { confirmees: [], angles: [], discretes: [], partages: [] };
+    try {
+      const data = dataEspaceCourant || {};
+      const prof = (((data.analyses || {}).socle) || {}).profil || {};
+      const bf = prof.scoresBigFive || prof.bigFive;
+      if (!bf || !window.Competences) return out;
+      const comps = Competences.scorer(bf, (prof.naturelAdapte && prof.naturelAdapte.ecarts) || null, null);
+      const parId = {};
+      comps.forEach(function (co) { parId[co.id] = co; });
+      COMPS_360.forEach(function (id) {
+        const notes = reponsesTous.map(function (rp) { return (rp.r || {})[id]; }).filter(function (v) { return v >= 1 && v <= 4; });
+        const moiC = parId[id] || parId[id.replace(/^c_/, '')];
+        if (!notes.length || !moiC) return;
+        const eux = Math.round(notes.reduce(function (a, b) { return a + b; }, 0) / notes.length / 3 * 100 - 100 / 3);
+        const moi = Math.round(moiC.expression);
+        const delta = eux - moi;
+        const item = { id: id, nom: moiC.nom, moi: moi, eux: Math.max(0, eux), delta: delta };
+        if (delta >= 15) out.angles.push(item);
+        else if (delta <= -15) out.discretes.push(item);
+        else if (eux >= 60 && moi >= 58) out.confirmees.push(item);
+        else if (eux < 60 && moi < 58) out.partages.push(item);
+        else out.confirmees.push(item);
+      });
+      ['confirmees', 'angles', 'discretes', 'partages'].forEach(function (k) {
+        out[k].sort(function (a, b) { return Math.abs(b.delta) - Math.abs(a.delta); });
+      });
+    } catch (e) {}
+    return out;
+  }
+
+  function pisteExiste360(nom) {
+    try {
+      const tout = (dataEspaceCourant && dataEspaceCourant.suivi_plan) || {};
+      let trouve = false;
+      Object.keys(tout).forEach(function (m) {
+        ((tout[m] || {}).suivi || []).forEach(function (p) { if (String(p.objectif || '').indexOf(nom) >= 0) trouve = true; });
+      });
+      return trouve;
+    } catch (e) { return false; }
+  }
+
+  function mirCroiseHtml(reponsesTous) {
+    if (!Array.isArray(reponsesTous) || reponsesTous.length < 2) {
+      return reponsesTous && reponsesTous.length === 1
+        ? '<div class="mir-croise mir-croise-attente"><p>Encore un regard et votre lecture croisée s\'ouvre ici : vos forces confirmées, vos angles morts, vos forces discrètes.</p></div>'
+        : '';
+    }
+    const t = croiserRegards(reponsesTous);
+    if (!t.confirmees.length && !t.angles.length && !t.discretes.length && !t.partages.length) return '';
+    const carte = function (it, genre) {
+      let phrase = '';
+      let action = '';
+      if (genre === 'angle') {
+        phrase = 'Vos collègues vous voient plus fort que vous (+' + it.delta + '). Vous sous-estimez un appui qu\'ils utilisent déjà.';
+        action = pisteExiste360(it.nom)
+          ? '<span class="mc-fait">Dans votre plan ✓</span>'
+          : '<button type="button" class="mc-btn" onclick="App.pisteDepuis360(\'' + it.id + '\', \'' + String(it.nom).replace(/'/g, '') + '\', this)">En faire une piste de mon plan</button>';
+      } else if (genre === 'discrete') {
+        phrase = 'Vous vous voyez plus fort qu\'eux (' + it.delta + '). Cette force reste invisible : montrez-la ou recalibrez-la.';
+      } else if (genre === 'partage') {
+        phrase = 'Bas des deux côtés : un chantier assumé, sans illusion.';
+      } else {
+        phrase = 'Vous et eux la voyez : un appui solide et public.';
+      }
+      return '<div class="mc-carte"><div class="mc-nom">' + it.nom + '</div><div class="mc-chiffres">vous ' + it.moi + ' · leurs regards ' + it.eux + '</div><p class="mc-p">' + phrase + '</p>' + action + '</div>';
+    };
+    const bloc = function (titre, sous, liste, genre, cls) {
+      if (!liste.length) return '';
+      return '<div class="mc-terr ' + cls + '"><div class="mc-t">' + titre + '</div><div class="mc-s">' + sous + '</div>' + liste.map(function (it) { return carte(it, genre); }).join('') + '</div>';
+    };
+    return '<div class="mir-croise"><div class="mir-croise-head"><span class="esp-rem-kicker">La lecture croisée</span><h3>Vous, et leurs regards.</h3><p class="mc-intro">Sur les sept compétences observées, calculée sur ' + reponsesTous.length + ' regards.</p></div><div class="mc-grille">'
+      + bloc('Vos angles morts', 'Ils vous voient plus fort que vous : votre marge cachée.', t.angles, 'angle', 'mc-angle')
+      + bloc('Forces confirmées', 'Visibles de vous comme d\'eux.', t.confirmees, 'conf', 'mc-conf')
+      + bloc('Forces discrètes', 'Vous seul les voyez, pour l\'instant.', t.discretes, 'discrete', 'mc-disc')
+      + bloc('Terrain partagé', 'Bas des deux côtés, en toute lucidité.', t.partages, 'partage', 'mc-part')
+      + '</div></div>';
+  }
+
+  function planPourNea() {
+    try {
+      const tout = (dataEspaceCourant && dataEspaceCourant.suivi_plan) || {};
+      const out = [];
+      Object.keys(tout).forEach(function (m) {
+        if (m.charAt(0) === '_') return;
+        ((tout[m] || {}).suivi || []).forEach(function (p) {
+          if (p && p.objectif) out.push({ objectif: String(p.objectif).slice(0, 110), statut: p.statut || 'À faire' });
+        });
+      });
+      return out.slice(0, 8);
+    } catch (e) { return []; }
+  }
+
+  function pisteDepuis360(id, nom, el) {
+    try {
+      const data = dataEspaceCourant || {};
+      data.suivi_plan = data.suivi_plan || {};
+      data.suivi_plan.socle = data.suivi_plan.socle || { suivi: [] };
+      data.suivi_plan.socle.suivi = data.suivi_plan.socle.suivi || [];
+      if (pisteExiste360(nom)) return;
+      const objectif = "M'appuyer davantage sur ma " + nom + ' : une occasion concrète cette semaine, que mes collègues remarquent';
+      data.suivi_plan.socle.suivi.push({ thematique: 'Regard 360', objectif: objectif, statut: 'À faire', ressenti: '', horizon: '2 semaines' });
+      fetch(PROGRESSION_URL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'save_plan_suivi', email: identite.email, module: 'socle', suivi: data.suivi_plan.socle.suivi }),
+      }).catch(function () {});
+      try { if (el && el.parentNode) el.outerHTML = '<span class="mc-fait">Dans votre plan ✓</span>'; } catch (e) {}
+      try { poserRetourNea(carteEspaceCourant); } catch (e) {}
+      try { poserSeedupEspace(carteEspaceCourant); } catch (e) {}
+    } catch (e) { console.warn('[Sinéa]', e); }
+  }
+
   function agregerMiroir(reponses) {
     const percu = {};
     MIROIR_QUESTIONS.forEach(function (q) {
@@ -1685,7 +1828,7 @@ const App = (() => {
     const reponses = filtreMiroirRel ? reponsesTous.filter(function (rp) { return (rp.r || {}).relation === filtreMiroirRel; }) : reponsesTous;
     if (!jeton) {
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Mon Feedback 360</div>
+        <div class="esp-rem-kicker">Mon regard 360</div>
         <div class="esp-rem-titre">Le regard de vos collègues</div>
         <p class="esp-rem-txt">Invitez deux collègues à répondre à cinq questions, une minute, réponses anonymes. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
         ${guideMiroirHtml()}<button type="button" class="esp-rem-btn" id="esp-mir-init">Créer mon lien d'invitation</button>
@@ -1715,7 +1858,7 @@ const App = (() => {
         ? '1 réponse reçue. L\'analyse s\'ouvre à la deuxième, pour préserver l\'anonymat.'
         : 'Aucune réponse pour l\'instant. Envoyez ce lien à deux collègues, leurs réponses restent anonymes.';
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Mon Feedback 360</div>
+        <div class="esp-rem-kicker">Mon regard 360</div>
         <div class="esp-rem-titre">Le regard de vos collègues</div>
         <p class="esp-rem-txt">${attente}</p>
         ${mir.prediction ? blocLien + pariHtml : pariHtml + blocLien}
@@ -1781,7 +1924,7 @@ const App = (() => {
         phrase = `Vos collègues perçoivent moins de ${maxDim.label.toLowerCase()} que ce que vous pensez montrer. Cet écart dit quelque chose de précieux, angle mort ou réserve : explorez-le lors d'un prochain échange.`;
       }
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Mon Feedback 360 · ${reponses.length} regards${repartition}</div>
+        <div class="esp-rem-kicker">Mon regard 360 · ${reponses.length} regards${repartition}</div>
         <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
         ${chipsRel}
         ${impactHtml}
@@ -1802,6 +1945,7 @@ const App = (() => {
       else if (inp) { inp.select(); document.execCommand('copy'); fini(); }
     };
     if (jeton) {
+      try { slot.insertAdjacentHTML('beforeend', mirCroiseHtml(reponsesTous)); } catch (e) {}
       try { slot.insertAdjacentHTML('afterbegin', mirEtapesHtml(mir, reponsesTous)); } catch (e) {}
       if (navigator.share) { try { slot.querySelectorAll('.esp-mir-msg-btn').forEach(function (b2) { if (b2.textContent.indexOf('Copier') === 0) b2.textContent = 'Partager ce message'; }); } catch (e) {} }
     }
@@ -1979,7 +2123,7 @@ const App = (() => {
         resumeEl.innerHTML = '<div class="acc-resume">'
           + '<span class="acc-chip" style="border-color:' + coulFam + '">' + echapValeur(archetype || '') + (famKey ? ' · ' + famKey.charAt(0) + famKey.slice(1).toLowerCase() : '') + '</span>'
           + '<span class="acc-txt">Votre action du jour vous attend.</span>'
-          + '<button type="button" class="esp-nav-b acc-cta" onclick="App.espTab(&quot;dev&quot;)">Ouvrir mon développement</button>'
+          + '<button type="button" class="esp-nav-b acc-cta" onclick="App.espTab(&quot;dev&quot;)">Ouvrir mon plan</button>'
           + '</div>';
       }
     }
@@ -2808,6 +2952,7 @@ const App = (() => {
         document.getElementById('screen-espace').classList.remove('active');
         document.getElementById('screen-result').classList.add('active');
         try { Result.render(res); } catch (e) { console.error('[Sinéa]', e); alert("Une partie de l'analyse n'a pas pu s'afficher. Rechargez la page, et contactez-nous si cela persiste."); }
+        try { if (Result.apresRender) Result.apresRender(res, mod === 'socle' ? '' : 'spe'); } catch (e) { console.warn('[Sinéa]', e); }
         if (Result.setEmail) Result.setEmail(identite.email || '');
       })
       .catch(() => alert('Impossible de charger votre analyse pour le moment.'));
@@ -3793,6 +3938,7 @@ const App = (() => {
       // Quel que soit le résultat, la restitution s'affiche ensuite (on ne bloque jamais).
       function afficherRestitution(res) {
         Result.render(res);
+        try { if (Result.apresRender) Result.apresRender(res, ''); } catch (e) { console.warn('[Sinéa]', e); }
         if (Result.setEmail) Result.setEmail(identite.email || '');
         lancerRevelation(res);
         window.scrollTo(0, 0);
@@ -4070,7 +4216,24 @@ const App = (() => {
   // Pont pour ouvrir le plan d'action depuis la restitution (barre de sélection)
   function ouvrirPlanDepuisResto(mod){ ouvrirPlanAction(mod || 'socle'); }
 
-  return { enregistrerResultat, start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  // La session survit au rechargement : l'identité se restaure sept jours,
+  // sauf quand l'URL porte déjà une entrée par jeton (apprenant ou miroir).
+  (function restaurerIdentite() {
+    try {
+      if (/[?&](token|miroir)=/.test(location.search)) return;
+      const brut = localStorage.getItem('sinea_identite');
+      if (!brut) return;
+      const d = JSON.parse(brut);
+      if (!d || !d.email || (Date.now() - (d.ts || 0)) > 7 * 24 * 3600 * 1000) return;
+      identite.email = d.email;
+      if (d.prenom) identite.prenom = d.prenom;
+      const go = function () { try { goToEspace(); } catch (e) {} };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go);
+      else go();
+    } catch (e) {}
+  })();
+
+  return { planPourNea, pisteDepuis360, enregistrerResultat, start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

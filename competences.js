@@ -109,7 +109,7 @@
         N: num(bf.N) + num(ecarts.N),
       });
     }
-    return REFERENTIEL.map((comp) => {
+    const liste = REFERENTIEL.map((comp) => {
       const potentiel = scoreCompetence(comp, nat);
       let expression = scoreCompetence(comp, adp);
       // Fusion avec les dimensions métier observées, quand elles existent
@@ -124,6 +124,15 @@
       const zone = zoneDe(potentiel, expression);
       return { id: comp.id, nom: comp.nom, famille: comp.famille, potentiel, expression, zone };
     });
+    const __parGoulot = [...liste].sort((a, b) => Math.min(b.potentiel, b.expression) - Math.min(a.potentiel, a.expression));
+    const __top3 = __parGoulot.slice(0, 3);
+    const __seuils = {
+      pot: Math.min(SEUILS.potAppui, Math.min(...__top3.map(cc => cc.potentiel))),
+      expr: Math.min(SEUILS.exprAppui, Math.min(...__top3.map(cc => cc.expression))),
+    };
+    liste.forEach(cc => { cc.zone = zoneDe(cc.potentiel, cc.expression, __seuils); });
+    liste.seuils = __seuils;
+    return liste;
   }
 
   // prioriser(comps, posteId) : les 3 forces d'appui, les 3 opportunités où
@@ -273,9 +282,11 @@
   // Les seuils du modèle, source unique pour le moteur, le quadrant,
   // la carte de chaleur et l'adéquation au poste.
   const SEUILS = { potAppui: 62, exprAppui: 58, potLevier: 50 };
-  function zoneDe(potentiel, expression) {
+  function zoneDe(potentiel, expression, seuils) {
+    const sx = (seuils && seuils.pot) || SEUILS.potAppui;
+    const sy = (seuils && seuils.expr) || SEUILS.exprAppui;
+    if (potentiel >= sx && expression >= sy) return 'appui';
     if (potentiel <= 40) return 'economie';
-    if (potentiel >= SEUILS.potAppui && expression >= SEUILS.exprAppui) return 'appui';
     if (potentiel >= 60 && (potentiel - expression >= 8 || expression < 55)) return 'opportunite';
     return 'neutre';
   }
@@ -415,9 +426,14 @@
   const BOOST_PROJECTION = 12;
   function projeterComps(comps, idsEngages) {
     if (!Array.isArray(comps) || !idsEngages) return comps;
-    return comps.map((c) => idsEngages.has(c.id)
+    const out = comps.map((c) => idsEngages.has(c.id)
       ? Object.assign({}, c, { expression: Math.min(100, Math.max(c.expression, Math.min(c.potentiel, c.expression + BOOST_PROJECTION))) })
       : c);
+    if (comps.seuils) {
+      out.seuils = comps.seuils;
+      out.forEach((c) => { c.zone = zoneDe(c.potentiel, c.expression, comps.seuils); });
+    }
+    return out;
   }
 
   // ============================================================

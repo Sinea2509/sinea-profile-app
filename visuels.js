@@ -33,7 +33,7 @@
     const fams = FAMS();
     const W = 640, H = opts.compact ? 470 : 540;
     const x0 = 64, x1 = 616, y0 = 40, y1 = H - 96;
-    const SEU = (window.Competences && window.Competences.SEUILS) || { potAppui: 62, exprAppui: 58 };
+    const SEU = (comps && comps.seuils) ? { potAppui: comps.seuils.pot, exprAppui: comps.seuils.expr } : ((window.Competences && window.Competences.SEUILS) || { potAppui: 62, exprAppui: 58 });
     const seuilX = SEU.potAppui, seuilY = SEU.exprAppui;
     // Le zoom : l'échelle se resserre sur la plage réelle des valeurs,
     // seuils inclus, pour que les points respirent au lieu de s'agglutiner.
@@ -169,7 +169,7 @@
       const t = g.querySelector('title');
       if (t) { g.setAttribute('data-nom', (t.textContent || '').split(' \u00b7 ')[0]); g.setAttribute('aria-label', t.textContent || ''); t.remove(); }
     });
-    const ZONES = { appui: 'Appui, force visible au quotidien', opportunite: "Opportunit\u00e9, l'effort rapporte ici", economie: "Veille, terrain d'observation", neutre: 'Zone m\u00e9diane' };
+    const ZONES = { appui: 'Vos appuis \u00b7 facile pour vous et d\u00e9j\u00e0 mobilis\u00e9', opportunite: '\u00c0 lib\u00e9rer \u00b7 facile pour vous, encore peu mobilis\u00e9', economie: 'En retrait \u00b7 moins naturel, \u00e0 mobiliser avec parcimonie', neutre: 'Zone m\u00e9diane \u00b7 ni co\u00fbteuse ni acquise' };
     container.addEventListener('mousemove', function (e) {
       const g = e.target.closest && e.target.closest('[data-comp]');
       if (!g || !g.hasAttribute('data-pot')) { tip.style.display = 'none'; return; }

@@ -148,7 +148,7 @@ verifie('frise : jalon fait coché, jalon à venir creux', fr.indexOf('#5B9E6B')
 verifie('frise : curseur au bon jour', fr.indexOf('Jour 45') > 0);
 verifie('frise : sans date, sans curseur', V.frise90Svg([{ label: 'Portrait', pos: 0, fait: true }], null).indexOf('Jour') < 0);
 verifie('cockpit : posé et appelé', srcCtrl.indexOf('function poserCockpit(') > 0 && srcCtrl.indexOf('poserCockpit(dataEspaceCourant, carte)') > 0);
-verifie('cockpit : dans l\'onglet développement', srcCtrl.indexOf("dev: ['espace-cockpit', 'espace-checklist', 'espace-nea'") > 0);
+verifie('cockpit : dans l\'onglet développement', srcCtrl.indexOf("dev: ['espace-accueil-resume', 'espace-cockpit', 'espace-checklist', 'espace-nea'") > 0);
 verifie('cockpit : slot présent dans la page', idxH2.indexOf('id="espace-cockpit"') > 0);
 verifie('miroir : le radar entre dans l\'analyse', srcCtrl.indexOf('${radarHtml}') > 0 && srcCtrl.indexOf('radarMiroirSvg(vous, percu') > 0);
 verifie('engagements : état relié aux défis', srcCtrl.indexOf('compsDefis.has(mm.id)') > 0);
@@ -220,7 +220,7 @@ verifie('bandeau : fit conditionné au poste sur mesure', srcDash.indexOf('poste
 verifie('bandeau : la qualité vécue entre en scène', srcDash.indexOf('Qualité vécue') > 0);
 verifie('cockpit : le pronostic a sa place dans les priorités', srcCtrl2().indexOf('pronostic Feedback 360') > 0);
 verifie('miroir : le pari est replié par défaut', srcCtrl2().indexOf('pari-open') > 0 && srcCtrl2().indexOf('pari-corps esp-hide') > 0);
-verifie('accueil : le résumé est posé et rangé', idxH2.indexOf('id="espace-accueil-resume"') > 0 && srcCtrl2().indexOf('acc-resume') > 0 && srcCtrl2().indexOf("accueil: ['espace-accueil-resume'") > 0);
+verifie('accueil : le résumé est posé et rangé', idxH2.indexOf('id="espace-accueil-resume"') > 0 && srcCtrl2().indexOf('acc-resume') > 0 && srcCtrl2().indexOf("dev: ['espace-accueil-resume'") > 0);
 
 console.log('\n== 0terdecies. Les facettes et la défithèque ==');
 verifie('facettes : 32, deux par compétence, ids uniques', (() => {
@@ -253,7 +253,7 @@ verifie('jardin : l\'éclosion suit la gauche vers la droite', srcCtrl2().indexO
 verifie('jardin : panoramique bord à bord', cssTxt2().indexOf('width:calc(100% + 36px)') > 0 && cssTxt2().indexOf('.ckl{overflow:hidden;}') > 0);
 verifie('jardin : trois prochaines pousses et rattrapage', srcCtrl2().indexOf('aFaire.slice(0, 3)') > 0 && srcCtrl2().indexOf('Déjà fait ?') > 0 && srcCtrl2().indexOf('function marquerFait(') > 0);
 verifie('jardin : les jalons manuels comptent partout', (srcCtrl2().match(/!!jal\./g) || []).length === 9);
-verifie('feedback 360 : le nom est partout à l\'écran', idxH2.indexOf('Mon Feedback 360') > 0 && (srcCtrl2().match(/Mon Feedback 360/g) || []).length >= 3 && srcCtrl2().indexOf('pronostic Feedback 360') > 0);
+verifie('feedback 360 : le nom est partout à l\'écran', idxH2.indexOf('Mon regard 360') > 0 && (srcCtrl2().match(/Mon regard 360/g) || []).length >= 3 && srcCtrl2().indexOf('pronostic Feedback 360') > 0);
 verifie('feedback 360 : chaque porte dépose au geste précis', srcCtrl2().indexOf('function allerFeedback(') > 0 && (srcCtrl2().match(/allerFeedback/g) || []).length >= 8 && srcCtrl2().indexOf("App.espTab('miroir')") < 0 && srcCtrl2().indexOf('espTab(&quot;miroir&quot;)') < 0);
 verifie('feedback 360 : le fil des quatre étapes guide et téléporte', srcCtrl2().indexOf('function mirEtapesHtml(') > 0 && srcCtrl2().indexOf("insertAdjacentHTML('afterbegin', mirEtapesHtml") > 0 && srcCtrl2().indexOf('function mirAller(') > 0 && cssTxt2().indexOf('.mir-etapes{display:flex') > 0);
 verifie('feedback 360 : cibles au standard, filtre actif lisible', cssTxt2().indexOf('.esp-mir-msg-btn{min-height:40px;}') > 0 && cssTxt2().indexOf('.mir-rel.on{background:#5E59C7;color:#fff') > 0 && cssTxt2().indexOf('.mir-et{min-height:44px;}') > 0);
@@ -322,6 +322,31 @@ verifie('signature : le portrait habite aussi la carte des résultats et la rare
 verifie('voix typographique : la display se charge et signe les titres majeurs', require('fs').readFileSync('index.html', 'utf8').indexOf('Bricolage+Grotesque') > 0 && cssTxt2().indexOf("--font-display:'Bricolage Grotesque'") > 0 && cssTxt2().indexOf('.espace-name{font-family:var(--font-display)') > 0 && cssTxt2().indexOf('.r-rare-num{font-family:var(--font-display)') > 0);
 verifie('clôture : la fin de lecture devient un moment, teinté famille', srcRes2().indexOf('r-cloture-titre">Ce portrait est le vôtre.') > 0 && cssTxt2().indexOf('.r-cloture{background:linear-gradient(140deg,#221D45 0%, var(--fam-color') > 0 && srcRes2().indexOf("getElementById('screen-result').style.setProperty('--fam-color'") > 0);
 verifie('tunnel : la première impression porte la voix et la barre suit la charte', cssTxt2().indexOf('.cover-inner h1{font-family:var(--font-display)') > 0 && cssTxt2().indexOf('linear-gradient(90deg,#5E59C7,#8884F0,#B9B6F5)') > 0 && cssTxt2().indexOf('#F98272,#8884F0,#E290EC') < 0);
+verifie('session : l\'identité survit sept jours et se restaure hors entrée par jeton', srcCtrl2().indexOf("localStorage.setItem('sinea_identite'") > 0 && srcCtrl2().indexOf('function restaurerIdentite()') > 0 && srcCtrl2().indexOf('(token|miroir)=') > 0);
+verifie('lecture : les trois modes et le CTA du portrait complet', srcRes2().indexOf("classList.toggle('mode-spe'") > 0 && cssTxt2().indexOf('#screen-result.mode-spe .r-bloc:not(#b-spe){display:none;}') > 0 && srcRes2().indexOf('Lire mon portrait complet') > 0);
+verifie('lecture : la couche essentielle se construit en local', srcRes2().indexOf('function construireEssentiel(') > 0 && srcRes2().indexOf('Vos trois appuis') > 0 && cssTxt2().indexOf('.r-essentiel{') > 0);
+verifie('lecture : le sommaire vit en latéral et en barre mobile, suivi au défilement', srcRes2().indexOf('function construireSommaire(') > 0 && srcRes2().indexOf('IntersectionObserver') > 0 && cssTxt2().indexOf('#r-sommaire-mob{position:sticky') > 0 && cssTxt2().indexOf('@media (min-width:1700px)') > 0);
+(function () {
+  const CZ = window.Competences;
+  const bas = CZ.scorer({ O: 30, C: 30, E: 30, A: 30, N: 70 }, null, null);
+  const appuisBas = bas.filter(c => c.zone === 'appui');
+  const coherent = appuisBas.every(c => c.potentiel >= bas.seuils.pot && c.expression >= bas.seuils.expr);
+  const haut = CZ.scorer({ O: 80, C: 80, E: 80, A: 80, N: 20 }, null, null);
+  verifie('compétences : trois appuis garantis même sur un profil en retrait', appuisBas.length >= 3 && bas.seuils.pot < CZ.SEUILS.potAppui && coherent);
+  verifie('compétences : les seuils restent absolus sur un profil fort', haut.seuils.pot === CZ.SEUILS.potAppui && haut.seuils.expr === CZ.SEUILS.exprAppui);
+})();
+verifie('compétences : le récit précède la carte, pliée en exploration', srcRes2().indexOf('function recitQ16(') > 0 && srcRes2().indexOf('vous vient facilement') > 0 && srcRes2().indexOf('Explorer la carte complète') > 0 && cssTxt2().indexOf('.q16-details summary{') > 0);
+verifie('compétences : le vocabulaire parle au premier contact', srcRes2().indexOf('À libérer') > 0 && srcRes2().indexOf('En retrait') > 0 && srcRes2().indexOf('facilité naturelle') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('Vos appuis') > 0);
+verifie('espace : trois objets nommés, le plan rassemble l\'action', require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon portrait<') > 0 && require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon plan<') > 0 && require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon regard 360<') > 0 && srcCtrl2().indexOf("dev: ['espace-accueil-resume', 'espace-cockpit'") > 0 && srcCtrl2().indexOf("accueil: ['espace-prog-globale'") > 0);
+verifie('jardin : il pousse sur les pistes réelles du plan', srcCtrl2().indexOf('function comptePlan(') > 0 && srcCtrl2().indexOf('jr-plan-note') > 0 && srcCtrl2().indexOf('planInfo.total > 0 ? planInfo.faites : liste.length') > 0);
+verifie('néa : la relance ouvre sur l\'objectif engagé', srcCtrl2().indexOf('function relanceNea(') > 0 && srcCtrl2().indexOf('Où en êtes-vous cette semaine') > 0 && cssTxt2().indexOf('.nea-relance{') > 0);
+verifie('version : controller et dashboard parlent d\'une seule voix', (function () { const mc = (srcCtrl2().match(/Sinea Profile (v\d+) servie/) || [])[1]; const md = (require('fs').readFileSync('dashboard.js', 'utf8').match(/Sinea Dashboard (v\d+)/) || [])[1]; return !!mc && mc === md; })());
+verifie('360 croisé : quatre territoires calculés sur les compétences observées', srcCtrl2().indexOf('function croiserRegards(') > 0 && srcCtrl2().indexOf('delta >= 15') > 0 && srcCtrl2().indexOf("out.angles.push") > 0 && srcCtrl2().indexOf('COMPS_360') > 0);
+verifie('360 croisé : la lecture croisée se rend dès deux regards', srcCtrl2().indexOf('function mirCroiseHtml(') > 0 && srcCtrl2().indexOf('Vos angles morts') > 0 && srcCtrl2().indexOf('mirCroiseHtml(reponsesTous)') > 0 && cssTxt2().indexOf('.mir-croise{') > 0);
+verifie('360 croisé : chaque angle mort devient une piste du plan', srcCtrl2().indexOf('function pisteDepuis360(') > 0 && srcCtrl2().indexOf("action: 'save_plan_suivi'") > 0 && srcCtrl2().indexOf('pisteDepuis360, enregistrerResultat') > 0);
+verifie('néa : le fil conversationnel connaît le plan', srcRes2().indexOf('App.planPourNea') > 0 && srcCtrl2().indexOf('function planPourNea(') > 0 && srcCtrl2().indexOf('planPourNea, pisteDepuis360') > 0);
+verifie('mesure : le sondage couvre appris et longueur', srcRes2().indexOf("AVIS_APPRIS") > 0 && srcRes2().indexOf("AVIS_LONGUEUR") > 0 && srcRes2().indexOf("J'ai appris quelque chose sur moi") > 0);
+verifie('mesure : la lecture se trace par chapitre et part au beacon', srcRes2().indexOf('function traceurLecture(') > 0 && srcRes2().indexOf('sendBeacon') > 0 && srcRes2().indexOf("action: 'lecture_chapitres'") > 0 && srcRes2().indexOf('pagehide') > 0);
 verifie('souvenir : la carte à partager parle Bricolage', srcRes2().indexOf('px "Bricolage Grotesque", Poppins,') > 0);
 })();
 (function () {

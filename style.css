@@ -2462,3 +2462,79 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 /* ===== v125 : le tunnel prend la voix ===== */
 .cover-inner h1{font-family:var(--font-display);letter-spacing:-0.015em;}
 #screen-chapter h1, #screen-chapter h2, .chap-titre, .chap-title{font-family:var(--font-display);letter-spacing:-0.012em;}
+
+/* ===== v128 : le récit avant la carte ===== */
+.q16-recit{margin:0 0 14px;}
+.q16-r-l{font-size:15px;line-height:1.6;margin:0 0 8px;}
+.q16-r-t{background:#FFF6DE;border:1px solid #F1E0B0;border-radius:12px;padding:10px 13px;}
+.q16-lecture{font-size:12.5px;color:#6E6A85;line-height:1.55;margin:0 0 12px;}
+.q16-details{margin-top:6px;}
+.q16-details summary{cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;min-height:46px;padding:11px 18px;border:1px solid #E2DFD6;border-radius:13px;background:#F7F6F1;color:#221D45;}
+.q16-details summary::-webkit-details-marker{display:none;}
+.q16-details summary::before{content:"+";font-weight:800;}
+.q16-details[open] summary{margin-bottom:14px;}
+.q16-details[open] summary::before{content:"–";}
+
+/* ===== v127 récupéré : la lecture en couches ===== */
+#screen-result.mode-spe .r-bloc:not(#b-spe){display:none;}
+#screen-result.mode-spe #r-essentiel{display:none;}
+.r-cta-complet{max-width:880px;margin:36px auto 0;background:linear-gradient(140deg,#221D45 0%,#3A2F66 70%);color:#F5F4F0;border-radius:22px;padding:30px 26px;text-align:center;}
+.r-ctac-k{font-size:11.5px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;opacity:0.75;margin-bottom:8px;}
+.r-ctac-t{font-family:var(--font-display);font-size:26px;margin:0 0 8px;color:#fff;}
+.r-cta-complet p{opacity:0.85;max-width:520px;margin:0 auto 16px;}
+.r-ctac-btn{font-family:inherit;font-size:14px;font-weight:800;min-height:48px;padding:12px 22px;border:none;border-radius:14px;background:#F5F4F0;color:#221D45;cursor:pointer;}
+.r-essentiel{max-width:880px;margin:26px auto 0;background:#fff;border:1px solid #E7E4DB;border-radius:22px;padding:24px;}
+.r-ess-kicker{font-size:11.5px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#5E59C7;}
+.r-ess-titre{font-family:var(--font-display);font-size:24px;margin:6px 0 14px;}
+.r-ess-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;}
+.r-ess-tuile{background:#F7F6F1;border-radius:16px;padding:16px;}
+.r-ess-k{font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:#6E6A85;margin-bottom:8px;}
+.r-ess-list{margin:0;padding:0 0 0 18px;font-size:14px;line-height:1.7;}
+.r-ess-p{font-size:14px;line-height:1.6;margin:0;}
+.r-ess-num{font-family:var(--font-display);font-size:30px;color:#221D45;line-height:1.1;margin-bottom:4px;}
+.r-ess-btn{margin-top:16px;font-family:inherit;font-size:13.5px;font-weight:800;min-height:46px;padding:11px 20px;border:none;border-radius:13px;background:#221D45;color:#F5F4F0;cursor:pointer;}
+#r-sommaire{display:none;}
+@media (min-width:1700px){
+  #r-sommaire{display:block;position:fixed;top:96px;left:max(14px,calc(50vw - 800px - 252px));width:216px;z-index:40;background:rgba(255,255,255,0.93);backdrop-filter:blur(8px);border:1px solid #E7E4DB;border-radius:16px;padding:12px;max-height:calc(100vh - 140px);overflow:auto;}
+  #r-sommaire-mob{display:none;}
+}
+.somm-t{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#6E6A85;margin:2px 4px 8px;}
+.somm-b{display:block;width:100%;text-align:left;font-family:inherit;font-size:12.5px;line-height:1.35;padding:7px 9px;border-radius:9px;border:none;background:none;color:#4A4757;cursor:pointer;}
+.somm-b:hover{background:#F1EFE8;}
+.somm-b.on{background:#221D45;color:#F5F4F0;}
+.somm-cpt{font-size:11px;color:#6E6A85;margin:8px 4px 2px;}
+#r-sommaire-mob{position:sticky;top:8px;z-index:46;max-width:880px;margin:14px auto 0;}
+.somm-mob-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;font-family:inherit;font-size:13px;font-weight:700;min-height:46px;padding:11px 14px;border:1px solid #E7E4DB;border-radius:14px;background:rgba(255,255,255,0.94);backdrop-filter:blur(8px);color:#221D45;cursor:pointer;}
+.somm-mob-cpt{font-weight:800;font-size:11.5px;color:#6E6A85;}
+.somm-mob-liste{display:none;background:#fff;border:1px solid #E7E4DB;border-radius:14px;margin-top:6px;padding:8px;box-shadow:0 14px 34px rgba(34,29,69,0.14);}
+.somm-mob-liste.open{display:block;}
+
+/* ===== v129 : l'espace en trois objets, le plan au centre ===== */
+.nea-relance{background:linear-gradient(140deg,#221D45 0%,#3A2F66 80%);color:#F5F4F0;border-radius:18px;padding:18px 20px;margin:0 0 16px;}
+.nea-r-k{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;opacity:0.75;margin-bottom:6px;}
+.nea-relance p{margin:0 0 12px;line-height:1.55;font-size:14.5px;}
+.nea-r-btn{font-family:inherit;font-size:13px;font-weight:800;min-height:44px;padding:10px 18px;border:none;border-radius:12px;background:#F5F4F0;color:#221D45;cursor:pointer;}
+.jr-plan-note{font-size:13px;color:#4A4757;line-height:1.55;margin:10px 0 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.jr-plan-btn{font-family:inherit;font-size:12.5px;font-weight:800;min-height:40px;padding:8px 14px;border:1px solid #E2DFD6;border-radius:11px;background:#fff;color:#221D45;cursor:pointer;}
+
+/* ===== v130 : la lecture croisée du regard 360 ===== */
+.mir-croise{margin:22px 0 0;background:#fff;border:1px solid #E7E4DB;border-radius:20px;padding:22px;}
+.mir-croise-attente{background:#F7F6F1;border-style:dashed;}
+.mir-croise-attente p{margin:0;color:#4A4757;font-size:14px;line-height:1.6;}
+.mir-croise-head h3{font-family:var(--font-display);font-size:24px;margin:4px 0 4px;}
+.mc-intro{font-size:12.5px;color:#6E6A85;margin:0 0 14px;}
+.mc-grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+.mc-terr{border-radius:16px;padding:14px;border:1px solid #E7E4DB;background:#FBFAF7;}
+.mc-angle{background:linear-gradient(150deg,#221D45 0%,#3A2F66 90%);color:#F5F4F0;border:none;}
+.mc-angle .mc-s,.mc-angle .mc-chiffres{color:rgba(245,244,240,0.75);}
+.mc-conf{background:#EFF6EC;border-color:#D6E6CF;}
+.mc-disc{background:#FFF6DE;border-color:#F1E0B0;}
+.mc-t{font-size:14px;font-weight:800;margin-bottom:2px;}
+.mc-s{font-size:12px;color:#6E6A85;margin-bottom:10px;}
+.mc-carte{border-radius:12px;padding:10px 12px;background:rgba(255,255,255,0.6);margin:0 0 8px;}
+.mc-angle .mc-carte{background:rgba(255,255,255,0.1);}
+.mc-nom{font-weight:800;font-size:14px;}
+.mc-chiffres{font-size:12px;color:#6E6A85;margin:2px 0 6px;}
+.mc-p{font-size:13px;line-height:1.55;margin:0 0 8px;}
+.mc-btn{font-family:inherit;font-size:12.5px;font-weight:800;min-height:42px;padding:9px 14px;border:none;border-radius:11px;background:#F5F4F0;color:#221D45;cursor:pointer;}
+.mc-fait{font-size:12.5px;font-weight:800;opacity:0.85;}

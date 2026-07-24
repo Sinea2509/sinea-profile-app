@@ -402,11 +402,13 @@ const Result = (() => {
       return `<div class="r-section-tag">Vos compétences, la lecture Sinéa</div>
         <p class="r-hint">Le potentiel vient de votre nature, l'expression de votre comportement au travail. La carte situe vos seize compétences en quatre zones de jeu.</p>
         <div class="r-card r-q16-card">
+          <div class="q16-recit">${recitQ16(comps)}</div>
+          <p class="q16-lecture">Lecture de la carte : l'horizontale mesure votre facilité naturelle, le potentiel. La verticale mesure ce que vous mobilisez réellement aujourd'hui, l'expression.</p>
           <div class="q16-zones">
-            <div class="q16-zone q16-z-appui"><b>Appui</b> · potentiel élevé et expression au rendez-vous, vos forces visibles au quotidien.</div>
-            <div class="q16-zone q16-z-oppo"><b>Opportunité</b> · le potentiel dépasse l'expression, l'endroit où l'effort rapporte le plus.</div>
-            <div class="q16-zone q16-z-sur"><b>Sur-régime</b> · l'expression dépasse le potentiel, tenez la posture en surveillant l'énergie qu'elle coûte.</div>
-            <div class="q16-zone q16-z-veille"><b>Veille</b> · potentiel et expression en retrait, terrain d'observation, sans urgence.</div>
+            <div class="q16-zone q16-z-appui"><b>Vos appuis</b> · facile pour vous et déjà mobilisé, vos forces visibles au quotidien.</div>
+            <div class="q16-zone q16-z-oppo"><b>À libérer</b> · plus facile que mobilisé, l'endroit où l'effort rapporte le plus vite.</div>
+            <div class="q16-zone q16-z-sur"><b>En sur-régime</b> · mobilisé au-delà de votre facilité naturelle, tenez la posture en surveillant l'énergie.</div>
+            <div class="q16-zone q16-z-veille"><b>En retrait</b> · peu facile et peu mobilisé, terrain d'observation, sans urgence.</div>
           </div>
           <div class="q16-flex">
             ${window.Visuels ? Visuels.quadrantSvg(comps) : ''}
@@ -419,6 +421,18 @@ const Result = (() => {
   }
 
   function contenu(nom){ const s=dataSlug(nom); return (SINEA_DATA.contenu&&SINEA_DATA.contenu[s])||{}; }
+  function recitQ16(comps) {
+    try {
+      const appuis = comps.filter(c => c.zone === 'appui').sort((a, b) => Math.min(b.potentiel, b.expression) - Math.min(a.potentiel, a.expression)).slice(0, 3);
+      let html = appuis.map(c => '<p class="q16-r-l"><b>' + echapHtml(c.nom) + '</b> vous vient facilement (' + Math.round(c.potentiel) + ') et vous la mobilisez déjà (' + Math.round(c.expression) + ').</p>').join('');
+      const sur = comps.filter(c => c.expression - c.potentiel >= 10).sort((a, b) => (b.expression - b.potentiel) - (a.expression - a.potentiel))[0];
+      const oppo = comps.filter(c => c.zone === 'opportunite').sort((a, b) => (b.potentiel - b.expression) - (a.potentiel - a.expression))[0];
+      if (sur) html += '<p class="q16-r-l q16-r-t"><b>' + echapHtml(sur.nom) + '</b> vous coûte plus qu\'il n\'y paraît : mobilisée à ' + Math.round(sur.expression) + ' pour une facilité de ' + Math.round(sur.potentiel) + '. Ménagez votre énergie.</p>';
+      else if (oppo) html += '<p class="q16-r-l q16-r-t"><b>' + echapHtml(oppo.nom) + '</b> est votre marge la plus rapide : facilité ' + Math.round(oppo.potentiel) + ', encore mobilisée à ' + Math.round(oppo.expression) + '.</p>';
+      return html;
+    } catch (e) { return ''; }
+  }
+
   function rarete(nom){ const s=dataSlug(nom); return (SINEA_DATA.rarete&&SINEA_DATA.rarete[s])||{pct:'',niveau:''}; }
   // Rareté de la COMBINAISON dominant + secondaire (plus marquante que le dominant seul)
   function rareteCombinee(res){
@@ -1398,6 +1412,7 @@ const Result = (() => {
         archetype: dom.nom, famille: dom.famille, bigFive: res.scoresBigFive,
         contextuel: res.contextuel || {}, contextuelPlus: res.contextuelPlus || {},
         question, historique: chatHistorique,
+        plan: (window.App && App.planPourNea) ? App.planPourNea() : undefined,
         email: emailCourant || undefined, token: lireToken() || undefined,
       }),
     })
@@ -2602,6 +2617,15 @@ const Result = (() => {
           <div class="m3-notes">${[1,2,3,4,5].map(i => `<button type="button" class="m3-note" id="m3c-${i}" onclick="Result.setNoteExtra('AVIS_CLARTE','m3c',${i})">${i}</button>`).join('')}</div>
           <div class="m3-notes-labels"><span>Pas vraiment</span><span>Totalement</span></div>
         </div>
+        <div class="m3-field m3-field-note">
+          <label class="m3-q">J'ai appris quelque chose sur moi</label>
+          <div class="m3-notes">${[1,2,3,4,5].map(i => `<button type="button" class="m3-note" id="m3a-${i}" onclick="Result.setNoteExtra('AVIS_APPRIS','m3a',${i})">${i}</button>`).join('')}</div>
+          <div class="m3-notes-labels"><span>Rien de neuf</span><span>Une vraie découverte</span></div>
+        </div>
+        <div class="m3-field m3-field-note">
+          <label class="m3-q">La longueur de ce portrait</label>
+          <div class="m3-notes m3-notes-mots">${[['Trop long',1],['Bien dosée',2],["J'en voulais plus",3]].map(p => `<button type="button" class="m3-note m3-note-mot" id="m3l-${p[1]}" onclick="Result.setNoteExtra('AVIS_LONGUEUR','m3l',${p[1]})">${p[0]}</button>`).join('')}</div>
+        </div>
         ${textQs}
         <button class="btn-primary m3-submit" id="m3-submit" disabled onclick="Result.submitMoment3()">Découvrir mes défis SeedUp</button>
       </div>`;
@@ -2708,7 +2732,7 @@ const Result = (() => {
     avis[cle] = v;
     for (let i = 1; i <= 5; i++) {
       const el = document.getElementById(prefixe + '-' + i);
-      if (el) el.classList.toggle('sel', i <= v);
+      if (el) el.classList.toggle('sel', cle === 'AVIS_LONGUEUR' ? i === v : i <= v);
     }
   }
 
@@ -2816,6 +2840,20 @@ const Result = (() => {
 
   function brancherQ16(){
     const carte = document.querySelector('#screen-result .r-q16-card');
+    if (carte && !carte.querySelector('.q16-details')) {
+      const zones = carte.querySelector('.q16-zones');
+      const flex = carte.querySelector('.q16-flex');
+      const lect = carte.querySelector('.q16-lecture');
+      if (zones && flex) {
+        const det = document.createElement('details');
+        det.className = 'q16-details';
+        det.innerHTML = '<summary>Explorer la carte complète des seize compétences</summary>';
+        zones.parentNode.insertBefore(det, lect || zones);
+        if (lect) det.appendChild(lect);
+        det.appendChild(zones);
+        det.appendChild(flex);
+      }
+    }
     if (!carte || carte.__q16) return;
     carte.__q16 = true;
     const svg = carte.querySelector('svg.q16');
@@ -2835,37 +2873,160 @@ const Result = (() => {
       if (ref && zone) zone.innerHTML = '<b>' + echapHtml(ref.nom) + '</b> · ' + echapHtml(ref.def);
     });
   }
-  function installerSommaireFlottant(){
+  function setModeLecture(mode){
     const scr = document.getElementById('screen-result');
-    if (!scr || scr.__tocFlot) return;
-    const items = Array.from(scr.querySelectorAll('.r-toc-i'));
-    if (!items.length) return;
-    scr.__tocFlot = true;
-    const bouton = document.createElement('button');
-    bouton.type = 'button';
-    bouton.id = 'r-toc-flot';
-    bouton.textContent = '☰ Sommaire';
-    const panel = document.createElement('div');
-    panel.id = 'r-toc-panel';
-    panel.innerHTML = items.map(function (a) {
-      const cible = (a.getAttribute('href') || '').replace('#', '');
-      const lab = (a.querySelector('span:last-child') || a).textContent.trim();
-      return '<button type="button" class="r-toc-flot-i" data-cible="' + cible + '">' + lab + '</button>';
-    }).join('');
-    scr.appendChild(bouton);
-    scr.appendChild(panel);
-    bouton.addEventListener('click', function (e) { e.stopPropagation(); panel.classList.toggle('ouvert'); });
-    panel.addEventListener('click', function (e) {
-      const b = e.target.closest('.r-toc-flot-i');
-      if (!b) return;
-      const el = document.getElementById(b.getAttribute('data-cible'));
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      panel.classList.remove('ouvert');
-    });
-    document.addEventListener('click', function (e) {
-      if (!panel.contains(e.target) && e.target !== bouton) panel.classList.remove('ouvert');
-    });
+    if (!scr) return;
+    scr.classList.toggle('mode-spe', mode === 'spe');
+    let cta = document.getElementById('r-cta-complet');
+    if (mode === 'spe') {
+      if (!cta) {
+        cta = document.createElement('div');
+        cta.id = 'r-cta-complet';
+        cta.className = 'r-cta-complet';
+        cta.innerHTML = '<div class="r-ctac-k">Votre lecture continue</div><h3 class="r-ctac-t">Le portrait complet vous attend.</h3><p>Personnalit\u00e9, tensions, dimensions profondes et comp\u00e9tences, la lecture int\u00e9grale prend environ quinze minutes.</p><button type="button" class="r-ctac-btn" onclick="Result.setModeLecture(\'\');window.scrollTo({top:0,behavior:\'smooth\'});">Lire mon portrait complet</button>';
+        const clo = scr.querySelector('.r-cloture');
+        if (clo && clo.parentNode) clo.parentNode.insertBefore(cta, clo);
+        else (scr.querySelector('.r-screen') || scr).appendChild(cta);
+      }
+      cta.style.display = '';
+    } else if (cta) {
+      cta.style.display = 'none';
+    }
+    construireSommaire();
   }
+
+  function construireEssentiel(res){
+    try {
+      const ancien = document.getElementById('r-essentiel');
+      if (ancien) ancien.remove();
+      if (!res || !res.dominante) return;
+      const hero = document.getElementById('r-hero');
+      if (!hero || !hero.parentNode) return;
+      const bf = res.scoresBigFive || res.bigFive;
+      let appuis = [];
+      try {
+        if (window.Competences && bf) appuis = Competences.scorer(bf, (res.naturelAdapte && res.naturelAdapte.ecarts) || null, null).filter(function(c){ return c.zone === 'appui'; }).sort(function(a,b){ return Math.min(b.potentiel,b.expression) - Math.min(a.potentiel,a.expression); }).slice(0, 3).map(function(c){ return c.nom; });
+      } catch (e) {}
+      const t0 = (Array.isArray(res.tensions) && res.tensions[0] && (res.tensions[0].analyse || res.tensions[0].titre)) || '';
+      const tension = String(t0).split('.')[0].slice(0, 150);
+      const rar = rarete(res.dominante.nom) || {};
+      const tuiles = [];
+      if (appuis.length === 3) tuiles.push('<div class="r-ess-tuile"><div class="r-ess-k">Vos trois appuis</div><ul class="r-ess-list">' + appuis.map(function(n){ return '<li>' + n + '</li>'; }).join('') + '</ul></div>');
+      if (tension) tuiles.push('<div class="r-ess-tuile"><div class="r-ess-k">Votre tension \u00e0 conna\u00eetre</div><p class="r-ess-p">' + tension + '.</p></div>');
+      if (rar.affichage || rar.pct) tuiles.push('<div class="r-ess-tuile"><div class="r-ess-k">Votre singularit\u00e9</div><div class="r-ess-num">' + (rar.affichage || (rar.pct + '%')) + '</div><p class="r-ess-p">partagent votre combinaison d\'arch\u00e9types.</p></div>');
+      if (tuiles.length < 2) return;
+      const d = document.createElement('section');
+      d.id = 'r-essentiel';
+      d.className = 'r-essentiel';
+      d.innerHTML = '<div class="r-ess-head"><span class="r-ess-kicker">L\'essentiel \u00b7 deux minutes</span><h2 class="r-ess-titre">' + String(res.dominante.nom) + ', en bref.</h2></div><div class="r-ess-grid">' + tuiles.join('') + '</div><button type="button" class="r-ess-btn" onclick="var b=document.querySelector(\'#screen-result .r-bloc\');if(b)b.scrollIntoView({behavior:\'smooth\',block:\'start\'});">Entrer dans le portrait</button>';
+      hero.parentNode.insertBefore(d, hero.nextSibling);
+    } catch (e) { console.warn('[Sin\u00e9a]', e); }
+  }
+
+  function construireSommaire(){
+    const scr = document.getElementById('screen-result');
+    if (!scr) return;
+    ['r-sommaire', 'r-sommaire-mob'].forEach(function(id){ const e = document.getElementById(id); if (e) e.remove(); });
+    if (scr.__sommObs) { try { scr.__sommObs.disconnect(); } catch (e) {} scr.__sommObs = null; }
+    const blocs = Array.from(scr.querySelectorAll('.r-bloc')).filter(function(b){ return b.offsetParent !== null; });
+    if (blocs.length < 3) return;
+    const items = blocs.map(function(b, i){
+      if (!b.id) b.id = 'chap-' + (i + 1);
+      const tEl = b.querySelector('.r-bloc-head h2') || b.querySelector('.r-section-tag') || b.querySelector('h2');
+      let t = tEl ? tEl.textContent.trim() : 'Chapitre ' + (i + 1);
+      t = t.replace(/^\d+\s*\u00b7\s*/, '').slice(0, 38);
+      return { id: b.id, t: t };
+    });
+    const num = function(i){ return (i + 1 < 10 ? '0' : '') + (i + 1); };
+    const boutons = items.map(function(it, i){ return '<button type="button" class="somm-b" data-cible="' + it.id + '">' + num(i) + ' \u00b7 ' + it.t + '</button>'; }).join('');
+    const nav = document.createElement('nav');
+    nav.id = 'r-sommaire';
+    nav.setAttribute('aria-label', 'Sommaire du portrait');
+    nav.innerHTML = '<div class="somm-t">Sommaire</div>' + boutons + '<div class="somm-cpt" id="somm-cpt">1 / ' + items.length + '</div>';
+    scr.appendChild(nav);
+    const mob = document.createElement('div');
+    mob.id = 'r-sommaire-mob';
+    mob.innerHTML = '<button type="button" class="somm-mob-btn" id="somm-mob-btn"><span id="somm-mob-cur">01 \u00b7 ' + items[0].t + '</span><span class="somm-mob-cpt" id="somm-mob-cpt">1 / ' + items.length + '</span></button><div class="somm-mob-liste" id="somm-mob-liste">' + boutons + '</div>';
+    const ancreMob = document.getElementById('r-essentiel') || document.getElementById('r-hero');
+    if (ancreMob && ancreMob.parentNode) ancreMob.parentNode.insertBefore(mob, ancreMob.nextSibling);
+    function aller(id){
+      const b = document.getElementById(id);
+      if (b) b.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const li = document.getElementById('somm-mob-liste');
+      if (li) li.classList.remove('open');
+    }
+    document.querySelectorAll('#r-sommaire .somm-b, #r-sommaire-mob .somm-b').forEach(function(b){ b.onclick = function(){ aller(this.getAttribute('data-cible')); }; });
+    const btnMob = document.getElementById('somm-mob-btn');
+    if (btnMob) btnMob.onclick = function(){ const li = document.getElementById('somm-mob-liste'); if (li) li.classList.toggle('open'); };
+    const obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (!en.isIntersecting) return;
+        const id = en.target.id;
+        const idx = items.findIndex(function(it){ return it.id === id; });
+        if (idx < 0) return;
+        document.querySelectorAll('.somm-b').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-cible') === id); });
+        const cpt = document.getElementById('somm-cpt'); if (cpt) cpt.textContent = (idx + 1) + ' / ' + items.length;
+        const cur = document.getElementById('somm-mob-cur'); if (cur) cur.textContent = num(idx) + ' \u00b7 ' + items[idx].t;
+        const mc = document.getElementById('somm-mob-cpt'); if (mc) mc.textContent = (idx + 1) + ' / ' + items.length;
+      });
+    }, { rootMargin: '-25% 0px -60% 0px' });
+    blocs.forEach(function(b){ obs.observe(b); });
+    scr.__sommObs = obs;
+  }
+
+  let _lect = null;
+  function traceurLecture(res){
+    try {
+      if (_lect && _lect.obs) { try { _lect.obs.disconnect(); } catch (e) {} }
+      const blocs = Array.from(document.querySelectorAll('#screen-result .r-bloc')).filter(function (b) { return b.offsetParent !== null; });
+      if (!blocs.length) return;
+      _lect = { mod: (res && res.diagType) || 'socle', depuis: {}, cumul: {}, titres: {}, obs: null, envoye: false };
+      blocs.forEach(function (b, i) {
+        if (!b.id) b.id = 'chap-' + (i + 1);
+        const tEl = b.querySelector('.r-bloc-head h2') || b.querySelector('h2');
+        _lect.titres[b.id] = (tEl ? tEl.textContent.trim() : b.id).slice(0, 40);
+      });
+      const obs = new IntersectionObserver(function (entries) {
+        const t = Date.now();
+        entries.forEach(function (en) {
+          const id = en.target.id;
+          if (en.isIntersecting) { _lect.depuis[id] = t; }
+          else if (_lect.depuis[id]) { _lect.cumul[id] = (_lect.cumul[id] || 0) + (t - _lect.depuis[id]); delete _lect.depuis[id]; }
+        });
+      }, { threshold: 0.05 });
+      blocs.forEach(function (b) { obs.observe(b); });
+      _lect.obs = obs;
+    } catch (e) {}
+  }
+  function envoyerLecture(){
+    try {
+      if (!_lect || _lect.envoye) return;
+      const t = Date.now();
+      Object.keys(_lect.depuis).forEach(function (id) { _lect.cumul[id] = (_lect.cumul[id] || 0) + (t - _lect.depuis[id]); });
+      const chapitres = {};
+      let total = 0;
+      Object.keys(_lect.cumul).forEach(function (id) {
+        const s = Math.round(_lect.cumul[id] / 1000);
+        if (s >= 2) { chapitres[id] = { s: s, t: _lect.titres[id] || id }; total += s; }
+      });
+      if (total < 5) return;
+      _lect.envoye = true;
+      const corps = JSON.stringify({ action: 'lecture_chapitres', email: emailCourant || undefined, token: lireToken() || undefined, mod: _lect.mod, chapitres: chapitres });
+      if (navigator.sendBeacon) navigator.sendBeacon(API_BASE + '/progression', corps);
+      else fetch(API_BASE + '/progression', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: corps, keepalive: true }).catch(function () {});
+    } catch (e) {}
+  }
+  window.__lectureDebug = function () { return _lect ? { cumul: _lect.cumul, depuis: Object.keys(_lect.depuis), envoye: _lect.envoye, titres: Object.keys(_lect.titres).length } : null; };
+  window.addEventListener('pagehide', envoyerLecture);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') envoyerLecture(); });
+
+  function apresRender(res, mode){
+    try { traceurLecture(res); _lect && (_lect.envoye = false); } catch (e) {}
+    try { construireEssentiel(res); } catch (e) {}
+    try { setModeLecture(mode || ''); } catch (e) {}
+  }
+
+  function installerSommaireFlottant(){ construireSommaire(); }
 
   function installerBarreLecture(){
     const scr = document.getElementById('screen-result');
@@ -2886,7 +3047,7 @@ const Result = (() => {
     window.addEventListener('scroll', lire, { passive: true });
   }
 
-  return { installerBarreLecture, installerSommaireFlottant, telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, ouvrirNotation: showMoment3, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
+  return { envoyerLecture, apresRender, setModeLecture, installerBarreLecture, installerSommaireFlottant, telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, ouvrirNotation: showMoment3, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)
