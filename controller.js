@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v132 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v132]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v134 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v134]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -364,6 +364,20 @@ const App = (() => {
     scr.classList.add('active');
     const submit = document.getElementById('cx-submit');
     if (submit && !submit.dataset.bound) { submit.onclick = soumettreConnexion; submit.dataset.bound = '1'; }
+  }
+
+  // La sortie de session, en face de la persistance de sept jours.
+  // Elle efface la mémoire du navigateur, vide l'identité et ramène à l'accueil.
+  function seDeconnecter() {
+    try { localStorage.removeItem('sinea_identite'); } catch (e) {}
+    identite.email = '';
+    identite.prenom = '';
+    identite.nom = '';
+    try { dataEspaceCourant = null; carteEspaceCourant = null; } catch (e) {}
+    try {
+      if (location.search) history.replaceState(null, '', location.pathname);
+    } catch (e) {}
+    goToCover();
   }
 
   function goToCover() {
@@ -2080,6 +2094,16 @@ const App = (() => {
     VISION: "Votre regard tourné vers l'horizon donne sa couleur à votre portrait.",
   };
   // Sous-phrase selon l'avancement
+  function deduireDroits(declares, analyses) {
+    let txt = String(declares || '').toLowerCase();
+    try {
+      ['socle', 'commercial', 'manager'].forEach(function (m) {
+        if (analyses && analyses[m] && txt.indexOf(m) < 0) txt += (txt ? ',' : '') + m;
+      });
+    } catch (e) {}
+    return txt;
+  }
+
   function phraseAvancement(analyses, droitsTxt) {
     const aModuleDispo = (droitsTxt.includes('commercial') && !analyses.commercial) || (droitsTxt.includes('manager') && !analyses.manager);
     const toutFait = analyses.socle && (!droitsTxt.includes('commercial') || analyses.commercial) && (!droitsTxt.includes('manager') || analyses.manager);
@@ -2104,7 +2128,10 @@ const App = (() => {
       famille = analyses.socle.profil.dominante.famille || '';
     }
     monArchetype = archetype; // retenu pour situer la personne dans le codex
-    const droitsTxt = (data.droits || droits || '').toLowerCase();
+    // Les droits déclarés peuvent manquer quand une sauvegarde s'est interrompue.
+    // Une analyse présente en base prouve le droit mieux qu'un champ déclaratif :
+    // on complète donc les droits par ce que la personne a réellement passé.
+    const droitsTxt = deduireDroits(data.droits || droits || '', analyses);
     const progression = data.progression || {};
 
     document.getElementById('espace-name').textContent = 'Bonjour ' + prenom;
@@ -2192,6 +2219,13 @@ const App = (() => {
     }
     if (analyses.socle) {
       resultatsHtml += `<button class="espace-pdf-btn" id="espace-pdf-btn" onclick="App.telechargerPortraitEspace()">Télécharger mon portrait complet (PDF)</button>`;
+    }
+    // Fiche connue, aucune analyse retrouvée : le dire clairement plutôt que
+    // de renvoyer la personne vers une passation qu'elle a peut-être déjà faite.
+    if (!faits.length && data.found !== false && (data.prenom || data.archetype || (data.progression && Object.keys(data.progression).length))) {
+      resultatsHtml = '<div class="esp-vide"><div class="esp-vide-k">Portrait introuvable</div>'
+        + '<p>Votre compte existe bien, et nous ne retrouvons aucun portrait enregistré. Une passation interrompue en est la cause la plus fréquente.</p>'
+        + '<p class="esp-vide-p">Avant de tout recommencer, écrivez-nous à <a href="mailto:contact@sineaformation.fr">contact@sineaformation.fr</a>, vos réponses sont souvent récupérables.</p></div>';
     }
     document.getElementById('espace-resultats').innerHTML = resultatsHtml;
 
@@ -4233,7 +4267,7 @@ const App = (() => {
     } catch (e) {}
   })();
 
-  return { planPourNea, pisteDepuis360, enregistrerResultat, start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+  return { seDeconnecter, planPourNea, pisteDepuis360, enregistrerResultat, start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
 })();
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)

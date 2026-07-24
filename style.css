@@ -2538,3 +2538,19 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 .mc-p{font-size:13px;line-height:1.55;margin:0 0 8px;}
 .mc-btn{font-family:inherit;font-size:12.5px;font-weight:800;min-height:42px;padding:9px 14px;border:none;border-radius:11px;background:#F5F4F0;color:#221D45;cursor:pointer;}
 .mc-fait{font-size:12.5px;font-weight:800;opacity:0.85;}
+
+/* ===== v133 : la sortie de session, en face de la persistance ===== */
+.esp-quit{position:absolute;top:18px;right:18px;font-family:inherit;font-size:12.5px;font-weight:700;min-height:40px;padding:9px 15px;border:1px solid rgba(245,244,240,0.35);border-radius:11px;background:rgba(245,244,240,0.12);color:#F5F4F0;cursor:pointer;transition:background .15s ease;}
+.esp-quit:hover{background:rgba(245,244,240,0.22);}
+.espace-hero{position:relative;}
+@media (max-width:640px){
+  .esp-quit{position:static;display:block;margin:14px 0 0;width:100%;}
+}
+
+/* ===== v134 : la fiche connue sans portrait retrouvé ===== */
+.esp-vide{background:#FFF6DE;border:1px solid #F1E0B0;border-radius:18px;padding:20px 22px;margin:0 0 8px;}
+.esp-vide-k{font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#8A6D1F;margin-bottom:8px;}
+.esp-vide p{margin:0 0 10px;font-size:14.5px;line-height:1.6;color:#2A2833;}
+.esp-vide p:last-child{margin-bottom:0;}
+.esp-vide-p{font-size:13.5px;color:#4A4757;}
+.esp-vide a{color:#5E59C7;font-weight:700;}

@@ -347,6 +347,10 @@ verifie('360 croisé : chaque angle mort devient une piste du plan', srcCtrl2().
 verifie('néa : le fil conversationnel connaît le plan', srcRes2().indexOf('App.planPourNea') > 0 && srcCtrl2().indexOf('function planPourNea(') > 0 && srcCtrl2().indexOf('planPourNea, pisteDepuis360') > 0);
 verifie('mesure : le sondage couvre appris et longueur', srcRes2().indexOf("AVIS_APPRIS") > 0 && srcRes2().indexOf("AVIS_LONGUEUR") > 0 && srcRes2().indexOf("J'ai appris quelque chose sur moi") > 0);
 verifie('mesure : la lecture se trace par chapitre et part au beacon', srcRes2().indexOf('function traceurLecture(') > 0 && srcRes2().indexOf('sendBeacon') > 0 && srcRes2().indexOf("action: 'lecture_chapitres'") > 0 && srcRes2().indexOf('pagehide') > 0);
+verifie('session : la persistance arrive avec sa sortie', srcCtrl2().indexOf("localStorage.setItem('sinea_identite'") > 0 && srcCtrl2().indexOf("localStorage.removeItem('sinea_identite')") > 0 && srcCtrl2().indexOf('function seDeconnecter(') > 0 && srcCtrl2().indexOf('seDeconnecter, planPourNea') > 0);
+verifie('droits : une analyse trouvée vaut preuve du droit', srcCtrl2().indexOf('function deduireDroits(') > 0 && srcCtrl2().indexOf('deduireDroits(data.droits || droits') > 0 && srcCtrl2().indexOf("['socle', 'commercial', 'manager'].forEach(function (m) {") > 0);
+verifie('espace : une fiche connue sans portrait le dit clairement', srcCtrl2().indexOf('Portrait introuvable') > 0 && srcCtrl2().indexOf('vos réponses sont souvent récupérables') > 0 && cssTxt2().indexOf('.esp-vide{') > 0);
+verifie('session : le bouton est à l\'écran et stylé', idxH2.indexOf('App.seDeconnecter()') > 0 && idxH2.indexOf('Me déconnecter') > 0 && cssTxt2().indexOf('.esp-quit{') > 0);
 verifie('souvenir : la carte à partager parle Bricolage', srcRes2().indexOf('px "Bricolage Grotesque", Poppins,') > 0);
 })();
 (function () {
