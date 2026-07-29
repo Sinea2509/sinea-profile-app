@@ -1,5 +1,5 @@
 // ============================================================
-// verifs.js — Harnais de non-régression Sinéa Profile
+// verifs.js , Harnais de non-régression Sinéa Profile
 // Usage : node verifs.js   (depuis le dossier du front)
 // Zéro dépendance. Sort en erreur (code 1) au premier échec.
 // Règle d'or : chaque bug corrigé ajoute son test ici.
@@ -23,8 +23,7 @@ let srcEngine = fs.readFileSync('engine.js', 'utf8')
   .replace(/window\.Engine = /, 'global.Engine = ');
 eval(srcEngine);
 const srcControleur = fs.readFileSync('controller.js', 'utf8');
-const mJardin = srcControleur.match(/  function jardinSvg\(nb, slugPerso, nouvelArbre\) \{[\s\S]*?\n  \}/);
-eval('function srcPerso(s){return s + ".webp";}\n' + mJardin[0]);
+function srcEng(){ return fs.readFileSync('engine.js', 'utf8'); }
 
 console.log('\n== 0. Intégrité des pages ==');
 verifie('index.html commence par le DOCTYPE', fs.readFileSync('index.html', 'utf8').startsWith('<!DOCTYPE html>'));
@@ -148,7 +147,7 @@ verifie('frise : jalon fait coché, jalon à venir creux', fr.indexOf('#5B9E6B')
 verifie('frise : curseur au bon jour', fr.indexOf('Jour 45') > 0);
 verifie('frise : sans date, sans curseur', V.frise90Svg([{ label: 'Portrait', pos: 0, fait: true }], null).indexOf('Jour') < 0);
 verifie('cockpit : posé et appelé', srcCtrl.indexOf('function poserCockpit(') > 0 && srcCtrl.indexOf('poserCockpit(dataEspaceCourant, carte)') > 0);
-verifie('cockpit : dans l\'onglet développement', srcCtrl.indexOf("dev: ['espace-accueil-resume', 'espace-cockpit', 'espace-checklist', 'espace-nea'") > 0);
+verifie('cockpit : dans l\'onglet développement, Néa en dernier', srcCtrl.indexOf("dev: ['espace-accueil-resume', 'espace-cockpit', 'espace-checklist', 'espace-seedup', 'espace-sparring', 'espace-nea']") > 0);
 verifie('cockpit : slot présent dans la page', idxH2.indexOf('id="espace-cockpit"') > 0);
 verifie('miroir : le radar entre dans l\'analyse', srcCtrl.indexOf('${radarHtml}') > 0 && srcCtrl.indexOf('radarMiroirSvg(vous, percu') > 0);
 verifie('engagements : état relié aux défis', srcCtrl.indexOf('compsDefis.has(mm.id)') > 0);
@@ -236,23 +235,14 @@ verifie('défithèque : 160 micro-défis exactement', (() => {
 verifie('portail : les facettes entrent dans la modal', srcDash.indexOf('cx-fac') > 0 && srcDash.indexOf('facettesHtml') > 0);
 verifie('espace : les facettes entrent dans la fiche focus', srcCtrl2().indexOf('fcx-fac') > 0 && srcCtrl2().indexOf('FACETTES[id]') > 0);
 
-console.log('\n== 0quaterdecies. La serre du parcours ==');
-verifie('jardin : le slot vit dans Mon développement', require('fs').readFileSync('index.html', 'utf8').indexOf('id="espace-remesure"') > 0 && require('fs').readFileSync('controller.js', 'utf8').indexOf("'espace-remesure'") > 0);
-verifie('serre : posée au chargement et rafraîchissable', srcCtrl2().indexOf('function poserChecklist(') > 0 && srcCtrl2().indexOf('checklistCtx = { data: dataEspaceCourant') > 0 && srcCtrl2().indexOf('function majChecklist()') > 0);
-verifie('serre : neuf étapes pour 130 points', (() => {
-  const src = srcCtrl2();
-  const m = src.match(/pts: (\d+), fait:/g) || [];
-  const somme = m.reduce((a, x) => a + parseInt(x.match(/\d+/)[0], 10), 0);
-  return m.length === 9 && somme === 130;
-})());
-verifie('jardin : les détections lisent les vraies sources', srcCtrl2().indexOf('const jal = carte.jalons || {}') > 0 && srcCtrl2().indexOf('Number(carte.voeux)') > 0 && srcCtrl2().indexOf('mir.prediction') > 0 && srcCtrl2().indexOf('pistes_libelles') > 0);
-verifie('jardin : la notation s\'ouvre depuis l\'étape', srcCtrl2().indexOf('Result.noterPortrait()') > 0);
-verifie('jardin : la scène d\'aube, ciel, soleil, fleurs en dégradés', srcCtrl2().indexOf('jgd-ciel') > 0 && srcCtrl2().indexOf('radialGradient') > 0 && srcCtrl2().indexOf('#2E2955') > 0 && srcCtrl2().indexOf('url(#jgd-sol)') > 0 && srcCtrl2().indexOf('#FFD34D') > 0);
-verifie('jardin : le soleil monte avec la progression', srcCtrl2().indexOf('112 - Math.round(72 * prog)') > 0 && srcCtrl2().indexOf('1 - prog') > 0);
-verifie('jardin : l\'éclosion suit la gauche vers la droite', srcCtrl2().indexOf('i < nEclos') > 0 && srcCtrl2().indexOf('nEclos === BASE_J.length') > 0);
-verifie('jardin : panoramique bord à bord', cssTxt2().indexOf('width:calc(100% + 36px)') > 0 && cssTxt2().indexOf('.ckl{overflow:hidden;}') > 0);
-verifie('jardin : trois prochaines pousses et rattrapage', srcCtrl2().indexOf('aFaire.slice(0, 3)') > 0 && srcCtrl2().indexOf('Déjà fait ?') > 0 && srcCtrl2().indexOf('function marquerFait(') > 0);
-verifie('jardin : les jalons manuels comptent partout', (srcCtrl2().match(/!!jal\./g) || []).length === 9);
+console.log('\n== 0quaterdecies. Les prochaines étapes du parcours ==');
+verifie('étapes : le slot vit dans Mon développement', require('fs').readFileSync('index.html', 'utf8').indexOf('id="espace-remesure"') > 0 && require('fs').readFileSync('controller.js', 'utf8').indexOf("'espace-remesure'") > 0);
+verifie('étapes : posées au chargement et rafraîchissables', srcCtrl2().indexOf('function poserChecklist(') > 0 && srcCtrl2().indexOf('checklistCtx = { data: dataEspaceCourant') > 0 && srcCtrl2().indexOf('function majChecklist()') > 0);
+verifie('étapes : neuf jalons détectés', (srcCtrl2().match(/id: '/g) || []).length >= 9 && srcCtrl2().indexOf("id: 'remesure'") > 0);
+verifie('étapes : les détections lisent les vraies sources', srcCtrl2().indexOf('const jal = carte.jalons || {}') > 0 && srcCtrl2().indexOf('Number(carte.voeux)') > 0 && srcCtrl2().indexOf('mir.prediction') > 0 && srcCtrl2().indexOf('pistes_libelles') > 0);
+verifie('étapes : la notation s\'ouvre depuis l\'étape', srcCtrl2().indexOf('Result.noterPortrait()') > 0);
+verifie('étapes : trois prochaines et rattrapage', srcCtrl2().indexOf('aFaire.slice(0, 3)') > 0 && srcCtrl2().indexOf('Déjà fait ?') > 0 && srcCtrl2().indexOf('function marquerFait(') > 0);
+verifie('étapes : les jalons manuels comptent partout', (srcCtrl2().match(/!!jal\./g) || []).length === 9);
 verifie('feedback 360 : le nom est partout à l\'écran', idxH2.indexOf('Mon regard 360') > 0 && (srcCtrl2().match(/Mon regard 360/g) || []).length >= 3 && srcCtrl2().indexOf('pronostic Feedback 360') > 0);
 verifie('feedback 360 : chaque porte dépose au geste précis', srcCtrl2().indexOf('function allerFeedback(') > 0 && (srcCtrl2().match(/allerFeedback/g) || []).length >= 8 && srcCtrl2().indexOf("App.espTab('miroir')") < 0 && srcCtrl2().indexOf('espTab(&quot;miroir&quot;)') < 0);
 verifie('feedback 360 : le fil des quatre étapes guide et téléporte', srcCtrl2().indexOf('function mirEtapesHtml(') > 0 && srcCtrl2().indexOf("insertAdjacentHTML('afterbegin', mirEtapesHtml") > 0 && srcCtrl2().indexOf('function mirAller(') > 0 && cssTxt2().indexOf('.mir-etapes{display:flex') > 0);
@@ -273,7 +263,7 @@ verifie('restitution : le sommaire flotte, liste et téléporte', srcRes2().inde
 verifie('restitution terrain : bouton autonome, largeurs unies, radar ample, doublon retiré', require('fs').readFileSync('style.css', 'utf8').indexOf('.r-topbar-espace{background:#221D45') > 0 && require('fs').readFileSync('style.css', 'utf8').indexOf('#screen-result .r-bloc{padding-left:23px') > 0 && require('fs').readFileSync('style.css', 'utf8').indexOf('.r-radar-svg{width:100%') > 0 && require('fs').readFileSync('result.js', 'utf8').indexOf('r-dp2-card') < 0 && require('fs').readFileSync('result.js', 'utf8').indexOf('class="r-radar-svg"') > 0);
 verifie('restitution : les devises parlent en tendances, à l\'infinitif', srcRes2().indexOf('"Relier les personnes et faire tenir les liens."') > 0 && srcRes2().indexOf('Je relie les personnes') < 0 && srcRes2().indexOf('Je suis le moteur') < 0);
 verifie('compétences : le zoom respire et les points sont fins', require('fs').readFileSync('visuels.js', 'utf8').indexOf('hi - lo < 16') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('r * 0.72') > 0);
-verifie('espace : la constellation et le jardin expliquent leur intention', srcCtrl2().indexOf('Vers la droite grandit votre potentiel naturel') > 0 && srcCtrl2().indexOf('jr-pourquoi') > 0 && srcCtrl2().indexOf('cinq défis font éclore une étape') > 0 && cssTxt2().indexOf('.jr-pourquoi{') > 0);
+verifie('espace : la constellation et les défis expliquent leur intention', srcCtrl2().indexOf('Vers la droite grandit votre potentiel naturel') > 0 && srcCtrl2().indexOf('jr-pourquoi') > 0 && cssTxt2().indexOf('.jr-pourquoi{') > 0);
 verifie('fiabilité : le verdict post-affinage reste honnête face aux signaux forts', srcCtrl2().indexOf('fortsRestants') > 0 && srcCtrl2().indexOf('Une variabilité de réponses reste visible') > 0);
 verifie('restitution : la notation du portrait est accessible en relecture', srcRes2().indexOf('ouvrirNotation: showMoment3') > 0 && srcRes2().indexOf('Noter ce portrait') > 0 && cssTxt2().indexOf('.r-noter-btn{') > 0);
 verifie('matrices : tooltip riche, lecture carto et données portées par les points', require('fs').readFileSync('visuels.js', 'utf8').indexOf('data-pot=') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('function brancherTooltip(') > 0 && cssTxt2().indexOf('.qt-tip{') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('carto-lecture') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('orientation relation') > 0);
@@ -337,8 +327,8 @@ verifie('lecture : le sommaire vit en latéral et en barre mobile, suivi au déf
 })();
 verifie('compétences : le récit précède la carte, pliée en exploration', srcRes2().indexOf('function recitQ16(') > 0 && srcRes2().indexOf('vous vient facilement') > 0 && srcRes2().indexOf('Explorer la carte complète') > 0 && cssTxt2().indexOf('.q16-details summary{') > 0);
 verifie('compétences : le vocabulaire parle au premier contact', srcRes2().indexOf('À libérer') > 0 && srcRes2().indexOf('En retrait') > 0 && srcRes2().indexOf('facilité naturelle') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('Vos appuis') > 0);
-verifie('espace : trois objets nommés, le plan rassemble l\'action', require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon portrait<') > 0 && require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon plan<') > 0 && require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon regard 360<') > 0 && srcCtrl2().indexOf("dev: ['espace-accueil-resume', 'espace-cockpit'") > 0 && srcCtrl2().indexOf("accueil: ['espace-prog-globale'") > 0);
-verifie('jardin : il pousse sur les pistes réelles du plan', srcCtrl2().indexOf('function comptePlan(') > 0 && srcCtrl2().indexOf('jr-plan-note') > 0 && srcCtrl2().indexOf('planInfo.total > 0 ? planInfo.faites : liste.length') > 0);
+verifie('espace : trois objets nommés, le plan rassemble l\'action', require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon portrait<') > 0 && require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon plan<') > 0 && require('fs').readFileSync('index.html', 'utf8').indexOf('>Mon regard 360<') > 0 && srcCtrl2().indexOf("dev: ['espace-accueil-resume', 'espace-cockpit'") > 0 && srcCtrl2().indexOf("accueil: ['espace-banniere', 'espace-resultats'") > 0);
+verifie('défis : le pont vers le plan lit les pistes réelles', srcCtrl2().indexOf('function comptePlan(') > 0 && srcCtrl2().indexOf('jr-plan-note') > 0);
 verifie('néa : la relance ouvre sur l\'objectif engagé', srcCtrl2().indexOf('function relanceNea(') > 0 && srcCtrl2().indexOf('Où en êtes-vous cette semaine') > 0 && cssTxt2().indexOf('.nea-relance{') > 0);
 verifie('version : controller et dashboard parlent d\'une seule voix', (function () { const mc = (srcCtrl2().match(/Sinea Profile (v\d+) servie/) || [])[1]; const md = (require('fs').readFileSync('dashboard.js', 'utf8').match(/Sinea Dashboard (v\d+)/) || [])[1]; return !!mc && mc === md; })());
 verifie('360 croisé : quatre territoires calculés sur les compétences observées', srcCtrl2().indexOf('function croiserRegards(') > 0 && srcCtrl2().indexOf('delta >= 15') > 0 && srcCtrl2().indexOf("out.angles.push") > 0 && srcCtrl2().indexOf('COMPS_360') > 0);
@@ -385,10 +375,9 @@ verifie('carte : les étiquettes vont à la valeur, la lecture accompagne', srcC
 verifie('glossaire : les trente-deux facettes se montrent', srcCtrl2().indexOf('glos-f') > 0 && srcCtrl2().indexOf('Competences.FACETTES[r.id]') > 0 && srcCtrl2().indexOf('16 compétences, 32 facettes') > 0);
 verifie('constellation : l\'étoile choisie s\'allume et la fiche défile', require("fs").readFileSync("visuels.js", "utf8").indexOf("data-comp=") > 0 && srcCtrl2().indexOf("g[data-comp=") > 0 && srcCtrl2().indexOf('q16-sel') > 0 && srcCtrl2().indexOf("behavior: 'smooth', block: 'center'") > 0);
 verifie('personnage : la carte-portrait déborde du hero, en majesté', cssTxt2().indexOf('.espace-hero-perso{position:absolute;right:34px;bottom:-46px') > 0 && cssTxt2().indexOf('.espace-hero-perso::before{content:none;}') > 0);
-verifie('serre : les plantes poussent en SVG', srcCtrl2().indexOf('ckl-serre') > 0 && srcCtrl2().indexOf('ckl-bloom') > 0 && cssTxt2().indexOf('@keyframes cklBloom') > 0);
 verifie('restitution : le bouton de notation a quitté l\'Essentiel', srcRes2().indexOf('ess-avis') < 0 && srcRes2().indexOf('Result.noterPortrait = function') > 0);
 verifie('restitution : le jalon de lecture est auto', srcRes2().indexOf("jalon: 'lecture'") > 0 && srcRes2().indexOf('fin-lecture') > 0 && srcRes2().indexOf('IntersectionObserver') > 0);
-verifie('restitution : un avis rafraîchit la serre', srcRes2().indexOf('__avisFait = true') > 0 && srcRes2().indexOf('App.majChecklist()') > 0);
+verifie('restitution : un avis rafraîchit les étapes', srcRes2().indexOf('__avisFait = true') > 0 && srcRes2().indexOf('App.majChecklist()') > 0);
 
 console.log('\n== 0quindecies. La mission au coach ==');
 verifie('coach : endpoint et modal câblés', srcDash.indexOf('COACH_ENVOI_URL') > 0 && srcDash.indexOf('function ouvrirEnvoiCoach(') > 0 && srcDash.indexOf('function envoyerCoach(') > 0);
@@ -397,7 +386,7 @@ verifie('coach : le payload porte la clé et la campagne', srcDash.indexOf('cle:
 verifie('incarnation : le bouton ouvre l\'espace de l\'apprenant', srcDash.indexOf('LIEN_URL') > 0 && srcDash.indexOf('function voirCommeApprenant(') > 0 && srcDash.indexOf('Voir comme lui') > 0 && srcDash.indexOf("window.open(dj.lien, '_blank')") > 0);
 verifie('portrait PDF : le portail embarque compétences, familles et plan', srcDash.indexOf('function extraPortrait(') > 0 && srcDash.indexOf('extra: extraPortrait(m)') > 0 && srcDash.indexOf('quadrant: Visuels.quadrantSvg') > 0);
 verifie('incarnation : le lien se copie aussi', srcDash.indexOf('function copierLienApprenant(') > 0 && srcDash.indexOf('Copier son lien') > 0 && srcDash.indexOf('navigator.clipboard') > 0);
-verifie('mobile : l\'espace a son bloc au cordeau', cssTxt2().indexOf('@media (max-width: 640px)') > 0 && cssTxt2().indexOf('.esp-nav{overflow-x:auto') > 0 && cssTxt2().indexOf('.ckl-serre{max-width:100%') > 0);
+verifie('mobile : l\'espace a son bloc au cordeau', cssTxt2().indexOf('@media (max-width: 640px)') > 0 && cssTxt2().indexOf('.esp-nav{overflow-x:auto') > 0);
 verifie('mobile : la colonne résiste à la navigation', cssTxt2().indexOf('.espace-hero-txt{width:100%;min-width:0;}') > 0);
 verifie('audit : navigation collante sur fond de verre', cssTxt2().indexOf('.esp-nav{position:sticky;top:10px') > 0 && cssTxt2().indexOf('backdrop-filter:blur(10px)') > 0);
 verifie('audit : cibles tactiles remontées, 44 en mobile', cssTxt2().indexOf('.ckl-deja{font-size:11.5px;color:#6E6A85;padding:9px 10px;min-height:40px') > 0 && cssTxt2().indexOf('.ckl-cta{min-height:44px;}') > 0);
@@ -476,18 +465,291 @@ verifie('score plancher : rang 5', Engine.percentileTrait('E', 3) === 5);
 verifie('trait sans normes : null', Engine.percentileTrait('A', 55) === null);
 SINEA_DATA.normes = null;
 
-console.log('\n== 8. Jardin : invariants sur toute la gamme ==');
-[1, 4, 5, 7, 12, 23, 40].forEach(nb => {
-  const svg = jardinSvg(nb, 'le_capitaine', nb === 5);
-  const arbres = (svg.match(/#8A6244/g) || []).length;
-  const ok = arbres === Math.min(Math.floor(nb / 5), 6)
-    && (svg.match(/<g /g) || []).length === (svg.match(/<\/g>/g) || []).length
-    && svg.includes('0 0 340 132')
-    && (svg.match(/jr-luciole/g) || []).length === 2
-    && svg.includes('jr-papillon')
-    && (nb !== 5 || svg.includes('jr-arbre-fete'));
-  verifie(nb + ' défis : arbres, équilibre, faune, fête', ok);
-});
+console.log('\n== 8. Gamification retirée : décision produit du re-pilote ==');
+// Quatre testeurs sur huit ont nommé l'abondance, Mathis a demandé de justifier
+// le jardin. La règle retenue : tout visuel doit porter une information, la
+// décoration seule disparaît. Ces gardes empêchent le jardin de revenir.
+verifie('le jardin d\'ancrage a disparu du code', srcCtrl2().indexOf('jardinSvg') < 0 && srcCtrl2().indexOf('etapeJardin') < 0 && srcCtrl2().indexOf('exporterJardinImage') < 0);
+verifie('la scène d\'aube et ses fleurs ont disparu', srcCtrl2().indexOf('jgd-ciel') < 0 && srcCtrl2().indexOf('ckl-bloom') < 0 && srcCtrl2().indexOf('fleurJ') < 0);
+verifie('les points de la checklist ont disparu', srcCtrl2().indexOf('pts: 10') < 0 || srcCtrl2().indexOf(' pts</i>') < 0);
+verifie('le CSS du jardin est parti avec lui', cssTxt2().indexOf('.jr-svg') < 0 && cssTxt2().indexOf('ckl-serre') < 0 && cssTxt2().indexOf('cklBloom') < 0);
+verifie('la liste des défis SeedUp reste entière', srcCtrl2().indexOf('function poserSeedupEspace(') > 0 && srcCtrl2().indexOf('carteDefi') > 0 && srcCtrl2().indexOf('Vos défis, un à un') > 0);
+verifie('le pont vers le plan reste', srcCtrl2().indexOf('jr-plan-note') > 0 && srcCtrl2().indexOf('function comptePlan(') > 0 && srcCtrl2().indexOf('ouvrirPlanDepuisResto') > 0);
+verifie('la pousse du tunnel reste, elle porte la progression', fs.readFileSync('index.html', 'utf8').indexOf('id="q-pousse"') > 0 && srcCtrl2().indexOf('function majPousse(') > 0);
+
+console.log('\n== 9. Identité des archétypes : résolution tolérante ==');
+// Un portrait enregistré fige le libellé en vigueur au jour de sa génération.
+// La résolution centrale doit retrouver l'archétype à partir de n'importe quel
+// libellé connu, actuel comme historique, ainsi que de la clé technique.
+verifie('SINEA_DATA expose la résolution centrale',
+  typeof SINEA_DATA.slug === 'function' && typeof SINEA_DATA.image === 'function');
+const idsArch = Object.keys(SINEA_DATA.personnages);
+const libellesHisto = [];
+(SINEA_DATA.variantes || []).forEach(function (g) { g.forEach(function (v) { libellesHisto.push(v); }); });
+verifie('tout libellé historique retrouve son visuel et sa fiche',
+  libellesHisto.length > 0 && libellesHisto.every(function (l) {
+    return SINEA_DATA.slug(l) && SINEA_DATA.image(l)
+      && Object.keys(SINEA_DATA.fiche(l)).length > 0 && SINEA_DATA.perso(l);
+  }));
+verifie('les tables indexées par libellé suivent personnages',
+  ['images', 'slugs', 'profils', 'familles'].every(function (t) {
+    return Object.keys(SINEA_DATA[t]).sort().join('|')
+      === idsArch.map(function (i) { return SINEA_DATA.personnages[i].nom; }).sort().join('|');
+  }));
+verifie('controller.js et result.js passent par la résolution',
+  srcCtrl2().indexOf('SINEA_DATA.images[') < 0
+  && srcRes2().indexOf('SINEA_DATA.images[') < 0
+  && srcRes2().indexOf('SINEA_DATA.slugs[') < 0);
+verifie('verifs_visuels.js est présent au dépôt', fs.existsSync('verifs_visuels.js'));
+
+console.log('\n== 10. Lecture des modules metier et sommaire ==');
+// Le tunnel et l'espace ouvraient un module metier avec les blocs et le
+// sommaire du socle. Le mode de lecture se deduit desormais du module lu.
+verifie('le mode de lecture se deduit du module',
+  srcRes2().includes('function modeLecturePour(res)')
+  && srcRes2().includes("setModeLecture(mode === 'spe' ? 'spe' : modeLecturePour(res))"));
+verifie('le sommaire de tete suit le module lu',
+  srcRes2().includes('const lectureSpe = (dt === \'manager\' || dt === \'commercial\')')
+  && srcRes2().includes("{ href: 'spe-ch2', label: 'Vous en situation' }"));
+verifie('le sommaire flottant parcourt les chapitres du module en lecture metier',
+  srcRes2().includes("scr.querySelectorAll(lectureSpe ? '.spe-chap' : '.r-bloc')")
+  && srcRes2().includes(".spe-chap-head h3"));
+verifie('le sommaire mobile s\'efface a la descente',
+  srcRes2().includes("mob.classList.add('somm-cache')")
+  && cssTxt2().includes('#r-sommaire-mob.somm-cache'));
+verifie('les ancres reservent la hauteur du sommaire mobile',
+  cssTxt2().includes('scroll-margin-top:74px'));
+
+console.log('\n== 11. L\'espace hiérarchisé et le passage à l\'action ==');
+// Chantier 2 du re-pilote : l'espace notait 2,9 sur 5 et une personne sur huit
+// avait engagé son plan. Trois décisions : l'ordre du DOM suit la valeur, le
+// plan s'ouvre en un geste, les défis générés survivent à la navigation.
+const idx = fs.readFileSync('index.html', 'utf8');
+verifie('espace : les résultats arrivent avant la carte des compétences',
+  idx.indexOf('id="espace-resultats"') > 0
+  && idx.indexOf('id="espace-resultats"') < idx.indexOf('id="espace-competences"'));
+verifie('espace : Néa ferme la marche de l\'onglet Agir',
+  idx.indexOf('id="espace-seedup"') < idx.indexOf('id="espace-nea"'));
+verifie('espace : l\'onglet d\'accueil ouvre sur les résultats',
+  srcCtrl2().indexOf("accueil: ['espace-banniere', 'espace-resultats'") > 0);
+verifie('compétences : les appuis restent visibles, le détail se déplie',
+  srcCtrl2().indexOf('esp-cp-deplier') > 0 && srcCtrl2().indexOf("id=\"esp-cp-suite\" style=\"display:none\"") > 0
+  && srcCtrl2().indexOf('function deplierCompetences()') > 0
+  && srcCtrl2().indexOf("Vos terrains d\\'appui") < srcCtrl2().indexOf('esp-cp-deplier'));
+verifie('plan : l\'étape des 90 jours l\'ouvre directement quand il existe',
+  srcCtrl2().indexOf("aPlan ? 'App.ouvrirPlanDepuisResto(") > 0);
+verifie('plan : le cockpit porte le raccourci permanent',
+  srcCtrl2().indexOf('ck-plan-btn') > 0 && cssTxt2().indexOf('.ck-plan-btn{') > 0
+  && srcCtrl2().indexOf('planRapide + eng') > 0);
+verifie('défis : les défis conservés se réaffichent avant tout appel réseau',
+  srcRes2().indexOf('const conserves = lireDefisConserves();') > 0
+  && srcRes2().indexOf('conserverDefis(defis);') > 0
+  && srcRes2().indexOf("localStorage.setItem(cleDefis()") > 0);
+verifie('défis : ils voyagent dans les deux payloads d\'interactions',
+  (srcRes2().match(/defis_proposes:/g) || []).length === 2);
+verifie('défis : l\'espace les retrouve, Airtable puis mémoire de l\'appareil',
+  srcCtrl2().indexOf('it.defis_proposes') > 0
+  && srcCtrl2().indexOf("localStorage.getItem('sinea_defis_'") > 0
+  && srcCtrl2().indexOf('esp-sd-propose') > 0 && cssTxt2().indexOf('.esp-sd-propose{') > 0);
+verifie('défis : le bloc apparaît dès que des défis proposés existent',
+  srcCtrl2().indexOf('!liste.length && planInfo.total === 0 && !proposes.length') > 0);
+
+console.log('\n== 12. La densité du portrait : chapitres et Essentiel unifié ==');
+// Chantier 3 du re-pilote : trois lecteurs sur huit trouvaient le portrait
+// trop long, deux avaient proposé la révélation par paliers. L'Essentiel
+// notait 3,25 sur 5 avec deux blocs homonymes empilés en tête de portrait.
+verifie('chapitres : les quatre chapitres profonds se plient au premier rendu',
+  srcRes2().indexOf("const CHAPITRES_PLIABLES = ['b-dims', 'b2', 'b3', 'b-spe']") > 0
+  && srcRes2().indexOf('function poserChapitres()') > 0
+  && srcRes2().indexOf('poserChapitres();') > 0);
+verifie('chapitres : accroche, temps de lecture et tout déplier',
+  srcRes2().indexOf('tempsLectureMin') > 0 && srcRes2().indexOf('chap-accroche') > 0
+  && srcRes2().indexOf('deplierTout') > 0 && cssTxt2().indexOf('.chap-ouvrir{') > 0);
+verifie('chapitres : une ouverture se mémorise par module',
+  srcRes2().indexOf("'sinea_chap_'") > 0 && srcRes2().indexOf('chapitresOuverts()') > 0);
+verifie('chapitres : le sommaire ouvre un chapitre plié avant d\'y défiler',
+  srcRes2().indexOf("contains('chap-plie')) ouvrirChapitre(id)") > 0);
+verifie('chapitres : le mode candidat et la lecture métier restent entiers',
+  srcRes2().indexOf("modeCampagne === 'recrutement') return") > 0
+  && srcRes2().indexOf("contains('mode-spe')) return") > 0);
+verifie('essentiel : un seul bloc porte ce nom',
+  (srcRes2().match(/L\\'essentiel/g) || []).length === 1);
+verifie('essentiel : la clé de lecture s\'annonce comme telle',
+  srcRes2().indexOf('Avant de lire · la clé et la fiabilité') > 0
+  && srcRes2().indexOf("indexOf('ess-cle') < 0 && h.indexOf('ess-fiab') < 0) return") > 0);
+verifie('essentiel : le trio en pourcentages et les traces ont disparu',
+  srcRes2().indexOf('ess-trio') < 0 && srcRes2().indexOf('ess-traces') < 0);
+verifie('repères : les trois repères pour agir vivent au chapitre de l\'action',
+  srcRes2().indexOf("id = 'reperes-agir'") > 0
+  && srcRes2().indexOf("getElementById('b3')") > 0);
+
+console.log('\n== 13. Les défauts nommés du re-pilote ==');
+// Jade : scellement échoué, regards désalignés, aucune opportunité.
+verifie('miroir : le pari envoie aussi l\'email quand la session le porte',
+  srcCtrl2().indexOf("email: identite.email || undefined, prediction") > 0);
+verifie('regards : trois colonnes fixes en chiffres tabulaires',
+  srcCtrl2().indexOf('esp-mir-col') > 0
+  && cssTxt2().indexOf('grid-template-columns:58px 62px 46px') > 0
+  && cssTxt2().indexOf('tabular-nums') > 0);
+(function () {
+  global.window = {};
+  const C = (function () {
+    const fs2 = require('fs');
+    eval(fs2.readFileSync('competences.js', 'utf8').replace(/window\.Competences\s*=/, 'global.__C ='));
+    return global.__C;
+  })();
+  let sans = 0;
+  for (let n = 0; n < 3000; n++) {
+    const bf = { O: 20 + Math.random() * 75, C: 20 + Math.random() * 75, E: 20 + Math.random() * 75, A: 20 + Math.random() * 75, S: 20 + Math.random() * 75 };
+    const comps = C.scorer(bf, null, null);
+    ['manager', 'commercial'].forEach(function (poste) {
+      const p2 = C.prioriser(comps, poste);
+      if (!p2.appuis.length || !p2.opportunites.length) sans++;
+    });
+  }
+  verifie('compétences : tout profil reçoit appuis et opportunités, six mille tirages', sans === 0);
+  verifie('compétences : les planchers relatifs sont posés dans la priorisation',
+    fs.readFileSync('competences.js', 'utf8').indexOf('marge_de_progression') > 0);
+})();
+
+console.log('\n== 14. L\'ADN du scoring : mesures rejouées à chaque lancement ==');
+// Le cœur métrologique, audité puis figé. Générateur déterministe : les
+// mêmes tirages à chaque lancement, un écart signale un vrai changement.
+(function () {
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const alea = mulberry32(20260727);
+  global.window = {};
+  eval(fs.readFileSync('engine.js', 'utf8').replace(/const Engine = \{/, 'global.__E = {').replace(/window\.Engine = /, 'global.__E2 = '));
+  const E = global.__E || global.__E2;
+  const D = SINEA_DATA;
+  const inv = new Set(D.mini_inverses);
+  verifie('mesure : 25 items, cinq par trait, au moins deux inversés par trait',
+    Object.values(D.mini_scoring).every(function (i) { return i.items.length === 5 && i.items.filter(function (id) { return inv.has(id); }).length >= 2; }));
+  verifie('mesure : la triangulation par choix forcé est branchée au scoring',
+    srcEng().indexOf('mini_choix_force') > 0 && srcEng().indexOf('0.7') > 0);
+  verifie('scoring : l\'équité structurelle normalise les potentiels',
+    srcEng().indexOf('calculerPotentielsSinea') > 0 && srcEng().indexOf('potMoyen / p') > 0);
+  function personne() {
+    const latent = {}; Object.keys(D.mini_scoring).forEach(function (d2) { latent[d2] = alea(); });
+    const rep = {};
+    Object.entries(D.mini_scoring).forEach(function (e2) {
+      e2[1].items.forEach(function (id) {
+        let p2 = latent[e2[0]] + (alea() - 0.5) * 0.5; p2 = Math.max(0, Math.min(1, p2));
+        let r2 = 1 + Math.round(p2 * 3); if (inv.has(id)) r2 = 5 - r2; rep[id] = r2;
+      });
+    });
+    return rep;
+  }
+  const ids = []; Object.values(D.mini_scoring).forEach(function (i) { i.items.forEach(function (id) { ids.push(id); }); });
+  const compte = {}; let blendKo = 0; const N = 5000;
+  for (let n = 0; n < N; n++) {
+    const r = E.scorer(personne(), {}, {});
+    const s2 = D.slug(r.dominante.nom); compte[s2] = (compte[s2] || 0) + 1;
+    if (r.blend && Object.values(r.blend).reduce(function (a2, b2) { return a2 + b2; }, 0) !== 100) blendKo++;
+  }
+  verifie('scoring : les trois pourcentages totalisent 100 sur cinq mille passations', blendKo === 0);
+  verifie('scoring : les vingt archétypes sont tous atteignables',
+    Object.keys(D.rarete).every(function (s2) { return (compte[s2] || 0) > 0; }));
+  verifie('scoring : aucun archétype ne dépasse le quart des verdicts',
+    Object.values(compte).every(function (c2) { return c2 / N < 0.25; }));
+  verifie('rareté : la distribution mesurée reste dans un facteur quatre de la table',
+    Object.keys(D.rarete).every(function (s2) {
+      const ann = parseFloat(D.rarete[s2].pct), mes = (compte[s2] || 0) / N * 100;
+      return mes < Math.max(ann * 4, 3) && mes > ann / 4 - 0.5;
+    }));
+  let flip1 = 0, flip3 = 0; const M = 2500;
+  for (let n = 0; n < M; n++) {
+    const rep = personne(); const r0 = E.scorer(rep, {}, {});
+    const rep1 = Object.assign({}, rep);
+    const id1 = ids[Math.floor(alea() * ids.length)];
+    rep1[id1] = Math.max(1, Math.min(4, rep1[id1] + (alea() < 0.5 ? -1 : 1)));
+    if (E.scorer(rep1, {}, {}).dominante.nom !== r0.dominante.nom) flip1++;
+    const rep3 = Object.assign({}, rep);
+    for (let k = 0; k < 3; k++) { const j = ids[Math.floor(alea() * ids.length)]; rep3[j] = Math.max(1, Math.min(4, rep3[j] + (alea() < 0.5 ? -1 : 1))); }
+    if (E.scorer(rep3, {}, {}).dominante.nom !== r0.dominante.nom) flip3++;
+  }
+  verifie('stabilité : une réponse déplacée d\'un cran change le verdict sous 15 %', flip1 / M < 0.15);
+  verifie('stabilité : le bruit d\'une repasse, trois réponses, change le verdict sous 25 %', flip3 / M < 0.25);
+  // Preuve constructive d'atteignabilité : un témoin par personnage, une
+  // passation concrète qui le produit. Dix-neuf partent de leur vecteur de
+  // référence ; le Conteur exige un vecteur décalé, son vecteur de référence
+  // tombe dans le bassin de l'Architecte, décalage documenté à trancher.
+  const lettre = { extraversion: 'E', agreabilite: 'A', conscience: 'C', neuroticisme: 'N', ouverture: 'O' };
+  const toutesQ = [].concat.apply([], Object.values(D.sinea_famille)).concat(D.sinea_hybride, D.sinea_transversales);
+  const TEMOINS = { conteur: { E: 60, A: 82, C: 67, N: 27, O: 84 } };
+  function miniPour(cible) {
+    const rep = {};
+    Object.entries(D.mini_scoring).forEach(function (e2) {
+      const v = cible[lettre[e2[0]]]; if (v === undefined) return;
+      e2[1].items.forEach(function (id) {
+        let r2 = 1 + Math.round(v / 100 * 3); if (inv.has(id)) r2 = 5 - r2;
+        rep[id] = Math.max(1, Math.min(4, r2));
+      });
+    });
+    return rep;
+  }
+  function sineaPour(slug) {
+    const rep = {};
+    toutesQ.forEach(function (q) {
+      let mi = 0, pts = -1;
+      (q.options || []).forEach(function (o, i) { const p2 = (o.ponderation || {})[slug] || 0; if (p2 > pts) { pts = p2; mi = i; } });
+      rep[q.id] = mi;
+    });
+    return rep;
+  }
+  const rates = Object.keys(D.rarete).filter(function (slug) {
+    const cible = TEMOINS[slug] || D.profils[D.nom(slug)];
+    return D.slug(E.scorer(miniPour(cible), sineaPour(slug), {}).dominante.nom) !== slug;
+  });
+  verifie('atteignabilité : un témoin concret produit chacun des vingt personnages',
+    rates.length === 0);
+})();
+
+console.log('\n== 15. Bannière, Sparring, Preuve Vivante ==');
+// Trois chantiers d'écart concurrentiel. La famille comme langue, la
+// conversation entraînée contre un archétype, l'instrument qui publie
+// ses propres chiffres sur sa vraie population.
+verifie('simplification : le test express est retiré du dépôt',
+  fs.existsSync('famille.html') === false);
+verifie('familles : la table familles_cle porte les quatre, complètes',
+  ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'].every(function (k) {
+    const g = (SINEA_DATA.familles_cle || {})[k];
+    return g && g.verbe && g.question && g.essence && g.union && g.parler && g.tension && g.repere;
+  }));
+verifie('familles : les quatre verbes sont RELIER, OSER, CADRER, IMAGINER',
+  SINEA_DATA.familles_cle.RELATION.verbe === 'RELIER' && SINEA_DATA.familles_cle.ACTION.verbe === 'OSER'
+  && SINEA_DATA.familles_cle.STRUCTURE.verbe === 'CADRER' && SINEA_DATA.familles_cle.VISION.verbe === 'IMAGINER');
+verifie('portrait : la clé de lecture se pose, bandeau, carte, fiche, poster',
+  srcRes2().indexOf('function poserFamilleClef(') > 0 && srcRes2().indexOf('poserFamilleClef(res);') > 0
+  && srcRes2().indexOf('fk-hero') > 0 && srcRes2().indexOf('VOUS \u00caTES ICI') > 0
+  && srcRes2().indexOf('ce qui vous unit') > 0 && srcRes2().indexOf('fk-cle-l') > 0
+  && fs.readFileSync('index.html', 'utf8').indexOf('famille-clef') < 0
+  && srcRes2().indexOf('id="famille-clef"') > 0
+  && cssTxt2().indexOf('.fk-hero{') > 0);
+verifie('portrait : la fiche de famille lit les cinq personnages du référentiel',
+  srcRes2().indexOf("SINEA_DATA.famille(id) === fam") > 0
+  && srcRes2().indexOf('p.verbe_signature || p.role') > 0);
+verifie('sparring : quatre familles au lieu de vingt, situations prêtes',
+  srcCtrl2().indexOf('spar-fam-b') > 0 && srcCtrl2().indexOf('SPAR_SITUATIONS') > 0
+  && srcCtrl2().indexOf('SINEA_DATA.familles_cle') > 0
+  && srcCtrl2().indexOf("id=\"spar-cible\"") < 0
+  && cssTxt2().indexOf('.spar-fam-b{') > 0);
+verifie('bannière : elle vit dans l\'espace et se copie en une ligne',
+  srcCtrl2().indexOf('function poserBanniere(') > 0 && srcCtrl2().indexOf('copierBanniere') > 0
+  && fs.readFileSync('index.html', 'utf8').indexOf('id="espace-banniere"') > 0
+  && cssTxt2().indexOf('.esp-ban{') > 0);
+verifie('sparring : l\'entraînement vit dans l\'onglet Agir avec sa ligne éthique',
+  srcCtrl2().indexOf('function poserSparring(') > 0
+  && srcCtrl2().indexOf('jamais contre une personne nommée') > 0
+  && srcCtrl2().indexOf("'espace-sparring'") > 0
+  && srcCtrl2().indexOf('sparDebrief') > 0);
+verifie('preuve : les repères réels se posent au portrait via percentileTrait',
+  srcRes2().indexOf('poserReperesReels') > 0 && srcRes2().indexOf('Engine.percentileTrait') > 0
+  && srcRes2().indexOf("d.n < (d.min_requis || 10)") > 0);
+verifie('preuve : la page Méthode publie population et stabilité',
+  fs.existsSync('methode.html')
+  && fs.readFileSync('methode.html', 'utf8').indexOf('/api/normes') > 0
+  && fs.readFileSync('methode.html', 'utf8').indexOf('stabilite') > 0);
 
 console.log('\n===============================');
 console.log(nbEchec === 0 ? 'TOUT PASSE : ' + nbOk + ' vérifications vertes.' : nbEchec + ' ÉCHEC(S) sur ' + (nbOk + nbEchec) + '.');

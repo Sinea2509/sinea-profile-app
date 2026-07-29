@@ -51,8 +51,8 @@ const Result = (() => {
   let coutPortrait = null;     // coût mesuré de la génération, attaché par le back, persisté avec les interactions
   let RES = null;
 
-  function dataSlug(nom){ return SINEA_DATA.slugs[nom]; }
-  function img(nom){ const s=SINEA_DATA.images[nom]; return s?`${s}.webp`:''; }
+  function dataSlug(nom){ return SINEA_DATA.slug(nom); }
+  function img(nom){ const s=SINEA_DATA.image(nom); return s?`${s}.webp`:''; }
 
   // Visuel : matrice SWOT (forces, vigilances, leviers, frictions)
   function matriceSwot(res){
@@ -420,7 +420,7 @@ const Result = (() => {
     } catch (e) { console.warn("[Sinéa]", e); return ''; }
   }
 
-  function contenu(nom){ const s=dataSlug(nom); return (SINEA_DATA.contenu&&SINEA_DATA.contenu[s])||{}; }
+  function contenu(nom){ return SINEA_DATA.fiche(nom); }
   function recitQ16(comps) {
     try {
       const appuis = comps.filter(c => c.zone === 'appui').sort((a, b) => Math.min(b.potentiel, b.expression) - Math.min(a.potentiel, a.expression)).slice(0, 3);
@@ -433,7 +433,7 @@ const Result = (() => {
     } catch (e) { return ''; }
   }
 
-  function rarete(nom){ const s=dataSlug(nom); return (SINEA_DATA.rarete&&SINEA_DATA.rarete[s])||{pct:'',niveau:''}; }
+  function rarete(nom){ return SINEA_DATA.raretePour(nom); }
   // Rareté de la COMBINAISON dominant + secondaire (plus marquante que le dominant seul)
   function rareteCombinee(res){
     const dom = res.dominante;
@@ -451,7 +451,7 @@ const Result = (() => {
     const affichage = '1 sur ' + surN.toLocaleString('fr-FR');
     return { pct: null, affichage, surN, niveau: 'combinaison', combi: true };
   }
-  function verbe(nom){ const l=Object.values(SINEA_DATA.personnages||{}); const p=l.find(x=>x.nom===nom); return p?(p.verbe_signature||p.role||p.axe||''):''; }
+  function verbe(nom){ const p=SINEA_DATA.perso(nom); return p?(p.verbe_signature||p.role||p.axe||''):''; }
   function initiale(nom){ return nom.replace(/^(La |Le |L')/,'').charAt(0); }
 
   function radarSvg(radar, color){
@@ -740,7 +740,14 @@ const Result = (() => {
 
     // ---- Sommaire dynamique (reflète les blocs réellement présents) ----
     const modeCandidat = res.modeCampagne === 'recrutement';
-    const tocItems = modeCandidat ? [
+    // La lecture d'un module métier ouvre son propre sommaire, celui de ses
+    // trois chapitres. Le sommaire du socle appartient à la lecture du socle.
+    const lectureSpe = (dt === 'manager' || dt === 'commercial');
+    const tocItems = lectureSpe ? [
+      { href: 'spe-ch1', label: dt === 'manager' ? 'Qui vous êtes comme manager' : 'Qui vous êtes comme commercial' },
+      { href: 'spe-ch2', label: 'Vous en situation' },
+      { href: 'spe-ch3', label: 'Votre synthèse et votre progression' },
+    ] : modeCandidat ? [
       { href: 'b0', label: 'Comprendre la méthode' },
       { href: 'b-familles', label: 'Les 4 familles' },
       { href: 'b1', label: 'Vous connaître' },
@@ -752,10 +759,10 @@ const Result = (() => {
       { href: 'b2', label: 'Lire les autres' },
       { href: 'b3', label: 'Passer à l\'action' },
     ];
-    if (!modeCandidat && dt === 'manager') tocItems.push({ href: 'b-spe', label: 'Votre management' });
-    else if (!modeCandidat && dt === 'commercial') tocItems.push({ href: 'b-spe', label: 'Votre approche commerciale' });
+    if (!lectureSpe && !modeCandidat && dt === 'manager') tocItems.push({ href: 'b-spe', label: 'Votre management' });
+    else if (!lectureSpe && !modeCandidat && dt === 'commercial') tocItems.push({ href: 'b-spe', label: 'Votre approche commerciale' });
     const tocHtml = tocItems.map((it, i) =>
-      `<a href="#${it.href}" class="r-toc-i"><span class="r-toc-n">${String(i).padStart(2, '0')}</span><span>${it.label}</span></a>`
+      `<a href="#${it.href}" class="r-toc-i"><span class="r-toc-n">${String(i + 1).padStart(2, '0')}</span><span>${it.label}</span></a>`
     ).join('');
 
     document.getElementById('r-kicker').textContent='Votre archétype';
@@ -768,7 +775,7 @@ const Result = (() => {
     try {
       const heroC = document.getElementById('r-hero');
       let carteP = document.getElementById('r-hero-carte');
-      const slugC = (res && res.dominante && SINEA_DATA.images) ? SINEA_DATA.images[res.dominante.nom] : '';
+      const slugC = (res && res.dominante) ? SINEA_DATA.image(res.dominante.nom) : '';
       if (slugC && window.App && App.srcPerso) {
         if (!carteP) { carteP = document.createElement('div'); carteP.id = 'r-hero-carte'; carteP.className = 'r-hero-carte'; heroC.appendChild(carteP); }
         carteP.innerHTML = '<img src="' + App.srcPerso(slugC) + '" alt="' + (res.dominante.nom || '') + '"/>';
@@ -848,7 +855,7 @@ const Result = (() => {
 
       <div class="r-bloc" id="b-familles">
         <div class="r-bloc-head"><span class="r-bloc-tag">Le système</span><h2>Les 4 familles de profils</h2></div>
-        <p class="r-familles-intro">Chaque archétype appartient à l'une des quatre grandes familles. Elles donnent une lecture simple et immédiate de ce qui anime chaque personne. <strong>Votre famille est mise en avant ci-dessous.</strong></p>
+        <div id="famille-clef"></div>
         <div class="r-familles-grid">${htmlFamilles(dom.famille)}</div>
       </div>
 
@@ -925,7 +932,7 @@ const Result = (() => {
         <div class="r-section-tag">Communiquer avec chaque famille</div>
         <div class="r-fams-grid">${famBlocks}</div>
         <div class="r-section-tag">Gérer les conflits</div>
-        <div class="r-card"><div class="r-ia-tag">Votre style en conflit</div><p style="margin:0">${maCle.en_conflit||''}</p></div>
+        <div class="r-card"><div class="r-ia-tag">Votre style en conflit</div><p style="margin:0">${maCle.mon_conflit||maCle.en_conflit||''}</p></div>
         <p class="r-hint">Désamorcer selon le profil d'en face :</p>
         <div class="r-cf-grid">${conflitRows}</div>
         <div class="r-section-tag">Vos angles morts relationnels</div>
@@ -1033,7 +1040,7 @@ const Result = (() => {
       cartePreview.innerHTML = `
         <div class="r-carte-mini" style="background:linear-gradient(145deg, ${famCarte.c1}, ${famCarte.c2});">
           <div class="r-carte-mini-logo">SINÉA</div>
-          <div class="r-carte-mini-perso"><img src="${img(dom.nom)}" alt="${dom.nom}"/>${(window.SINEA_EMBLEMES&&window.SINEA_EMBLEMES[dom.nom])?`<span class="r-carte-mini-emb" style="color:${famCarte.c1}">${window.SINEA_EMBLEMES[dom.nom].svg}</span>`:''}</div>
+          <div class="r-carte-mini-perso"><img src="${img(dom.nom)}" alt="${dom.nom}"/>${SINEA_DATA.embleme(dom.nom)?`<span class="r-carte-mini-emb" style="color:${famCarte.c1}">${SINEA_DATA.embleme(dom.nom).svg}</span>`:''}</div>
           <div class="r-carte-mini-kicker">Mon archétype</div>
           <div class="r-carte-mini-nom">${dom.nom}</div>
           ${res.epithete?`<div class="r-carte-mini-fac">${res.epithete}</div>`:''}
@@ -1749,6 +1756,7 @@ const Result = (() => {
         pistes_choisies: Array.from(selectedActions),
         pistes_libelles: Array.from(selectedActions).map(i => actionLibelles[i] || '').filter(Boolean),
         cout_portrait: coutPortrait,
+        defis_proposes: (Array.isArray(defisGeneres) && defisGeneres.length) ? defisGeneres.map(function(d){ return { titre: d.titre || '', defi: d.defi || d.description || '', duree: d.duree || null, niveau: d.niveau || null }; }) : undefined,
         avis: Object.assign({}, avis),
         auto_perception: (RES && RES.speDims) ? Object.keys(parisSpe).filter(a => parisSpe[a] && parisSpe[a] !== '_skip' && SPE_DIM_LABELS[a]).map(a => ({
           axe: a,
@@ -1787,6 +1795,7 @@ const Result = (() => {
       pistes_choisies: Array.from(selectedActions),
       pistes_libelles: Array.from(selectedActions).map(i => actionLibelles[i] || '').filter(Boolean),
       cout_portrait: coutPortrait,
+      defis_proposes: (Array.isArray(defisGeneres) && defisGeneres.length) ? defisGeneres.map(function(d){ return { titre: d.titre || '', defi: d.defi || d.description || '', duree: d.duree || null, niveau: d.niveau || null }; }) : undefined,
       avis: Object.assign({}, avis),
       diagType: RES ? RES.diagType : 'classic',
     };
@@ -2016,26 +2025,26 @@ const Result = (() => {
     VISION:   { c1: '#5E59C7', c2: '#8E89E8', label: 'Vision' },
   };
   const PHRASES_CARTE = {
-    "La Tisseuse": "Relier les personnes et faire tenir les liens.",
-    "Le Passeur": "Relier les personnes et transmettre ce qui compte.",
-    "Le Roc": "Tenir le point d'appui sur lequel on compte.",
-    "Le Diplomate": "Accorder les points de vue avec finesse.",
-    "L'Ambassadeur": "Porter haut les idées et rassembler.",
-    "Le Capitaine": "Donner le cap et entraîner vers le but.",
-    "L'Indomptable": "Ouvrir la voie et oser là où d'autres hésitent.",
-    "Le Champion": "Entraîner l'équipe vers le résultat.",
-    "Le Pionnier": "Explorer et ouvrir des chemins neufs.",
-    "Le Résilient": "Rebondir et tenir dans la durée.",
-    "L'Architecte": "Construire la structure et la vision d'ensemble.",
-    "La Sentinelle": "Protéger et anticiper ce qui vient.",
-    "Le Gardien": "Veiller à la justesse et à la solidité.",
-    "L'Orfèvre": "Ciseler le détail juste et le travail bien fait.",
-    "Le Stratège": "Lire loin et poser les bons coups.",
-    "Le Conteur": "Donner du sens et embarquer par le récit.",
-    "L'Étincelle": "Allumer les idées et l'énergie créative.",
-    "Le Veilleur": "Percevoir les signaux faibles avant les autres.",
-    "L'Explorateur": "Repousser les horizons par curiosité.",
-    "Le Révélateur": "Faire émerger le potentiel des autres.",
+    "tisseuse": "Relier les personnes et faire tenir les liens.",
+    "passeur": "Relier les personnes et transmettre ce qui compte.",
+    "roc": "Tenir le point d'appui sur lequel on compte.",
+    "diplomate": "Accorder les points de vue avec finesse.",
+    "ambassadeur": "Porter haut les idées et rassembler.",
+    "capitaine": "Donner le cap et entraîner vers le but.",
+    "indomptable": "Ouvrir la voie et oser là où d'autres hésitent.",
+    "champion": "Entraîner l'équipe vers le résultat.",
+    "pionnier": "Explorer et ouvrir des chemins neufs.",
+    "resilient": "Rebondir et tenir dans la durée.",
+    "architecte": "Construire la structure et la vision d'ensemble.",
+    "sentinelle": "Protéger et anticiper ce qui vient.",
+    "gardien": "Veiller à la justesse et à la solidité.",
+    "orfevre": "Ciseler le détail juste et le travail bien fait.",
+    "stratege": "Lire loin et poser les bons coups.",
+    "conteur": "Donner du sens et embarquer par le récit.",
+    "etincelle": "Allumer les idées et l'énergie créative.",
+    "veilleur": "Percevoir les signaux faibles avant les autres.",
+    "explorateur": "Repousser les horizons par curiosité.",
+    "revelateur": "Faire émerger le potentiel des autres.",
   };
 
   function genererCarte(archetype, famille, slug, prenom, epithete) {
@@ -2113,7 +2122,7 @@ const Result = (() => {
       ctx.fillText('Famille ' + fam.label, taille/2, taille*(epithete ? 0.805 : 0.77));
 
       // phrase signature (avec retour à la ligne automatique)
-      const phrase = PHRASES_CARTE[archetype] || '';
+      const phrase = PHRASES_CARTE[SINEA_DATA.slug(archetype)] || '';
       ctx.font = '400 34px "Bricolage Grotesque", Poppins, Arial, sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.95)';
       const mots = phrase.split(' ');
@@ -2562,7 +2571,7 @@ const Result = (() => {
     const zone = document.getElementById('ia-actions');
     if(!zone) return; // bloc retiré (mode candidat)
     const fb=(dc.leviers||['Affirmer vos besoins avec assurance','Oser le désaccord constructif']);
-    zone.innerHTML=`<div class="r-ia-tag">Vos pistes d'action</div><div class="r-actions-grid">`+
+    zone.innerHTML=`<div class="r-actions-grid">`+
       fb.map((l,i)=>`<div class="r-action" id="act-${i}" onclick="Result.toggleAction(${i})"><div class="r-action-check">✓</div><p>${l}</p></div>`).join('')+`</div>`;
   }
 
@@ -2648,8 +2657,7 @@ const Result = (() => {
     const famC = (window.Competences && window.Competences.COULEURS_FAMILLES) || { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#2C97E0', VISION: '#5E59C7' };
     const blend = res.blend || {};
     const trio = [res.dominante].concat(res.secondaires || []).slice(0, 3);
-    let h = '<div class="ess" id="essentiel-bloc"><div class="ess-kicker">L\'essentiel · votre profil en un coup d\'œil</div>';
-    h += '<div class="ess-trio">' + trio.map(a => '<span class="ess-arch" style="border-color:' + (famC[a.famille] || '#5E59C7') + '"><b>' + a.nom + '</b>' + (blend[a.nom] ? ' · ' + blend[a.nom] + '%' : '') + '</span>').join('') + '</div>';
+    let h = '<div class="ess" id="essentiel-bloc"><div class="ess-kicker">Avant de lire · la clé et la fiabilité</div>';
     // La clé de lecture naturel / adapté, quand l'écart est significatif
     const na = res.naturelAdapte;
     if (na && typeof na.moyenneEcart === 'number' && na.moyenneEcart >= 15 && na.ecarts){
@@ -2657,17 +2665,19 @@ const Result = (() => {
       Object.entries(na.ecarts).forEach(([t, v]) => { if (Math.abs(v) > Math.abs(vMax)) { vMax = v; traitMax = t; } });
       h += '<div class="ess-cle"><span class="ess-cle-tag">La clé de lecture</span> Ce portrait décrit votre <b>nature profonde</b>. Au travail, vous vous adaptez fortement, surtout sur ' + (TRAITS_FR_ESS[traitMax] || traitMax) + ' (' + (vMax > 0 ? '+' : '') + Math.round(vMax) + ' points). Si le portrait vous surprend, c\'est sans doute votre personnage professionnel qui lit votre naturel : les deux sont vrais, l\'un se choisit, l\'autre se recharge.</div>';
     }
-    // Trois repères d'action, depuis les angles de coaching déjà générés
+    // Les trois repères d'action vivent au chapitre Passer à l'action, où
+    // Zohra les attendait, en tête du bloc, juste avant les vigilances.
     const conseils = (c && c.angles_coaching && Array.isArray(c.angles_coaching.conseils)) ? c.angles_coaching.conseils.slice(0, 3) : [];
     if (conseils.length){
-      h += '<div class="ess-titre">Trois repères pour agir</div><ul class="ess-liste">' + conseils.map(x => '<li>' + sansGras(x) + '</li>').join('') + '</ul>';
-    }
-    // D'où ça vient : ses propres réponses comme trace
-    const traces = [];
-    if (c && c.rebond_q1) traces.push(prem(c.rebond_q1));
-    if (c && c.rebond_q2) traces.push(prem(c.rebond_q2));
-    if (traces.length){
-      h += '<div class="ess-titre">D\'où ça vient</div><div class="ess-traces">' + traces.map(t => '<p>' + t + '</p>').join('') + '</div>';
+      const b3 = document.getElementById('b3');
+      if (b3 && !document.getElementById('reperes-agir')) {
+        const rep = document.createElement('div');
+        rep.id = 'reperes-agir';
+        rep.innerHTML = '<div class="r-section-tag">Trois repères pour agir</div><div class="r-card"><ul class="ess-liste">' + conseils.map(x => '<li>' + sansGras(x) + '</li>').join('') + '</ul></div>';
+        const tete = b3.querySelector('.r-bloc-head');
+        if (tete && tete.nextSibling) b3.insertBefore(rep, tete.nextSibling.nextSibling || tete.nextSibling);
+        else b3.appendChild(rep);
+      }
     }
     // La fiabilité, dite simplement et honnêtement
     const f = res.fiabilite;
@@ -2675,8 +2685,12 @@ const Result = (() => {
       const fort = (f.signaux || []).some(x => x && x.niveau === 'fort');
       h += '<div class="ess-fiab">Fiabilité de la mesure : <b>' + f.score + '/100, ' + (f.niveau || '') + '</b>.' + (fort ? ' Un signal de cohérence a été détecté et retravaillé par vos précisions : l\'échange avec votre formateur affinera encore la lecture.' : '') + '</div>';
     }
-    h += '<p class="ess-mir">Le regard des autres compte aussi : le miroir 360 vous attend dans votre espace personnel.</p>';
-    h += '<button type="button" class="ess-cta" onclick="document.getElementById(\'essentiel-bloc\').nextElementSibling.scrollIntoView({behavior:\'smooth\'})">Lire l\'analyse complète</button></div>';
+    // Le regard des autres, une ligne : le 360 est la fonctionnalité à faire
+    // connaître, une personne sur huit l'avait reçu au re-pilote.
+    h += '<p class="ess-mir">Le regard des autres compte aussi : le Feedback 360 vous attend dans votre espace personnel.</p>';
+    h += '</div>';
+    // Sans clé de lecture ni fiabilité, le bloc n'a rien à dire : il s'efface.
+    if (h.indexOf('ess-cle') < 0 && h.indexOf('ess-fiab') < 0) return;
     const zone = document.createElement('div');
     zone.innerHTML = h;
     corpsR.insertBefore(zone.firstChild, corpsR.firstChild);
@@ -2752,7 +2766,27 @@ const Result = (() => {
   }
 
   // ---- Écran des défis SeedUp ----
+  // Les défis générés par l'IA se conservent : en mémoire locale pour la
+  // session et l'appareil, et dans les interactions Airtable pour retrouver
+  // les mêmes défis depuis n'importe où. Quitter l'écran ne perd plus rien,
+  // et une réouverture rend les mêmes défis au lieu d'en générer d'autres.
   const DEFIS_URL = API_BASE + "/defis";
+  let defisGeneres = null;
+  function cleDefis(){ return 'sinea_defis_' + ((RES && RES.diagType) || 'classic'); }
+  function lireDefisConserves(){
+    if (Array.isArray(defisGeneres) && defisGeneres.length) return defisGeneres;
+    try {
+      const d = JSON.parse(localStorage.getItem(cleDefis()) || 'null');
+      if (Array.isArray(d) && d.length) { defisGeneres = d; return d; }
+    } catch (e) {}
+    return null;
+  }
+  function conserverDefis(defis){
+    if (!Array.isArray(defis) || !defis.length) return;
+    defisGeneres = defis;
+    try { localStorage.setItem(cleDefis(), JSON.stringify(defis)); } catch (e) {}
+    sauvegarderInteractions();
+  }
 
   async function showDefis(){
     const sb0 = document.getElementById('r-selbar');
@@ -2775,6 +2809,10 @@ const Result = (() => {
     document.querySelectorAll('.screen.active').forEach(s => s.classList.remove('active'));
     scr.classList.add('active');
     window.scrollTo(0, 0);
+
+    // Des défis déjà générés se réaffichent à l'identique, sans appel réseau.
+    const conserves = lireDefisConserves();
+    if (conserves) { renderDefis(scr, conserves); return; }
 
     // Construire le payload défis : profil + avis
     const payload = {
@@ -2802,6 +2840,7 @@ const Result = (() => {
       if (!r.ok) throw new Error("Défis " + r.status);
       const d = await r.json();
       const defis = d.defis || d.contenu || [];
+      conserverDefis(defis);
       renderDefis(scr, defis);
     } catch (e) {
       // Fallback : message clair si le backend n'est pas joignable
@@ -2928,11 +2967,16 @@ const Result = (() => {
     if (!scr) return;
     ['r-sommaire', 'r-sommaire-mob'].forEach(function(id){ const e = document.getElementById(id); if (e) e.remove(); });
     if (scr.__sommObs) { try { scr.__sommObs.disconnect(); } catch (e) {} scr.__sommObs = null; }
-    const blocs = Array.from(scr.querySelectorAll('.r-bloc')).filter(function(b){ return b.offsetParent !== null; });
+    // En lecture d'un module métier, les chapitres à parcourir sont ceux du
+    // module. En lecture du socle, ce sont les blocs du portrait.
+    const lectureSpe = scr.classList.contains('mode-spe');
+    const blocs = Array.from(scr.querySelectorAll(lectureSpe ? '.spe-chap' : '.r-bloc'))
+      .filter(function(b){ return b.offsetParent !== null; });
     if (blocs.length < 3) return;
     const items = blocs.map(function(b, i){
       if (!b.id) b.id = 'chap-' + (i + 1);
-      const tEl = b.querySelector('.r-bloc-head h2') || b.querySelector('.r-section-tag') || b.querySelector('h2');
+      const tEl = b.querySelector('.r-bloc-head h2') || b.querySelector('.spe-chap-head h3')
+        || b.querySelector('.r-section-tag') || b.querySelector('h2') || b.querySelector('h3');
       let t = tEl ? tEl.textContent.trim() : 'Chapitre ' + (i + 1);
       t = t.replace(/^\d+\s*\u00b7\s*/, '').slice(0, 38);
       return { id: b.id, t: t };
@@ -2951,6 +2995,7 @@ const Result = (() => {
     if (ancreMob && ancreMob.parentNode) ancreMob.parentNode.insertBefore(mob, ancreMob.nextSibling);
     function aller(id){
       const b = document.getElementById(id);
+      if (b && b.classList.contains('chap-plie')) ouvrirChapitre(id);
       if (b) b.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const li = document.getElementById('somm-mob-liste');
       if (li) li.classList.remove('open');
@@ -2958,6 +3003,22 @@ const Result = (() => {
     document.querySelectorAll('#r-sommaire .somm-b, #r-sommaire-mob .somm-b').forEach(function(b){ b.onclick = function(){ aller(this.getAttribute('data-cible')); }; });
     const btnMob = document.getElementById('somm-mob-btn');
     if (btnMob) btnMob.onclick = function(){ const li = document.getElementById('somm-mob-liste'); if (li) li.classList.toggle('open'); };
+
+    // Le sommaire mobile s'efface à la descente et revient à la remontée, ce qui
+    // rend les visuels du portrait entièrement visibles pendant la lecture.
+    if (scr.__sommScroll) window.removeEventListener('scroll', scr.__sommScroll);
+    let dernierY = window.scrollY || 0;
+    scr.__sommScroll = function(){
+      const y = window.scrollY || 0;
+      const liste = document.getElementById('somm-mob-liste');
+      const ouvert = liste && liste.classList.contains('open');
+      const descend = y > dernierY + 6;
+      const remonte = y < dernierY - 6;
+      if (descend && y > 240 && !ouvert) mob.classList.add('somm-cache');
+      else if (remonte || y <= 240 || ouvert) mob.classList.remove('somm-cache');
+      if (descend || remonte) dernierY = y;
+    };
+    window.addEventListener('scroll', scr.__sommScroll, { passive: true });
     const obs = new IntersectionObserver(function(entries){
       entries.forEach(function(en){
         if (!en.isIntersecting) return;
@@ -2972,6 +3033,65 @@ const Result = (() => {
     }, { rootMargin: '-25% 0px -60% 0px' });
     blocs.forEach(function(b){ obs.observe(b); });
     scr.__sommObs = obs;
+  }
+
+  // ===== La lecture par chapitres =====
+  // L'idée de Mathis, reprise par François : le portrait se donne par paliers.
+  // Version douce pour préserver les quatre lecteurs qui le trouvent bien dosé.
+  // Le premier chapitre s'offre entier. Les suivants se présentent fermés,
+  // avec leur accroche et leur temps de lecture, et s'ouvrent d'un geste.
+  // Un lien déplie tout pour la lecture intégrale. Chaque ouverture se
+  // mémorise par module, un chapitre lu reste ouvert aux visites suivantes.
+  const CHAPITRES_PLIABLES = ['b-dims', 'b2', 'b3', 'b-spe'];
+  function cleChapitres(){ return 'sinea_chap_' + ((RES && RES.diagType) || 'classic'); }
+  function chapitresOuverts(){
+    try { return JSON.parse(localStorage.getItem(cleChapitres()) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function ouvrirChapitre(id, sansMemoire){
+    const bloc = document.getElementById(id);
+    if (!bloc) return;
+    bloc.classList.remove('chap-plie');
+    const c = bloc.querySelector('.chap-cover');
+    if (c) c.remove();
+    if (!sansMemoire) {
+      try {
+        const o = chapitresOuverts(); o[id] = 1;
+        localStorage.setItem(cleChapitres(), JSON.stringify(o));
+      } catch (e) {}
+    }
+    try { construireSommaire(); } catch (e) {}
+  }
+  function deplierTout(){
+    CHAPITRES_PLIABLES.forEach(function (id) { ouvrirChapitre(id); });
+  }
+  function tempsLectureMin(bloc){
+    const mots = String(bloc.innerText || '').split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(mots / 200));
+  }
+  function poserChapitres(){
+    if (!RES || RES.modeCampagne === 'recrutement') return;
+    const scr = document.getElementById('screen-result');
+    if (scr && scr.classList.contains('mode-spe')) return;
+    const deja = chapitresOuverts();
+    let premier = true;
+    CHAPITRES_PLIABLES.forEach(function (id) {
+      const bloc = document.getElementById(id);
+      if (!bloc || deja[id] || bloc.classList.contains('chap-plie')) return;
+      const tag = bloc.querySelector('.r-section-tag');
+      const accroche = tag ? String(tag.textContent || '').trim().slice(0, 80) : '';
+      const min = tempsLectureMin(bloc);
+      bloc.classList.add('chap-plie');
+      const cover = document.createElement('div');
+      cover.className = 'chap-cover';
+      cover.innerHTML = (accroche ? '<p class="chap-accroche">' + accroche + '…</p>' : '')
+        + '<button type="button" class="chap-ouvrir" onclick="Result.ouvrirChapitre(\'' + id + '\')">Lire ce chapitre · ' + min + ' min</button>'
+        + (premier ? '<button type="button" class="chap-tout" onclick="Result.deplierTout()">ou tout déplier</button>' : '');
+      premier = false;
+      const tete = bloc.querySelector('.r-bloc-head');
+      if (tete) tete.insertAdjacentElement('afterend', cover);
+      else bloc.insertBefore(cover, bloc.firstChild);
+    });
+    try { construireSommaire(); } catch (e) {}
   }
 
   let _lect = null;
@@ -3020,10 +3140,106 @@ const Result = (() => {
   window.addEventListener('pagehide', envoyerLecture);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') envoyerLecture(); });
 
+  // Le module lu commande le mode de lecture. Le tunnel et l'espace passent
+  // désormais par la même règle, ce qui évite d'ouvrir un module métier avec
+  // les blocs et le sommaire du socle.
+  function modeLecturePour(res){
+    const t = String((res && res.diagType) || '').toLowerCase();
+    return (t === 'manager' || t === 'commercial') ? 'spe' : '';
+  }
+
+  // ---- Les repères réels : votre trait face à la vraie population ----
+  // Les normes vivent au back, agrégats anonymes recalculés des passations.
+  // Posées dans SINEA_DATA.normes, percentileTrait fait le reste. Sous dix
+  // passations, le portrait reste silencieux, une norme se mérite.
+  const LIBELLES_TRAITS = { O: 'ouverture', C: 'exigence', E: 'énergie relationnelle', A: 'coopération', S: 'stabilité' };
+  async function poserReperesReels(res){
+    try {
+      if (!res || !res.scoresBigFive) return;
+      const r = await fetch(API_BASE + '/normes');
+      if (!r.ok) return;
+      const d = await r.json();
+      if (!d || !d.traits || d.n < (d.min_requis || 10)) return;
+      SINEA_DATA.normes = {};
+      Object.keys(d.traits).forEach(function (t) { SINEA_DATA.normes[t] = d.traits[t].percentiles; });
+      const bf = res.scoresBigFive;
+      const tries = Object.keys(bf).filter(function (t) { return SINEA_DATA.normes[t]; })
+        .sort(function (a2, b2) { return bf[b2] - bf[a2]; }).slice(0, 2);
+      const lignes = tries.map(function (t) {
+        const pct = Engine.percentileTrait(t, bf[t]);
+        return pct ? 'Votre ' + (LIBELLES_TRAITS[t] || t) + ' dépasse ' + pct + ' % des ' + d.n + ' profils mesurés.' : '';
+      }).filter(Boolean);
+      if (!lignes.length) return;
+      const b1 = document.getElementById('b1');
+      if (!b1 || document.getElementById('reperes-reels')) return;
+      const bloc = document.createElement('div');
+      bloc.id = 'reperes-reels';
+      bloc.innerHTML = '<div class="r-card r-reperes-reels"><div class="r-ia-tag">Repères réels</div>'
+        + lignes.map(function (l) { return '<p>' + l + '</p>'; }).join('')
+        + '<p class="rr-note">Calculé sur la population réelle Sinéa Profile, recalculé à chaque nouvelle passation.</p></div>';
+      b1.appendChild(bloc);
+    } catch (e) {}
+  }
+
+  // ---- La famille comme clé de lecture : bandeau, carte des quatre, fiche, poster ----
+  // La famille d'abord, le personnage dedans. Un verbe par famille, sa question
+  // intérieure, ce qui unit ses cinq personnages, et la clé de lecture des
+  // quatre en douze lignes. Le contenu vit dans SINEA_DATA.familles_cle.
+  const COULEURS_FAM_R = { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#3EADFF', VISION: '#5E59C7' };
+  const FONCE_FAM_R = { RELATION: '#e26856', ACTION: '#c97e0d', STRUCTURE: '#2b8fd9', VISION: '#4a45ad' };
+  function poserFamilleClef(res){
+    const zone = document.getElementById('famille-clef');
+    const dom = res && res.dominante;
+    const CLE = SINEA_DATA.familles_cle || {};
+    if (!zone || !dom || !CLE[dom.famille]) return;
+    const fam = dom.famille;
+    const f = CLE[fam];
+    const persos = Object.keys(SINEA_DATA.personnages)
+      .filter(function (id) { return SINEA_DATA.famille(id) === fam; })
+      .map(function (id) { return SINEA_DATA.personnages[id]; });
+    const monIdx = persos.findIndex(function (p) { return p.nom === dom.nom; });
+    const points = persos.map(function (p, i) { return '<s class="' + (i === monIdx ? 'on' : '') + '"></s>'; }).join('');
+    const rar = SINEA_DATA.raretePour(dom.nom);
+    const perso = SINEA_DATA.perso(dom.nom) || {};
+    const ordre = ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'];
+    const quad = ordre.map(function (k) {
+      const g = CLE[k];
+      return '<div class="fk-q" style="background:' + COULEURS_FAM_R[k] + ';opacity:' + (k === fam ? '1' : '.42') + '">'
+        + '<b>' + g.verbe + '</b><u>' + k.charAt(0) + k.slice(1).toLowerCase() + '</u><i>« ' + g.question + ' »</i>'
+        + (k === fam ? '<span class="fk-ici">VOUS ÊTES ICI</span>' : '') + '</div>';
+    }).join('');
+    const cinq = persos.map(function (p, i) {
+      const moi = i === monIdx;
+      return '<div class="' + (moi ? 'moi' : '') + '"><b>' + p.nom + (moi ? ' · vous' : '') + '</b><span>' + (p.verbe_signature || p.role || '') + '</span></div>';
+    }).join('');
+    const poster = ordre.map(function (k) {
+      const g = CLE[k];
+      return '<div class="fk-cle-l"><div class="fk-cle-f" style="background:' + COULEURS_FAM_R[k] + '">' + g.verbe + '<i>« ' + g.question + ' »</i></div>'
+        + '<div class="fk-cle-t"><p><b>Lui parler.</b> ' + g.parler + '</p><p><b>Sous tension.</b> ' + g.tension + '</p></div></div>';
+    }).join('');
+    zone.innerHTML = '<div class="fk-hero" style="background:linear-gradient(135deg,' + COULEURS_FAM_R[fam] + ',' + FONCE_FAM_R[fam] + ')">'
+      + '<div class="fk-k">VOTRE FAMILLE</div>'
+      + '<div class="fk-ligne"><h3>' + fam.charAt(0) + fam.slice(1).toLowerCase() + '</h3><span class="fk-verbe">' + f.verbe + '</span></div>'
+      + '<p class="fk-q2">Sa question : « ' + f.question + ' »</p>'
+      + '<p class="fk-ess">' + f.essence + '</p>'
+      + '<div class="fk-perso"><b>Dans cette famille, vous êtes ' + dom.nom + '</b>'
+      + '<i>' + (perso.verbe_signature ? 'verbe : ' + perso.verbe_signature : '') + (rar.niveau ? ' · profil ' + rar.niveau : '') + '</i>'
+      + '<div class="fk-pts">' + points + '<em>1 des ' + persos.length + ' personnages ' + fam.charAt(0) + fam.slice(1).toLowerCase() + '</em></div></div>'
+      + '</div>'
+      + '<div class="fk-quad">' + quad + '</div>'
+      + '<div class="fk-unir" style="border-left-color:' + COULEURS_FAM_R[fam] + '">'
+      + '<h4>La famille ' + fam.charAt(0) + fam.slice(1).toLowerCase() + ', ce qui vous unit</h4>'
+      + '<p class="fk-u">' + f.union + '</p><div class="fk-cinq">' + cinq + '</div></div>'
+      + '<div class="fk-cle">' + poster + '</div>';
+  }
+
   function apresRender(res, mode){
     try { traceurLecture(res); _lect && (_lect.envoye = false); } catch (e) {}
     try { construireEssentiel(res); } catch (e) {}
-    try { setModeLecture(mode || ''); } catch (e) {}
+    try { setModeLecture(mode === 'spe' ? 'spe' : modeLecturePour(res)); } catch (e) {}
+    try { poserFamilleClef(res); } catch (e) {}
+    try { poserChapitres(); } catch (e) {}
+    try { poserReperesReels(res); } catch (e) {}
   }
 
   function installerSommaireFlottant(){ construireSommaire(); }
@@ -3047,7 +3263,7 @@ const Result = (() => {
     window.addEventListener('scroll', lire, { passive: true });
   }
 
-  return { envoyerLecture, apresRender, setModeLecture, installerBarreLecture, installerSommaireFlottant, telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, ouvrirNotation: showMoment3, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
+  return { envoyerLecture, apresRender, ouvrirChapitre, deplierTout, modeLecturePour, setModeLecture, installerBarreLecture, installerSommaireFlottant, telechargerPortrait, telechargerFiche, setEmail, render, toggleValid, saveOpen, toggleAction, parierDim, parierStyle, finishSeedup, ouvrirNotation: showMoment3, setNote, setNoteExtra, setAvis, submitMoment3, backFromMoment3, backFromDefis, htmlCompatibilites, sauvegarderInteractionsImmediat };
 })();
 
 // Exposer Result globalement (pour que controller.js puisse appeler Result.htmlCompatibilites)

@@ -2255,6 +2255,44 @@ const SINEA_DATA = {
    "niveau": "peu commun"
   }
  },
+ "familles_cle": {
+ "RELATION": {
+  "verbe": "RELIER",
+  "question": "Et les autres, ça va ?",
+  "essence": "Vous faites tenir le collectif. Le lien, la transmission, le soutien : cette famille relie les personnes entre elles.",
+  "union": "Le collectif d'abord. Vous sentez l'état d'une équipe avant qu'elle ne le dise, et un résultat qui abîme le lien reste pour vous un mauvais résultat.",
+  "parler": "La personne d'abord, le dossier ensuite.",
+  "tension": "Se tait pour préserver le lien, dites que le désaccord est bienvenu.",
+  "repere": "le lien d'abord, évite le clash"
+ },
+ "ACTION": {
+  "verbe": "OSER",
+  "question": "On y va quand ?",
+  "essence": "Vous mettez le monde en mouvement. Le cap, le terrain, le rebond : cette famille transforme l'intention en résultat.",
+  "union": "L'élan vers le résultat. Vous préférez un essai imparfait à un plan parfait, et le terrain vous apprend plus vite que la salle de réunion.",
+  "parler": "Le résultat d'abord, court, puis le contexte.",
+  "tension": "Monte au front, annoncez la franchise avant d'être franc.",
+  "repere": "direct, veut le résultat"
+ },
+ "STRUCTURE": {
+  "verbe": "CADRER",
+  "question": "Comment, exactement ?",
+  "essence": "Vous rendez les choses solides. Le cadre, la précision, la vigilance : cette famille fait que ça tient dans la durée.",
+  "union": "La fiabilité avant l'effet. Vous voyez le détail qui fera dérailler le projet, et une promesse vague vous coûte plus qu'un vrai problème bien posé.",
+  "parler": "Les faits, le cadre, ce qui est vérifié.",
+  "tension": "Vérifie tout, donnez l'information complète avant qu'il la cherche.",
+  "repere": "précis, vérifie tout"
+ },
+ "VISION": {
+  "verbe": "IMAGINER",
+  "question": "Pourquoi, au fond ?",
+  "essence": "Vous ouvrez les possibles. L'idée, le sens, le pas de côté : cette famille voit ce qui n'existe pas encore.",
+  "union": "Le sens avant la routine. Vous reliez des idées que personne ne rapprochait, et un travail sans pourquoi vous éteint plus vite qu'un travail difficile.",
+  "parler": "Le sens d'abord, le pourquoi avant le comment.",
+  "tension": "Prend de la hauteur, ramenez un point concret et daté.",
+  "repere": "le sens, les idées, la hauteur"
+ }
+},
  "cles_familles": {
   "RELATION": {
    "couleur": "#F98272",
@@ -2272,6 +2310,7 @@ const SINEA_DATA = {
     ]
    },
    "en_conflit": "Elles évitent l'affrontement direct et cherchent à préserver le lien. Pour désamorcer : rassurez sur la relation d'abord, montrez que le désaccord ne menace pas le lien, cherchez une issue où personne ne perd la face.",
+   "mon_conflit": "Vous évitez l'affrontement direct et vous cherchez à préserver le lien. Vous cédez parfois trop vite pour garder l'harmonie, alors que dire votre désaccord tôt et calmement protège mieux la relation qu'un accord de façade.",
    "collaborer": "Excellentes pour souder une équipe et fluidifier les échanges. Donnez-leur un rôle de liant, elles feront tenir le collectif."
   },
   "ACTION": {
@@ -2290,6 +2329,7 @@ const SINEA_DATA = {
     ]
    },
    "en_conflit": "Elles affrontent le conflit de face, parfois avec vigueur. Pour désamorcer : restez factuel et direct, ne fuyez pas, proposez une solution actionnable rapidement. Elles respectent la franchise.",
+   "mon_conflit": "Vous affrontez le conflit de face, parfois avec vigueur. Votre franchise clarifie vite les situations, et elle gagne à être annoncée, en prévenant votre interlocuteur que vous allez être direct avant de l'être.",
    "collaborer": "Moteurs de l'avancement, elles débloquent les situations. Confiez-leur ce qui doit bouger vite, elles feront décoller le projet."
   },
   "STRUCTURE": {
@@ -2308,6 +2348,7 @@ const SINEA_DATA = {
     ]
    },
    "en_conflit": "Elles s'appuient sur les faits, les règles, la logique. Pour désamorcer : argumentez avec des données précises, respectez le cadre, montrez que votre position est rigoureuse et cohérente.",
+   "mon_conflit": "Vous vous appuyez sur les faits, les règles et la logique. Votre rigueur rend vos positions solides, et elle porte davantage quand vous reconnaissez d'abord la part émotionnelle du désaccord avant de dérouler vos arguments.",
    "collaborer": "Garantes de la fiabilité et de la qualité, elles sécurisent l'ensemble. Confiez-leur ce qui doit être solide et durable."
   },
   "VISION": {
@@ -2326,6 +2367,7 @@ const SINEA_DATA = {
     ]
    },
    "en_conflit": "Elles peuvent prendre de la hauteur ou s'évader vers les principes. Pour désamorcer : reconnaissez leur vision, reliez le désaccord à un sens plus large, évitez de les enfermer dans des contraintes pures.",
+   "mon_conflit": "Vous prenez de la hauteur, parfois jusqu'aux principes. Cette élévation ouvre des issues que personne ne voyait, et elle porte quand vous redescendez ensuite sur un point concret et daté que votre interlocuteur peut tenir.",
    "collaborer": "Sources d'innovation et d'anticipation, elles ouvrent les horizons. Confiez-leur ce qui demande de l'imagination et de la projection."
   }
  },
@@ -2373,6 +2415,15 @@ const SINEA_DATA = {
   "Le Révélateur": "revelateur",
   "Le Veilleur": "veilleur"
  },
+ "variantes": [
+  ["L'Ambassadeur", "L'Ambassadrice"],
+  ["Le Champion", "La Championne"],
+  ["Le Pionnier", "La Pionnière"],
+  ["L'Explorateur", "L'Exploratrice"],
+  ["Le Résilient", "La Résiliente"],
+  ["Le Stratège", "La Stratège"],
+  ["Le Protecteur", "Le Roc"]
+ ],
  "contextuelles": {
   "module": "Dimensions contextuelles",
   "version": "1.0",
@@ -5335,24 +5386,114 @@ const SINEA_DATA = {
 
 /* ===== Emblèmes : un objet symbolique par archétype (icône SVG teintable + phrase de Néa) ===== */
 window.SINEA_EMBLEMES = {
-  "Le Roc": { objet:"le bouclier", phrase:"Ce que vous protégez, vous le tenez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.5v5.5c0 4-3 6.8-7 8.5-4-1.7-7-4.5-7-8.5V5.5z"/></svg>' },
-  "La Tisseuse": { objet:"la navette", phrase:"Vous tissez les liens que les autres ne voient pas encore.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9c4 2.5 12 2.5 16 0"/><path d="M4 15c4-2.5 12-2.5 16 0"/><path d="M4 12h16"/></svg>' },
-  "Le Passeur": { objet:"le pont", phrase:"Vous reliez les rives et vous faites passer ce qui compte.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15a9 6 0 0 1 18 0"/><path d="M3 15h18"/><path d="M7 15v4"/><path d="M17 15v4"/><path d="M12 15v4"/></svg>' },
-  "Le Diplomate": { objet:"la balance", phrase:"Vous accordez les points de vue avec justesse.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15"/><path d="M7 19h10"/><path d="M5 7h14"/><path d="M5 7l-2.5 5a2.5 2.5 0 0 0 5 0z"/><path d="M19 7l-2.5 5a2.5 2.5 0 0 0 5 0z"/></svg>' },
-  "L'Ambassadrice": { objet:"l'étendard", phrase:"Vous portez haut les idées et vous rassemblez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M6 4h12l-3 3.5L18 11H6z"/></svg>' },
-  "Le Capitaine": { objet:"la boussole", phrase:"Vous donnez le cap et vous entraînez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-2 5-2-5 2-1z"/></svg>' },
-  "L'Indomptable": { objet:"l'éclair", phrase:"Vous ouvrez la voie et vous osez le premier.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h5l-1 9 8-12h-5z"/></svg>' },
-  "La Championne": { objet:"le laurier", phrase:"Vous transformez l'effort en résultat.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M12 13c-3.2 0-5-2-5.2-5.2C10 7.6 12 9.6 12 13z"/><path d="M12 13c3.2 0 5-2 5.2-5.2C14 7.6 12 9.6 12 13z"/></svg>' },
-  "La Pionnière": { objet:"le drapeau", phrase:"Vous plantez le premier jalon sur des terres neuves.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M6 4l11 2-3 3 3 3-11-2z"/></svg>' },
-  "La Résiliente": { objet:"l'arc", phrase:"Vous pliez sous la tension et vous revenez plus fort.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c7 3.5 7 14.5 0 18"/><path d="M6 3l13 9-13 9"/></svg>' },
-  "L'Architecte": { objet:"le compas", phrase:"Vous tracez la structure qui tient l'ensemble.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.5"/><path d="M12 6l-4.5 14"/><path d="M12 6l4.5 14"/><path d="M9 15h6"/></svg>' },
-  "La Sentinelle": { objet:"le rempart", phrase:"Vous protégez et vous anticipez ce qui vient.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10h3V7h3v3h4V7h3v3h3v10z"/></svg>' },
-  "Le Gardien": { objet:"la clé de voûte", phrase:"Vous tenez l'édifice par sa pièce maîtresse.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1.5 7h-9z"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>' },
-  "L'Orfèvre": { objet:"le burin", phrase:"Vous cisèlez le détail juste.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3l7 7-8.5 8.5L8 20l1.5-4.5z"/><path d="M11 8l5 5"/></svg>' },
-  "La Stratège": { objet:"la pièce d'échecs", phrase:"Vous lisez plusieurs coups à l'avance.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M8.5 21c0-3 2-4 2-6h3c0 2 2 3 2 6"/><circle cx="12" cy="7" r="3"/></svg>' },
-  "Le Conteur": { objet:"le livre ouvert", phrase:"Vous donnez du sens et vous embarquez par le récit.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10 4.8 7 4.8 4.5 6v12C7 16.8 10 16.8 12 18c2-1.2 5-1.2 7.5 0V6C17 4.8 14 4.8 12 6z"/><path d="M12 6v12"/></svg>' },
-  "L'Étincelle": { objet:"la flamme", phrase:"Vous allumez les idées et l'élan créatif.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.5 3.5 4.5 5.5 4.5 9a4.5 4.5 0 0 1-9 0c0-1.8 .8-2.8 1.8-3.8.2 1.8 1.2 2.8 2.7 2.8 0-2.8-1-5 0-8z"/></svg>' },
-  "Le Veilleur": { objet:"la lanterne", phrase:"Vous percevez les signaux faibles avant tout le monde.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 21h5"/><path d="M8 8h8l.8 10H7.2z"/><path d="M10 8V5.5h4V8"/><path d="M12 3.5V5"/></svg>' },
-  "L'Exploratrice": { objet:"la longue-vue", phrase:"Vous repoussez les horizons par curiosité.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5l9-3 3.5 1-1 3.5z"/><path d="M13 14l4-7.5 3 1.8-3.5 6.7z"/></svg>' },
-  "Le Révélateur": { objet:"le prisme", phrase:"Vous révélez le potentiel que chacun porte.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 19h18z"/><path d="M3 19l9-7 9 7"/></svg>' }
+  "roc": { objet:"le bouclier", phrase:"Ce que vous protégez, vous le tenez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.5v5.5c0 4-3 6.8-7 8.5-4-1.7-7-4.5-7-8.5V5.5z"/></svg>' },
+  "tisseuse": { objet:"la navette", phrase:"Vous tissez les liens que les autres ne voient pas encore.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9c4 2.5 12 2.5 16 0"/><path d="M4 15c4-2.5 12-2.5 16 0"/><path d="M4 12h16"/></svg>' },
+  "passeur": { objet:"le pont", phrase:"Vous reliez les rives et vous faites passer ce qui compte.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15a9 6 0 0 1 18 0"/><path d="M3 15h18"/><path d="M7 15v4"/><path d="M17 15v4"/><path d="M12 15v4"/></svg>' },
+  "diplomate": { objet:"la balance", phrase:"Vous accordez les points de vue avec justesse.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v15"/><path d="M7 19h10"/><path d="M5 7h14"/><path d="M5 7l-2.5 5a2.5 2.5 0 0 0 5 0z"/><path d="M19 7l-2.5 5a2.5 2.5 0 0 0 5 0z"/></svg>' },
+  "ambassadeur": { objet:"l'étendard", phrase:"Vous portez haut les idées et vous rassemblez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M6 4h12l-3 3.5L18 11H6z"/></svg>' },
+  "capitaine": { objet:"la boussole", phrase:"Vous donnez le cap et vous entraînez.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5l-2 5-2-5 2-1z"/></svg>' },
+  "indomptable": { objet:"l'éclair", phrase:"Vous ouvrez la voie et vous osez le premier.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 13h5l-1 9 8-12h-5z"/></svg>' },
+  "champion": { objet:"le laurier", phrase:"Vous transformez l'effort en résultat.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M12 13c-3.2 0-5-2-5.2-5.2C10 7.6 12 9.6 12 13z"/><path d="M12 13c3.2 0 5-2 5.2-5.2C14 7.6 12 9.6 12 13z"/></svg>' },
+  "pionnier": { objet:"le drapeau", phrase:"Vous plantez le premier jalon sur des terres neuves.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18"/><path d="M6 4l11 2-3 3 3 3-11-2z"/></svg>' },
+  "resilient": { objet:"l'arc", phrase:"Vous pliez sous la tension et vous revenez plus fort.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3c7 3.5 7 14.5 0 18"/><path d="M6 3l13 9-13 9"/></svg>' },
+  "architecte": { objet:"le compas", phrase:"Vous tracez la structure qui tient l'ensemble.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.5"/><path d="M12 6l-4.5 14"/><path d="M12 6l4.5 14"/><path d="M9 15h6"/></svg>' },
+  "sentinelle": { objet:"le rempart", phrase:"Vous protégez et vous anticipez ce qui vient.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10h3V7h3v3h4V7h3v3h3v10z"/></svg>' },
+  "gardien": { objet:"la clé de voûte", phrase:"Vous tenez l'édifice par sa pièce maîtresse.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l1.5 7h-9z"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>' },
+  "orfevre": { objet:"le burin", phrase:"Vous cisèlez le détail juste.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3l7 7-8.5 8.5L8 20l1.5-4.5z"/><path d="M11 8l5 5"/></svg>' },
+  "stratege": { objet:"la pièce d'échecs", phrase:"Vous lisez plusieurs coups à l'avance.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6"/><path d="M8.5 21c0-3 2-4 2-6h3c0 2 2 3 2 6"/><circle cx="12" cy="7" r="3"/></svg>' },
+  "conteur": { objet:"le livre ouvert", phrase:"Vous donnez du sens et vous embarquez par le récit.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10 4.8 7 4.8 4.5 6v12C7 16.8 10 16.8 12 18c2-1.2 5-1.2 7.5 0V6C17 4.8 14 4.8 12 6z"/><path d="M12 6v12"/></svg>' },
+  "etincelle": { objet:"la flamme", phrase:"Vous allumez les idées et l'élan créatif.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2.5 3.5 4.5 5.5 4.5 9a4.5 4.5 0 0 1-9 0c0-1.8 .8-2.8 1.8-3.8.2 1.8 1.2 2.8 2.7 2.8 0-2.8-1-5 0-8z"/></svg>' },
+  "veilleur": { objet:"la lanterne", phrase:"Vous percevez les signaux faibles avant tout le monde.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 21h5"/><path d="M8 8h8l.8 10H7.2z"/><path d="M10 8V5.5h4V8"/><path d="M12 3.5V5"/></svg>' },
+  "explorateur": { objet:"la longue-vue", phrase:"Vous repoussez les horizons par curiosité.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5l9-3 3.5 1-1 3.5z"/><path d="M13 14l4-7.5 3 1.8-3.5 6.7z"/></svg>' },
+  "revelateur": { objet:"le prisme", phrase:"Vous révélez le potentiel que chacun porte.", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L3 19h18z"/><path d="M3 19l9-7 9 7"/></svg>' }
 };
+
+/* ============================================================
+   Résolution des archétypes, point d'entrée unique
+   ------------------------------------------------------------
+   Les clés techniques (ambassadeur, champion, pionnier ...) restent stables
+   pour toujours. Les libellés affichés restent libres de changer.
+   Tout libellé, ancien comme actuel, se résout vers sa clé technique via
+   la table variantes. Les portraits enregistrés avant un changement de
+   libellé continuent donc de trouver leur image, leur fiche et leur rareté.
+
+   Usage :
+     SINEA_DATA.slug(x)        clé technique
+     SINEA_DATA.nom(x)         libellé affiché actuel
+     SINEA_DATA.image(x)       base du fichier .webp
+     SINEA_DATA.fiche(x)       entrée de contenu
+     SINEA_DATA.raretePour(x)  entrée de rareté
+     SINEA_DATA.perso(x)       entrée de personnages
+     SINEA_DATA.famille(x)     famille (RELATION, ACTION, STRUCTURE, VISION)
+     SINEA_DATA.profil(x)      profil Big Five de référence
+     SINEA_DATA.embleme(x)     emblème symbolique
+   x accepte un libellé actuel, un ancien libellé ou une clé technique.
+   ============================================================ */
+(function () {
+  var D = SINEA_DATA;
+
+  function normaliser(x) {
+    return String(x === null || x === undefined ? '' : x)
+      .trim().toLowerCase()
+      .replace(/[\u2019\u02BC\u00B4`]/g, "'")
+      .replace(/\s+/g, ' ');
+  }
+
+  var INDEX = Object.create(null);
+  function poser(variante, slug) {
+    var c = normaliser(variante);
+    if (c && slug) INDEX[c] = slug;
+  }
+
+  Object.keys(D.personnages || {}).forEach(function (id) {
+    poser(id, id);
+    poser((D.personnages[id] || {}).nom, id);
+  });
+  Object.keys(D.slugs || {}).forEach(function (nom) { poser(nom, D.slugs[nom]); });
+
+  // Chaque groupe rassemble les libellés successifs d'un même archétype.
+  // Le groupe prend la clé technique du premier libellé déjà connu de l'index,
+  // ce qui rend la table symétrique et valable dans les deux sens.
+  (D.variantes || []).forEach(function (groupe) {
+    var slug = '';
+    groupe.forEach(function (v) { if (!slug) slug = INDEX[normaliser(v)] || ''; });
+    if (slug) groupe.forEach(function (v) { poser(v, slug); });
+  });
+
+  function tableEmblemes() {
+    if (typeof window !== 'undefined' && window.SINEA_EMBLEMES) return window.SINEA_EMBLEMES;
+    if (typeof SINEA_EMBLEMES !== 'undefined') return SINEA_EMBLEMES;
+    return null;
+  }
+  function parNomOuSlug(table, x) {
+    var t = table || {};
+    var n = D.nom(x), s = D.slug(x);
+    if (n && Object.prototype.hasOwnProperty.call(t, n)) return t[n];
+    if (s && Object.prototype.hasOwnProperty.call(t, s)) return t[s];
+    return undefined;
+  }
+
+  D.slug = function (x) { return INDEX[normaliser(x)] || ''; };
+  D.nom = function (x) {
+    var s = D.slug(x);
+    var p = s && D.personnages ? D.personnages[s] : null;
+    return (p && p.nom) ? p.nom : '';
+  };
+  D.image = function (x) { return parNomOuSlug(D.images, x) || ''; };
+  D.famille = function (x) { return parNomOuSlug(D.familles, x) || ''; };
+  D.profil = function (x) { return parNomOuSlug(D.profils, x) || null; };
+  D.embleme = function (x) { return parNomOuSlug(tableEmblemes(), x) || null; };
+  D.fiche = function (x) {
+    var s = D.slug(x);
+    return (s && D.contenu && D.contenu[s]) ? D.contenu[s] : {};
+  };
+  D.raretePour = function (x) {
+    var s = D.slug(x);
+    return (s && D.rarete && D.rarete[s]) ? D.rarete[s] : { pct: '', niveau: '' };
+  };
+  D.perso = function (x) {
+    var s = D.slug(x);
+    return (s && D.personnages && D.personnages[s]) ? D.personnages[s] : null;
+  };
+  D.libellesConnus = function () { return Object.keys(INDEX); };
+})();

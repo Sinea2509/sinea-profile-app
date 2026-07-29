@@ -1,5 +1,5 @@
 // ============================================================
-// competences.js — Le moteur de compétences Sinéa
+// competences.js , Le moteur de compétences Sinéa
 // Inspiré de la logique TMA : le POTENTIEL d'une compétence vient
 // des traits naturels (le moteur intrinsèque), son EXPRESSION vient
 // du profil adapté (le comportement observable au travail).
@@ -145,7 +145,16 @@
       .filter((c) => c.potentiel >= 58 && c.expression >= 52)
       .map((c) => ({ c, s: ((c.potentiel + c.expression) / 2) * coef(c.id) }))
       .sort((a, b) => b.s - a.s);
-    const appuis = parScoreAppui.slice(0, 3).map((x) => x.c);
+    let appuis = parScoreAppui.slice(0, 3).map((x) => x.c);
+    // Plancher : tout profil a des appuis relatifs. Quand aucune compétence
+    // ne franchit les seuils absolus, les trois plus solides du profil
+    // tiennent ce rôle, comme le ferait un coach devant la même carte.
+    if (!appuis.length) {
+      appuis = comps
+        .map((c) => ({ c, s: ((c.potentiel + c.expression) / 2) * coef(c.id) }))
+        .sort((a, b) => b.s - a.s)
+        .slice(0, 3).map((x) => x.c);
+    }
     const idsAppuis = new Set(appuis.map((c) => c.id));
     // Opportunités de premier ordre : le potentiel est là, l'expression suit
     // encore (la vraie logique TMA, quand la mesure de l'adapté existe).
@@ -163,6 +172,18 @@
         .map((c) => ({ c: c, motif: 'levier_de_poste', s: coef(c.id) * 100 + c.potentiel }))
         .sort((a, b) => b.s - a.s);
       opportunitesBrutes = opportunitesBrutes.concat(leviers.slice(0, 3 - opportunitesBrutes.length));
+    }
+    // Plancher : un profil qui exprime déjà bien partout, le cas de Jade,
+    // reçoit sa marge de progression, les compétences décisives pour le
+    // poste où son expression reste la plus basse. Sept pour cent des
+    // profils sortaient sans aucune opportunité et lisaient un vide.
+    if (opportunitesBrutes.length < 2) {
+      const deja2 = new Set(opportunitesBrutes.map((x) => x.c.id));
+      const marges = comps
+        .filter((c) => !idsAppuis.has(c.id) && !deja2.has(c.id))
+        .map((c) => ({ c: c, motif: 'marge_de_progression', s: coef(c.id) * 100 + (100 - c.expression) }))
+        .sort((a, b) => b.s - a.s);
+      opportunitesBrutes = opportunitesBrutes.concat(marges.slice(0, 2 - opportunitesBrutes.length));
     }
     const opportunites = opportunitesBrutes.map((x) => Object.assign({}, x.c, { motif: x.motif }));
     const vigilances = comps

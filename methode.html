@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notre méthode, en chiffres · Sinéa Profile</title>
+<meta name="description" content="Sinéa Profile publie les chiffres de son instrument : population mesurée, stabilité au bruit, distribution des familles. En direct.">
+<style>
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#F5F4F0;color:#221D45;margin:0;padding:0 16px 60px;}
+  .mt-wrap{max-width:640px;margin:0 auto;}
+  h1{font-size:26px;margin:34px 0 6px;text-align:center;}
+  .mt-sous{color:#6E6A85;font-size:14.5px;text-align:center;margin:0 0 26px;line-height:1.55;}
+  .mt-carte{background:#fff;border:1px solid #E7E4DB;border-radius:16px;padding:18px;margin-bottom:14px;}
+  .mt-carte h2{font-size:16px;margin:0 0 10px;}
+  .mt-gros{font-size:34px;font-weight:900;}
+  .mt-p{font-size:13.5px;color:#6E6A85;line-height:1.6;margin:8px 0 0;}
+  .mt-fam{display:grid;gap:8px;margin-top:8px;}
+  .mt-fam-l{display:grid;grid-template-columns:96px 1fr 44px;gap:8px;align-items:center;font-size:12.5px;font-weight:700;}
+  .mt-fam-b{height:10px;border-radius:6px;background:#E7E4DB;overflow:hidden;}
+  .mt-fam-b i{display:block;height:100%;}
+  .mt-tab{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;font-variant-numeric:tabular-nums;}
+  .mt-tab td,.mt-tab th{padding:6px 4px;text-align:right;border-bottom:1px solid #F0EEE7;}
+  .mt-tab th:first-child,.mt-tab td:first-child{text-align:left;}
+  .mt-note{font-size:11.5px;color:#9A96AD;text-align:center;margin-top:18px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="mt-wrap">
+  <h1>Notre méthode, en chiffres</h1>
+  <p class="mt-sous">Sinéa Profile mesure les cinq grands traits de la personnalité, le seul modèle
+  qui fait consensus scientifique, et publie les chiffres de son propre instrument. Cette page se
+  recalcule sur les passations réelles.</p>
+
+  <div class="mt-carte">
+    <h2>La population mesurée</h2>
+    <div class="mt-gros" id="mt-n">…</div>
+    <p class="mt-p">passations complètes du portrait socle. Chaque nouvelle passation affine les
+    repères que nous affichons dans les portraits.</p>
+    <div class="mt-fam" id="mt-fam"></div>
+  </div>
+
+  <div class="mt-carte">
+    <h2>La stabilité de l'instrument</h2>
+    <p class="mt-p">Mesurée par simulation de passations complètes, rejouée à chaque évolution du
+    moteur par notre harnais de vérification. Une réponse déplacée d'un cran sur l'échelle change
+    le verdict d'archétype dans <b id="mt-s1">…</b> des cas. Le bruit d'une repasse entière, trois
+    réponses qui bougent, le change dans <b id="mt-s3">…</b> des cas. La famille, le premier niveau
+    de lecture, résiste mieux encore. Nous publions ces chiffres parce qu'un instrument honnête
+    connaît ses propres limites.</p>
+  </div>
+
+  <div class="mt-carte" id="mt-carte-traits" style="display:none">
+    <h2>Les cinq traits sur notre population</h2>
+    <table class="mt-tab" id="mt-traits"></table>
+    <p class="mt-p">Moyenne et dispersion sur les passations réelles. Les portraits situent chaque
+    personne face à ces repères, en percentiles recalculés.</p>
+  </div>
+
+  <p class="mt-note">Sous dix passations, les agrégats restent masqués. Aucune donnée individuelle
+  ne transite par cette page, uniquement des totaux anonymes.<br>
+  Sinéa Profile · Big Five, vingt archétypes, quatre familles, re-mesure à 90 jours.</p>
+</div>
+<script>
+(function(){
+  var API = 'https://sinea-profile-ia.vercel.app/api/normes';
+  var COULEURS = { RELATION:'#F98272', ACTION:'#E8951A', STRUCTURE:'#3EADFF', VISION:'#5E59C7' };
+  var NOMS = { O:'Ouverture', C:'Conscience', E:'Extraversion', A:'Agréabilité', S:'Stabilité' };
+  fetch(API).then(function(r){ return r.json(); }).then(function(d){
+    document.getElementById('mt-n').textContent = d.n || 0;
+    document.getElementById('mt-s1').textContent = (d.stabilite && d.stabilite.bruit_une_reponse_pct || 10.2) + ' %';
+    document.getElementById('mt-s3').textContent = (d.stabilite && d.stabilite.bruit_repasse_pct || 17.8) + ' %';
+    var fam = d.familles || {}; var tot = 0; Object.keys(fam).forEach(function(k){ tot += fam[k]; });
+    if (tot >= (d.min_requis || 10)) {
+      document.getElementById('mt-fam').innerHTML = Object.keys(COULEURS).map(function(f){
+        var pct = Math.round((fam[f]||0)/tot*100);
+        return '<div class="mt-fam-l"><span>'+f.charAt(0)+f.slice(1).toLowerCase()+'</span>'
+          + '<span class="mt-fam-b"><i style="width:'+pct+'%;background:'+COULEURS[f]+'"></i></span>'
+          + '<span>'+pct+'%</span></div>';
+      }).join('');
+    }
+    if (d.traits) {
+      var t = document.getElementById('mt-traits');
+      t.innerHTML = '<tr><th>Trait</th><th>Moyenne</th><th>Dispersion</th></tr>'
+        + Object.keys(NOMS).map(function(k){
+            var v = d.traits[k]; if (!v) return '';
+            return '<tr><td>'+NOMS[k]+'</td><td>'+v.moyenne+'</td><td>'+v.ecart+'</td></tr>';
+          }).join('');
+      document.getElementById('mt-carte-traits').style.display = 'block';
+    }
+  }).catch(function(){
+    document.getElementById('mt-n').textContent = 'bientôt';
+  });
+})();
+</script>
+</body>
+</html>

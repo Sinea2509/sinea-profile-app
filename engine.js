@@ -171,8 +171,15 @@ function calculerResultat(scoresBf, affinites, pointsSinea) {
   const plancher = top4[3] || 0;
   const ecarts = [0,1,2].map(i=> Math.max(score[classement[i]]-plancher, 0.1));
   const totalEc = ecarts.reduce((a,b)=>a+b,0);
+  // Trois arrondis independants donnent un total de 99, 100 ou 101. La methode
+  // du plus fort reste distribue les unites restantes et garantit un total de 100.
+  const bruts = [0,1,2].map(i=> ecarts[i]/totalEc*100);
+  const parts = bruts.map(Math.floor);
+  const reste = 100 - parts.reduce((a,b)=>a+b,0);
+  const ordre = bruts.map((v,i)=>({i:i, frac:v-Math.floor(v)})).sort((a,b)=> b.frac-a.frac);
+  for (let k=0; k<reste; k++) parts[ordre[k % 3].i]++;
   const blend = {};
-  [0,1,2].forEach(i=> blend[classement[i]] = Math.round(ecarts[i]/totalEc*100));
+  [0,1,2].forEach(i=> blend[classement[i]] = parts[i]);
 
   return {
     dominante: {nom: dominante, famille: familles[dominante], score: Math.round(score[dominante]*10)/10},

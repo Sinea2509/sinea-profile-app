@@ -1,5 +1,5 @@
 // ============================================================
-// revelation.js — Séquence de révélation à la première découverte
+// revelation.js , Séquence de révélation à la première découverte
 //
 // À COLLER dans result.js (ou à charger en <script> avant result.js).
 // Puis, tout au DÉBUT de la fonction render(res), ajouter :
@@ -53,7 +53,7 @@
   function illustration(nom) {
     try { if (typeof img === "function") return img(nom); } catch (e) {}
     try {
-      var s = (window.SINEA_DATA && SINEA_DATA.images && SINEA_DATA.images[nom]);
+      var s = (window.SINEA_DATA && SINEA_DATA.image) ? SINEA_DATA.image(nom) : '';
       return s ? s + ".webp" : "";
     } catch (e) { return ""; }
   }

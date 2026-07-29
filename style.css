@@ -288,7 +288,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-action p{margin:0;font-size:14.5px;line-height:1.4;}
 
 /* ============================================================
-   RESTITUTION COMPLÈTE — 3 blocs, validation, questions ouvertes
+   RESTITUTION COMPLÈTE , 3 blocs, validation, questions ouvertes
    ============================================================ */
 /* Sommaire */
 .r-toc{background:var(--c-white);border:1px solid #EAE7E0;border-radius:18px;padding:18px;margin-top:30px;box-shadow:var(--shadow-card);}
@@ -373,7 +373,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-open-input::placeholder{color:var(--c-medium-grey);}
 
 /* ============================================================
-   DESKTOP (>= 768px) — cover + restitution exploitent l'écran
+   DESKTOP (>= 768px) , cover + restitution exploitent l'écran
    Le parcours reste focalisé (colonne centrée).
    ============================================================ */
 @media (min-width: 768px){
@@ -1449,12 +1449,12 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .r-coach-questions li::before{content:'';position:absolute;left:0;top:2px;width:20px;height:20px;border-radius:50%;background:rgba(136,132,240,0.16);}
 .r-coach-questions li::after{content:'?';position:absolute;left:6px;top:1px;font-size:12px;font-weight:800;color:var(--c-purple-text, #5E59C7);}
 
-/* ===== v16 : barre de progression du parcours — correction de la largeur (invisible car sans largeur dans le flex) ===== */
+/* ===== v16 : barre de progression du parcours , correction de la largeur (invisible car sans largeur dans le flex) ===== */
 .q-progress-head{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:9px;margin-bottom:0;}
 .q-bar{width:100%;height:9px;background:#E6E3DC;border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);}
 .q-bar-fill{height:100%;min-width:14px;background:linear-gradient(90deg,#5E59C7,#8884F0,#B9B6F5);background-size:200% 100%;border-radius:6px;box-shadow:0 1px 8px rgba(136,132,240,0.45);transition:width 0.5s cubic-bezier(0.22,1,0.36,1);animation:qBarShimmer 2.6s linear infinite;}
 
-/* ===== v16 : desktop — redonner de la vie et de la presence a la page parcours ===== */
+/* ===== v16 : desktop , redonner de la vie et de la presence a la page parcours ===== */
 @media (min-width:768px){
   /* profondeur douce dans la zone principale, au lieu d'un beige plat */
   #screen-question .q-main{background:radial-gradient(130% 90% at 72% 26%, rgba(249,168,118,0.07), transparent 56%), var(--c-beige);}
@@ -1470,7 +1470,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   .sw-btn{font-size:14px;padding:16px 16px;max-width:132px;}
 }
 
-/* ===== v17 : barre de selection — se retire pendant qu'on fait defiler ===== */
+/* ===== v17 : barre de selection , se retire pendant qu'on fait defiler ===== */
 .r-selbar.on.r-selbar-hide{transform:translateY(115%);}
 
 /* ===== v17 : animation au survol des CTA principaux ===== */
@@ -1479,7 +1479,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .btn-primary:active,.plan-seedup-btn:active,.r-selbar-btn:active{transform:translateY(0) scale(0.99);}
 .esp-res-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,0.18);}
 
-/* ===== v17 : personnage de l'encart resultats — plus grand et plus vivant ===== */
+/* ===== v17 : personnage de l'encart resultats , plus grand et plus vivant ===== */
 .esp-res-perso-vide{}
 .esp-res-perso-vide{}
 @keyframes espResFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
@@ -1525,7 +1525,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   .plan-cards{grid-template-columns:1fr 1fr;}
 }
 
-/* ===== v22 : feuille de route — largeur desktop (sinon colonne mobile perdue dans le vide) ===== */
+/* ===== v22 : feuille de route , largeur desktop (sinon colonne mobile perdue dans le vide) ===== */
 @media (min-width:768px){
   .plan-scroll{max-width:880px;padding:36px 32px 80px;}
   .plan-hero{max-width:100%;margin-left:auto;margin-right:auto;}
@@ -1768,7 +1768,10 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .esp-mir-copie{padding:9px 16px;}
 .esp-mir-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;background:var(--c-beige);margin-bottom:6px;}
 .esp-mir-lab{font-size:13.5px;font-weight:600;color:var(--c-dark-grey);}
-.esp-mir-vals{font-size:12.5px;font-weight:700;color:#5E59C7;white-space:nowrap;}
+.esp-mir-vals{display:grid;grid-template-columns:58px 62px 46px;gap:6px;align-items:center;font-size:12.5px;font-weight:700;color:#5E59C7;font-variant-numeric:tabular-nums;}
+.esp-mir-col{justify-self:end;white-space:nowrap;font-weight:600;}
+.esp-mir-col b{font-weight:800;}
+.esp-mir-lab{flex:1;min-width:0;}
 
 /* ===== v47 : bibliothèque SeedUp dans l'espace apprenant ===== */
 .esp-sd-stats{font-size:12.5px;font-weight:600;color:var(--c-grey);margin-bottom:12px;}
@@ -1826,10 +1829,10 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .esp-sd-coach{box-shadow:0 1px 6px rgba(45,45,45,0.05);}
 
 /* ===== v50 : le jardin d'ancrage ===== */
-.jr-wrap{position:relative;margin:8px 0 10px;background:linear-gradient(180deg,#FDFCF8,#F4F3EA);border:1px solid #ECEAE3;border-radius:16px;padding:8px 6px 0;overflow:hidden;}
-.jr-svg{display:block;width:100%;height:auto;}
-.jr-confetti{position:absolute;inset:0;pointer-events:none;}
-.jr-confetti i{position:absolute;bottom:16px;width:7px;height:7px;border-radius:50%;opacity:0;}
+
+
+
+
 .esp-sd-soustitre{display:flex;align-items:center;gap:12px;font-size:11px;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;color:var(--c-grey);margin:14px 0 10px;}
 .esp-sd-soustitre::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#E7E4DC,transparent);}
 @media (prefers-reduced-motion: no-preference){
@@ -1837,19 +1840,19 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   @keyframes jr-pousse{from{transform:scaleY(0);}to{transform:scaleY(1);}}
   .jr-plante{transform-box:fill-box;transform-origin:50% 100%;animation:jr-balance 6s ease-in-out infinite alternate;}
   @keyframes jr-balance{from{transform:rotate(-1.4deg);}to{transform:rotate(1.4deg);}}
-  .jr-perso{animation:jr-flotte 4.5s ease-in-out infinite alternate;}
+  
   @keyframes jr-flotte{from{transform:translateY(0);}to{transform:translateY(-3px);}}
-  .jr-confetti i{animation:jr-monte 1.7s ease-out both;}
+  
   @keyframes jr-monte{0%{transform:translateY(0);opacity:0;}12%{opacity:1;}100%{transform:translateY(-92px);opacity:0;}}
 }
 @media (prefers-reduced-motion: reduce){
-  .jr-confetti{display:none;}
+  
 }
 
 /* ===== v51 : l'étape franchie, tous les cinq défis ===== */
-.jr-etape{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:2;background:linear-gradient(120deg,#F98272,#5E59C7);color:#fff;font-size:12px;font-weight:800;letter-spacing:0.03em;padding:7px 16px;border-radius:20px;box-shadow:0 6px 18px rgba(94,89,199,0.3);white-space:nowrap;pointer-events:none;}
+
 @media (prefers-reduced-motion: no-preference){
-  .jr-etape{animation:jr-ruban 3.6s cubic-bezier(0.16,1,0.3,1) both;}
+  
   @keyframes jr-ruban{0%{opacity:0;transform:translate(-50%,-14px) scale(0.9);}10%{opacity:1;transform:translate(-50%,0) scale(1.04);}16%{transform:translate(-50%,0) scale(1);}82%{opacity:1;}100%{opacity:0;transform:translate(-50%,-8px);}}
   .jr-arbre-fete{animation:jr-surgit 1s cubic-bezier(0.34,1.56,0.64,1) both !important;animation-delay:0.25s !important;}
   @keyframes jr-surgit{0%{transform:scaleY(0);}62%{transform:scaleY(1.09);}80%{transform:scaleY(0.97);}100%{transform:scaleY(1);}}
@@ -1857,7 +1860,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   @keyframes jr-eclat{0%{filter:drop-shadow(0 0 0 rgba(94,89,199,0));}28%{filter:drop-shadow(0 0 9px rgba(94,89,199,0.55));}100%{filter:drop-shadow(0 0 0 rgba(94,89,199,0));}}
 }
 @media (prefers-reduced-motion: reduce){
-  .jr-etape{display:none;}
+  
 }
 
 /* ===== v52 : le défi relié à son action du plan ===== */
@@ -1925,7 +1928,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .esp-mir-msg-cible{font-size:10.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#5E59C7;margin-bottom:5px;}
 .esp-mir-msg-txt{font-size:12.5px;line-height:1.55;color:#1A1A2E;margin:0 0 8px;}
 .esp-mir-msg-btn{font-size:11.5px;padding:7px 13px;}
-.esp-mir-delta{display:inline-block;font-size:10.5px;font-weight:800;border-radius:9px;padding:2px 7px;margin-left:6px;}
+.esp-mir-delta{display:inline-block;font-size:10.5px;font-weight:800;border-radius:9px;padding:2px 7px;justify-self:end;text-align:center;min-width:30px;}
 .esp-mir-delta.pos{background:rgba(62,173,255,0.14);color:#1C6FA8;}
 .esp-mir-delta.neg{background:rgba(249,130,114,0.16);color:#B0442F;}
 .esp-mir-gapmax{background:rgba(94,89,199,0.06);border-radius:10px;padding-left:8px;padding-right:8px;margin:0 -8px;}
@@ -2107,7 +2110,7 @@ img{max-width:100%;}
 .ckl-tete span{font-size:12px;font-weight:700;color:#5E59C7;}
 .ckl-bar{height:7px;background:#EFEDE6;border-radius:5px;margin:9px 0 6px;overflow:hidden;}
 .ckl-bar i{display:block;height:100%;background:linear-gradient(90deg,#7CBB8A,#5E59C7);border-radius:5px;transition:width 0.5s ease;}
-.ckl-serre{display:block;width:calc(100% + 36px);max-width:none;height:auto;margin:10px -18px 8px;}
+
 .ckl-row{display:flex;align-items:center;gap:9px;padding:6px 2px;border-top:1px solid #F1EFE8;}
 .ckl-row .ckl-ic{flex:0 0 18px;text-align:center;font-size:13px;color:#B9B4A6;}
 .ckl-row.fait .ckl-ic{color:#3E7C4F;font-weight:800;}
@@ -2116,9 +2119,9 @@ img{max-width:100%;}
 .ckl-lab i{font-style:normal;font-size:10.5px;color:#8A879B;}
 .ckl-cta{font-family:inherit;font-size:11px;font-weight:800;padding:6px 12px;border-radius:14px;border:1.5px solid #5E59C7;background:transparent;color:#5E59C7;cursor:pointer;}
 .ckl-cta:hover{background:rgba(94,89,199,0.08);}
-@keyframes cklBloom{from{opacity:0;transform:translateY(10px) scale(0.4);}to{opacity:1;transform:translateY(0) scale(1);}}
-.ckl-bloom{animation:cklBloom 0.5s ease-out both;}
-@media (prefers-reduced-motion: reduce){.ckl-bloom{animation:none;}}
+
+
+@media (prefers-reduced-motion: reduce){}
 
 /* ===== v85 : l'espace au cordeau sur mobile ===== */
 @media (max-width: 640px){
@@ -2139,7 +2142,7 @@ img{max-width:100%;}
   .pari-l span{flex:0 0 100px;font-size:11px;}
   .mir-luc{padding:9px 11px;gap:8px;}
   .mir-luc-score{font-size:20px;}
-  #espace-miroir svg, #esp-cp-matrice svg, .ckl-serre{max-width:100%;height:auto;}
+  #espace-miroir svg, #esp-cp-matrice svg, 
   .fcx-pal, .fcx-fac{padding:6px 9px;}
   .q16-slider span{font-size:10px;}
 }
@@ -2197,10 +2200,10 @@ img{max-width:100%;}
 /* ===== v92 : le jardin panoramique, bord à bord ===== */
 .ckl{overflow:hidden;}
 @media (max-width: 640px){
-  .ckl-serre{width:calc(100% + 26px);margin-left:-13px;margin-right:-13px;max-width:none;}
+  
 }
 
-/* ===== v94 : audit UX — contrastes, cibles tactiles, navigation collante, focus ===== */
+/* ===== v94 : audit UX , contrastes, cibles tactiles, navigation collante, focus ===== */
 .esp-nav{position:sticky;top:10px;z-index:40;background:rgba(34,29,69,0.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px;padding:6px;width:max-content;max-width:100%;}
 .esp-nav-b{min-height:40px;}
 .ckl-cta{font-size:12px;padding:9px 14px;min-height:40px;}
@@ -2255,7 +2258,7 @@ img{max-width:100%;}
   .cstl-grid{grid-template-columns:1fr;}
 }
 
-/* ===== v99 : le Feedback 360 au cordeau — fil d'étapes, cibles, filtres ===== */
+/* ===== v99 : le Feedback 360 au cordeau , fil d'étapes, cibles, filtres ===== */
 .mir-etapes{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;}
 .mir-et{font-family:inherit;font-size:11.5px;font-weight:800;padding:9px 13px;min-height:40px;border-radius:14px;border:1.5px solid #E0DCD2;background:#fff;color:#6E6A85;cursor:pointer;}
 .mir-et.ok{border-color:#3EAD8B;color:#2E7D5B;background:rgba(62,173,139,0.08);}
@@ -2554,3 +2557,102 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 .esp-vide p:last-child{margin-bottom:0;}
 .esp-vide-p{font-size:13.5px;color:#4A4757;}
 .esp-vide a{color:#5E59C7;font-weight:700;}
+
+/* ===== Sommaire mobile : il s'efface à la descente, il revient à la remontée =====
+   Le sommaire reste collé en haut de l'écran pendant toute la lecture, ce qui le
+   fait passer devant les visuels du portrait. Il s'efface donc quand le lecteur
+   descend et revient dès qu'il remonte ou qu'il ouvre la liste. Les ancres
+   réservent la hauteur du sommaire, pour que le titre visé reste lisible. */
+#r-sommaire-mob{transition:transform 0.22s ease, opacity 0.22s ease;will-change:transform;}
+#r-sommaire-mob.somm-cache{transform:translateY(-160%);opacity:0;pointer-events:none;}
+#screen-result .r-bloc,
+#screen-result .spe-chap{scroll-margin-top:74px;}
+@media (min-width:1700px){
+  #screen-result .r-bloc,
+  #screen-result .spe-chap{scroll-margin-top:24px;}
+}
+
+/* Le raccourci permanent vers le plan dans le cockpit : discret, un geste. */
+.ck-plan-btn{display:block;margin-top:10px;font-family:inherit;font-size:13px;font-weight:800;min-height:42px;padding:9px 16px;border:1.5px solid #221D45;border-radius:12px;background:transparent;color:#221D45;cursor:pointer;}
+.ck-plan-btn:hover{background:#221D45;color:#F5F4F0;}
+.esp-sd-propose{border-left:3px solid #F5A623;}
+
+/* ===== La lecture par chapitres : fermés avec accroche, ouverts d'un geste ===== */
+.r-bloc.chap-plie > *:not(.r-bloc-head):not(.chap-cover){display:none;}
+.r-bloc.chap-plie{padding-bottom:18px;}
+.chap-cover{padding:4px 0 2px;}
+.chap-accroche{font-size:14px;line-height:1.55;color:#6E6A85;margin:0 0 12px;font-style:italic;}
+.chap-ouvrir{font-family:inherit;font-size:13.5px;font-weight:800;min-height:44px;padding:10px 18px;border:none;border-radius:12px;background:#221D45;color:#F5F4F0;cursor:pointer;}
+.chap-tout{font-family:inherit;font-size:12.5px;font-weight:700;margin-left:10px;padding:10px 6px;border:none;background:none;color:#6E6A85;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+
+/* ===== La bannière : famille, archétype, verbe, copiable en une ligne ===== */
+.esp-ban{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid;border-radius:16px;padding:12px 14px;margin-bottom:14px;}
+.esp-ban-emb{width:34px;height:34px;flex:none;}
+.esp-ban-emb svg{width:100%;height:100%;}
+.esp-ban-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.esp-ban-txt b{font-size:15px;}
+.esp-ban-txt i{font-style:normal;font-size:12px;color:#6E6A85;}
+.esp-ban-copie{font-family:inherit;font-size:12px;font-weight:800;min-height:38px;padding:8px 14px;border:1.5px solid #221D45;border-radius:10px;background:transparent;color:#221D45;cursor:pointer;}
+
+/* ===== Le Sparring : l'entraînement conversationnel ===== */
+.spar-p{font-size:13.5px;color:#6E6A85;line-height:1.55;margin:0 0 12px;}
+.spar-form{display:grid;gap:8px;margin-bottom:12px;}
+.spar-form input{font-family:inherit;font-size:14px;min-height:44px;padding:10px 12px;border:1.5px solid #E7E4DB;border-radius:12px;background:#fff;color:#221D45;}
+#spar-fil{display:grid;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:10px;}
+.spar-m{font-size:13.5px;line-height:1.5;padding:9px 12px;border-radius:12px;max-width:88%;}
+.spar-m.moi{background:#221D45;color:#F5F4F0;justify-self:end;}
+.spar-m.lui{background:#fff;border:1px solid #E7E4DB;justify-self:start;}
+#spar-saisie textarea{width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid #E7E4DB;border-radius:12px;resize:vertical;}
+.spar-boutons{display:flex;gap:8px;margin-top:8px;}
+.spar-debrief{font-family:inherit;font-size:12.5px;font-weight:800;min-height:42px;padding:9px 14px;border:1.5px solid #221D45;border-radius:12px;background:transparent;color:#221D45;cursor:pointer;}
+.spar-verdict{background:#fff;border:1px solid #E7E4DB;border-radius:14px;padding:12px 14px;}
+.spar-verdict p{font-size:13.5px;line-height:1.55;margin:0 0 8px;}
+.r-reperes-reels p{margin:0 0 6px;font-size:14px;line-height:1.5;}
+.rr-note{font-size:11.5px;color:#9A96AD;}
+
+/* ===== La famille comme clé de lecture ===== */
+.fk-hero{border-radius:18px;padding:22px 18px 18px;color:#fff;margin-bottom:10px;}
+.fk-k{font-size:11px;letter-spacing:2px;font-weight:800;opacity:.9;}
+.fk-ligne{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.fk-ligne h3{font-size:30px;font-weight:900;margin:2px 0 4px;}
+.fk-verbe{font-size:13px;font-weight:900;letter-spacing:1.5px;border:1.5px solid rgba(255,255,255,.6);border-radius:20px;padding:4px 12px;}
+.fk-q2{font-size:14px;font-style:italic;opacity:.95;margin:2px 0 12px;}
+.fk-ess{font-size:14.5px;line-height:1.5;margin:0 0 14px;}
+.fk-perso{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:11px 12px;}
+.fk-perso b{font-size:15px;display:block;}
+.fk-perso i{font-style:normal;font-size:11.5px;opacity:.92;}
+.fk-pts{display:flex;gap:6px;margin-top:9px;align-items:center;}
+.fk-pts s{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.4);text-decoration:none;}
+.fk-pts s.on{width:12px;height:12px;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35);}
+.fk-pts em{font-style:normal;font-size:10.5px;opacity:.9;margin-left:4px;}
+.fk-quad{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.fk-q{border-radius:14px;padding:12px;color:#fff;}
+.fk-q b{font-size:17px;font-weight:900;letter-spacing:.5px;display:block;}
+.fk-q u{text-decoration:none;font-size:11px;font-weight:800;opacity:.95;display:block;}
+.fk-q i{font-style:italic;font-size:11px;opacity:.95;display:block;margin-top:5px;}
+.fk-ici{display:inline-block;margin-top:7px;font-size:10px;font-weight:900;letter-spacing:1px;background:#221D45;border-radius:8px;padding:3px 8px;}
+.fk-unir{background:#fff;border:1px solid #E7E4DB;border-left:5px solid;border-radius:16px;padding:16px;margin-bottom:10px;}
+.fk-unir h4{font-size:15px;margin:0 0 6px;}
+.fk-u{font-size:13.5px;line-height:1.55;margin:0 0 12px;color:#3d3861;}
+.fk-cinq{display:grid;gap:7px;}
+.fk-cinq div{display:flex;justify-content:space-between;align-items:center;font-size:13px;border-bottom:1px solid #F0EEE7;padding-bottom:6px;}
+.fk-cinq div:last-child{border-bottom:none;padding-bottom:0;}
+.fk-cinq b{font-weight:800;}
+.fk-cinq span{color:#6E6A85;font-weight:700;font-size:12px;}
+.fk-cinq .moi b,.fk-cinq .moi span{color:inherit;font-weight:900;}
+.fk-cle{background:#fff;border:1px solid #E7E4DB;border-radius:16px;overflow:hidden;}
+.fk-cle-l{display:grid;grid-template-columns:96px 1fr;border-bottom:1px solid #F0EEE7;}
+.fk-cle-l:last-child{border-bottom:none;}
+.fk-cle-f{padding:12px 8px;color:#fff;font-size:12px;font-weight:900;display:flex;flex-direction:column;justify-content:center;}
+.fk-cle-f i{font-style:italic;font-size:10px;font-weight:700;opacity:.95;margin-top:2px;}
+.fk-cle-t{padding:9px 12px;}
+.fk-cle-t p{margin:0 0 3px;font-size:12.5px;line-height:1.45;}
+
+.spar-fam{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.spar-fam-b{font-family:inherit;border:none;border-radius:12px;padding:11px 10px;color:#fff;cursor:pointer;text-align:left;opacity:.5;}
+.spar-fam-b.on{opacity:1;outline:2.5px solid #221D45;outline-offset:2px;}
+.spar-fam-b b{font-size:14px;font-weight:900;display:block;}
+.spar-fam-b i{font-style:normal;font-size:10.5px;opacity:.95;}
+.spar-sit{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.spar-sit-b{font-family:inherit;font-size:11.5px;font-weight:700;border:1.5px solid #E7E4DB;border-radius:18px;background:#fff;color:#221D45;padding:7px 11px;cursor:pointer;}
+.spar-sit-b.on{border-color:#221D45;background:#221D45;color:#fff;}
