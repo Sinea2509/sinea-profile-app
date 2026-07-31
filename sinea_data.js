@@ -2255,14 +2255,17 @@ const SINEA_DATA = {
    "niveau": "peu commun"
   }
  },
+ "familles_prologue": "Depuis toujours, quand des humains entreprennent quelque chose ensemble, quatre voix se lèvent autour de la table. Vous les connaissez déjà, vous les avez entendues dans chaque équipe de votre vie. L'une d'elles porte votre timbre.",
  "familles_cle": {
  "RELATION": {
-  "verbe": "RELIER",
+  "verbe": "UNIR",
   "question": "Et les autres, ça va ?",
   "essence": "Vous faites tenir le collectif. Le lien, la transmission, le soutien : cette famille relie les personnes entre elles.",
   "union": "Le collectif d'abord. Vous sentez l'état d'une équipe avant qu'elle ne le dise, et un résultat qui abîme le lien reste pour vous un mauvais résultat.",
   "parler": "La personne d'abord, le dossier ensuite.",
   "tension": "Se tait pour préserver le lien, dites que le désaccord est bienvenu.",
+  "symbole": "<path d=\"M4.5 14.5c2.5-5 5 4.5 7.5 0s2.5-4 5-2.5\" stroke-linecap=\"round\"/><circle cx=\"5\" cy=\"9.5\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"19\" cy=\"16.5\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"/>",
+  "recit": "La première voix regarde les visages avant les dossiers. Elle sent le silence de trop dans une réunion, retient le prénom du nouveau, recoud ce que la pression a déchiré. Quand elle demande « et les autres, ça va ? », elle fait d'un groupe une équipe. Ses cinq personnages tiennent le fil qui relie tout le monde.",
   "repere": "le lien d'abord, évite le clash"
  },
  "ACTION": {
@@ -2272,6 +2275,8 @@ const SINEA_DATA = {
   "union": "L'élan vers le résultat. Vous préférez un essai imparfait à un plan parfait, et le terrain vous apprend plus vite que la salle de réunion.",
   "parler": "Le résultat d'abord, court, puis le contexte.",
   "tension": "Monte au front, annoncez la franchise avant d'être franc.",
+  "symbole": "<path d=\"M7 20.5V4l10 3.5L7 11\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M4 20.5h6\" stroke-linecap=\"round\"/>",
+  "recit": "La deuxième voix a déjà la main sur la poignée de la porte. Elle préfère un essai imparfait à un plan parfait, transforme les réunions en décisions et les décisions en premiers pas. Sa question tient en trois mots, « on y va quand ? ». C'est elle qui donne au projet son premier battement de cœur.",
   "repere": "direct, veut le résultat"
  },
  "STRUCTURE": {
@@ -2281,6 +2286,8 @@ const SINEA_DATA = {
   "union": "La fiabilité avant l'effet. Vous voyez le détail qui fera dérailler le projet, et une promesse vague vous coûte plus qu'un vrai problème bien posé.",
   "parler": "Les faits, le cadre, ce qui est vérifié.",
   "tension": "Vérifie tout, donnez l'information complète avant qu'il la cherche.",
+  "symbole": "<path d=\"M6.5 4v13.5H20\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M10.5 17.5v-2.4M14 17.5v-2.4M17.5 17.5v-2.4M6.5 8h2.4M6.5 11.5h2.4M6.5 15h2.4\" stroke-linecap=\"round\"/>",
+  "recit": "La troisième voix voit la marche qui manque à l'escalier. Elle vérifie, consolide, tient les promesses du groupe au millimètre. Pendant que tout le monde applaudit l'idée, elle demande « comment, exactement ? », et c'est grâce à cette question que l'idée tiendra encore debout dans six mois.",
   "repere": "précis, vérifie tout"
  },
  "VISION": {
@@ -2290,6 +2297,8 @@ const SINEA_DATA = {
   "union": "Le sens avant la routine. Vous reliez des idées que personne ne rapprochait, et un travail sans pourquoi vous éteint plus vite qu'un travail difficile.",
   "parler": "Le sens d'abord, le pourquoi avant le comment.",
   "tension": "Prend de la hauteur, ramenez un point concret et daté.",
+  "symbole": "<rect x=\"4.5\" y=\"4.5\" width=\"15\" height=\"15\" rx=\"2\"/><path d=\"M12 4.5v15M4.5 12h15\"/><path d=\"M14.6 9.4L18 6M18 8.6V6h-2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
+  "recit": "La quatrième voix regarde par la fenêtre pendant la réunion, et c'est précisément là qu'elle travaille. Elle relie des idées que personne ne rapprochait, flaire le monde qui vient, demande « pourquoi, au fond ? ». Elle offre au groupe ce qui lui manque le plus souvent, un ailleurs.",
   "repere": "le sens, les idées, la hauteur"
  }
 },

@@ -68,7 +68,7 @@ const V = window.Visuels;
 const compsV = C.scorer({ O: 58, C: 38, E: 72, A: 78, N: 45 }, { C: 18 });
 const qv = V.quadrantSvg(compsV, { deltas: { developpement_autres: { avant: 41, apres: 58 } } });
 verifie('quadrant : 16 points', (qv.match(/q16-pt/g) || []).length === 16);
-verifie('quadrant : 4 zones nommées', (qv.match(/APPUIS|OPPORTUNITÉS|SUR-RÉGIME|EN VEILLE/g) || []).length === 4);
+verifie('quadrant : les zones du moteur nommées avec leur compte', (qv.match(/VOS FORCES · |EN RETRAIT · /g) || []).length >= 2 && qv.indexOf('data-case=') > 0 && qv.indexOf('SUR-RÉGIME') < 0);
 verifie('quadrant : flèche d\'évolution', (qv.match(/url\(#q16f\)/g) || []).length === 1);
 verifie('quadrant : groupes équilibrés', (qv.match(/<g /g) || []).length === (qv.match(/<\/g>/g) || []).length);
 const dpv = V.doubleProfilSvg({ naturel: { O: 76, C: 7, E: 64, A: 70, N: 55 }, adapte: { O: 34, C: 97, E: 60, A: 66, N: 40 } });
@@ -262,10 +262,10 @@ verifie('restitution : cibles et encres au standard', cssTxt2().indexOf('.r-topb
 verifie('restitution : le sommaire flotte, liste et téléporte', srcRes2().indexOf('function installerSommaireFlottant(') > 0 && srcRes2().indexOf('installerBarreLecture(); installerSommaireFlottant();') > 0 && srcRes2().indexOf('installerBarreLecture, installerSommaireFlottant,') > 0 && cssTxt2().indexOf('#r-toc-flot{position:fixed') > 0 && cssTxt2().indexOf('#r-toc-panel.ouvert{display:block;}') > 0);
 verifie('restitution terrain : bouton autonome, largeurs unies, radar ample, doublon retiré', require('fs').readFileSync('style.css', 'utf8').indexOf('.r-topbar-espace{background:#221D45') > 0 && require('fs').readFileSync('style.css', 'utf8').indexOf('#screen-result .r-bloc{padding-left:23px') > 0 && require('fs').readFileSync('style.css', 'utf8').indexOf('.r-radar-svg{width:100%') > 0 && require('fs').readFileSync('result.js', 'utf8').indexOf('r-dp2-card') < 0 && require('fs').readFileSync('result.js', 'utf8').indexOf('class="r-radar-svg"') > 0);
 verifie('restitution : les devises parlent en tendances, à l\'infinitif', srcRes2().indexOf('"Relier les personnes et faire tenir les liens."') > 0 && srcRes2().indexOf('Je relie les personnes') < 0 && srcRes2().indexOf('Je suis le moteur') < 0);
-verifie('compétences : le zoom respire et les points sont fins', require('fs').readFileSync('visuels.js', 'utf8').indexOf('hi - lo < 16') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('r * 0.72') > 0);
+verifie('compétences : le zoom respire et les points sont fins', require('fs').readFileSync('visuels.js', 'utf8').indexOf('min-max par côté') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('r * 0.72') > 0);
 verifie('espace : la constellation et les défis expliquent leur intention', srcCtrl2().indexOf('Vers la droite grandit votre potentiel naturel') > 0 && srcCtrl2().indexOf('jr-pourquoi') > 0 && cssTxt2().indexOf('.jr-pourquoi{') > 0);
 verifie('fiabilité : le verdict post-affinage reste honnête face aux signaux forts', srcCtrl2().indexOf('fortsRestants') > 0 && srcCtrl2().indexOf('Une variabilité de réponses reste visible') > 0);
-verifie('restitution : la notation du portrait est accessible en relecture', srcRes2().indexOf('ouvrirNotation: showMoment3') > 0 && srcRes2().indexOf('Noter ce portrait') > 0 && cssTxt2().indexOf('.r-noter-btn{') > 0);
+verifie('restitution : la notation du portrait est accessible en relecture', srcRes2().indexOf('ouvrirNotation: showMoment3') > 0 && srcRes2().indexOf('Je donne mon avis') > 0 && cssTxt2().indexOf('.r-noter-btn{') > 0);
 verifie('matrices : tooltip riche, lecture carto et données portées par les points', require('fs').readFileSync('visuels.js', 'utf8').indexOf('data-pot=') > 0 && require('fs').readFileSync('visuels.js', 'utf8').indexOf('function brancherTooltip(') > 0 && cssTxt2().indexOf('.qt-tip{') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('carto-lecture') > 0 && require('fs').readFileSync('dashboard.js', 'utf8').indexOf('orientation relation') > 0);
 (function () {
   if (!window.Visuels) { eval(fs.readFileSync('visuels.js', 'utf8')); }
@@ -332,7 +332,7 @@ verifie('défis : le pont vers le plan lit les pistes réelles', srcCtrl2().inde
 verifie('néa : la relance ouvre sur l\'objectif engagé', srcCtrl2().indexOf('function relanceNea(') > 0 && srcCtrl2().indexOf('Où en êtes-vous cette semaine') > 0 && cssTxt2().indexOf('.nea-relance{') > 0);
 verifie('version : controller et dashboard parlent d\'une seule voix', (function () { const mc = (srcCtrl2().match(/Sinea Profile (v\d+) servie/) || [])[1]; const md = (require('fs').readFileSync('dashboard.js', 'utf8').match(/Sinea Dashboard (v\d+)/) || [])[1]; return !!mc && mc === md; })());
 verifie('360 croisé : quatre territoires calculés sur les compétences observées', srcCtrl2().indexOf('function croiserRegards(') > 0 && srcCtrl2().indexOf('delta >= 15') > 0 && srcCtrl2().indexOf("out.angles.push") > 0 && srcCtrl2().indexOf('COMPS_360') > 0);
-verifie('360 croisé : la lecture croisée se rend dès deux regards', srcCtrl2().indexOf('function mirCroiseHtml(') > 0 && srcCtrl2().indexOf('Vos angles morts') > 0 && srcCtrl2().indexOf('mirCroiseHtml(reponsesTous)') > 0 && cssTxt2().indexOf('.mir-croise{') > 0);
+verifie('360 croisé : la lecture croisée se rend dès trois regards', srcCtrl2().indexOf('function mirCroiseHtml(') > 0 && srcCtrl2().indexOf('reponsesTous.length < 3') > 0 && srcCtrl2().indexOf('Vos forces cachées') > 0 && srcCtrl2().indexOf('mirCroiseHtml(reponsesTous)') > 0 && cssTxt2().indexOf('.mir-croise{') > 0);
 verifie('360 croisé : chaque angle mort devient une piste du plan', srcCtrl2().indexOf('function pisteDepuis360(') > 0 && srcCtrl2().indexOf("action: 'save_plan_suivi'") > 0 && srcCtrl2().indexOf('pisteDepuis360, enregistrerResultat') > 0);
 verifie('néa : le fil conversationnel connaît le plan', srcRes2().indexOf('App.planPourNea') > 0 && srcCtrl2().indexOf('function planPourNea(') > 0 && srcCtrl2().indexOf('planPourNea, pisteDepuis360') > 0);
 verifie('mesure : le sondage couvre appris et longueur', srcRes2().indexOf("AVIS_APPRIS") > 0 && srcRes2().indexOf("AVIS_LONGUEUR") > 0 && srcRes2().indexOf("J'ai appris quelque chose sur moi") > 0);
@@ -716,19 +716,175 @@ verifie('familles : la table familles_cle porte les quatre, complètes',
     const g = (SINEA_DATA.familles_cle || {})[k];
     return g && g.verbe && g.question && g.essence && g.union && g.parler && g.tension && g.repere;
   }));
-verifie('familles : les quatre verbes sont RELIER, OSER, CADRER, IMAGINER',
-  SINEA_DATA.familles_cle.RELATION.verbe === 'RELIER' && SINEA_DATA.familles_cle.ACTION.verbe === 'OSER'
+verifie('familles : les quatre verbes sont UNIR, OSER, CADRER, IMAGINER',
+  SINEA_DATA.familles_cle.RELATION.verbe === 'UNIR' && SINEA_DATA.familles_cle.ACTION.verbe === 'OSER'
   && SINEA_DATA.familles_cle.STRUCTURE.verbe === 'CADRER' && SINEA_DATA.familles_cle.VISION.verbe === 'IMAGINER');
-verifie('portrait : la clé de lecture se pose, bandeau, carte, fiche, poster',
+verifie('portrait : le récit des familles, prologue, quatre voix, chute, poster',
   srcRes2().indexOf('function poserFamilleClef(') > 0 && srcRes2().indexOf('poserFamilleClef(res);') > 0
-  && srcRes2().indexOf('fk-hero') > 0 && srcRes2().indexOf('VOUS \u00caTES ICI') > 0
-  && srcRes2().indexOf('ce qui vous unit') > 0 && srcRes2().indexOf('fk-cle-l') > 0
-  && fs.readFileSync('index.html', 'utf8').indexOf('famille-clef') < 0
-  && srcRes2().indexOf('id="famille-clef"') > 0
-  && cssTxt2().indexOf('.fk-hero{') > 0);
-verifie('portrait : la fiche de famille lit les cinq personnages du référentiel',
-  srcRes2().indexOf("SINEA_DATA.famille(id) === fam") > 0
-  && srcRes2().indexOf('p.verbe_signature || p.role') > 0);
+  && srcRes2().indexOf('fk-prologue') > 0 && srcRes2().indexOf('SINEA_DATA.familles_prologue') > 0
+  && srcRes2().indexOf('fk-recit') > 0 && srcRes2().indexOf('fk-chute') > 0
+  && srcRes2().indexOf('fk-cle-l') > 0 && srcRes2().indexOf('id="famille-clef"') > 0
+  && cssTxt2().indexOf('.fk-prologue{') > 0 && cssTxt2().indexOf('.fk-voix{') > 0);
+verifie('portrait : les voix portent les vrais personnages en vignettes',
+  srcRes2().indexOf("SINEA_DATA.famille(id) === f2") > 0
+  && srcRes2().indexOf('SINEA_DATA.image(x.id)') > 0
+  && srcRes2().indexOf("recit") > 0);
+verifie('symboles : les quatre familles portent leur tracé, tiré des récits',
+  ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'].every(function (k) {
+    const g = SINEA_DATA.familles_cle[k];
+    return g && g.symbole && g.symbole.indexOf('stroke-linecap') > 0;
+  })
+  && SINEA_DATA.familles_cle.STRUCTURE.symbole.indexOf('17.5v-2.4') > 0
+  && SINEA_DATA.familles_cle.VISION.symbole.indexOf('rect') === 1);
+verifie('symboles : branchés aux voix, à la bannière et au Sparring',
+  srcRes2().indexOf('svgFam(g, 18)') > 0 && srcRes2().indexOf('fk-ic') > 0
+  && srcCtrl2().indexOf('gFam.symbole') > 0
+  && srcCtrl2().indexOf('spar-ic') > 0
+  && cssTxt2().indexOf('.fk-ic{') > 0 && cssTxt2().indexOf('.spar-ic{') > 0);
+verifie('familles : les quatre récits vivent dans le référentiel, prologue compris',
+  ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'].every(function (k) {
+    const g = SINEA_DATA.familles_cle[k];
+    return g && g.recit && g.recit.length > 100;
+  }) && String(SINEA_DATA.familles_prologue || '').indexOf('quatre voix') > 0);
+verifie('combinaison : trio proportionnel et signature en trois faits',
+  srcRes2().indexOf('function poserCombinaison(') > 0
+  && srcRes2().indexOf('combinaison-clef') > 0
+  && srcRes2().indexOf('combinaisons possibles') > 0
+  && srcRes2().indexOf('const tailles = [132, 92, 72]') > 0
+  && srcRes2().indexOf('phraseSignature(res, rar)}') < 0
+  && cssTxt2().indexOf('.cb-trio{') > 0);
+verifie('fin de lecture : le geste principal est de donner son avis',
+  srcRes2().indexOf('>Je donne mon avis</button>') > 0
+  && srcRes2().indexOf('Result.ouvrirNotation()') > 0);
+verifie('compétences du portrait : l\'ordre du lecteur, héros, carte, méthodo en dernier',
+  (function () {
+    const r = srcRes2();
+    const iIntro = r.indexOf('cph-intro'), iHeros = r.indexOf('<div class="cph-liste">${heros}</div>'),
+      iCarte = r.indexOf('<div id="cph-carte">'), iLeg = r.indexOf('cph-legende'),
+      iMet = r.indexOf('${methodo}`;');
+    return iIntro > 0 && iIntro < iHeros && iHeros < iCarte && iCarte < iLeg && iLeg < iMet
+      && r.indexOf('cases hors diagonale') > 0
+      && r.indexOf('la m\\u00e9thode, en chiffres</a>') > 0
+      && cssTxt2().indexOf('.cph-legende{') > 0 && cssTxt2().indexOf('.cph-met-rh{') > 0;
+  })());
+verifie('constellation : les zones du moteur, seuil au centre, halo, sans invention',
+  (function () {
+    const v = fs.readFileSync('visuels.js', 'utf8');
+    return v.indexOf('SUR-RÉGIME') < 0 && v.indexOf('EN VEILLE') < 0
+      && v.indexOf('Quatre cases de même taille') > 0 && v.indexOf('nb.hd') > 0
+      && v.indexOf('const mx = Math.round((x0 + x1) / 2)') > 0 && v.indexOf('le paysage') > 0
+      && v.indexOf('stroke-opacity="0.4"') > 0;
+  })());
+verifie('constellation : les marges rendues à la donnée, les points occupent la place',
+  (function () {
+    const v = fs.readFileSync('visuels.js', 'utf8');
+    return v.indexOf('min-max par c\u00f4t\u00e9') > 0 && v.indexOf('const PAD = 18') > 0 && v.indexOf('Espace de s\u00e9curit\u00e9') > 0
+      && v.indexOf('Math.floor(lo / 5)') < 0;
+  })());
+verifie('scoring : les deux écritures du contrat, N portail et S direct, sont identiques',
+  (function () {
+    const a2 = window.Competences.scorer({ O: 48, C: 70, E: 44, A: 62, N: 15 }, {}, {});
+    const b2 = window.Competences.scorer({ O: 48, C: 70, E: 44, A: 62, S: 85 }, {}, {});
+    return a2.every(function (c, i) { return Math.abs(c.potentiel - b2[i].potentiel) < 0.01; });
+  })());
+verifie('cohérence : la stabilité haute porte la résilience en tête',
+  (function () {
+    const tri = window.Competences.scorer({ O: 48, C: 70, E: 44, A: 62, N: 15 }, {}, {}).slice().sort(function (a2, b2) { return b2.potentiel - a2.potentiel; });
+    return tri.slice(0, 3).some(function (c) { return c.id === 'resilience'; });
+  })());
+verifie('cohérence : la conscience haute porte rigueur et organisation en tête',
+  (function () {
+    const tri = window.Competences.scorer({ O: 45, C: 88, E: 48, A: 58, N: 38 }, {}, {}).slice().sort(function (a2, b2) { return b2.potentiel - a2.potentiel; });
+    const t3 = tri.slice(0, 3).map(function (c) { return c.id; });
+    return t3.indexOf('rigueur') >= 0 && t3.indexOf('organisation') >= 0;
+  })());
+verifie('cohérence : le déclaré à 55 pour cent crée la divergence attendue',
+  (function () {
+    const comps = window.Competences.scorer({ O: 86, C: 40, E: 82, A: 50, N: 42 }, { C: 20 }, { cadrage: 75 });
+    const org = comps.filter(function (c) { return c.id === 'organisation'; })[0];
+    return org && org.expression - org.potentiel >= 8;
+  })());
+verifie('constellation : la garde d\'occupation, les points remplissent la carte',
+  (function () {
+    const serre = [];
+    for (let i = 0; i < 16; i += 1) serre.push({ id: 'c' + i, nom: 'C' + i, famille: 'ACTION', potentiel: 58 + (i % 5) * 2, expression: 57 + ((i * 3) % 7), zone: 'neutre' });
+    const svg = window.Visuels.quadrantSvg(serre, {});
+    const pts = Array.from(svg.matchAll(/data-comp="c\d+"[^>]*>[^<]*<circle cx="(\d+)" cy="(\d+)"/g)).map(function (m2) { return [+m2[1], +m2[2]]; });
+    if (pts.length !== 16) return false;
+    const xs = pts.map(function (p2) { return p2[0]; }), ys = pts.map(function (p2) { return p2[1]; });
+    const occX = (Math.max.apply(null, xs) - Math.min.apply(null, xs)) / (616 - 64);
+    const occY = (Math.max.apply(null, ys) - Math.min.apply(null, ys)) / 380;
+    return occX > 0.6 && occY > 0.6;
+  })());
+verifie('constellation : toutes les coordonnées restent dans le cadre, haut et bas',
+  (function () {
+    const bas = [
+      { id: 'a', nom: 'A', famille: 'ACTION', potentiel: 44, expression: 41, zone: 'neutre' },
+      { id: 'b', nom: 'B', famille: 'VISION', potentiel: 66, expression: 48, zone: 'opportunite' },
+      { id: 'c', nom: 'C', famille: 'RELATION', potentiel: 70, expression: 64, zone: 'appui' },
+      { id: 'd', nom: 'D', famille: 'STRUCTURE', potentiel: 52, expression: 71, zone: 'neutre' },
+    ];
+    bas.seuils = { pot: 62, expr: 58 };
+    const svg = window.Visuels.quadrantSvg(bas, {});
+    const cys = Array.from(svg.matchAll(/<g[^>]*data-comp="[^"]*"[^>]*>[\s\S]*?<circle cx="(\d+)" cy="(\d+)"/g)).map(function (m) { return [+m[1], +m[2]]; });
+    return cys.length === 4 && cys.every(function (c) { return c[0] >= 60 && c[0] <= 620 && c[1] >= 36 && c[1] <= 460; });
+  })());
+verifie('matrice : la clé en quatre tuiles, un geste par case',
+  (function () {
+    const r = srcRes2();
+    return r.indexOf('cph-cle4') > 0 && (r.match(/<em>/g) || []).length >= 4 && r.indexOf('Le geste') < 0
+      && r.indexOf("Tenues par l'effort") > 0 && r.indexOf('c4-bd') > 0
+      && fs.readFileSync('visuels.js', 'utf8').indexOf('PAR L\\u2019EFFORT · ') > 0
+      && fs.readFileSync('visuels.js', 'utf8').indexOf('const CASES = {') > 0
+      && cssTxt2().indexOf('.cph-cle4{') > 0;
+  })());
+verifie('constellation : la matrice compte juste, case par case',
+  (function () {
+    const fake = [
+      { id: 'a', nom: 'A', famille: 'ACTION', potentiel: 70, expression: 66, zone: 'appui' },
+      { id: 'b', nom: 'B', famille: 'VISION', potentiel: 66, expression: 50, zone: 'opportunite' },
+      { id: 'c', nom: 'C', famille: 'RELATION', potentiel: 50, expression: 66, zone: 'neutre' },
+    ];
+    fake.seuils = { pot: 62, expr: 58 };
+    const svg = window.Visuels.quadrantSvg(fake, {});
+    return svg.indexOf('VOS FORCES · 1') > 0 && svg.indexOf('EN RETRAIT · ') > 0
+      && svg.indexOf('stroke-opacity="0.4"') > 0;
+  })());
+verifie('fiche espace : lecture, prochain pas, le reste replié',
+  srcCtrl2().indexOf('esp-cp-lecture') > 0 && srcCtrl2().indexOf('VOTRE PROCHAIN PAS') > 0
+  && srcCtrl2().indexOf('<details class="esp-cp-plus">') > 0
+  && srcCtrl2().indexOf('Aller plus loin') > 0
+  && cssTxt2().indexOf('.esp-cp-pas{') > 0);
+verifie('déploiement : seuil trois partout, trois défis en cours, suivi riche',
+  srcCtrl2().indexOf("' / 3'") > 0 && srcCtrl2().indexOf('dès trois regards reçus') > 0
+  && srcCtrl2().indexOf('Recevoir trois regards') > 0
+  && srcCtrl2().indexOf('cartes.slice(0, 3)') > 0 && srcCtrl2().indexOf('plan-avenir') > 0
+  && srcCtrl2().indexOf("premier_pas: a.premier_pas") > 0
+  && cssTxt2().indexOf('.plan-avenir{') > 0);
+verifie('miroir 360 : la lucidité sur son ancre, les catégories positives, le répondant must-have',
+  srcCtrl2().indexOf('mir-luc') > 0 && srcCtrl2().indexOf('LUCIDITÉ') > 0
+  && srcCtrl2().indexOf('Vos forces cachées') > 0 && srcCtrl2().indexOf('À rendre visibles') > 0
+  && srcCtrl2().indexOf('geste à oser') > 0 && srcCtrl2().indexOf('agrégée à partir de trois regards') > 0
+  && cssTxt2().indexOf('.mir-luc{') > 0);
+verifie('plan unique : un écran, les sources en onglets, la preuve au Fait',
+  srcCtrl2().indexOf('plan-src-tab') > 0 && srcCtrl2().indexOf('Un seul plan, toutes vos analyses') > 0
+  && srcCtrl2().indexOf("if (next === 'Fait'") > 0 && srcCtrl2().indexOf('Ma preuve, en une ligne') > 0
+  && cssTxt2().indexOf('.plan-src-tab{') > 0);
+verifie('plan : le déclencheur et la lignée vivent sur chaque carte',
+  srcCtrl2().indexOf('planc-quand') > 0 && srcCtrl2().indexOf('N\\u00e9e de : ') > 0
+  && srcCtrl2().indexOf('origine: f,') > 0
+  && cssTxt2().indexOf('.planc-quand{') > 0 && cssTxt2().indexOf('.planc-nee{') > 0);
+verifie('plan : pastille de source et preuve à ramener, au format défi',
+  srcCtrl2().indexOf('planc-src') > 0 && srcCtrl2().indexOf('Votre preuve à ramener') > 0
+  && cssTxt2().indexOf('.planc-src{') > 0);
+verifie('forces : la vraie légende, couleur famille, rayé vigilance',
+  fs.readFileSync('visuels.js', 'utf8').indexOf('fv-legende') > 0
+  && fs.readFileSync('visuels.js', 'utf8').indexOf('barre ray\\u00e9e dit une vigilance') > 0
+  && cssTxt2().indexOf('.fv-legende{') > 0);
+verifie('question sur mesure : elle dit son but',
+  srcRes2().indexOf('fk-but') > 0 && srcRes2().indexOf('Votre r\\u00e9ponse tranche') > 0);
+verifie('matrice : les cellules respirent, plus de coupe',
+  cssTxt2().indexOf('.swot-grid{overflow:visible') > 0);
 verifie('sparring : quatre familles au lieu de vingt, situations prêtes',
   srcCtrl2().indexOf('spar-fam-b') > 0 && srcCtrl2().indexOf('SPAR_SITUATIONS') > 0
   && srcCtrl2().indexOf('SINEA_DATA.familles_cle') > 0

@@ -815,7 +815,21 @@ const App = (() => {
     zone.innerHTML = '<div class="esp-cp-fcard"><button type="button" class="esp-cp-fx" onclick="document.getElementById(&quot;esp-cp-focus&quot;).innerHTML=&quot;&quot;">×</button>'
       + '<div class="esp-cp-fnom"><i style="background:' + coul + '"></i>' + echapValeur(c2.nom) + '<span>nature ' + Math.round(c2.potentiel) + ' · travail ' + Math.round(c2.expression) + '</span></div>'
       + (ref.def ? '<p class="esp-cp-def">' + echapValeur(ref.def) + '</p>' : '')
+      + (function () {
+          const d = Math.round(c2.expression) - Math.round(c2.potentiel);
+          const lect = d >= 8 ? 'Votre quotidien exprime cette compétence au-delà de votre pente naturelle, ' + Math.round(c2.expression) + ' contre ' + Math.round(c2.potentiel) + '. Les gestes sont construits, il reste à les rendre confortables.'
+            : d <= -8 ? 'Votre nature porte cette compétence plus haut que votre quotidien ne l\'exprime, ' + Math.round(c2.potentiel) + ' contre ' + Math.round(c2.expression) + '. Le moteur est là, la pratique fera le reste.'
+            : 'Nature et quotidien s\'accordent sur cette compétence, autour de ' + Math.round((c2.potentiel + c2.expression) / 2) + '. Un terrain stable pour construire.';
+          return '<p class="esp-cp-lecture">' + lect + '</p>';
+        })()
+      + ((window.Competences.CODEX && window.Competences.CODEX[id]) ? (function () {
+          const cx = window.Competences.CODEX[id];
+          const pal = window.Competences.palierDe(c2.expression);
+          const p2 = cx.paliers[pal - 1];
+          return p2 && p2[1] ? '<div class="esp-cp-pas"><u>VOTRE PROCHAIN PAS</u><p>' + echapValeur(p2[1]) + '</p></div>' : '';
+        })() : '')
       + ((ref.progresser || []).length ? '<div class="esp-cp-prog-t">Pour progresser</div><ul class="esp-cp-prog">' + ref.progresser.map(function (p2) { return '<li>' + echapValeur(p2) + '</li>'; }).join('') + '</ul>' : '')
+      + '<details class="esp-cp-plus"><summary>Aller plus loin · la trajectoire et les deux facettes</summary>'
       + ((window.Competences.CODEX && window.Competences.CODEX[id]) ? (function () {
           const cx = window.Competences.CODEX[id];
           const pal = window.Competences.palierDe(c2.expression);
@@ -826,6 +840,7 @@ const App = (() => {
           }).join('');
         })() : '')
       + ((window.Competences.FACETTES && window.Competences.FACETTES[id]) ? '<div class="esp-cp-prog-t">Les deux facettes</div>' + window.Competences.FACETTES[id].map(function (f) { return '<div class="fcx-fac"><b>' + echapValeur(f.nom) + '</b><span>' + echapValeur(f.def) + '</span><em>Défi : ' + echapValeur(f.defis[0]) + '</em></div>'; }).join('') : '')
+      + '</details>'
       + '</div>';
     zone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -861,12 +876,12 @@ const App = (() => {
     if (!dom || !dom.nom) { slot.innerHTML = ''; return; }
     const fam = dom.famille || SINEA_DATA.famille(dom.nom) || 'RELATION';
     const perso = SINEA_DATA.perso(dom.nom) || {};
-    const emb = SINEA_DATA.embleme(dom.nom) || {};
+    const gFam = (SINEA_DATA.familles_cle || {})[fam] || {};
     const verbe = perso.verbe_signature || perso.role || '';
     const c = COULEURS_FAM[fam] || '#5E59C7';
     const libFam = fam.charAt(0) + fam.slice(1).toLowerCase();
     slot.innerHTML = '<div class="esp-ban" style="border-color:' + c + '">'
-      + (emb.svg ? '<span class="esp-ban-emb" style="color:' + c + '">' + emb.svg + '</span>' : '')
+      + (gFam.symbole ? '<span class="esp-ban-emb" style="color:' + c + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + gFam.symbole + '</svg></span>' : '')
       + '<span class="esp-ban-txt"><b>' + dom.nom + '</b><i>Famille ' + libFam + (verbe ? ' · ' + verbe : '') + '</i></span>'
       + '<button type="button" class="esp-ban-copie" onclick="App.copierBanniere(this)" data-t="'
       + echapValeur(dom.nom + ' · Famille ' + libFam + (verbe ? ' · ' + verbe : '') + ' · Sinéa Profile') + '">Copier</button>'
@@ -891,7 +906,9 @@ const App = (() => {
     const CLE = SINEA_DATA.familles_cle || {};
     const fams = ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'].map(function (k) {
       const g = CLE[k] || {};
-      return '<button type="button" class="spar-fam-b' + (k === sparFam ? ' on' : '') + '" data-fam="' + k + '" style="background:' + COULEURS_FAM[k] + '" onclick="App.sparChoisirFam(this)"><b>' + (g.verbe || k) + '</b><i>' + (g.repere || '') + '</i></button>';
+      return '<button type="button" class="spar-fam-b' + (k === sparFam ? ' on' : '') + '" data-fam="' + k + '" style="background:' + COULEURS_FAM[k] + '" onclick="App.sparChoisirFam(this)">'
+        + '<span class="spar-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">' + (g.symbole || '') + '</svg></span>'
+        + '<span class="spar-fam-txt"><b>' + (g.verbe || k) + '</b><i>' + (g.repere || '') + '</i></span></button>';
     }).join('');
     const sits = SPAR_SITUATIONS.map(function (t, i) {
       return '<button type="button" class="spar-sit-b' + (i === 0 ? ' on' : '') + '" onclick="App.sparSituation(this)">' + t + '</button>';
@@ -1003,7 +1020,7 @@ const App = (() => {
       act = { t: 'Votre re-mesure des 90 jours est ouverte', p: 'Dix minutes pour mesurer le chemin parcouru depuis votre portrait.', cta: 'Faire ma re-mesure', fn: "App.cockpitVers('espace-remesure')" };
     } else if (aJeton && nbRegards === 0) {
       act = { t: 'Votre Feedback 360 attend ses premiers regards', p: 'Trois messages prêts à copier vous attendent, trois minutes pour vos collègues.', cta: 'Ouvrir les invitations', fn: "App.allerFeedback('inviter')" };
-    } else if (aJeton && !mir.prediction && nbRegards < 2) {
+    } else if (aJeton && !mir.prediction && nbRegards < 3) {
       act = { t: 'Faites votre pronostic Feedback 360', p: 'Trente secondes pour prédire le regard des autres. À l\'arrivée de leurs réponses : votre score de lucidité.', cta: 'Faire mon pronostic', fn: "App.allerFeedback('pari')" };
     } else if (!pistes.length) {
       act = { t: 'Choisissez vos premières actions', p: 'Vos opportunités sont identifiées : reliez-les à des actions concrètes pour lancer le programme.', cta: 'Voir mes compétences', fn: "App.cockpitVers('espace-competences')" };
@@ -1430,7 +1447,7 @@ const App = (() => {
     { d: 'c_cooperation', label: 'Esprit d\'équipe', texte: 'Cette personne joue collectif : elle aide spontanément et partage l\'information.' },
     { d: 'c_resilience', label: 'Solide sous pression', texte: 'Cette personne garde son calme et rebondit vite face aux difficultés.' },
     { d: 'c_fiabilite_suivi', label: 'Tient ses engagements', texte: 'Ce qui est convenu avec cette personne est fait, dans les délais.' },
-    { d: 'conseil', type: 'texte', label: 'Un conseil pour grandir', texte: 'Si vous aviez un conseil à lui donner pour progresser, ce serait…' },
+    { d: 'conseil', type: 'texte', label: 'Un geste à continuer, un geste à oser', texte: 'Un geste que cette personne gagne à continuer, et un geste qu\'elle gagnerait à oser.' },
   ];
   const MIROIR_ANCRES = { 1: 'Pas du tout', 2: 'Plutôt pas', 3: 'Plutôt oui', 4: 'Tout à fait' };
   const MIROIR_CONV = { 1: 0.0, 2: 33.333, 3: 66.667, 4: 100.0 };
@@ -1439,7 +1456,7 @@ const App = (() => {
   // Perception agrégée par dimension, avec le même adoucissement doux que le profil adapté
   const COMPS_360 = ['c_developpement_autres', 'c_communication_influence', 'c_orientation_resultats', 'c_prise_decision', 'c_cooperation', 'c_resilience', 'c_fiabilite_suivi'];
   function croiserRegards(reponsesTous) {
-    const out = { confirmees: [], angles: [], discretes: [], partages: [] };
+    const out = { confirmees: [], angles: [], discretes: [], partages: [], percu: {} };
     try {
       const data = dataEspaceCourant || {};
       const prof = (((data.analyses || {}).socle) || {}).profil || {};
@@ -1451,6 +1468,7 @@ const App = (() => {
       COMPS_360.forEach(function (id) {
         const notes = reponsesTous.map(function (rp) { return (rp.r || {})[id]; }).filter(function (v) { return v >= 1 && v <= 4; });
         const moiC = parId[id] || parId[id.replace(/^c_/, '')];
+        if (notes.length) out.percu[id] = notes.reduce(function (a2, b2) { return a2 + MIROIR_CONV[b2]; }, 0) / notes.length;
         if (!notes.length || !moiC) return;
         const eux = Math.round(notes.reduce(function (a, b) { return a + b; }, 0) / notes.length / 3 * 100 - 100 / 3);
         const moi = Math.round(moiC.expression);
@@ -1481,7 +1499,7 @@ const App = (() => {
   }
 
   function mirCroiseHtml(reponsesTous) {
-    if (!Array.isArray(reponsesTous) || reponsesTous.length < 2) {
+    if (!Array.isArray(reponsesTous) || reponsesTous.length < 3) {
       return reponsesTous && reponsesTous.length === 1
         ? '<div class="mir-croise mir-croise-attente"><p>Encore un regard et votre lecture croisée s\'ouvre ici : vos forces confirmées, vos angles morts, vos forces discrètes.</p></div>'
         : '';
@@ -1509,10 +1527,22 @@ const App = (() => {
       if (!liste.length) return '';
       return '<div class="mc-terr ' + cls + '"><div class="mc-t">' + titre + '</div><div class="mc-s">' + sous + '</div>' + liste.map(function (it) { return carte(it, genre); }).join('') + '</div>';
     };
-    return '<div class="mir-croise"><div class="mir-croise-head"><span class="esp-rem-kicker">La lecture croisée</span><h3>Vous, et leurs regards.</h3><p class="mc-intro">Sur les sept compétences observées, calculée sur ' + reponsesTous.length + ' regards.</p></div><div class="mc-grille">'
-      + bloc('Vos angles morts', 'Ils vous voient plus fort que vous : votre marge cachée.', t.angles, 'angle', 'mc-angle')
+    const mir2 = ((((dataEspaceCourant || {}).interactions || {}).socle) || {}).miroir || {};
+    const pred = mir2.prediction || {};
+    let luc = '';
+    try {
+      const cles = Object.keys(t.percu || {}).filter(function (k) { return pred[k] !== undefined && pred[k] !== null; });
+      if (cles.length >= 3) {
+        const ecart = cles.reduce(function (a2, k) { const pv = Number(pred[k]); const p100 = pv <= 4 ? (MIROIR_CONV[pv] || 0) : pv; return a2 + Math.abs(p100 - t.percu[k]); }, 0) / cles.length;
+        const score = Math.max(0, Math.round(100 - ecart));
+        const mot = score >= 75 ? ', une belle justesse.' : score >= 50 ? ', quelques surprises fécondes.' : ', le miroir vous apprend beaucoup.';
+        luc = '<div class="mir-luc"><span class="mir-luc-k">LUCIDITÉ</span><b>' + score + ' / 100</b><p>Votre pronostic face à leur regard réel' + mot + '</p></div>';
+      }
+    } catch (e) {}
+    return '<div class="mir-croise">' + luc + '<div class="mir-croise-head"><span class="esp-rem-kicker">La lecture croisée</span><h3>Vous, et leurs regards.</h3><p class="mc-intro">Sur les sept compétences observées, calculée sur ' + reponsesTous.length + ' regards.</p></div><div class="mc-grille">'
+      + bloc('Vos forces cachées', 'Ils vous voient plus fort que vous, assumez cette marge.', t.angles, 'angle', 'mc-angle')
       + bloc('Forces confirmées', 'Visibles de vous comme d\'eux.', t.confirmees, 'conf', 'mc-conf')
-      + bloc('Forces discrètes', 'Vous seul les voyez, pour l\'instant.', t.discretes, 'discrete', 'mc-disc')
+      + bloc('À rendre visibles', 'Vous les vivez, ils les voient moins, montrez-les.', t.discretes, 'discrete', 'mc-disc')
       + bloc('Terrain partagé', 'Bas des deux côtés, en toute lucidité.', t.partages, 'partage', 'mc-part')
       + '</div></div>';
   }
@@ -1626,7 +1656,7 @@ const App = (() => {
       { id: 'defi1', label: 'Ancrer un premier défi', pts: 15, fait: !!jal.defi1 || sd.length >= 1, cta: 'App.cockpitVers(&quot;espace-seedup&quot;)', lab: 'Ancrer' },
       { id: 'miroir', label: 'Lancer votre Feedback 360', pts: 10, fait: !!jal.miroir || !!mir.jeton, cta: 'App.allerFeedback(&quot;haut&quot;)', lab: 'Lancer' },
       { id: 'pari', label: 'Faire votre pronostic', pts: 10, fait: !!jal.pari || !!mir.prediction, cta: 'App.allerFeedback(&quot;pari&quot;)', lab: 'Pronostiquer' },
-      { id: 'regards2', label: 'Recevoir deux regards', pts: 15, fait: !!jal.regards2 || nbRegards >= 2, cta: 'App.allerFeedback(&quot;inviter&quot;)', lab: 'Inviter' },
+      { id: 'regards2', label: 'Recevoir trois regards', pts: 15, fait: !!jal.regards2 || nbRegards >= 3, cta: 'App.allerFeedback(&quot;inviter&quot;)', lab: 'Inviter' },
       { id: 'remesure', label: 'Re-mesure des 90 jours', pts: 30, fait: !!jal.remesure || remFaite, cta: 'App.cockpitVers(&quot;espace-remesure&quot;)', lab: 'Mesurer' },
     ];
     const faits = ITEMS.filter(function (x) { return x.fait; });
@@ -1708,7 +1738,7 @@ const App = (() => {
   function pariMiroirHtml(mir){
     if (mir && mir.prediction) {
       const p = mir.prediction;
-      return '<div class="pari-bloc pari-scelle"><div class="esp-cp-titre">Votre pronostic est scellé</div><p class="pari-p">Vous découvrirez votre score de lucidité dès deux regards reçus.</p><div class="pari-vals">'
+      return '<div class="pari-bloc pari-scelle"><div class="esp-cp-titre">Votre pronostic est scellé</div><p class="pari-p">Vous découvrirez votre score de lucidité dès trois regards reçus.</p><div class="pari-vals">'
         + AXES_PARI.map(function (a) { return '<span>' + a[1] + ' <b>' + (typeof p[a[0]] === 'number' ? p[a[0]] : '·') + '</b></span>'; }).join('') + '</div></div>';
     }
     return '<div class="pari-bloc"><div class="esp-cp-titre">Avant leurs regards, le vôtre</div>'
@@ -1791,7 +1821,7 @@ const App = (() => {
     const lien = location.origin + location.pathname + '?miroir=' + jeton;
     const pariHtml = pariMiroirHtml(mir);
     const blocLien = guideMiroirHtml() + `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
-    if (reponses.length < 2) {
+    if (reponses.length < 3) {
       const attente = reponses.length === 1
         ? '1 réponse reçue. L\'analyse s\'ouvre à la deuxième, pour préserver l\'anonymat.'
         : 'Aucune réponse pour l\'instant. Envoyez ce lien à deux collègues, leurs réponses restent anonymes.';
@@ -1895,13 +1925,13 @@ const App = (() => {
     const etapes = [
       { lab: 'Lien créé', ok: true, cible: '.esp-mir-msg' },
       { lab: 'Pronostic', ok: !!mir.prediction, cible: '__pari' },
-      { lab: n + ' regard' + (n > 1 ? 's' : '') + ' / 2', ok: n >= 2, cible: '.esp-mir-msg' },
-      { lab: 'Analyse', ok: n >= 2, cible: '.mir-luc' },
+      { lab: n + ' regard' + (n > 1 ? 's' : '') + ' / 3', ok: n >= 3, cible: '.esp-mir-msg' },
+      { lab: 'Analyse', ok: n >= 3, cible: '.mir-luc' },
     ];
     return '<div class="mir-etapes">' + etapes.map(function (e2) {
       return '<button type="button" class="mir-et' + (e2.ok ? ' ok' : '') + '" onclick="App.mirAller(&quot;' + e2.cible + '&quot;)">' + (e2.ok ? '✓ ' : '') + e2.lab + '</button>';
     }).join('') + '</div>'
-      + (n < 2 ? '<p class="mir-note">' + ageLienMiroir(mir) + 'Encore ' + (2 - n) + ' regard' + (2 - n > 1 ? 's' : '') + ' et votre analyse s\'ouvre. Un message suffit à relancer.</p>' : '');
+      + (n < 3 ? '<p class="mir-note">' + ageLienMiroir(mir) + 'Encore ' + (3 - n) + ' regard' + (3 - n > 1 ? 's' : '') + ' et votre analyse s\'ouvre. Un message suffit à relancer.</p>' : '');
   }
   function ageLienMiroir(mir){
     if (!mir.cree) return '';
@@ -1963,7 +1993,7 @@ const App = (() => {
         .then(function (r) { return r.json(); })
         .then(function (d) {
           const carteMerci = d && d.ok
-            ? '<div class="esp-rem-titre">Merci pour votre regard</div><p class="esp-rem-txt">Votre perception est enregistrée, de façon anonyme. Elle aidera votre collègue à mieux se connaître.</p>'
+            ? '<div class="mir-merci-sym">✦</div><div class="esp-rem-titre">Merci, votre regard compte.</div><p class="esp-rem-txt">Votre perception est enregistrée, anonyme, agrégée à partir de trois regards. Elle aidera votre collègue à se voir plus juste.</p>'
             : (d && d.raison === 'complet'
               ? '<div class="esp-rem-titre">Ce miroir est complet</div><p class="esp-rem-txt">Cette personne a déjà reçu le nombre maximal de regards. Merci pour votre intention.</p>'
               : '<div class="esp-rem-titre">Lien inconnu</div><p class="esp-rem-txt">Ce lien d\'invitation ne correspond à aucun profil. Demandez un nouveau lien à la personne qui vous a invité.</p>');
@@ -2509,7 +2539,9 @@ const App = (() => {
       const profil = (analyses[mod] && analyses[mod].profil) || (analyses.socle && analyses.socle.profil) || {};
       const inter = interactionsTout[mod] || interactionsTout.socle || {};
       const suiviSauve = (suiviTout[mod] && suiviTout[mod].suivi) || [];
-      afficherPagePlan(mod, profil, inter, suiviSauve);
+      const aCoches = (it) => { const x = it || {}; return ((x.forces_libelles || x.forces_validees || []).length + (x.vigilances_libelles || []).length + (x.leviers_libelles || []).length) > 0; };
+      const modsDispo = ['socle', 'commercial', 'manager'].filter((m2) => aCoches(interactionsTout[m2]));
+      afficherPagePlan(mod, profil, inter, suiviSauve, modsDispo);
       try { soignerPlan(scr); } catch (e) { console.warn('[Sinéa]', e); }
     }).catch(function () {
       // au lieu d'une alerte, message clair dans la page + bouton réessayer
@@ -2523,7 +2555,7 @@ const App = (() => {
     });
   }
 
-  function afficherPagePlan(mod, profil, inter, suiviSauve) {
+  function afficherPagePlan(mod, profil, inter, suiviSauve, modsDispo) {
     let scr = document.getElementById('screen-plan');
     if (!scr) {
       scr = document.createElement('section');
@@ -2552,10 +2584,11 @@ const App = (() => {
       '<button class="plan-retour" id="plan-retour">← Mon espace</button>' +
       '<div class="plan-hero" style="--pf1:' + couleurFam + ';">' +
         (slug ? '<div class="plan-hero-img"><img src="' + srcPerso(slug) + '" alt="' + echapValeur(archetype) + '" onerror="' + onerrPerso(slug) + '"/></div>' : '') +
-        '<div class="plan-hero-kicker">Votre feuille de route</div>' +
-        '<h1 class="plan-hero-titre">Votre plan d\'action</h1>' +
+        '<div class="plan-hero-kicker">Mon plan des 90 jours</div>' +
+        '<h1 class="plan-hero-titre">Un seul plan, toutes vos analyses</h1>' +
         (archetype ? '<p class="plan-hero-sub">Taillé pour ' + echapValeur(archetype) + ' que vous êtes. Voici par où commencer.</p>' : '<p class="plan-hero-sub">Voici par où commencer.</p>') +
-      '</div>';
+      '</div>' +
+      ((modsDispo && modsDispo.length > 1) ? ('<div class="plan-src-tabs">' + modsDispo.map(function (m2) { return '<button type="button" class="plan-src-tab' + (m2 === mod ? ' actif' : '') + '" onclick="App.ouvrirPlanDepuisResto(\'' + m2 + '\')">' + m2.toUpperCase() + '</button>'; }).join('') + '</div>') : '');
 
     // si rien coché : message d'invitation, pas d'appel IA
     const rien = !forces.length && !vigilances.length && !objectifs.length;
@@ -2653,9 +2686,10 @@ const App = (() => {
       'Vous avez une date posée pour la suite.',
       'Vous savez décrire votre prochain pas.',
     ];
-    forces.forEach((f, i) => out.push({ thematique: 'Force', type: 'Capitaliser', horizon: 'Bientôt', objectif: f, premier_pas: pasF[i % 3], indicateur: indF[i % 3] }));
-    vigilances.forEach((v, i) => out.push({ thematique: 'Progression', type: 'Progresser', horizon: 'Maintenant', objectif: v, premier_pas: pasV[i % 3], indicateur: indV[i % 3] }));
-    objectifs.forEach((o, i) => out.push({ thematique: 'Développement', type: 'Explorer', horizon: 'Plus tard', objectif: o, premier_pas: pasO[i % 3], indicateur: indO[i % 3] }));
+    const qd = 'Cette semaine, dans une situation r\u00e9elle de votre agenda';
+    forces.forEach((f, i) => out.push({ thematique: 'Force', type: 'Capitaliser', horizon: 'Bientôt', objectif: f, quand: qd, origine: f, premier_pas: pasF[i % 3], indicateur: indF[i % 3] }));
+    vigilances.forEach((v, i) => out.push({ thematique: 'Progression', type: 'Progresser', horizon: 'Maintenant', objectif: v, quand: qd, origine: v, premier_pas: pasV[i % 3], indicateur: indV[i % 3] }));
+    objectifs.forEach((o, i) => out.push({ thematique: 'Développement', type: 'Explorer', horizon: 'Plus tard', objectif: o, quand: qd, origine: o, premier_pas: pasO[i % 3], indicateur: indO[i % 3] }));
     return out;
   }
   function signalerRepliPlan(mod) {
@@ -2710,22 +2744,29 @@ const App = (() => {
       const aRessenti = a.ressenti && a.ressenti.trim();
       const pas = (a.premier_pas || '').trim();
       const ind = (a.indicateur || '').trim();
+      const quand = (a.quand || '').trim();
+      const orig = (a.origine || '').trim();
+      const srcMod = a.source || mod || 'socle';
+      const SRC_C = { socle: '#3EADFF', commercial: '#E8951A', manager: '#5E59C7' };
       return '<div class="planc" data-i="' + i + '">' +
         '<div class="planc-head">' +
+          '<span class="planc-src" style="background:' + (SRC_C[srcMod] || '#3EADFF') + '">' + echapValeur(String(srcMod).toUpperCase()) + '</span>' +
           '<span class="plan-them">' + echapValeur(a.thematique) + '</span>' +
+          (orig ? '<span class="planc-nee" title="' + echapValeur(orig) + '">N\u00e9e de : ' + echapValeur(orig.length > 46 ? orig.slice(0, 44) + '\u2026' : orig) + '</span>' : '') +
           '<span class="plan-type ' + classeType(a.type) + '">' + echapValeur(a.type) + '</span>' +
           '<button class="planc-horizon ' + classeHorizon(a.horizon) + '" data-horizon="' + i + '" title="Ajuster l\'horizon">' + echapValeur(a.horizon) + '</button>' +
         '</div>' +
+        (quand ? '<div class="planc-quand">' + echapValeur(quand) + '</div>' : '') +
         '<p class="planc-obj">' + echapValeur(objDe(a)) + '</p>' +
         (pas ? '<div class="planc-layer planc-pas"><span class="planc-ic">▸</span><div class="planc-layer-txt"><span class="planc-lab">Premier pas</span><p>' + echapValeur(pas) + '</p></div></div>' : '') +
-        (ind ? '<div class="planc-layer planc-ind"><span class="planc-ic">◎</span><div class="planc-layer-txt"><span class="planc-lab">Vous saurez que c\'est acquis</span><p>' + echapValeur(ind) + '</p></div></div>' : '') +
+        (ind ? '<div class="planc-layer planc-ind"><span class="planc-ic">◎</span><div class="planc-layer-txt"><span class="planc-lab">Votre preuve à ramener</span><p>' + echapValeur(ind) + '</p></div></div>' : '') +
         '<div class="planc-suivi">' +
           '<button class="plan-statut ' + classeStatut(statut) + '" data-statut="' + i + '">' + libStatut(statut) + '</button>' +
-          '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti="' + i + '" title="Laisser un ressenti">' + (aRessenti ? '✏️ Mon ressenti' : '💬 Laisser un ressenti') + '</button>' +
+          '<button class="plan-ressenti-btn' + (aRessenti ? ' a-note' : '') + '" data-ressenti="' + i + '" title="Votre preuve, en une ligne">' + (aRessenti ? '✏️ Ma preuve' : '💬 Ma preuve, en une ligne') + '</button>' +
         '</div>' +
         (aRessenti ? '<div class="planc-note">« ' + echapValeur(a.ressenti.trim()) + ' »</div>' : '') +
       '</div>';
-    }).join('');
+    });
 
     const capHtml = (synthese && synthese.trim())
       ? '<div class="plan-cap"><div class="plan-cap-lab">Votre cap</div><p class="plan-cap-txt">' + echapValeur(synthese.trim()) + '</p></div>'
@@ -2743,7 +2784,8 @@ const App = (() => {
     scr.innerHTML = '<div class="plan-scroll">' + heroHtml +
       capHtml +
       '<p class="plan-intro-tab">Voici votre feuille de route. Chaque objectif tient en trois temps : le cap, le premier pas, et le signe que c\'est acquis. L\'horizon est proposé, ajustez-le en cliquant dessus.</p>' +
-      '<div class="plan-cards">' + cartes + '</div>' +
+      '<div class="plan-cards">' + cartes.slice(0, 3).join('') + '</div>' +
+      (cartes.length > 3 ? '<details class="plan-avenir"><summary>À venir · ' + (cartes.length - 3) + ' défis</summary><div class="plan-cards">' + cartes.slice(3).join('') + '</div></details>' : '') +
       seedup +
     '</div>';
     activerScreenPlan(scr, mod);
@@ -2778,6 +2820,7 @@ const App = (() => {
         b.className = 'plan-statut ' + classeStatut(next);
       });
       sauverSuiviPlan(mod, actions);
+      if (next === 'Fait' && !(actions[i].ressenti && String(actions[i].ressenti).trim())) ouvrirRessenti(scr, mod, actions, i);
     };
     scr.querySelectorAll('[data-statut]').forEach(btn => {
       const i = parseInt(btn.getAttribute('data-statut'), 10);
@@ -2856,7 +2899,8 @@ const App = (() => {
     if (!identite.email) return;
     const suivi = actions.map(a => ({
       thematique: a.thematique, objectif: a.objectif || a.objectif_smart || '',
-      statut: a.statut || 'À faire', ressenti: a.ressenti || '', horizon: a.horizon || ''
+      statut: a.statut || 'À faire', ressenti: a.ressenti || '', horizon: a.horizon || '',
+      quand: a.quand || '', premier_pas: a.premier_pas || '', indicateur: a.indicateur || '', origine: a.origine || ''
     }));
     fetch(PROGRESSION_URL, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },

@@ -399,7 +399,29 @@ const Result = (() => {
       const comps = window.Competences.scorer(res.scoresBigFive, res.naturelAdapte && res.naturelAdapte.ecarts, dims);
       const pri = window.Competences.prioriser(comps, poste);
       if (!pri.appuis.length && !pri.opportunites.length) return '';
+      const coulFam2 = { RELATION: '#F98272', ACTION: '#E8951A', STRUCTURE: '#3EADFF', VISION: '#5E59C7' };
+      const heros = pri.appuis.slice(0, 3).map(function (c) {
+        const cc = coulFam2[c.famille] || '#3EADFF';
+        return '<div class="cph" style="--c:' + cc + '"><b>' + c.nom + '</b><u>APPUI</u><span class="cph-bar"><i style="width:' + Math.round(c.expression) + '%"></i></span></div>';
+      }).join('') + pri.opportunites.slice(0, 2).map(function (c) {
+        const cc = coulFam2[c.famille] || '#E8951A';
+        return '<div class="cph" style="--c:' + cc + '"><b>' + c.nom + '</b><u>OPPORTUNIT\u00c9</u><span class="cph-bar"><i style="width:' + Math.round(c.expression) + '%"></i></span></div>';
+      }).join('');
+      const CLEF = SINEA_DATA.familles_cle || {};
+      const methodo = '<div class="cph-methodo"><p><b>Seize comp\u00e9tences, quatre par famille</b>, chacune pes\u00e9e sur vos cinq grands traits. Le chiffre <b>nature</b> applique ces poids \u00e0 votre mesure, le chiffre <b>travail</b> vient de vos comportements d\u00e9clar\u00e9s. Deux chiffres, deux sources, la m\u00eame personne.</p>'
+        + ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'].map(function (k) {
+            const noms = window.Competences.REFERENTIEL.filter(function (r2) { return r2.famille === k; }).map(function (r2) { return r2.nom; }).join(' \u00b7 ');
+            const g2 = CLEF[k] || {};
+            return '<div class="cph-met-l" style="--c:' + ((window.Competences.COULEURS_FAMILLES || {})[k] || '#8A879B') + '">'
+              + (g2.symbole ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + g2.symbole + '</svg>' : '')
+              + '<span>' + noms + '</span></div>';
+          }).join('')
+        + '<p class="cph-met-src">Fond\u00e9 sur le Big Five, le cadre le plus valid\u00e9 de la psychologie diff\u00e9rentielle. La conscience est le pr\u00e9dicteur le plus robuste de la performance professionnelle, Barrick et Mount, 1991.</p><p class="cph-met-rh">Les chiffres de l\u2019instrument sur notre population r\u00e9elle, stabilit\u00e9 comprise : <a href="methode.html" target="_blank" rel="noopener">la m\u00e9thode, en chiffres</a>.</p></div>';
       return `<div class="r-section-tag">Vos compétences, la lecture Sinéa</div>
+        <p class="cph-intro">Vos trois forces d'abord, puis vos deux terrains \u00e0 investir. La suite montre d'o\u00f9 ils sortent.</p>
+        <div class="cph-liste">${heros}</div>
+        <p class="cph-liaison">Voici la carte compl\u00e8te, vos seize comp\u00e9tences situ\u00e9es entre nature et travail.</p>
+        <div id="cph-carte">
         <p class="r-hint">Le potentiel vient de votre nature, l'expression de votre comportement au travail. La carte situe vos seize compétences en quatre zones de jeu.</p>
         <div class="r-card r-q16-card">
           <div class="q16-recit">${recitQ16(comps)}</div>
@@ -416,7 +438,16 @@ const Result = (() => {
           </div>
           <div id="q16-def" class="q16-def"></div>
           <p class="r-comp-pont">Survolez une compétence de la liste pour l'allumer sur la carte, touchez-la pour lire sa définition. Dans les pistes ci-dessous, choisissez au moins une action qui travaille vos opportunités : c'est là que l'effort rapporte le plus.</p>
-        </div>`;
+        </div></div>
+        <p class="cph-legende"><b>Nature</b>, ce que vos cinq traits portent d\u2019eux-m\u00eames. <b>Travail</b>, ce que vos r\u00e9ponses sur votre quotidien montrent. La carte croise les deux, chaque comp\u00e9tence situ\u00e9e dans votre propre paysage, autour de votre moyenne. Le cercle violet signale une comp\u00e9tence port\u00e9e par le travail au-del\u00e0 de la nature, et les cases hors diagonale s\u2019ouvrent quand nature et travail divergent.</p>
+        <div class="cph-cle4">
+          <div class="c4 c4-hg"><b>Tenues par l'effort</b><span>Vous les faites vivre au travail plus que votre nature ne les pousse.</span><em>Un rituel ou un outil les rendra moins co\u00fbteuses, et gardez un \u0153il sur votre \u00e9nergie.</em></div>
+          <div class="c4 c4-hd"><b>Vos forces</b><span>Votre nature les porte et votre travail le confirme.</span><em>Prenez les sujets o\u00f9 elles comptent, elles tiendront.</em></div>
+          <div class="c4 c4-bg"><b>En retrait</b><span>Les moins pr\u00e9sentes chez vous aujourd'hui.</span><em>Vous pouvez les laisser tranquilles, d\u00e9l\u00e9guer ou compenser, sauf si votre poste en d\u00e9pend.</em></div>
+          <div class="c4 c4-bd"><b>\u00c0 r\u00e9veiller</b><span>Votre nature en porte plus que votre travail n'en montre.</span><em>Une occasion par semaine suffit \u00e0 les r\u00e9veiller.</em></div>
+        </div>
+        <p class="cph-liaison">Et pourquoi ces seize comp\u00e9tences, pas d'autres :</p>
+        ${methodo}`;
     } catch (e) { console.warn("[Sinéa]", e); return ''; }
   }
 
@@ -955,7 +986,7 @@ const Result = (() => {
         <div class="r-section-tag">Vos pistes d'action</div>
         <div class="r-ia" id="ia-actions"><div class="r-ia-tag">L'IA propose, vous choisissez</div><p class="r-hint" style="margin-top:0">Sélectionnez les habitudes à développer.</p><div class="r-ia-loading"><span class="mini-spin"></span>Génération...</div></div>
         <div class="r-section-tag">Votre signature</div>
-        <div class="r-rare"><div class="r-rare-num">${rar.affichage || (rar.pct?rar.pct+'%':'')}</div><div class="r-rare-txt" id="pepite-rarete">${phraseSignature(res, rar)}</div></div>
+        <div id="combinaison-clef"></div>
       </div>
 
       ${speBlocHtml}
@@ -1009,7 +1040,7 @@ const Result = (() => {
         <div class="r-cloture-kicker">Fin de lecture</div>
         <h3 class="r-cloture-titre">Ce portrait est le vôtre.</h3>
         <p>Il vit désormais dans votre espace, avec votre plan d'action et votre coach.</p>
-        <div class="r-noter"><span class="r-noter-txt">Votre avis compte pour affiner Sinéa Profile.</span><button type="button" class="r-noter-btn" onclick="Result.ouvrirNotation()">Noter ce portrait</button></div>
+        <div class="r-noter"><span class="r-noter-txt">Une minute pour nous dire ce qu'il vaut, c'est ce qui le fait progresser.</span><button type="button" class="r-noter-btn" onclick="Result.ouvrirNotation()">Je donne mon avis</button></div>
         <button class="btn-primary btn-light r-cta-espace" onclick="App.goToEspace()">Accéder à mon espace</button>
       </div>
     `;
@@ -1608,6 +1639,7 @@ const Result = (() => {
     bloc.id = 'clarif-bloc';
     bloc.innerHTML =
       '<div class="r-bloc-head"><span class="r-bloc-tag">Pour affiner</span><h2>Une question sur mesure</h2></div>'
+      + '<p class="fk-but">Vos r\u00e9ponses h\u00e9sitent entre deux lectures sur un point pr\u00e9cis de votre profil. Votre r\u00e9ponse tranche, et le portrait s\u2019affine en cons\u00e9quence.</p>'
       + '<p class="clarif-intro">' + intro + '</p>'
       + '<div class="r-open">'
       + '<label class="r-open-q">' + clarif.question + '</label>'
@@ -3193,44 +3225,66 @@ const Result = (() => {
     const CLE = SINEA_DATA.familles_cle || {};
     if (!zone || !dom || !CLE[dom.famille]) return;
     const fam = dom.famille;
-    const f = CLE[fam];
-    const persos = Object.keys(SINEA_DATA.personnages)
-      .filter(function (id) { return SINEA_DATA.famille(id) === fam; })
-      .map(function (id) { return SINEA_DATA.personnages[id]; });
-    const monIdx = persos.findIndex(function (p) { return p.nom === dom.nom; });
-    const points = persos.map(function (p, i) { return '<s class="' + (i === monIdx ? 'on' : '') + '"></s>'; }).join('');
-    const rar = SINEA_DATA.raretePour(dom.nom);
-    const perso = SINEA_DATA.perso(dom.nom) || {};
     const ordre = ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'];
-    const quad = ordre.map(function (k) {
+    const persosDe = function (f2) {
+      return Object.keys(SINEA_DATA.personnages)
+        .filter(function (id) { return SINEA_DATA.famille(id) === f2; })
+        .map(function (id) { return { id: id, p: SINEA_DATA.personnages[id] }; });
+    };
+    const svgFam = function (g2, t2) {
+      return '<svg width="' + t2 + '" height="' + t2 + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + (g2.symbole || '') + '</svg>';
+    };
+    const voix = ordre.map(function (k) {
       const g = CLE[k];
-      return '<div class="fk-q" style="background:' + COULEURS_FAM_R[k] + ';opacity:' + (k === fam ? '1' : '.42') + '">'
-        + '<b>' + g.verbe + '</b><u>' + k.charAt(0) + k.slice(1).toLowerCase() + '</u><i>« ' + g.question + ' »</i>'
-        + (k === fam ? '<span class="fk-ici">VOUS ÊTES ICI</span>' : '') + '</div>';
-    }).join('');
-    const cinq = persos.map(function (p, i) {
-      const moi = i === monIdx;
-      return '<div class="' + (moi ? 'moi' : '') + '"><b>' + p.nom + (moi ? ' · vous' : '') + '</b><span>' + (p.verbe_signature || p.role || '') + '</span></div>';
+      const chips = persosDe(k).map(function (x) {
+        const moi = k === fam && x.p.nom === dom.nom;
+        return '<span class="fk-pn' + (moi ? ' moi' : '') + '"><img src="' + SINEA_DATA.image(x.id) + '" alt="" loading="lazy">'
+          + x.p.nom + (moi ? '<u>VOUS</u>' : '') + '</span>';
+      }).join('');
+      return '<div class="fk-voix' + (k === fam ? '' : ' loin') + '" style="--c:' + COULEURS_FAM_R[k] + ';--f:' + FONCE_FAM_R[k] + '">'
+        + '<div class="fk-vt"><span class="fk-ic">' + svgFam(g, 18) + '</span><b>' + k + '</b><u>' + g.verbe + '</u><i>\u00ab ' + g.question + ' \u00bb</i></div>'
+        + '<p class="fk-recit">' + g.recit + '</p>'
+        + '<div class="fk-chips">' + chips + '</div></div>';
     }).join('');
     const poster = ordre.map(function (k) {
       const g = CLE[k];
-      return '<div class="fk-cle-l"><div class="fk-cle-f" style="background:' + COULEURS_FAM_R[k] + '">' + g.verbe + '<i>« ' + g.question + ' »</i></div>'
+      return '<div class="fk-cle-l"><div class="fk-cle-f" style="background:' + COULEURS_FAM_R[k] + '">' + g.verbe + '<i>\u00ab ' + g.question + ' \u00bb</i></div>'
         + '<div class="fk-cle-t"><p><b>Lui parler.</b> ' + g.parler + '</p><p><b>Sous tension.</b> ' + g.tension + '</p></div></div>';
     }).join('');
-    zone.innerHTML = '<div class="fk-hero" style="background:linear-gradient(135deg,' + COULEURS_FAM_R[fam] + ',' + FONCE_FAM_R[fam] + ')">'
-      + '<div class="fk-k">VOTRE FAMILLE</div>'
-      + '<div class="fk-ligne"><h3>' + fam.charAt(0) + fam.slice(1).toLowerCase() + '</h3><span class="fk-verbe">' + f.verbe + '</span></div>'
-      + '<p class="fk-q2">Sa question : « ' + f.question + ' »</p>'
-      + '<p class="fk-ess">' + f.essence + '</p>'
-      + '<div class="fk-perso"><b>Dans cette famille, vous êtes ' + dom.nom + '</b>'
-      + '<i>' + (perso.verbe_signature ? 'verbe : ' + perso.verbe_signature : '') + (rar.niveau ? ' · profil ' + rar.niveau : '') + '</i>'
-      + '<div class="fk-pts">' + points + '<em>1 des ' + persos.length + ' personnages ' + fam.charAt(0) + fam.slice(1).toLowerCase() + '</em></div></div>'
-      + '</div>'
-      + '<div class="fk-quad">' + quad + '</div>'
-      + '<div class="fk-unir" style="border-left-color:' + COULEURS_FAM_R[fam] + '">'
-      + '<h4>La famille ' + fam.charAt(0) + fam.slice(1).toLowerCase() + ', ce qui vous unit</h4>'
-      + '<p class="fk-u">' + f.union + '</p><div class="fk-cinq">' + cinq + '</div></div>'
+    zone.innerHTML = '<div class="fk-prologue"><div class="fk-k">LES 4 FAMILLES</div><p>'
+      + (SINEA_DATA.familles_prologue || '') + '</p></div>'
+      + voix
+      + '<div class="fk-chute"><img src="' + SINEA_DATA.image(dom.nom) + '" alt="" style="border-color:' + COULEURS_FAM_R[fam] + '">'
+      + '<p>Ces quatre voix parlent en vous aussi, \u00e0 des volumes diff\u00e9rents. La plus forte, chez vous, c\u2019est <b>'
+      + fam.charAt(0) + fam.slice(1).toLowerCase() + '</b>. Et dans cette famille, vous \u00eates <b>' + dom.nom + '</b>, 1 des '
+      + persosDe(fam).length + ' personnages.</p></div>'
       + '<div class="fk-cle">' + poster + '</div>';
+  }
+
+  function poserCombinaison(res, rar){
+    const zone = document.getElementById('combinaison-clef');
+    if (!zone || !res || !res.dominante) return;
+    const trio = [res.dominante].concat(res.secondaires || []).slice(0, 3);
+    const blend = res.blend || {};
+    const parts = trio.map(function (t) {
+      return { nom: t.nom, fam: t.famille || SINEA_DATA.famille(t.nom), pct: blend[t.nom] || 0 };
+    });
+    const eq = parts.map(function (x) {
+      return '<span class="cb-p" style="--c:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.nom + '<i>' + x.pct + '%</i></span>';
+    }).join('<em>+</em>')
+      + '<em>=</em><span class="cb-r">cette combinaison<i>' + (rar && rar.pct ? rar.pct + '% des profils' : 'la v\u00f4tre') + '</i></span>';
+    const tailles = [132, 92, 72];
+    const persos = parts.map(function (x, i) {
+      return '<span class="cb-a"><img src="' + SINEA_DATA.image(x.nom) + '" alt="" style="width:' + tailles[i] + 'px;height:' + tailles[i] + 'px;border-color:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '"><b style="background:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.pct + '%</b></span>';
+    }).join('');
+    const combis = (rar && rar.surN) ? Number(rar.surN).toLocaleString('fr-FR') : '1\u00a0976';
+    const sur1000 = (rar && rar.pct) ? Math.max(1, Math.round(parseFloat(String(rar.pct).replace(',', '.')) * 10)) : null;
+    zone.innerHTML = '<div class="cb"><div class="cb-eq">' + eq + '</div>'
+      + '<div class="cb-trio">' + persos + '</div>'
+      + '<div class="cb-sig"><div class="cb-l1">' + combis + ' combinaisons possibles. La v\u00f4tre :</div>'
+      + '<div class="cb-combo">' + parts.map(function (x) { return '<s style="color:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.nom.replace(/^(Le |La |L\u2019|L')/, '') + ' ' + x.pct + '</s>'; }).join(' \u00b7 ') + '</div>'
+      + (sur1000 ? '<div class="cb-n">' + sur1000 + ' <em>personne' + (sur1000 > 1 ? 's' : '') + ' sur</em> 1\u00a0000 <em>la partage' + (sur1000 > 1 ? 'nt' : '') + '</em></div>' : '')
+      + '</div></div>';
   }
 
   function apresRender(res, mode){
@@ -3238,6 +3292,7 @@ const Result = (() => {
     try { construireEssentiel(res); } catch (e) {}
     try { setModeLecture(mode === 'spe' ? 'spe' : modeLecturePour(res)); } catch (e) {}
     try { poserFamilleClef(res); } catch (e) {}
+    try { poserCombinaison(res, res && res.dominante ? SINEA_DATA.raretePour(res.dominante.nom) : null); } catch (e) {}
     try { poserChapitres(); } catch (e) {}
     try { poserReperesReels(res); } catch (e) {}
   }

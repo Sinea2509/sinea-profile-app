@@ -84,7 +84,11 @@
     const n = (x) => (typeof x === 'number' ? x : Number(x));
     return {
       O: borne(n(bf.O) || 0), C: borne(n(bf.C) || 0), E: borne(n(bf.E) || 0),
-      A: borne(n(bf.A) || 0), S: borne(100 - (n(bf.N) || 50)),
+      A: borne(n(bf.A) || 0),
+      // Contrat du portail : N (névrosisme) prioritaire, S = 100 moins N.
+      // Tolérance : une stabilité S directe est acceptée, fini le S = 50
+      // fabriqué en silence quand l'appelant parle en stabilité.
+      S: borne(bf.N !== undefined && bf.N !== null && bf.N !== '' ? 100 - (n(bf.N) || 0) : (bf.S !== undefined && bf.S !== null && bf.S !== '' ? n(bf.S) || 0 : 50)),
     };
   }
 
@@ -118,7 +122,7 @@
         const vals = clesDims.map((k) => Number(dims[k])).filter((v) => !isNaN(v) && v >= 0 && v <= 100);
         if (vals.length) {
           const moyDims = vals.reduce((a, b) => a + b, 0) / vals.length;
-          expression = Math.round((expression * 0.6 + moyDims * 0.4) * 10) / 10;
+          expression = Math.round((expression * 0.45 + moyDims * 0.55) * 10) / 10;
         }
       }
       const zone = zoneDe(potentiel, expression);
@@ -273,7 +277,7 @@
   const NOTICE = {
     preambule: [
       "Le référentiel Sinéa comprend seize compétences réparties sur les quatre familles du modèle (Relation, Action, Structure, Vision). Chaque compétence est pondérée sur les cinq grands facteurs de personnalité (Big Five), le cadre le plus validé de la psychologie différentielle, dont la structure et la validité prédictive en contexte professionnel sont établies par des décennies de méta-analyses.",
-      "Le POTENTIEL d'une compétence est calculé sur le profil naturel : il traduit la facilité intrinsèque de développement, dans l'esprit des approches par les moteurs (dont TMA). L'EXPRESSION est calculée sur le profil adapté, le comportement déclaré en contexte de travail, affinée par les dimensions métier mesurées (délégation, feedback, cadrage, posture, closing, objection) lorsqu'elles existent, à hauteur de quarante pour cent.",
+      "Le POTENTIEL d'une compétence est calculé sur le profil naturel : il traduit la facilité intrinsèque de développement, dans l'esprit des approches par les moteurs (dont TMA). L'EXPRESSION est calculée sur le profil adapté, le comportement déclaré en contexte de travail, affinée par les dimensions métier mesurées (délégation, feedback, cadrage, posture, closing, objection) lorsqu'elles existent, à hauteur de cinquante-cinq pour cent : le comportement déclaré pèse plus lourd que la pente, c'est lui qui crée les divergences réelles entre nature et travail.",
       "Limites et calibration : les mesures sont auto-déclarées. Trois mécanismes de calibration les consolident : la fiabilité interne (cohérence des réponses, signaux de hasard), le miroir 360 (le regard agrégé des pairs, comparé à l'expression calculée), et, à mesure que le volume de passations le permet, les normes empiriques qui remplaceront les seuils absolus par des percentiles réels.",
     ],
     parComp: {

@@ -2656,3 +2656,115 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 .spar-sit{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
 .spar-sit-b{font-family:inherit;font-size:11.5px;font-weight:700;border:1.5px solid #E7E4DB;border-radius:18px;background:#fff;color:#221D45;padding:7px 11px;cursor:pointer;}
 .spar-sit-b.on{border-color:#221D45;background:#221D45;color:#fff;}
+
+/* ===== Le récit des familles : prologue, quatre voix, chute, poster ===== */
+.fk-prologue{background:radial-gradient(120% 90% at 20% 0%,#2b2460 0%,#221D45 55%,#181336 100%);border-radius:22px;padding:22px 20px;color:#fff;margin-bottom:12px;box-shadow:0 18px 44px rgba(23,19,54,.4);}
+.fk-k{font-size:10.5px;letter-spacing:3px;font-weight:800;color:#F6C477;margin-bottom:10px;}
+.fk-prologue p{font-size:15px;line-height:1.7;margin:0;}
+.fk-voix{background:#fff;border-radius:18px;overflow:hidden;margin-bottom:11px;box-shadow:0 1px 2px rgba(34,29,69,.06),0 12px 30px rgba(34,29,69,.1);}
+.fk-voix.loin{opacity:.78;}
+.fk-vt{display:flex;align-items:baseline;gap:10px;padding:12px 15px;color:#fff;background:repeating-linear-gradient(-58deg,var(--c) 0 14px,color-mix(in srgb,var(--c) 78%,#fff) 14px 17px);}
+.fk-vt b{font-size:15.5px;font-weight:800;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.2);}
+.fk-vt u{text-decoration:none;font-size:10px;font-weight:800;letter-spacing:1.5px;opacity:.95;}
+.fk-vt i{font-style:italic;font-size:11px;margin-left:auto;opacity:.95;text-align:right;}
+.fk-recit{font-size:13.5px;line-height:1.7;margin:0;padding:13px 15px 11px;}
+.fk-chips{display:flex;gap:7px;flex-wrap:wrap;padding:0 13px 13px;}
+.fk-pn{display:flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--c) 12%,#fff);border:1px solid color-mix(in srgb,var(--c) 45%,#fff);border-radius:20px;padding:3px 10px 3px 3px;font-size:10.5px;font-weight:700;color:#221D45;}
+.fk-pn img{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1.5px solid var(--c);}
+.fk-pn.moi{background:#221D45;border-color:#F6C477;color:#fff;box-shadow:0 0 0 2px #F6C477;font-weight:800;}
+.fk-pn.moi u{text-decoration:none;font-size:8px;letter-spacing:1.5px;color:#F6C477;margin-left:3px;}
+.fk-chute{background:linear-gradient(135deg,#2b2460,#221D45);border-radius:18px;padding:16px;color:#fff;display:flex;gap:13px;align-items:center;margin-bottom:11px;box-shadow:0 16px 40px rgba(23,19,54,.35);}
+.fk-chute img{width:58px;height:58px;border-radius:50%;object-fit:cover;border:3px solid;flex:none;}
+.fk-chute p{font-size:13px;line-height:1.65;margin:0;}
+.fk-chute b{color:#F6C477;}
+.fk-but{font-size:12.5px;line-height:1.6;background:#FBFAF7;border-left:3px solid #5E59C7;border-radius:0 12px 12px 0;padding:9px 13px;margin:8px 0 12px;}
+
+/* ===== La combinaison : équation, trio proportionnel, trois faits ===== */
+.cb{background:radial-gradient(120% 90% at 20% 0%,#2b2460 0%,#221D45 55%,#181336 100%);border-radius:22px;padding:20px 18px;color:#fff;box-shadow:0 18px 44px rgba(23,19,54,.4);}
+.cb-eq{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.cb-p{border-radius:13px;padding:8px 11px;font-size:11px;font-weight:600;background:rgba(255,255,255,.07);border:1px solid color-mix(in srgb,var(--c) 65%,transparent);}
+.cb-p i{font-style:normal;display:block;font-size:15px;font-weight:800;color:var(--c);}
+.cb-eq em{font-style:normal;align-self:center;font-weight:800;font-size:14px;color:rgba(255,255,255,.5);}
+.cb-r{border-radius:13px;padding:8px 11px;font-size:11px;font-weight:600;background:#F6C477;color:#221D45;}
+.cb-r i{font-style:normal;display:block;font-size:15px;font-weight:800;}
+.cb-trio{display:flex;align-items:flex-end;justify-content:center;gap:2px;margin-bottom:6px;}
+.cb-a{position:relative;display:inline-block;margin:0 -8px;}
+.cb-a img{border-radius:50%;object-fit:cover;border:4px solid;box-shadow:0 10px 26px rgba(0,0,0,.5);display:block;}
+.cb-a b{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:800;color:#fff;border-radius:11px;padding:2px 8px;box-shadow:0 4px 10px rgba(0,0,0,.4);}
+.cb-sig{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);text-align:center;}
+.cb-l1{font-size:12.5px;color:rgba(255,255,255,.6);}
+.cb-combo{font-size:14.5px;font-weight:800;margin:7px 0;}
+.cb-combo s{text-decoration:none;padding:0 2px;}
+.cb-n{font-size:30px;font-weight:800;color:#F6C477;letter-spacing:-.5px;}
+.cb-n em{font-style:normal;font-size:13px;font-weight:600;color:rgba(255,255,255,.6);}
+
+/* ===== Les compétences en héros ===== */
+.cph-liste{display:grid;gap:9px;margin-bottom:10px;}
+.cph{border-radius:15px;padding:12px 14px;color:#fff;display:flex;align-items:center;gap:11px;background:linear-gradient(120deg,var(--c),color-mix(in srgb,var(--c) 72%,#000));box-shadow:0 8px 20px color-mix(in srgb,var(--c) 38%,transparent);position:relative;overflow:hidden;}
+.cph:before{content:"";position:absolute;inset:0 auto 0 0;width:8px;background:repeating-linear-gradient(-45deg,rgba(255,255,255,.5) 0 5px,transparent 5px 10px);}
+.cph b{font-size:13.5px;flex:1;font-weight:800;}
+.cph u{text-decoration:none;font-size:8.5px;font-weight:800;letter-spacing:1.5px;background:rgba(255,255,255,.24);border-radius:9px;padding:4px 8px;}
+.cph-bar{width:70px;height:8px;border-radius:6px;background:rgba(255,255,255,.28);overflow:hidden;flex:none;}
+.cph-bar i{display:block;height:100%;background:#fff;border-radius:6px;}
+.cph-lien{font-family:inherit;font-size:12px;font-weight:700;color:#6E6A85;background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px 0;margin-bottom:8px;}
+
+/* ===== La légende des forces, et la matrice qui respire ===== */
+.fv-legende{font-size:11.5px;color:#5c5776;line-height:1.65;background:#FBFAF7;border:1px dashed #E7E4DB;border-radius:12px;padding:9px 12px;margin:8px 0 4px;}
+.fv-legende s{text-decoration:none;display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px -1px 2px;}
+.matrice-natadapt{overflow:visible;padding-bottom:14px;}
+.swot-grid{overflow:visible;padding-bottom:6px;}
+.swot-cell{overflow:visible;}
+
+/* ===== Les symboles des familles, tirés des récits ===== */
+.fk-ic{width:30px;height:30px;flex:none;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.65);border-radius:10px;display:grid;place-items:center;}
+.fk-ic svg{display:block;}
+.spar-fam-b{display:flex;align-items:center;gap:9px;}
+.spar-ic{width:26px;height:26px;flex:none;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.6);border-radius:9px;display:grid;place-items:center;}
+.spar-ic svg{display:block;}
+.spar-fam-txt{min-width:0;}
+
+/* ===== La v12 auditée : lecture, prochain pas, replis, méthodo, plan ===== */
+.esp-cp-lecture{font-size:13px;line-height:1.6;background:#F5F4F0;border-radius:12px;padding:10px 13px;margin:8px 0;}
+.esp-cp-pas{border-left:4px solid #E8951A;background:#FFF7EC;border-radius:0 12px 12px 0;padding:10px 13px;margin:0 0 10px;}
+.esp-cp-pas u{text-decoration:none;font-size:9.5px;letter-spacing:1.5px;font-weight:900;color:#E8951A;display:block;margin-bottom:3px;}
+.esp-cp-pas p{font-size:13px;line-height:1.55;margin:0;font-weight:600;}
+.esp-cp-plus{margin-top:6px;}
+.esp-cp-plus summary{font-size:11.5px;font-weight:700;color:#6E6A85;cursor:pointer;text-decoration:underline;text-underline-offset:3px;list-style:none;}
+.esp-cp-plus summary::-webkit-details-marker{display:none;}
+.esp-cp-plus[open] summary{margin-bottom:8px;}
+.planc-src{font-size:9px;font-weight:900;letter-spacing:1.2px;color:#fff;border-radius:8px;padding:3px 8px;}
+.cph-methodo{background:#fff;border:1px solid #E7E4DB;border-radius:16px;padding:14px;margin-bottom:12px;}
+.cph-methodo p{font-size:13px;line-height:1.65;margin:0 0 10px;}
+.cph-met-l{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;font-weight:700;background:#F5F4F0;border-radius:12px;padding:8px 11px;margin-bottom:7px;line-height:1.5;color:#221D45;}
+.cph-met-l svg{flex:none;margin-top:1px;color:var(--c);}
+.cph-met-src{font-size:10.5px;color:#9A96AD;margin:4px 0 0;}
+#cph-carte{margin-bottom:12px;}
+.cph-intro{font-size:13px;line-height:1.6;margin:0 0 10px;}
+.cph-liaison{font-size:12px;color:#6E6A85;line-height:1.55;margin:12px 0 8px;}
+.cph-legende{font-size:11.5px;color:#5c5776;line-height:1.65;background:#FBFAF7;border:1px dashed #E7E4DB;border-radius:12px;padding:9px 12px;margin:8px 0 0;}
+.cph-met-rh{font-size:11px;color:#6E6A85;margin:8px 0 0;line-height:1.6;}
+.cph-met-rh a{color:#221D45;font-weight:700;}
+.cph-cle4{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.c4{border-radius:14px;padding:10px 12px;font-size:11.5px;line-height:1.55;background:#fff;border:1px solid #E7E4DB;border-top:4px solid;}
+.c4 b{display:block;font-size:12.5px;margin-bottom:3px;}
+.c4 span{color:#5c5776;display:block;}
+.c4 em{font-style:normal;display:block;margin-top:5px;color:#221D45;font-weight:600;}
+.c4-hg{border-top-color:#5E59C7;}
+.c4-hd{border-top-color:#5B9E6B;}
+.c4-bg{border-top-color:#8A879B;}
+.c4-bd{border-top-color:#E8951A;}
+@media(max-width:520px){.cph-cle4{grid-template-columns:1fr;}}
+.planc-quand{font-size:10px;letter-spacing:1.4px;font-weight:900;color:#B3701A;text-transform:uppercase;margin:2px 0 4px;}
+.planc-nee{font-size:9px;font-weight:700;background:#EFEDE6;color:#5c5776;border-radius:8px;padding:3px 8px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.plan-src-tabs{display:flex;gap:7px;margin:12px 0 2px;flex-wrap:wrap;}
+.plan-src-tab{font-size:10px;font-weight:900;letter-spacing:1.2px;border:1px solid #E7E4DB;background:#fff;border-radius:10px;padding:7px 12px;color:#6E6A85;cursor:pointer;font-family:inherit;}
+.plan-src-tab.actif{background:#221D45;color:#fff;border-color:#221D45;}
+.mir-luc{background:radial-gradient(120% 90% at 20% 0%,#2b2460 0%,#221D45 60%,#181336 100%);border-radius:16px;padding:13px 15px;color:#fff;margin-bottom:12px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;}
+.mir-luc-k{font-size:9.5px;letter-spacing:2px;font-weight:900;color:#F6C477;}
+.mir-luc b{font-size:20px;font-weight:800;grid-row:span 2;text-align:right;}
+.mir-luc p{grid-column:1;font-size:11.5px;line-height:1.5;margin:0;color:rgba(255,255,255,.85);}
+.mir-merci-sym{font-size:26px;text-align:center;margin-bottom:6px;color:#5E59C7;}
+.plan-avenir{margin-top:12px;}
+.plan-avenir summary{font-size:11.5px;font-weight:800;color:#6E6A85;cursor:pointer;padding:9px 12px;background:#fff;border:1px solid #E7E4DB;border-radius:12px;list-style:none;}
+.plan-avenir summary::-webkit-details-marker{display:none;}
+.plan-avenir[open] summary{margin-bottom:10px;}

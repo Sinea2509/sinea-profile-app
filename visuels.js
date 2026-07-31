@@ -34,57 +34,66 @@
     const W = 640, H = opts.compact ? 470 : 540;
     const x0 = 64, x1 = 616, y0 = 40, y1 = H - 96;
     const SEU = (comps && comps.seuils) ? { potAppui: comps.seuils.pot, exprAppui: comps.seuils.expr } : ((window.Competences && window.Competences.SEUILS) || { potAppui: 62, exprAppui: 58 });
-    const seuilX = SEU.potAppui, seuilY = SEU.exprAppui;
-    // Le zoom : l'échelle se resserre sur la plage réelle des valeurs,
-    // seuils inclus, pour que les points respirent au lieu de s'agglutiner.
+    // Quatre cases de même taille, toujours : le centre est la moyenne.
+    // Mapping standardisé : chaque compétence est située dans le paysage
+    // de la personne. Coordonnée = 50 + 10 z, z calculé sur ses seize
+    // valeurs, dispersion plancher à 6 pour les profils très homogènes.
+    // Les chiffres absolus restent la vérité des fiches et des tooltips.
     const valsX = comps.map((c) => c.potentiel);
     const valsY = comps.map((c) => c.expression);
     if (opts.deltas) Object.values(opts.deltas).forEach((d2) => { if (d2 && typeof d2.apres === 'number') valsY.push(d2.apres); });
-    const domaine = (vals, seuil) => {
-      let lo = Math.min.apply(null, vals.concat([seuil])) - 7;
-      let hi = Math.max.apply(null, vals.concat([seuil])) + 7;
-      lo = Math.max(0, Math.floor(lo / 5) * 5);
-      hi = Math.min(100, Math.ceil(hi / 5) * 5);
-      if (hi - lo < 16) { const c2 = (hi + lo) / 2; lo = Math.max(0, c2 - 8); hi = Math.min(100, c2 + 8); }
-      return [lo, hi];
+    // Étirement min-max par côté : la plus basse touche un bord, la plus
+    // haute touche l'autre, la moyenne personnelle est le centre exact.
+    // L'occupation de la carte est garantie par construction, et mesurée
+    // par une garde géométrique en pixels.
+    const stat = (v) => { const m = v.reduce((a2, b2) => a2 + b2, 0) / v.length; return { m: m, lo: Math.min.apply(null, v), hi: Math.max.apply(null, v) }; };
+    const stX = stat(valsX), stY = stat(valsY);
+    const mx = Math.round((x0 + x1) / 2), my = Math.round((y0 + y1) / 2);
+    // Espace de sécurité : les points extrêmes gardent l'air du bord,
+    // halo compris, rien ne touche jamais le cadre.
+    const PAD = 18;
+    const cote = (v, st, c0, cM, c1) => {
+      if (st.hi - st.lo < 1) return cM;
+      if (v <= st.m) { const d = Math.max(0.5, st.m - st.lo); return Math.round(cM - (cM - c0 - PAD) * (st.m - v) / d); }
+      const d = Math.max(0.5, st.hi - st.m); return Math.round(cM + (c1 - cM - PAD) * (v - st.m) / d);
     };
-    const [dx0, dx1] = domaine(valsX, seuilX);
-    const [dy0, dy1] = domaine(valsY, seuilY);
-    const px = (v) => Math.round(x0 + (x1 - x0) * (Math.max(dx0, Math.min(dx1, v)) - dx0) / (dx1 - dx0));
-    const py = (v) => Math.round(y1 - (y1 - y0) * (Math.max(dy0, Math.min(dy1, v)) - dy0) / (dy1 - dy0));
-    const sx = px(seuilX), sy = py(seuilY);
+    const px = (v) => cote(v, stX, x0, mx, x1);
+    const py = (v) => { const r2 = cote(v, stY, y0, my, y1); return my + (my - r2); };
+    const seuilX = stX.m, seuilY = stY.m;
+    const sx = mx, sy = my;
     const grads = (a, b) => [a, Math.round((a * 2 + b) / 15) * 5, Math.round((a + b * 2) / 15) * 5, b].filter((v, i, t) => t.indexOf(v) === i);
 
     // Le fond : quatre zones aux teintes maison, coins doux
     let s = '<svg class="q16" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="La carte des ' + comps.length + ' compétences : potentiel contre expression, quatre zones">';
-    s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (sx - x0) + '" height="' + (sy - y0) + '" rx="14" fill="#5E59C7" opacity="0.07"/>';
-    s += '<rect x="' + sx + '" y="' + y0 + '" width="' + (x1 - sx) + '" height="' + (sy - y0) + '" rx="14" fill="#5B9E6B" opacity="0.11"/>';
-    s += '<rect x="' + x0 + '" y="' + sy + '" width="' + (sx - x0) + '" height="' + (y1 - sy) + '" rx="14" fill="#8A879B" opacity="0.07"/>';
-    s += '<rect x="' + sx + '" y="' + sy + '" width="' + (x1 - sx) + '" height="' + (y1 - sy) + '" rx="14" fill="#E8951A" opacity="0.10"/>';
+    // Les zones peintes sont celles du moteur (zoneDe) : neutre en fond,
+    // appui en haut à droite, opportunité en bas à droite, économie en bande.
+    const nb = { hd: 0, bd: 0, hg: 0, bg: 0 };
+    comps.forEach((c) => {
+      const d2 = c.potentiel >= seuilX, h2 = c.expression >= seuilY;
+      nb[d2 ? (h2 ? 'hd' : 'bd') : (h2 ? 'hg' : 'bg')] += 1;
+    });
+    s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (mx - x0) + '" height="' + (my - y0) + '" rx="14" fill="#B9B29B" opacity="0.08"/>';
+    s += '<rect x="' + mx + '" y="' + y0 + '" width="' + (x1 - mx) + '" height="' + (my - y0) + '" rx="14" fill="#5B9E6B" opacity="0.13"/>';
+    s += '<rect x="' + x0 + '" y="' + my + '" width="' + (mx - x0) + '" height="' + (y1 - my) + '" rx="14" fill="#B9B29B" opacity="0.05"/>';
+    s += '<rect x="' + mx + '" y="' + my + '" width="' + (x1 - mx) + '" height="' + (y1 - my) + '" rx="14" fill="#E8951A" opacity="0.12"/>';
     // Les noms de zones, discrets, aux angles
     const zone = (x, y, ancre, titre, coul, sousTitre) =>
       '<text x="' + x + '" y="' + y + '" text-anchor="' + ancre + '" font-size="12.5" font-weight="800" letter-spacing="0.06em" fill="' + coul + '">' + titre + '</text>'
       + (sousTitre ? '<text x="' + x + '" y="' + (y + 15) + '" text-anchor="' + ancre + '" font-size="10.5" fill="#8A879B">' + sousTitre + '</text>' : '');
-    s += zone(x1 - 10, y0 + 20, 'end', 'APPUIS', '#3E7C4F', 'à faire rayonner');
-    s += zone(x1 - 10, y1 - 22, 'end', 'OPPORTUNITÉS', '#8A5A00', 'le moteur est là, la pratique paie');
-    s += zone(x0 + 10, y0 + 20, 'start', 'SUR-RÉGIME', '#4A45A0', "exprimé au-delà de la nature");
-    s += zone(x0 + 10, y1 - 10, 'start', 'EN VEILLE', '#8A879B', '');
+    if (nb.hg) s += zone(x0 + 6, y0 - 12, 'start', 'PAR L\u2019EFFORT · ' + nb.hg, '#4A45A0', 'tenues par le quotidien');
+    s += zone(x1 - 6, y0 - 12, 'end', 'VOS FORCES · ' + nb.hd, '#3E7C4F', 'au-dessus de votre médiane');
+    s += zone(x0 + 6, y1 + 24, 'start', 'EN RETRAIT · ' + nb.bg, '#8A879B', 'vos moins portées aujourd\u2019hui');
+    if (nb.bd) s += zone(x1 - 6, y1 + 24, 'end', '\u00c0 R\u00c9VEILLER · ' + nb.bd, '#8A5A00', 'le moteur est là, la pratique paie');
     // Les lignes de seuil, en pointillé doux
     s += '<line x1="' + sx + '" y1="' + y0 + '" x2="' + sx + '" y2="' + y1 + '" stroke="#C9C6BB" stroke-width="1" stroke-dasharray="3 5"/>';
     s += '<line x1="' + x0 + '" y1="' + sy + '" x2="' + x1 + '" y2="' + sy + '" stroke="#C9C6BB" stroke-width="1" stroke-dasharray="3 5"/>';
     // Les axes, avec graduations fines
     s += '<line x1="' + x0 + '" y1="' + y1 + '" x2="' + x1 + '" y2="' + y1 + '" stroke="#B0AEB8" stroke-width="1.2"/>';
     s += '<line x1="' + x0 + '" y1="' + y1 + '" x2="' + x0 + '" y2="' + y0 + '" stroke="#B0AEB8" stroke-width="1.2"/>';
-    grads(dx0, dx1).forEach((g) => {
-      s += '<line x1="' + px(g) + '" y1="' + y1 + '" x2="' + px(g) + '" y2="' + (y1 + 5) + '" stroke="#B0AEB8" stroke-width="1"/>'
-        + '<text x="' + px(g) + '" y="' + (y1 + 18) + '" text-anchor="middle" font-size="10" fill="#8A879B">' + g + '</text>';
-    });
-    grads(dy0, dy1).forEach((g) => {
-      s += '<line x1="' + (x0 - 5) + '" y1="' + py(g) + '" x2="' + x0 + '" y2="' + py(g) + '" stroke="#B0AEB8" stroke-width="1"/>'
-        + '<text x="' + (x0 - 9) + '" y="' + (py(g) + 3) + '" text-anchor="end" font-size="10" fill="#8A879B">' + g + '</text>';
-    });
-    s += '<text x="' + Math.round((x0 + x1) / 2) + '" y="' + (y1 + 40) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#4A4A52">' + ech(opts.titreX || 'Potentiel · votre nature profonde') + '</text>';
-    s += '<text x="20" y="' + Math.round((y0 + y1) / 2) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#4A4A52" transform="rotate(-90 20 ' + Math.round((y0 + y1) / 2) + ')">' + ech(opts.titreY || 'Expression · au travail') + '</text>';
+    /* graduations retirées : coordonnées standardisées, les chiffres vrais vivent dans les tooltips */
+    /* graduations retirées : coordonnées standardisées, les chiffres vrais vivent dans les tooltips */
+    s += '<text x="' + Math.round((x0 + x1) / 2) + '" y="' + (y1 + 42) + '" text-anchor="middle" font-size="11" font-weight="800" fill="#4A4A52">' + ech(opts.titreX || 'VOTRE NATURE \u2192') + '</text>';
+    s += '<text x="20" y="' + Math.round((y0 + y1) / 2) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#4A4A52" transform="rotate(-90 20 ' + Math.round((y0 + y1) / 2) + ')">' + ech(opts.titreY || 'VOTRE TRAVAIL \u2191') + '</text>';
 
     // Le choix des étiquettes : celles qui comptent, sans collision
     const parZone = { appui: [], opportunite: [], economie: [], neutre: [] };
@@ -118,7 +127,8 @@
       const attrsMv = dAv ? ' class="q16-pt q16-mv" data-cy0="' + py(dAv.avant) + '" data-cy1="' + cy + '"' : ' class="q16-pt"';
       const r = taille && taille[c.id] ? Math.min(13, 6 + taille[c.id] * 1.6) : 7;
       const coul = fams[c.famille] || '#8A879B';
-      pts += '<g' + attrsMv + ' data-comp="' + c.id + '" data-pot="' + Math.round(c.potentiel) + '" data-expr="' + Math.round(c.expression) + '" data-zone="' + (c.zone || '') + '"' + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
+      pts += '<g' + attrsMv + ' data-comp="' + c.id + '" data-pot="' + Math.round(c.potentiel) + '" data-expr="' + Math.round(c.expression) + '" data-zone="' + (c.zone || '') + '" data-case="' + ((c.potentiel >= seuilX) ? (c.expression >= seuilY ? 'hd' : 'bd') : (c.expression >= seuilY ? 'hg' : 'bg')) + '"' + (opts.clic ? ' onclick="' + opts.clic + '(&quot;' + c.id + '&quot;)" style="cursor:pointer;animation-delay:' + (0.05 * i).toFixed(2) + 's"' : ' style="animation-delay:' + (0.05 * i).toFixed(2) + 's"') + '>'
+        + ((c.expression - c.potentiel >= 8) ? '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.72 + 6).toFixed(1) + '" fill="none" stroke="#5E59C7" stroke-opacity="0.4" stroke-width="2"/>' : '')
         + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.72 + 1.6).toFixed(1) + '" fill="#FDFCF8" opacity="0.95"/>'
         + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.72).toFixed(1) + '" fill="' + coul + '"/>'
         + '<title>' + ech(c.nom) + ' · potentiel ' + Math.round(c.potentiel) + ' · expression ' + Math.round(c.expression) + '</title></g>';
@@ -173,7 +183,8 @@
     container.addEventListener('mousemove', function (e) {
       const g = e.target.closest && e.target.closest('[data-comp]');
       if (!g || !g.hasAttribute('data-pot')) { tip.style.display = 'none'; return; }
-      tip.innerHTML = '<b>' + ech(g.getAttribute('data-nom') || g.getAttribute('data-comp')) + '</b><span>Potentiel ' + g.getAttribute('data-pot') + ' \u00b7 Expression ' + g.getAttribute('data-expr') + '</span><i>' + (ZONES[g.getAttribute('data-zone')] || '') + '</i>';
+      const CASES = { hd: 'Force : nature et travail au-dessus de votre moyenne personnelle.', hg: 'Port\u00e9e par votre travail plus que par votre nature.', bd: '\u00c0 r\u00e9veiller : le moteur d\u00e9passe l\u2019usage, la pratique paie.', bg: 'En retrait, la moins pr\u00e9sente chez vous aujourd\u2019hui.' };
+      tip.innerHTML = '<b>' + ech(g.getAttribute('data-nom') || g.getAttribute('data-comp')) + '</b><span>Potentiel ' + g.getAttribute('data-pot') + ' \u00b7 Expression ' + g.getAttribute('data-expr') + '</span><i>' + (CASES[g.getAttribute('data-case')] || ZONES[g.getAttribute('data-zone')] || '') + '</i>';
       tip.style.display = 'block';
       tip.style.left = Math.min(window.innerWidth - 200, e.clientX + 14) + 'px';
       tip.style.top = (e.clientY + 16) + 'px';
@@ -256,7 +267,10 @@
         + (defs[c.id] ? '<p class="fv-def">' + ech(defs[c.id]) + '</p>' : '')
         + '</div>';
     };
-    return '<p class="fv-intro">Vos forces sont les compétences que votre nature alimente le plus fortement, celles où vous êtes fait pour briller. Vos vigilances sont celles qui vous demandent plus d\'effort : les connaître suffit souvent à les piloter. Le chiffre est votre potentiel sur 100.</p><div class="fv">'
+    return '<p class="fv-intro">Vos forces sont les compétences que votre nature alimente le plus fortement, celles où vous êtes fait pour briller. Vos vigilances sont celles qui vous demandent plus d\'effort : les connaître suffit souvent à les piloter. Le chiffre est votre potentiel sur 100.</p>'
+      + '<div class="fv-legende"><b>Comment lire.</b> La couleur indique la famille de la comp\u00e9tence, '
+      + Object.keys(fams).map(function(f2){ return '<s style="background:' + fams[f2] + '"></s>' + f2.charAt(0) + f2.slice(1).toLowerCase(); }).join(', ')
+      + '. Une barre pleine dit une force, une barre ray\u00e9e dit une vigilance, la comp\u00e9tence qui demande plus d\u2019effort.</div><div class="fv">'
       + '<div class="fv-col"><div class="fv-titre fv-titre-f">Vos cinq forces</div>' + forces.map((c) => barre(c, false)).join('') + '</div>'
       + '<div class="fv-col"><div class="fv-titre fv-titre-v">Vos points de vigilance</div>' + vig.slice(0, 3).map((c) => barre(c, true)).join('')
       + '<p class="fv-note">Une vigilance est une compétence moins naturelle chez vous : la connaître suffit souvent à la piloter.</p></div>'
