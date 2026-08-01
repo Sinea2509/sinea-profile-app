@@ -1739,7 +1739,7 @@ const App = (() => {
     if (mir && mir.prediction) {
       const p = mir.prediction;
       return '<div class="pari-bloc pari-scelle"><div class="esp-cp-titre">Votre pronostic est scellé</div><p class="pari-p">Vous découvrirez votre score de lucidité dès trois regards reçus.</p><div class="pari-vals">'
-        + AXES_PARI.map(function (a) { return '<span>' + a[1] + ' <b>' + (typeof p[a[0]] === 'number' ? p[a[0]] : '·') + '</b></span>'; }).join('') + '</div></div>';
+        + AXES_PARI.map(function (a) { return '<span class="pari-val">' + a[1] + '<b>' + (typeof p[a[0]] === 'number' ? p[a[0]] : '·') + '</b></span>'; }).join('') + '</div></div>';
     }
     return '<div class="pari-bloc"><div class="esp-cp-titre">Avant leurs regards, le vôtre</div>'
       + '<p class="pari-p">Trente secondes, cinq curseurs, avant que leurs réponses n\'arrivent.</p>'
@@ -1798,7 +1798,7 @@ const App = (() => {
       slot.innerHTML = `<div class="esp-rem esp-mir">
         <div class="esp-rem-kicker">Mon regard 360</div>
         <div class="esp-rem-titre">Le regard de vos collègues</div>
-        <p class="esp-rem-txt">Invitez deux collègues à répondre à cinq questions, une minute, réponses anonymes. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
+        <p class="esp-rem-txt">Invitez trois collègues à répondre à cinq questions, une minute, réponses anonymes. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
         ${guideMiroirHtml()}<button type="button" class="esp-rem-btn" id="esp-mir-init">Créer mon lien d'invitation</button>
       </div>`;
       const b = document.getElementById('esp-mir-init');
@@ -1822,14 +1822,22 @@ const App = (() => {
     const pariHtml = pariMiroirHtml(mir);
     const blocLien = guideMiroirHtml() + `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
     if (reponses.length < 3) {
-      const attente = reponses.length === 1
-        ? '1 réponse reçue. L\'analyse s\'ouvre à la deuxième, pour préserver l\'anonymat.'
-        : 'Aucune réponse pour l\'instant. Envoyez ce lien à deux collègues, leurs réponses restent anonymes.';
+      const attente = reponses.length === 2
+        ? '2 réponses reçues. L\'analyse s\'ouvre à la troisième, pour préserver l\'anonymat.'
+        : reponses.length === 1
+          ? '1 réponse reçue. L\'analyse s\'ouvre à la troisième, pour préserver l\'anonymat.'
+          : 'Aucune réponse pour l\'instant. Envoyez ce lien à trois collègues, leurs réponses restent anonymes.';
+      const n3 = reponses.length;
+      const pastilles = [0, 1, 2].map(function (i2) { return '<i class="mirh-p' + (i2 < n3 ? ' ok' : '') + '"></i>'; }).join('');
+      const lienHtml = `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
       slot.innerHTML = `<div class="esp-rem esp-mir">
-        <div class="esp-rem-kicker">Mon regard 360</div>
-        <div class="esp-rem-titre">Le regard de vos collègues</div>
-        <p class="esp-rem-txt">${attente}</p>
-        ${mir.prediction ? blocLien + pariHtml : pariHtml + blocLien}
+        <div class="mirh"><div class="esp-rem-kicker">Mon regard 360</div>
+          <div class="mirh-ligne"><span class="mirh-n">${n3}<small> / 3</small></span><span class="mirh-ps">${pastilles}</span></div>
+          <p class="mirh-txt">${attente}</p></div>
+        <div class="mir-et"><u>ÉTAPE 1 · INVITER</u>${lienHtml}
+          <details class="mir-msgs"><summary>Les trois messages prêts à envoyer, et à qui demander</summary>${guideMiroirHtml()}</details></div>
+        <div class="mir-et"><u>ÉTAPE 2 · VOTRE PRONOSTIC</u>${pariHtml}</div>
+        ${c360Html()}
       </div>`;
     } else {
       const percu = agregerMiroir(reponses);
@@ -4240,6 +4248,226 @@ const App = (() => {
 
 // Personnaliser l'accueil dès le chargement (questions, étapes, type)
 // Exposer App globalement (pour que result.js puisse appeler App.sauverAnalyse, App.getPrenom, etc.)
+
+  // ============================================================
+  // 360 Pro , palier 1 lot 2 : répondant, création, tableau de bord.
+  // ============================================================
+  const C360_URL = API_BASE + "/c360";
+  const C360_MG = [
+    ['mg_delegation', 'Délègue des sujets entiers, avec le pourquoi'],
+    ['mg_dev', 'Fait grandir ses collègues par un feedback régulier'],
+    ['mg_decision', 'Tranche dans un délai raisonnable, même sans consensus'],
+  ];
+  const c360Rep = { jeton: '', role: '', items: [], notes: {}, sur: {}, mg: {} };
+  const c360Crea = { auto: {} };
+  function c360Email() {
+    return (window.dataEspaceCourant && dataEspaceCourant.email) || window.prompt('Votre email de compte Sinéa') || '';
+  }
+  function c360Post(body) {
+    return fetch(C360_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+  }
+  function c360EchHtml(cle, groupe) {
+    const b = function (v, lab) { return '<button type="button" class="c360-n" data-g="' + groupe + '" data-k="' + cle + '" data-v="' + v + '" onclick="App.c360.note(this)">' + lab + '</button>'; };
+    return '<div class="c360-ech">' + b(1, '1') + b(2, '2') + b(3, '3') + b(4, '4') + b(5, '5') + b(0, 'pas observé') + '</div>';
+  }
+  function rendreC360Repondant(jeton) {
+    c360Rep.jeton = jeton;
+    document.body.innerHTML = '<div class="c360-page"><div class="c360-tete"><div class="c360-k">FEEDBACK 360 · SINÉA</div><h1>Votre regard compte, six minutes</h1><p>Réponses agrégées, jamais individuelles. Notez ce que vous observez vraiment.</p></div><div id="c360-corps"><p class="c360-charge">Chargement…</p></div></div>';
+    c360Post({ action: 'contexte', jeton: jeton }).then(function (ctx) {
+      const corps = document.getElementById('c360-corps');
+      if (!ctx || ctx.erreur) { corps.innerHTML = '<p class="c360-charge">' + echapValeur((ctx && ctx.erreur) || 'Lien invalide.') + '</p>'; return; }
+      if (ctx.deja) { corps.innerHTML = '<div class="mir-merci-sym">✦</div><p class="c360-charge">Votre regard est déjà enregistré, merci.</p>'; return; }
+      c360Rep.role = ctx.role; c360Rep.items = ctx.items || [];
+      const ordre = ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'];
+      let h = '';
+      ordre.forEach(function (f) {
+        h += '<div class="c360-fam" style="--c:' + ((window.Competences.COULEURS_FAMILLES || {})[f] || '#8A879B') + '">' + f + '</div>';
+        window.Competences.REFERENTIEL.filter(function (r2) { return r2.famille === f; }).forEach(function (r2) {
+          h += '<div class="c360-item"><b>' + echapValeur(r2.nom) + '</b><span>' + echapValeur(r2.def) + '</span>' + c360EchHtml(r2.id, 'notes') + '</div>';
+        });
+      });
+      if (c360Rep.items.length) {
+        h += '<div class="c360-fam" style="--c:#B3701A">◆ SON POSTE</div>';
+        c360Rep.items.forEach(function (it, i) {
+          h += '<div class="c360-item"><b>' + echapValeur(it.intitule) + '</b><span>' + echapValeur(it.item) + '</span>' + c360EchHtml('i' + i, 'sur') + '</div>';
+        });
+      }
+      if (ctx.role === 'manager') {
+        h += '<div class="c360-fam" style="--c:#221D45">VOTRE REGARD DE MANAGER</div>';
+        C360_MG.forEach(function (m2) { h += '<div class="c360-item"><b>' + m2[1] + '</b>' + c360EchHtml(m2[0], 'mg') + '</div>'; });
+      }
+      h += '<div class="c360-fam" style="--c:#5E59C7">DEUX QUESTIONS OUVERTES</div>'
+        + '<div class="c360-item"><b>Un geste à continuer</b><textarea id="c360-continuer" rows="2"></textarea></div>'
+        + '<div class="c360-item"><b>Un geste à oser</b><textarea id="c360-oser" rows="2"></textarea></div>'
+        + '<button type="button" class="c360-envoi" onclick="App.c360.envoyer()">Envoyer mon regard</button>';
+      corps.innerHTML = h;
+      const total = 16 + c360Rep.items.length + (ctx.role === 'manager' ? 3 : 0);
+      const compte = document.getElementById('c360-compte');
+      if (compte) compte.textContent = total + ' comportements à situer, six minutes environ.';
+    });
+  }
+  function c360Envoyer() {
+    const corps = document.getElementById('c360-corps');
+    c360Post({
+      action: 'repondre', jeton: c360Rep.jeton,
+      notes: c360Rep.notes, surMesure: c360Rep.sur, managerExtra: c360Rep.mg,
+      ouvertes: { continuer: (document.getElementById('c360-continuer') || {}).value || '', oser: (document.getElementById('c360-oser') || {}).value || '' },
+    }).then(function (r2) {
+      corps.innerHTML = r2 && r2.ok
+        ? '<div class="mir-merci-sym">✦</div><div class="esp-rem-titre">Merci, votre regard compte.</div><p class="c360-charge">Anonyme, agrégé avec les autres regards de son rôle.</p>'
+        : '<p class="c360-charge">' + echapValeur((r2 && r2.erreur) || 'Envoi impossible, réessayez.') + '</p>';
+    });
+  }
+  function c360Note(btn) {
+    const g = btn.getAttribute('data-g'), k = btn.getAttribute('data-k'), v = Number(btn.getAttribute('data-v'));
+    const cible = g === 'notes' ? c360Rep.notes : g === 'sur' ? c360Rep.sur : c360Rep.mg;
+    if (v === 0) delete cible[k]; else cible[k] = v;
+    const freres = btn.parentElement.querySelectorAll('.c360-n');
+    freres.forEach(function (b2) { b2.classList.remove('on'); });
+    btn.classList.add('on');
+    btn.closest('.c360-item').classList.add('fait');
+  }
+  function c360Html() {
+    const c = ((((window.dataEspaceCourant || {}).interactions || {}).socle || {}).c360) || {};
+    const camp = (c.campagnes || [])[0];
+    if (!camp) {
+      return '<div class="c360-carte"><div class="c360-k">360 PRO · OPTION</div><b>La campagne par rôles, socle + votre fiche de poste</b>'
+        + '<p>Manager, pairs, équipe, externes, rapport séparé par regard, items sur mesure extraits de la fiche de poste.</p>'
+        + '<button type="button" class="esp-rem-btn" onclick="App.c360.ouvrirCreation()">Créer une campagne</button></div>';
+    }
+    let h = '<div class="c360-carte"><div class="c360-k">360 PRO · CAMPAGNE EN COURS</div>';
+    Object.keys(camp.roles || {}).forEach(function (r2) {
+      const inv = camp.roles[r2] || []; if (!inv.length) return;
+      const rep = (camp.reponses || []).filter(function (x) { return x.role === r2; }).length;
+      h += '<div class="c360-prog"><span>' + r2 + '</span><i><em style="width:' + Math.round(100 * rep / inv.length) + '%"></em></i><small>' + rep + ' / ' + inv.length + '</small>'
+        + inv.filter(function (i2) { return !i2.repondu; }).map(function (i2) { return '<button type="button" class="c360-rel" onclick="App.c360.relancer(\'' + i2.jeton + '\')">relancer</button>'; }).join('') + '</div>';
+    });
+    h += c360Pret(camp) ? '<button type="button" class="c360-envoi" style="margin-top:10px" onclick="App.c360.rapport()">Ouvrir le rapport</button>' : '<p class="c360-charge" style="text-align:left;padding:6px 0 0">Le rapport se débloque quand chaque rôle atteint son seuil.</p>';
+    return h + '<div id="c360-rap"></div></div>';
+  }
+  function c360OuvrirCreation() {
+    const slot = document.querySelector('.esp-mir') || document.body;
+    slot.insertAdjacentHTML('beforeend', '<div class="c360-carte" id="c360-crea"><div class="c360-k">NOUVELLE CAMPAGNE 360 PRO</div>'
+      + ['manager', 'pairs', 'equipe', 'externes'].map(function (r2) { return '<label class="c360-lab">' + r2 + ' · emails séparés par des virgules</label><input type="text" class="c360-in" id="c360-r-' + r2 + '">'; }).join('')
+      + '<label class="c360-lab">La fiche de poste, collée</label><textarea class="c360-in" id="c360-fiche" rows="4"></textarea>'
+      + '<button type="button" class="esp-rem-btn" onclick="App.c360.proposer()">Proposer les items du poste</button>'
+      + '<div id="c360-items"></div>'
+      + '<button type="button" class="c360-envoi" onclick="App.c360.lancer()">Lancer la campagne</button>'
+      + '<div id="c360-liens"></div></div>');
+  }
+  function c360Proposer() {
+    const zone = document.getElementById('c360-items');
+    zone.innerHTML = '<p class="c360-charge">Extraction en cours…</p>';
+    c360Post({ action: 'items_fiche', fiche: (document.getElementById('c360-fiche') || {}).value || '' }).then(function (r2) {
+      if (!r2 || r2.erreur || !r2.items) { zone.innerHTML = '<p class="c360-charge">' + echapValeur((r2 && r2.erreur) || 'Extraction indisponible.') + '</p>'; return; }
+      zone.innerHTML = r2.items.map(function (it, i) {
+        return '<div class="c360-item-ed"><input type="text" class="c360-in" value="' + echapValeur(it.intitule) + '" data-ci="' + i + '"><textarea class="c360-in" rows="2" data-cx="' + i + '">' + echapValeur(it.item) + '</textarea><div class="c360-lab" style="margin:2px 0 3px">Votre auto-note</div><div class="c360-ech c360-mini">' + [1, 2, 3, 4, 5].map(function (v2) { return '<button type="button" class="c360-n" data-a="' + i + '" data-v="' + v2 + '" onclick="App.c360.autoNote(this)">' + v2 + '</button>'; }).join('') + '</div><button type="button" class="c360-rel" onclick="this.parentElement.remove()">retirer</button></div>';
+      }).join('');
+    });
+  }
+  function c360Lancer() {
+    const roles = {};
+    ['manager', 'pairs', 'equipe', 'externes'].forEach(function (r2) {
+      roles[r2] = ((document.getElementById('c360-r-' + r2) || {}).value || '').split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+    });
+    const items = Array.prototype.map.call(document.querySelectorAll('#c360-items .c360-item-ed'), function (ed) {
+      return { intitule: ed.querySelector('[data-ci]').value, item: ed.querySelector('[data-cx]').value };
+    });
+    c360Post({ action: 'creer', email: c360Email(), roles: roles, items: items, autoEval: { surMesure: c360Crea.auto }, fiche: (document.getElementById('c360-fiche') || {}).value || '' }).then(function (r2) {
+      const zone = document.getElementById('c360-liens');
+      if (!r2 || r2.erreur) { zone.innerHTML = '<p class="c360-charge">' + echapValeur((r2 && r2.erreur) || 'Création impossible.') + '</p>'; return; }
+      const base = location.origin + location.pathname;
+      zone.innerHTML = '<div class="c360-k" style="margin-top:10px">LES LIENS À ENVOYER</div>' + r2.invites.map(function (i2) {
+        return '<div class="c360-lien"><span>' + echapValeur(i2.role) + ' · ' + echapValeur(i2.email) + '</span><input type="text" class="c360-in" readonly value="' + base + '?c360=' + i2.jeton + '"></div>';
+      }).join('');
+    });
+  }
+  function c360Relancer(jeton) {
+    c360Post({ action: 'relancer', email: c360Email(), jeton: jeton, lienBase: location.origin + location.pathname }).then(function (r2) {
+      window.alert(r2 && r2.ok ? 'Relance envoyée, la ' + r2.relances + 'e.' : 'Relance impossible.');
+    });
+  }
+
+  // ---- Lot 3 : le rapport par rôle, calculé sur place ----
+  function c360Pret(camp) {
+    return Object.keys(camp.roles || {}).every(function (r2) {
+      const inv = camp.roles[r2] || []; if (!inv.length) return true;
+      return (camp.reponses || []).filter(function (x) { return x.role === r2; }).length >= (r2 === 'manager' ? 1 : 2);
+    });
+  }
+  function c360Moy(reps, cle, groupe) {
+    const vals = reps.map(function (x) { return ((groupe === 'sur' ? x.surMesure : x.notes) || {})[cle]; }).filter(function (v) { return typeof v === 'number'; });
+    if (!vals.length) return null;
+    return Math.round(vals.reduce(function (a2, b2) { return a2 + b2; }, 0) / vals.length * 20);
+  }
+  function c360ColsRoles(camp) {
+    // Anonymat : un rôle non manager sous deux réponses est fusionné dans "autres".
+    const cols = []; const autres = [];
+    ['manager', 'pairs', 'equipe', 'externes'].forEach(function (r2) {
+      const reps = (camp.reponses || []).filter(function (x) { return x.role === r2; });
+      if (!reps.length) return;
+      if (r2 !== 'manager' && reps.length < 2) { autres.push.apply(autres, reps); return; }
+      cols.push({ nom: r2, reps: reps });
+    });
+    if (autres.length) cols.push({ nom: 'autres', reps: autres });
+    return cols;
+  }
+  function c360Rapport() {
+    const camp = (((((window.dataEspaceCourant || {}).interactions || {}).socle || {}).c360) || {}).campagnes[0];
+    if (!camp) return;
+    const cols = c360ColsRoles(camp);
+    const profil = (((window.dataEspaceCourant || {}).analyses || {}).socle || {}).profil || {};
+    const comps = window.Competences.scorer(profil.bigFive || profil.big_five || {}, profil.ecarts || {}, profil.dims || {});
+    const selfDe = {}; comps.forEach(function (c2) { selfDe[c2.id] = Math.round(c2.expression); });
+    const lignes = window.Competences.REFERENTIEL.map(function (r2) {
+      const parRole = cols.map(function (c2) { return { nom: c2.nom, v: c360Moy(c2.reps, r2.id, 'notes') }; }).filter(function (x) { return x.v !== null; });
+      if (!parRole.length) return null;
+      const eux = Math.round(parRole.reduce(function (a2, b2) { return a2 + b2.v; }, 0) / parRole.length);
+      return { nom: r2.nom, self: selfDe[r2.id], eux: eux, parRole: parRole, ecart: eux - (selfDe[r2.id] || 0) };
+    }).filter(Boolean).sort(function (a2, b2) { return Math.abs(b2.ecart) - Math.abs(a2.ecart); });
+    const ligneHtml = function (l) {
+      const badge = l.ecart >= 10 ? '<u class="c360-b c360-b-vert">FORCE CACHÉE</u>' : l.ecart <= -10 ? '<u class="c360-b c360-b-amb">À RENDRE VISIBLE</u>' : '';
+      return '<div class="c360-rl"><b>' + echapValeur(l.nom) + '</b>' + badge
+        + '<div class="c360-rd"><i style="width:' + l.eux + '%"></i>' + (typeof l.self === 'number' ? '<em style="left:' + l.self + '%"></em>' : '') + '</div>'
+        + '<small>vous ' + (typeof l.self === 'number' ? l.self : '·') + ' · ' + l.parRole.map(function (x) { return x.nom + ' ' + x.v; }).join(' · ') + '</small></div>';
+    };
+    const poste = (camp.items || []).map(function (it, i) {
+      const parRole = cols.map(function (c2) { return { nom: c2.nom, v: c360Moy(c2.reps, 'i' + i, 'sur') }; }).filter(function (x) { return x.v !== null; });
+      if (!parRole.length) return '';
+      const autoV = ((camp.autoEval || {}).surMesure || {})['i' + i];
+      return '<div class="c360-rl"><b>' + echapValeur(it.intitule) + '</b><small>' + (typeof autoV === 'number' ? 'vous ' + autoV * 20 + ' · ' : '') + parRole.map(function (x) { return x.nom + ' ' + x.v; }).join(' · ') + '</small></div>';
+    }).join('');
+    const verbatims = (camp.reponses || []).map(function (x) { return x.ouvertes || {}; });
+    const vHtml = function (cle, titre) {
+      const l2 = verbatims.map(function (o2) { return (o2[cle] || '').trim(); }).filter(Boolean);
+      return l2.length ? '<div class="c360-vt"><b>' + titre + '</b>' + l2.map(function (t2) { return '<p>« ' + echapValeur(t2) + ' »</p>'; }).join('') + '</div>' : '';
+    };
+    const defis = lignes.filter(function (l) { return l.ecart <= -10; }).slice(0, 3).map(function (l) {
+      const ref = window.Competences.REFERENTIEL.filter(function (r2) { return r2.nom === l.nom; })[0] || {};
+      return '<div class="c360-defi"><span class="planc-src" style="background:#B3701A">360 PRO</span><b>' + echapValeur(l.nom) + ', la rendre visible</b><p>' + echapValeur((ref.progresser || [])[0] || 'Un geste observable cette semaine, raconté au coach.') + '</p></div>';
+    }).join('');
+    const zone = document.getElementById('c360-rap') || (function () { const d = document.createElement('div'); d.id = 'c360-rap'; (document.querySelector('.c360-carte') || document.body).appendChild(d); return d; })();
+    zone.innerHTML = '<div class="c360-k" style="margin-top:12px">LE RAPPORT · VOUS, VU PAR EUX</div>'
+      + lignes.slice(0, 6).map(ligneHtml).join('')
+      + (poste ? '<div class="c360-k" style="margin-top:10px">◆ LE POSTE</div>' + poste : '')
+      + vHtml('continuer', 'À continuer, selon eux') + vHtml('oser', 'À oser, selon eux')
+      + (defis ? '<div class="c360-k" style="margin-top:10px">TROIS DÉFIS PROPOSÉS</div>' + defis : '')
+      + '<button type="button" class="esp-rem-btn" onclick="window.print()">Imprimer le rapport</button>';
+  }
+  function c360AutoNote(btn) {
+    c360Crea.auto['i' + btn.getAttribute('data-a')] = Number(btn.getAttribute('data-v'));
+    btn.parentElement.querySelectorAll('.c360-n').forEach(function (b2) { b2.classList.remove('on'); });
+    btn.classList.add('on');
+  }
+  App.c360 = { note: c360Note, envoyer: c360Envoyer, rapport: c360Rapport, autoNote: c360AutoNote, ouvrirCreation: c360OuvrirCreation, proposer: c360Proposer, lancer: c360Lancer, relancer: c360Relancer };
+
+  (function initC360Invite() {
+    const m = location.search.match(/[?&]c360=([a-f0-9]{24,64})/);
+    if (!m) return;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { rendreC360Repondant(m[1]); });
+    else rendreC360Repondant(m[1]);
+  })();
+
 window.App = App;
 
 if (document.readyState === 'loading') {

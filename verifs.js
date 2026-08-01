@@ -247,7 +247,9 @@ verifie('feedback 360 : le nom est partout à l\'écran', idxH2.indexOf('Mon reg
 verifie('feedback 360 : chaque porte dépose au geste précis', srcCtrl2().indexOf('function allerFeedback(') > 0 && (srcCtrl2().match(/allerFeedback/g) || []).length >= 8 && srcCtrl2().indexOf("App.espTab('miroir')") < 0 && srcCtrl2().indexOf('espTab(&quot;miroir&quot;)') < 0);
 verifie('feedback 360 : le fil des quatre étapes guide et téléporte', srcCtrl2().indexOf('function mirEtapesHtml(') > 0 && srcCtrl2().indexOf("insertAdjacentHTML('afterbegin', mirEtapesHtml") > 0 && srcCtrl2().indexOf('function mirAller(') > 0 && cssTxt2().indexOf('.mir-etapes{display:flex') > 0);
 verifie('feedback 360 : cibles au standard, filtre actif lisible', cssTxt2().indexOf('.esp-mir-msg-btn{min-height:40px;}') > 0 && cssTxt2().indexOf('.mir-rel.on{background:#5E59C7;color:#fff') > 0 && cssTxt2().indexOf('.mir-et{min-height:44px;}') > 0);
-verifie('feedback 360 : le pari précède les invitations tant qu\'il attend', srcCtrl2().indexOf('mir.prediction ? blocLien + pariHtml : pariHtml + blocLien') > 0 && srcCtrl2().indexOf("mir.prediction ? '' : pariHtml") > 0 && srcCtrl2().indexOf('mir-note') > 0);
+verifie('feedback 360 : les étapes ordonnent la section, inviter puis pronostic',
+  srcCtrl2().indexOf('ÉTAPE 1 · INVITER') > 0 && srcCtrl2().indexOf('ÉTAPE 2 · VOTRE PRONOSTIC') > 0
+  && srcCtrl2().indexOf('ÉTAPE 1 · INVITER') < srcCtrl2().indexOf('ÉTAPE 2 · VOTRE PRONOSTIC'));
 verifie('pronostic : le pourquoi vit au point d\'action', srcCtrl2().indexOf('pari-why') > 0 && srcCtrl2().indexOf('score de lucidité') > 0 && srcCtrl2().indexOf('Sceller mon pronostic · 30 s') > 0 && srcCtrl2().indexOf('Faire mon pari') < 0);
 verifie('répondant : relation exigée, compteur vivant, nom unifié', srcCtrl2().indexOf('function majValiderMiroir(') > 0 && (srcCtrl2().match(/majValiderMiroir\(\)/g) || []).length >= 2 && srcCtrl2().indexOf('Choisissez votre relation ci-dessus') > 0 && srcCtrl2().indexOf('Feedback 360 · Sinéa') > 0 && srcCtrl2().indexOf('Miroir Sinéa') < 0);
 verifie('répondant : options au standard tactile', cssTxt2().indexOf('.esp-rem-opt{min-height:40px;}') > 0 && cssTxt2().indexOf('.esp-rem-opt{min-height:44px;}') > 0);
@@ -855,12 +857,57 @@ verifie('fiche espace : lecture, prochain pas, le reste replié',
   && srcCtrl2().indexOf('<details class="esp-cp-plus">') > 0
   && srcCtrl2().indexOf('Aller plus loin') > 0
   && cssTxt2().indexOf('.esp-cp-pas{') > 0);
+verifie('portail : la carte du plan lisible, le compteur à trois, le pari en pastilles',
+  srcCtrl2().indexOf('ouvre à la troisième') > 0 && srcCtrl2().indexOf('pari-val') > 0
+  && cssTxt2().indexOf('.acc-resume{background:radial-gradient') > 0
+  && cssTxt2().indexOf('.pari-val{') > 0);
 verifie('déploiement : seuil trois partout, trois défis en cours, suivi riche',
   srcCtrl2().indexOf("' / 3'") > 0 && srcCtrl2().indexOf('dès trois regards reçus') > 0
   && srcCtrl2().indexOf('Recevoir trois regards') > 0
   && srcCtrl2().indexOf('cartes.slice(0, 3)') > 0 && srcCtrl2().indexOf('plan-avenir') > 0
   && srcCtrl2().indexOf("premier_pas: a.premier_pas") > 0
   && cssTxt2().indexOf('.plan-avenir{') > 0);
+verifie('finitions : auto-note du poste, clôture lisible, miroir refondé en étapes',
+  srcCtrl2().indexOf('c360AutoNote') > 0 && srcCtrl2().indexOf('autoEval: { surMesure: c360Crea.auto }') > 0
+  && srcCtrl2().indexOf("'vous ' + autoV * 20") > 0
+  && srcCtrl2().indexOf('mirh-n') > 0 && srcCtrl2().indexOf('ÉTAPE 1 · INVITER') > 0
+  && srcCtrl2().indexOf('mir-msgs') > 0
+  && cssTxt2().indexOf('.mirh{') > 0 && cssTxt2().indexOf('.mirh-p.ok{') > 0);
+verifie('360 Pro : la couche UX, héros du répondant, compte annoncé, envoi collant',
+  srcCtrl2().indexOf('c360-compte') > 0 && srcCtrl2().indexOf("classList.add('fait')") > 0
+  && cssTxt2().indexOf('.c360-item.fait{') > 0 && cssTxt2().indexOf('position:sticky;bottom:12px') > 0
+  && cssTxt2().indexOf('.c360-tete{background:radial-gradient') > 0);
+verifie('360 Pro : fusion, seuils et moyennes joués avec de vraies données',
+  (function () {
+    const src = srcCtrl2();
+    const morceau = src.slice(src.indexOf('function c360Pret'), src.indexOf('function c360Rapport'));
+    const fabrique = new Function(morceau + '; return { pret: c360Pret, moy: c360Moy, cols: c360ColsRoles };');
+    const f = fabrique();
+    const camp = {
+      roles: { manager: [{ jeton: 'a' }], pairs: [{ jeton: 'b' }, { jeton: 'c' }], equipe: [] },
+      reponses: [
+        { role: 'manager', notes: { ecoute: 5 } },
+        { role: 'pairs', notes: { ecoute: 3 }, surMesure: { i0: 4 } },
+      ],
+    };
+    const cols = f.cols(camp);
+    const noms = cols.map(function (c2) { return c2.nom; }).join(',');
+    return f.pret(camp) === false
+      && noms === 'manager,autres'
+      && f.moy(cols[0].reps, 'ecoute', 'notes') === 100
+      && f.moy(cols[1].reps, 'ecoute', 'notes') === 60
+      && f.moy(cols[1].reps, 'i0', 'sur') === 80;
+  })());
+verifie('360 Pro : le rapport par rôle, fusion anonyme, badges et défis',
+  srcCtrl2().indexOf('c360Rapport') > 0 && srcCtrl2().indexOf("fusionné dans \"autres\"") > 0
+  && srcCtrl2().indexOf('FORCE CACHÉE') > 0 && srcCtrl2().indexOf('À RENDRE VISIBLE') > 0
+  && srcCtrl2().indexOf('TROIS DÉFIS PROPOSÉS') > 0 && srcCtrl2().indexOf('window.print()') > 0
+  && cssTxt2().indexOf('.c360-rd{') > 0 && cssTxt2().indexOf('#c360-rap,#c360-rap *{visibility:visible}') > 0);
+verifie('360 Pro : répondant par jeton, création avec fiche, tableau par rôle',
+  srcCtrl2().indexOf('c360=([a-f0-9]') > 0 && srcCtrl2().indexOf('rendreC360Repondant') > 0
+  && srcCtrl2().indexOf("action: 'contexte'") > 0 && srcCtrl2().indexOf('App.c360 = {') > 0
+  && srcCtrl2().indexOf('c360Html()') > 0 && srcCtrl2().indexOf("action: 'items_fiche'") > 0
+  && cssTxt2().indexOf('.c360-ech{') > 0 && cssTxt2().indexOf('.c360-prog{') > 0);
 verifie('miroir 360 : la lucidité sur son ancre, les catégories positives, le répondant must-have',
   srcCtrl2().indexOf('mir-luc') > 0 && srcCtrl2().indexOf('LUCIDITÉ') > 0
   && srcCtrl2().indexOf('Vos forces cachées') > 0 && srcCtrl2().indexOf('À rendre visibles') > 0
