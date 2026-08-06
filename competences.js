@@ -32,6 +32,9 @@
     { id: 'creativite', def: "Générer du neuf : associer, imaginer, proposer autrement.", progresser: ["Cherchez trois options avant de retenir la première solution.", "Empruntez une pratique d'un autre métier et testez-la chez vous."], mots: ['idee','creativ','brainstorm','imagin','contre-intuitive','contre intuitive'], nom: 'Créativité', famille: 'VISION', poids: { O: 0.65, E: 0.20, S: 0.15 } },
     { id: 'adaptabilite', def: "Épouser le changement : improviser, changer de plan sans perdre le cap.", progresser: ["Face au prochain imprévu, listez deux plans B avant de réagir.", "Changez volontairement une routine cette semaine pour vous entraîner."], mots: ['adapt','improvis','imprevu','nouveau contexte'], nom: 'Adaptabilité', famille: 'VISION', poids: { O: 0.40, S: 0.35, E: 0.25 } },
     { id: 'apprentissage', def: "Progresser en continu : curiosité, veille, essais réguliers.", progresser: ["Testez une nouvelle méthode sur une tâche réelle cette semaine.", "Bloquez trente minutes hebdomadaires de veille sur votre métier."], mots: ['apprendre','lire un','formation','veille','nouvelle methode'], nom: 'Apprentissage continu', famille: 'VISION', poids: { O: 0.55, C: 0.25, S: 0.20 } },
+    { id: 'gestion_conflits', def: "Traiter le désaccord plutôt que l'éviter : nommer le point de friction, entendre la position adverse, chercher l'issue tenable pour les deux.", progresser: ["Sur un désaccord que vous évitez, nommez le point précis à la personne concernée cette semaine.", "Dans une tension, reformulez la position de l'autre avant de défendre la vôtre."], mots: ['conflit','desaccord','tension','friction','confrontation','mediation'], nom: 'Gestion des conflits', famille: 'RELATION', poids: { S: 0.45, E: 0.30, A: 0.25 } },
+    { id: 'orientation_client', def: "Partir du besoin réel plutôt que de son offre : questionner avant de proposer, tenir la promesse faite, revenir après la livraison.", progresser: ["Avant de proposer une solution, posez trois questions sur le besoin réel.", "Rappelez un client une semaine après la livraison pour savoir ce qui s'est passé."], mots: ['client','besoin','satisfaction','service','relation client','ecoute client'], nom: 'Orientation client', famille: 'RELATION', poids: { A: 0.40, E: 0.30, C: 0.30 } },
+    { id: 'recevoir_feedback', def: "Accueillir ce qui dérange : écouter sans se justifier, demander un exemple précis, dire ce qu'on en fait.", progresser: ["Après un retour critique, posez une question pour obtenir un exemple précis avant de répondre.", "Demandez à un collègue ce que vous pourriez faire différemment, et écoutez sans vous justifier."], mots: ['feedback','retour','critique','remise en question','se remettre'], nom: 'Recevoir du feedback', famille: 'VISION', poids: { S: 0.45, O: 0.35, A: 0.20 } },
   ];
 
   // Les profils de poste : coefficient d'importance par compétence.
@@ -348,6 +351,24 @@
     return 4;
   }
   const CODEX = {
+    gestion_conflits: { paliers: [
+      ["Vous ne fuyez plus le désaccord, vous acceptez de le poser sur la table.", "Cette semaine, nommez à voix haute un point de friction que vous laissiez passer."],
+      ["Vous traitez la tension sans la personnaliser, le problème reste le sujet.", "Dans votre prochain désaccord, décrivez le fait observable avant de donner votre lecture."],
+      ["Vous menez une conversation difficile jusqu'à une issue acceptée par les deux parties.", "Sur un conflit en cours, proposez une solution qui coûte quelque chose à chacun."],
+      ["On vient vous chercher pour dénouer les situations bloquées autour de vous.", "Aidez deux collègues en désaccord à formuler ce que chacun demande vraiment."]],
+      entretien: ["Racontez-moi un désaccord professionnel que vous avez traité de front. Comment cela s'est-il terminé ?", "Décrivez une tension que vous avez laissée durer. Que feriez-vous différemment aujourd'hui ?"] },
+    orientation_client: { paliers: [
+      ["Vous écoutez la demande du client avant de dérouler votre solution habituelle.", "Sur votre prochain échange client, posez trois questions avant toute proposition."],
+      ["Vous distinguez la demande exprimée du besoin réel, et vous le vérifiez.", "Reformulez le besoin de votre prochain client et demandez-lui de le corriger."],
+      ["Vous tenez vos promesses de délai et vous revenez après la livraison.", "Rappelez un client une semaine après une livraison pour recueillir son retour."],
+      ["Votre lecture du client nourrit l'offre et les décisions de votre équipe.", "Transmettez cette semaine à votre équipe un besoin client récurrent et proposez une réponse."]],
+      entretien: ["Racontez-moi une fois où le besoin réel du client était différent de sa demande. Comment l'avez-vous découvert ?", "Décrivez un engagement client que vous n'avez pas pu tenir. Qu'avez-vous fait ?"] },
+    recevoir_feedback: { paliers: [
+      ["Vous écoutez un retour critique jusqu'au bout avant de répondre.", "Au prochain retour qui vous pique, comptez jusqu'à trois avant de dire un mot."],
+      ["Vous demandez un exemple précis plutôt que de vous justifier.", "Sur un feedback reçu cette semaine, demandez la situation exacte qui l'a motivé."],
+      ["Vous transformez les retours reçus en actions visibles et datées.", "Choisissez un retour reçu ce mois-ci et engagez une action concrète cette semaine."],
+      ["Vous provoquez le feedback et vous rendez sûr le fait de vous en donner.", "Demandez à trois personnes ce que vous devriez arrêter de faire, et remerciez-les."]],
+      entretien: ["Racontez-moi un retour difficile que vous avez reçu. Qu'en avez-vous fait concrètement ?", "Décrivez une critique que vous avez d'abord rejetée puis acceptée. Qu'est-ce qui a changé ?"] },
     ecoute_active: { paliers: [
       ["Vous laissez l'autre finir ses phrases et vous posez une question avant de donner votre avis.", "Aujourd'hui, dans un échange, posez deux questions ouvertes avant toute suggestion."],
       ["Reformuler est devenu un réflexe, vos interlocuteurs disent se sentir compris.", "Terminez trois conversations cette semaine par une reformulation en une phrase."],
@@ -468,6 +489,16 @@
   // portent chacune trois micro-défis pour la défithèque SeedUp.
   // ============================================================
   const FACETTES = {
+    gestion_conflits: [
+      { id: "franchise_situee", nom: "Franchise située", def: "Poser le désaccord au bon moment et dans les bons termes, sans le laisser pourrir ni le jeter en pleine réunion.", defis: ["Choisissez le moment et le lieu de votre prochaine conversation difficile avant de la lancer.", "Écrivez en une phrase le point de friction, puis dites-le tel quel à la personne.", "Repérez un sujet que votre équipe contourne depuis un mois et posez-le à l'ordre du jour."] },
+      { id: "recherche_issue", nom: "Recherche d'issue", def: "Viser un accord tenable plutôt que la victoire, en cherchant ce que chacun peut céder.", defis: ["Dans votre prochain désaccord, demandez à l'autre ce dont il a besoin pour avancer.", "Proposez une solution qui vous coûte quelque chose, et dites-le.", "Terminez votre prochain désaccord par un point de suivi daté avec la personne."] }],
+    orientation_client: [
+      { id: "besoin_reel", nom: "Lecture du besoin réel", def: "Distinguer la demande formulée du besoin sous-jacent, et le vérifier auprès du client.", defis: ["Reformulez le besoin de votre prochain client et demandez-lui de vous corriger.", "Avant de proposer, posez la question du problème que le client cherche à résoudre.", "Demandez à un client ce qui se passerait si rien ne changeait pour lui."] },
+      { id: "promesse_tenue", nom: "Promesse tenue", def: "Annoncer ce qui sera fait et quand, puis revenir vers le client après la livraison.", defis: ["Sur votre prochain engagement, annoncez une date que vous êtes certain de tenir.", "Rappelez un client une semaine après livraison, sans autre objet que son retour.", "Annoncez à un client un délai plus long que prévu, avant qu'il ne le découvre."] },
+    ],
+    recevoir_feedback: [
+      { id: "ecoute_non_defensive", nom: "Écoute non défensive", def: "Recevoir un retour critique sans se justifier ni contre-attaquer, en cherchant d'abord à comprendre.", defis: ["Au prochain retour qui vous pique, posez une question avant toute explication.", "Notez la critique reçue mot pour mot avant de formuler votre réaction.", "Écoutez un retour entier sans prononcer le mot mais, du début à la fin."] },
+      { id: "mise_en_action", nom: "Mise en action du retour", def: "Transformer ce qui a été entendu en une action visible et datée plutôt qu'en bonne intention.", defis: ["Choisissez un feedback reçu ce mois-ci et engagez une action datée cette semaine.", "Revenez vers la personne qui vous a fait un retour pour lui dire ce que vous en avez fait.", "Demandez à trois personnes ce que vous devriez arrêter de faire, et remerciez-les."] }],
     ecoute_active: [
       { id: "questionnement", nom: "Questionnement", def: "Faire émerger l'information et la réflexion par des questions ouvertes plutôt que par des affirmations.", defis: ["Dans votre prochain échange, remplacez votre premier conseil par une question ouverte.", "Préparez trois questions avant votre prochain point individuel, aucune fermée.", "Quand on vous demande votre avis aujourd'hui, répondez d'abord par : qu'en pensez-vous ?"] },
       { id: "empathie_tension", nom: "Empathie en tension", def: "Rester connecté au ressenti de l'autre quand la conversation chauffe, sans abandonner le fond.", defis: ["Au prochain désaccord, nommez l'émotion perçue chez l'autre avant de répondre sur le fond.", "Face à une critique aujourd'hui, remerciez et reformulez avant toute défense.", "Repérez le moment où votre interlocuteur se ferme et posez la question : qu'est-ce qui coince pour vous ?"] },

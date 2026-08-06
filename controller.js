@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v135 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v135]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v136 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v136]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -369,6 +369,7 @@ const App = (() => {
   // La sortie de session, en face de la persistance de sept jours.
   // Elle efface la mémoire du navigateur, vide l'identité et ramène à l'accueil.
   function seDeconnecter() {
+    try { localStorage.removeItem('sinea_chap_classic'); } catch (e) {}
     try { localStorage.removeItem('sinea_identite'); } catch (e) {}
     identite.email = '';
     identite.prenom = '';
@@ -1137,7 +1138,7 @@ const App = (() => {
       + '<div class="cstl"><div class="cstl-tete"><b>Ma Constellation</b><span>Seize compétences, trente-deux facettes. Vers la droite grandit votre potentiel naturel, vers le haut votre expression au travail. Vos appuis brillent en haut à droite, vos opportunités attendent en bas à droite, là où vos progrès se verront. Les étoiles étiquetées comptent pour vous, touchez les autres pour les découvrir.</span><button type="button" class="ckl-cta" onclick="App.ouvrirGlossaire()">Le glossaire · 16 + 32</button></div>'
       + '<div class="cstl-grid"><div class="cstl-carte">'
       + (window.Visuels ? Visuels.quadrantSvg(comps, { deltas: deltasQ, compact: true, clic: 'App.ouvrirCompDepuisCarte', labels: idsAValeur(comps) }) : '')
-      + '<span class="cstl-hint">Glissez la carte pour explorer ses seize étoiles</span>'
+      + '<span class="cstl-hint">Glissez la carte pour explorer ses ' + window.Competences.REFERENTIEL.length + ' étoiles</span>'
       + '<span class="cstl-aide">Touchez une étoile : sa fiche s\'ouvre juste dessous.</span>'
       + '</div><div class="cstl-lecture">' + lectureCarte(comps) + '</div></div>'
       + '</div>'
@@ -1186,7 +1187,7 @@ const App = (() => {
       h += '<div class="cl-bloc"><div class="cl-t" style="color:#E08A3C">Vos opportunités rentables</div><div class="cl-chips">' + opps.map(function (x) { return chipCarte(x, '#E08A3C'); }).join('') + '</div><p class="cl-p">' + opps.map(function (x) { return echapValeur(x.nom) + ' : potentiel ' + Math.round(x.potentiel) + ', exprimé ' + Math.round(x.expression); }).join(' · ') + '. Le moteur est là, quatre-vingt-dix jours de pratique suffisent à le faire parler.</p></div>';
     }
     if (!appuis.length && !opps.length) h += '<p class="cl-p">Votre carte est équilibrée : touchez les étoiles pour explorer chaque compétence.</p>';
-    if (nVeille) h += '<p class="cl-veille">' + nVeille + ' compétence' + (nVeille > 1 ? 's' : '') + ' en veille : normal, personne ne brille sur seize fronts.</p>';
+    if (nVeille) h += '<p class="cl-veille">' + nVeille + ' compétence' + (nVeille > 1 ? 's' : '') + ' en veille : normal, personne ne brille sur tous les fronts.</p>';
     h += '<p class="cl-p cl-fin">Chaque étoile a sa fiche : trajectoire en quatre paliers et deux facettes à travailler.</p>';
     return h;
   }
@@ -1696,7 +1697,7 @@ const App = (() => {
     ov.id = 'glos-ov';
     ov.className = 'noter-ov';
     ov.innerHTML = '<div class="glos-card"><button type="button" class="noter-x" onclick="this.closest(&quot;.noter-ov&quot;).remove()">×</button>'
-      + '<div class="noter-titre">Le glossaire · 16 compétences, 32 facettes</div>'
+      + '<div class="noter-titre">Le glossaire · ' + window.Competences.REFERENTIEL.length + ' compétences</div>'
       + '<p class="noter-sub">Touchez une compétence : sa définition, votre mesure, sa trajectoire et ses facettes.</p>'
       + '<div class="glos-grid">' + Competences.REFERENTIEL.map(function (r) {
           const coul = (Competences.COULEURS_FAMILLES || {})[r.famille] || '#8A879B';
@@ -4121,7 +4122,7 @@ const App = (() => {
         neaScr.classList.add('active');
         window.scrollTo(0, 0);
         const vid = neaScr.querySelector('.nea-vid');
-        if (vid) { try { vid.play(); } catch (e) { console.warn("[Sinéa]", e); } }
+        if (vid && typeof vid.play === 'function') { try { vid.play(); } catch (e) { console.warn("[Sinéa]", e); } }
         if (neaCta) neaCta.onclick = () => {
           neaScr.classList.remove('active');
           document.getElementById('screen-result').classList.add('active');
@@ -4243,12 +4244,6 @@ const App = (() => {
     } catch (e) {}
   })();
 
-  return { seDeconnecter, planPourNea, pisteDepuis360, enregistrerResultat, start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, deplierCompetences, copierBanniere, sparDemarrer, sparChoisirFam, sparSituation, sparEnvoyer, sparDebrief, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
-})();
-
-// Personnaliser l'accueil dès le chargement (questions, étapes, type)
-// Exposer App globalement (pour que result.js puisse appeler App.sauverAnalyse, App.getPrenom, etc.)
-
   // ============================================================
   // 360 Pro , palier 1 lot 2 : répondant, création, tableau de bord.
   // ============================================================
@@ -4260,8 +4255,29 @@ const App = (() => {
   ];
   const c360Rep = { jeton: '', role: '', items: [], notes: {}, sur: {}, mg: {} };
   const c360Crea = { auto: {} };
+  const C360_ITEMS = {
+    ecoute_active: 'Reformule ce qu\'il entend avant de répondre, même sous pression',
+    cooperation: 'Partage l\'information utile sans qu\'on la demande',
+    communication_influence: 'Fait adhérer sans imposer, y compris face à des avis contraires',
+    developpement_autres: 'Donne un feedback précis dans les jours qui suivent une situation, même délicat',
+    orientation_resultats: 'Garde le cap sur le résultat quand les obstacles s\'accumulent',
+    prise_decision: 'Tranche dans un délai raisonnable, même sans consensus complet',
+    initiative: 'Se saisit des sujets sans attendre qu\'on les lui confie',
+    resilience: 'Reste opérationnel et posé dans les périodes de forte pression',
+    organisation: 'Découpe le travail et tient les priorités visibles pour l\'équipe',
+    rigueur: 'Livre un travail vérifié, les détails qui comptent sont justes',
+    fiabilite_suivi: 'Tient ses engagements de suivi sans qu\'on ait à relancer',
+    analyse: 'Remonte aux causes avant de proposer une solution',
+    vision_strategique: 'Relie les décisions du quotidien aux enjeux de long terme',
+    creativite: 'Propose des angles neufs qui débloquent les situations',
+    adaptabilite: 'Ajuste sa méthode rapidement quand le contexte change',
+    apprentissage: 'Va chercher ce qui lui manque et l\'applique vite',
+    gestion_conflits: 'Nomme le désaccord au lieu de le contourner, et cherche une issue tenable',
+    orientation_client: 'Questionne le besoin réel du client avant de proposer une solution',
+    recevoir_feedback: 'Écoute un retour critique sans se justifier, et en fait quelque chose',
+  };
   function c360Email() {
-    return (window.dataEspaceCourant && dataEspaceCourant.email) || window.prompt('Votre email de compte Sinéa') || '';
+    return (dataEspaceCourant && dataEspaceCourant.email) || window.prompt('Votre email de compte Sinéa') || '';
   }
   function c360Post(body) {
     return fetch(C360_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
@@ -4283,7 +4299,7 @@ const App = (() => {
       ordre.forEach(function (f) {
         h += '<div class="c360-fam" style="--c:' + ((window.Competences.COULEURS_FAMILLES || {})[f] || '#8A879B') + '">' + f + '</div>';
         window.Competences.REFERENTIEL.filter(function (r2) { return r2.famille === f; }).forEach(function (r2) {
-          h += '<div class="c360-item"><b>' + echapValeur(r2.nom) + '</b><span>' + echapValeur(r2.def) + '</span>' + c360EchHtml(r2.id, 'notes') + '</div>';
+          h += '<div class="c360-item"><b>' + echapValeur(r2.nom) + '</b><span>' + echapValeur(C360_ITEMS[r2.id] || r2.def) + '</span>' + c360EchHtml(r2.id, 'notes') + '</div>';
         });
       });
       if (c360Rep.items.length) {
@@ -4328,7 +4344,7 @@ const App = (() => {
     btn.closest('.c360-item').classList.add('fait');
   }
   function c360Html() {
-    const c = ((((window.dataEspaceCourant || {}).interactions || {}).socle || {}).c360) || {};
+    const c = ((((dataEspaceCourant || {}).interactions || {}).socle || {}).c360) || {};
     const camp = (c.campagnes || [])[0];
     if (!camp) {
       return '<div class="c360-carte"><div class="c360-k">360 PRO · OPTION</div><b>La campagne par rôles, socle + votre fiche de poste</b>'
@@ -4377,7 +4393,7 @@ const App = (() => {
       const zone = document.getElementById('c360-liens');
       if (!r2 || r2.erreur) { zone.innerHTML = '<p class="c360-charge">' + echapValeur((r2 && r2.erreur) || 'Création impossible.') + '</p>'; return; }
       const base = location.origin + location.pathname;
-      zone.innerHTML = '<div class="c360-k" style="margin-top:10px">LES LIENS À ENVOYER</div>' + r2.invites.map(function (i2) {
+      zone.innerHTML = (typeof r2.credits === 'number' ? '<p class="c360-charge" style="text-align:left;padding:6px 0">Crédit consommé, il vous en reste ' + r2.credits + '.</p>' : '') + '<div class="c360-k" style="margin-top:10px">LES LIENS À ENVOYER</div>' + r2.invites.map(function (i2) {
         return '<div class="c360-lien"><span>' + echapValeur(i2.role) + ' · ' + echapValeur(i2.email) + '</span><input type="text" class="c360-in" readonly value="' + base + '?c360=' + i2.jeton + '"></div>';
       }).join('');
     });
@@ -4413,21 +4429,22 @@ const App = (() => {
     return cols;
   }
   function c360Rapport() {
-    const camp = (((((window.dataEspaceCourant || {}).interactions || {}).socle || {}).c360) || {}).campagnes[0];
+    const camp = ((((((dataEspaceCourant || {}).interactions || {}).socle || {}).c360) || {}).campagnes || [])[0];
     if (!camp) return;
     const cols = c360ColsRoles(camp);
-    const profil = (((window.dataEspaceCourant || {}).analyses || {}).socle || {}).profil || {};
+    const profil = (((dataEspaceCourant || {}).analyses || {}).socle || {}).profil || {};
     const comps = window.Competences.scorer(profil.bigFive || profil.big_five || {}, profil.ecarts || {}, profil.dims || {});
     const selfDe = {}; comps.forEach(function (c2) { selfDe[c2.id] = Math.round(c2.expression); });
     const lignes = window.Competences.REFERENTIEL.map(function (r2) {
+      var fam2 = r2.famille;
       const parRole = cols.map(function (c2) { return { nom: c2.nom, v: c360Moy(c2.reps, r2.id, 'notes') }; }).filter(function (x) { return x.v !== null; });
       if (!parRole.length) return null;
       const eux = Math.round(parRole.reduce(function (a2, b2) { return a2 + b2.v; }, 0) / parRole.length);
-      return { nom: r2.nom, self: selfDe[r2.id], eux: eux, parRole: parRole, ecart: eux - (selfDe[r2.id] || 0) };
+      return { nom: r2.nom, fam: fam2, self: selfDe[r2.id], eux: eux, parRole: parRole, ecart: eux - (selfDe[r2.id] || 0) };
     }).filter(Boolean).sort(function (a2, b2) { return Math.abs(b2.ecart) - Math.abs(a2.ecart); });
     const ligneHtml = function (l) {
       const badge = l.ecart >= 10 ? '<u class="c360-b c360-b-vert">FORCE CACHÉE</u>' : l.ecart <= -10 ? '<u class="c360-b c360-b-amb">À RENDRE VISIBLE</u>' : '';
-      return '<div class="c360-rl"><b>' + echapValeur(l.nom) + '</b>' + badge
+      return '<div class="c360-rl"><i class="c360-fdot" style="background:' + ((window.Competences.COULEURS_FAMILLES || {})[l.fam] || '#8A879B') + '"></i><b>' + echapValeur(l.nom) + '</b>' + badge
         + '<div class="c360-rd"><i style="width:' + l.eux + '%"></i>' + (typeof l.self === 'number' ? '<em style="left:' + l.self + '%"></em>' : '') + '</div>'
         + '<small>vous ' + (typeof l.self === 'number' ? l.self : '·') + ' · ' + l.parRole.map(function (x) { return x.nom + ' ' + x.v; }).join(' · ') + '</small></div>';
     };
@@ -4447,8 +4464,18 @@ const App = (() => {
       return '<div class="c360-defi"><span class="planc-src" style="background:#B3701A">360 PRO</span><b>' + echapValeur(l.nom) + ', la rendre visible</b><p>' + echapValeur((ref.progresser || [])[0] || 'Un geste observable cette semaine, raconté au coach.') + '</p></div>';
     }).join('');
     const zone = document.getElementById('c360-rap') || (function () { const d = document.createElement('div'); d.id = 'c360-rap'; (document.querySelector('.c360-carte') || document.body).appendChild(d); return d; })();
-    zone.innerHTML = '<div class="c360-k" style="margin-top:12px">LE RAPPORT · VOUS, VU PAR EUX</div>'
+    const compte = cols.map(function (c2) { return c2.nom + ' ' + c2.reps.length; }).join(' · ');
+    const tete = '<div class="c360-rap-tete"><b>Rapport Feedback 360 · Sinéa</b><span>' + echapValeur((typeof identite === 'object' && identite.prenom) || '') + ' · ' + new Date().toLocaleDateString('fr-FR') + ' · regards : ' + compte + '</span></div>';
+    const parFam = ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'].map(function (f2) {
+      const g2 = (SINEA_DATA.familles_cle || {})[f2] || {};
+      return '<div class="c360-fam" style="--c:' + ((window.Competences.COULEURS_FAMILLES || {})[f2] || '#8A879B') + '">'
+        + (g2.symbole ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + g2.symbole + '</svg> ' : '') + f2 + '</div>'
+        + lignes.filter(function (l2) { return l2.fam === f2; }).map(ligneHtml).join('');
+    }).join('');
+    zone.innerHTML = tete
+      + '<div class="c360-k" style="margin-top:12px">LE RAPPORT · VOUS, VU PAR EUX</div>'
       + lignes.slice(0, 6).map(ligneHtml).join('')
+      + '<details class="c360-tout"><summary>Les ' + window.Competences.REFERENTIEL.length + ' compétences, par famille</summary>' + parFam + '</details>'
       + (poste ? '<div class="c360-k" style="margin-top:10px">◆ LE POSTE</div>' + poste : '')
       + vHtml('continuer', 'À continuer, selon eux') + vHtml('oser', 'À oser, selon eux')
       + (defis ? '<div class="c360-k" style="margin-top:10px">TROIS DÉFIS PROPOSÉS</div>' + defis : '')
@@ -4459,7 +4486,7 @@ const App = (() => {
     btn.parentElement.querySelectorAll('.c360-n').forEach(function (b2) { b2.classList.remove('on'); });
     btn.classList.add('on');
   }
-  App.c360 = { note: c360Note, envoyer: c360Envoyer, rapport: c360Rapport, autoNote: c360AutoNote, ouvrirCreation: c360OuvrirCreation, proposer: c360Proposer, lancer: c360Lancer, relancer: c360Relancer };
+  const c360Api = { note: c360Note, envoyer: c360Envoyer, rapport: c360Rapport, autoNote: c360AutoNote, ouvrirCreation: c360OuvrirCreation, proposer: c360Proposer, lancer: c360Lancer, relancer: c360Relancer };
 
   (function initC360Invite() {
     const m = location.search.match(/[?&]c360=([a-f0-9]{24,64})/);
@@ -4467,6 +4494,13 @@ const App = (() => {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { rendreC360Repondant(m[1]); });
     else rendreC360Repondant(m[1]);
   })();
+
+  return { c360: c360Api, seDeconnecter, planPourNea, pisteDepuis360, enregistrerResultat, start, telechargerPortraitEspace, showChapterIntro, goToIdentif, goToConnexion, goToCover, goToEspace, sauverAnalyse, envoyerInteractions, autoFill, next, prev, answer, answerSwipe, answerChoixForce, answerCurseur, repartChange, initCover, saveOpen, ouvrirPlanDepuisResto, toggleCompEspace, deplierCompetences, copierBanniere, sparDemarrer, sparChoisirFam, sparSituation, sparEnvoyer, sparDebrief, toggleMatriceEspace, copierMsgMiroir, allerFeedback, mirAller, choisirRelMiroir, ouvrirCompDepuisCarte, filtrerMiroir, envoyerPariMiroir, espTab, cockpitVers, revoirAnalyse, majChecklist, marquerFait, poserChecklist, ouvrirGlossaire, choisirGlossaire, srcPerso, variantePerso, setVariantePerso, ouvrirCodex, getResult: () => result, getPrenom: () => identite.prenom || '' };
+})();
+
+// Personnaliser l'accueil dès le chargement (questions, étapes, type)
+// Exposer App globalement (pour que result.js puisse appeler App.sauverAnalyse, App.getPrenom, etc.)
+
 
 window.App = App;
 

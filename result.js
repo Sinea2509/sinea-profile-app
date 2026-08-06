@@ -420,9 +420,9 @@ const Result = (() => {
       return `<div class="r-section-tag">Vos compétences, la lecture Sinéa</div>
         <p class="cph-intro">Vos trois forces d'abord, puis vos deux terrains \u00e0 investir. La suite montre d'o\u00f9 ils sortent.</p>
         <div class="cph-liste">${heros}</div>
-        <p class="cph-liaison">Voici la carte compl\u00e8te, vos seize comp\u00e9tences situ\u00e9es entre nature et travail.</p>
+        <p class="cph-liaison">Voici la carte compl\u00e8te, vos ${window.Competences.REFERENTIEL.length} comp\u00e9tences situ\u00e9es entre nature et travail.</p>
         <div id="cph-carte">
-        <p class="r-hint">Le potentiel vient de votre nature, l'expression de votre comportement au travail. La carte situe vos seize compétences en quatre zones de jeu.</p>
+        <p class="r-hint">Le potentiel vient de votre nature, l'expression de votre comportement au travail. La carte situe vos ${window.Competences.REFERENTIEL.length} compétences en quatre zones de jeu.</p>
         <div class="r-card r-q16-card">
           <div class="q16-recit">${recitQ16(comps)}</div>
           <p class="q16-lecture">Lecture de la carte : l'horizontale mesure votre facilité naturelle, le potentiel. La verticale mesure ce que vous mobilisez réellement aujourd'hui, l'expression.</p>
@@ -446,7 +446,7 @@ const Result = (() => {
           <div class="c4 c4-bg"><b>En retrait</b><span>Les moins pr\u00e9sentes chez vous aujourd'hui.</span><em>Vous pouvez les laisser tranquilles, d\u00e9l\u00e9guer ou compenser, sauf si votre poste en d\u00e9pend.</em></div>
           <div class="c4 c4-bd"><b>\u00c0 r\u00e9veiller</b><span>Votre nature en porte plus que votre travail n'en montre.</span><em>Une occasion par semaine suffit \u00e0 les r\u00e9veiller.</em></div>
         </div>
-        <p class="cph-liaison">Et pourquoi ces seize comp\u00e9tences, pas d'autres :</p>
+        <p class="cph-liaison">Et pourquoi ces ${window.Competences.REFERENTIEL.length} comp\u00e9tences, pas d'autres :</p>
         ${methodo}`;
     } catch (e) { console.warn("[Sinéa]", e); return ''; }
   }
@@ -807,9 +807,9 @@ const Result = (() => {
       const heroC = document.getElementById('r-hero');
       let carteP = document.getElementById('r-hero-carte');
       const slugC = (res && res.dominante) ? SINEA_DATA.image(res.dominante.nom) : '';
-      if (slugC && window.App && App.srcPerso) {
+      if (slugC) {
         if (!carteP) { carteP = document.createElement('div'); carteP.id = 'r-hero-carte'; carteP.className = 'r-hero-carte'; heroC.appendChild(carteP); }
-        carteP.innerHTML = '<img src="' + App.srcPerso(slugC) + '" alt="' + (res.dominante.nom || '') + '"/>';
+        carteP.innerHTML = '<img src="' + ((window.App && App.srcPerso) ? App.srcPerso(slugC) : slugC + '.webp') + '" alt="' + (res.dominante.nom || '') + '"/>';
       }
     } catch (e) {}
     var _spb=document.getElementById('b-spe'); if(_spb)_spb.style.setProperty('--fam-color',color);
@@ -2918,7 +2918,7 @@ const Result = (() => {
       if (zones && flex) {
         const det = document.createElement('details');
         det.className = 'q16-details';
-        det.innerHTML = '<summary>Explorer la carte complète des seize compétences</summary>';
+        det.innerHTML = '<summary>Explorer la carte complète des ' + window.Competences.REFERENTIEL.length + ' compétences</summary>';
         zones.parentNode.insertBefore(det, lect || zones);
         if (lect) det.appendChild(lect);
         det.appendChild(zones);
@@ -3238,7 +3238,7 @@ const Result = (() => {
       const g = CLE[k];
       const chips = persosDe(k).map(function (x) {
         const moi = k === fam && x.p.nom === dom.nom;
-        return '<span class="fk-pn' + (moi ? ' moi' : '') + '"><img src="' + SINEA_DATA.image(x.id) + '" alt="" loading="lazy">'
+        return '<span class="fk-pn' + (moi ? ' moi' : '') + '"><img src="' + SINEA_DATA.image(x.id) + '.webp" alt="" loading="lazy">'
           + x.p.nom + (moi ? '<u>VOUS</u>' : '') + '</span>';
       }).join('');
       return '<div class="fk-voix' + (k === fam ? '' : ' loin') + '" style="--c:' + COULEURS_FAM_R[k] + ';--f:' + FONCE_FAM_R[k] + '">'
@@ -3254,7 +3254,7 @@ const Result = (() => {
     zone.innerHTML = '<div class="fk-prologue"><div class="fk-k">LES 4 FAMILLES</div><p>'
       + (SINEA_DATA.familles_prologue || '') + '</p></div>'
       + voix
-      + '<div class="fk-chute"><img src="' + SINEA_DATA.image(dom.nom) + '" alt="" style="border-color:' + COULEURS_FAM_R[fam] + '">'
+      + '<div class="fk-chute"><img src="' + SINEA_DATA.image(dom.nom) + '.webp" alt="" style="border-color:' + COULEURS_FAM_R[fam] + '">'
       + '<p>Ces quatre voix parlent en vous aussi, \u00e0 des volumes diff\u00e9rents. La plus forte, chez vous, c\u2019est <b>'
       + fam.charAt(0) + fam.slice(1).toLowerCase() + '</b>. Et dans cette famille, vous \u00eates <b>' + dom.nom + '</b>, 1 des '
       + persosDe(fam).length + ' personnages.</p></div>'
@@ -3275,7 +3275,7 @@ const Result = (() => {
       + '<em>=</em><span class="cb-r">cette combinaison<i>' + (rar && rar.pct ? rar.pct + '% des profils' : 'la v\u00f4tre') + '</i></span>';
     const tailles = [132, 92, 72];
     const persos = parts.map(function (x, i) {
-      return '<span class="cb-a"><img src="' + SINEA_DATA.image(x.nom) + '" alt="" style="width:' + tailles[i] + 'px;height:' + tailles[i] + 'px;border-color:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '"><b style="background:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.pct + '%</b></span>';
+      return '<span class="cb-a"><img src="' + SINEA_DATA.image(x.nom) + '.webp" alt="" style="width:' + tailles[i] + 'px;height:' + tailles[i] + 'px;border-color:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '"><b style="background:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.pct + '%</b></span>';
     }).join('');
     const combis = (rar && rar.surN) ? Number(rar.surN).toLocaleString('fr-FR') : '1\u00a0976';
     const sur1000 = (rar && rar.pct) ? Math.max(1, Math.round(parseFloat(String(rar.pct).replace(',', '.')) * 10)) : null;

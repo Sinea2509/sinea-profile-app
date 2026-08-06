@@ -385,7 +385,7 @@ console.log('\n== 0quindecies. La mission au coach ==');
 verifie('coach : endpoint et modal câblés', srcDash.indexOf('COACH_ENVOI_URL') > 0 && srcDash.indexOf('function ouvrirEnvoiCoach(') > 0 && srcDash.indexOf('function envoyerCoach(') > 0);
 verifie('coach : deux portes, la fiche et le bandeau', (srcDash.match(/ouvrirEnvoiCoach\(/g) || []).length >= 3 && srcDash.indexOf("ouvrirEnvoiCoach('apprenant'") > 0 && srcDash.indexOf('ouvrirEnvoiCoach(&quot;groupe&quot;)') > 0);
 verifie('coach : le payload porte la clé et la campagne', srcDash.indexOf('cle: cleAcces') > 0 && srcDash.indexOf('campagne: entrepriseCourante') > 0);
-verifie('incarnation : le bouton ouvre l\'espace de l\'apprenant', srcDash.indexOf('LIEN_URL') > 0 && srcDash.indexOf('function voirCommeApprenant(') > 0 && srcDash.indexOf('Voir comme lui') > 0 && srcDash.indexOf("window.open(dj.lien, '_blank')") > 0);
+verifie('incarnation : le bouton ouvre l\'espace de l\'apprenant', srcDash.indexOf('LIEN_URL') > 0 && srcDash.indexOf('function voirCommeApprenant(') > 0 && srcDash.indexOf('Voir comme lui') > 0 && srcDash.indexOf("window.open('', '_blank')") > 0 && srcDash.indexOf('onglet.location.href = dj.lien') > 0);
 verifie('portrait PDF : le portail embarque compétences, familles et plan', srcDash.indexOf('function extraPortrait(') > 0 && srcDash.indexOf('extra: extraPortrait(m)') > 0 && srcDash.indexOf('quadrant: Visuels.quadrantSvg') > 0);
 verifie('incarnation : le lien se copie aussi', srcDash.indexOf('function copierLienApprenant(') > 0 && srcDash.indexOf('Copier son lien') > 0 && srcDash.indexOf('navigator.clipboard') > 0);
 verifie('mobile : l\'espace a son bloc au cordeau', cssTxt2().indexOf('@media (max-width: 640px)') > 0 && cssTxt2().indexOf('.esp-nav{overflow-x:auto') > 0);
@@ -902,8 +902,11 @@ verifie('dashboard : aucun appel ne peut figer la page, boutons repliables',
     return js.indexOf('function postJson(') > 0 && js.indexOf('AbortController') > 0
       && js.indexOf('ne répond pas, réessayez') > 0
       && js.indexOf('postJson(LIEN_URL') > 0
-      && html.indexOf('.fm-head{flex-wrap:wrap') > 0
-      && html.indexOf('flex:1 1 calc(50% - 8px)') > 0;
+      && html.indexOf('.fm-actions{display:grid') > 0
+      && html.indexOf('grid-template-columns:repeat(4,minmax(0,1fr))') > 0
+      && js.indexOf("class=\"fm-actions\"") > 0
+      && js.indexOf("const onglet = window.open('', '_blank')") > 0
+      && js.indexOf('onglet.location.href = dj.lien') > 0;
   })());
 verifie('référentiel 1.1 : dix-neuf compétences, aucune mention chiffrée en dur',
   (function () {

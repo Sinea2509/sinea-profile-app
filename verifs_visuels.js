@@ -155,4 +155,25 @@ if (nbEchec > 0) {
   console.error(nbEchec + ' ECHEC(S) sur ' + (nbOk + nbEchec) + ' vérifications.');
   process.exit(1);
 }
+verifie('cover : le voile ne repasse jamais au-dessus du seuil validé (intensité B)',
+  (function () {
+    const css = require('fs').readFileSync('style.css', 'utf8');
+    const m = css.match(/radial-gradient\(circle at 50% 34%, rgba\(225,95,65,([0-9.]+)\) 0%, rgba\(85,40,115,([0-9.]+)\) 44%, rgba\(8,8,30,([0-9.]+)\)/);
+    if (!m) return false;
+    const mos = (css.match(/\.cover-mosaic\{[^}]*opacity:([0-9.]+)/) || [])[1];
+    return Number(m[1]) <= 0.62 && Number(m[2]) <= 0.72 && Number(m[3]) <= 0.88 && Number(mos) >= 0.8;
+  })());
+verifie('logo : les deux variantes servent les trois surfaces, mot blanc sur fond sombre',
+  (function () {
+    const fs2 = require('fs');
+    const idx = fs2.readFileSync('index.html', 'utf8');
+    const clair = fs2.readFileSync('logo-sinea.svg', 'utf8');
+    const sombre = fs2.readFileSync('logo-sinea-blanc.svg', 'utf8');
+    return fs2.existsSync('logo-sinea.svg') && fs2.existsSync('logo-sinea-blanc.svg')
+      && (idx.match(/logo-sinea-blanc\.svg/g) || []).length === 2
+      && (idx.match(/logo-sinea\.svg/g) || []).length === 1
+      && sombre.indexOf('fill: #ffffff') > 0 && clair.indexOf('fill: #221D45') > 0
+      && sombre.indexOf('Dégradé') > 0
+      && fs2.readFileSync('style.css', 'utf8').indexOf('.cover-logo img,.q-aside-logo img{display:block;height:21px') > 0;
+  })());
 console.log('TOUT PASSE : ' + nbOk + ' vérifications vertes.');

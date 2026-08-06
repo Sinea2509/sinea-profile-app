@@ -12,8 +12,8 @@
   const PROFIL_CIBLE_URL = API_BASE + "/profil_cible";
   const BRIEF_URL = API_BASE + "/brief_campagne";
   const RAPPORT_URL = API_BASE + "/rapport_campagne";
-  console.log('Sinea Dashboard v135');
-  window.addEventListener('error', function(e){ console.error('[Sinéa v135]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
+  console.log('Sinea Dashboard v136');
+  window.addEventListener('error', function(e){ console.error('[Sinéa v136]', e.message, (e.filename||'') + ':' + (e.lineno||'')); });
   const BRIEF_DEV_URL = API_BASE + "/brief_developpement";
   const COACH_URL = API_BASE + "/coach_hebdo";
   const POSTE_CIBLE_URL = API_BASE + "/poste_cible";
@@ -872,11 +872,13 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
           <div class="fm-head">
             <div class="membre-ava" style="background:${col};width:56px;height:56px;font-size:20px;border-radius:15px">${esc(initiales(m.nom))}</div>
             <div style="flex:1"><div class="fm-nom">${esc(m.nom||'')}</div><div class="fm-arch" style="color:${col}">${esc(m.dominante||'')} · ${esc(FAM_LABELS[f]||f)}</div></div>
-            ${m.email ? `<button class="fm-pdf-btn" id="fm-pdf-btn" onclick="telechargerPortraitMembre(${idx})">Portrait PDF</button>` : ''}
-            ${m.email ? `<button class="fm-pdf-btn" onclick="ouvrirEnvoiCoach('apprenant', ${idx})">Envoyer au coach</button>` : ''}
-            ${m.email ? `<button class="fm-pdf-btn" onclick="voirCommeApprenant(${idx}, this)">Voir comme lui</button>` : ''}
-            ${m.email ? `<button class="fm-pdf-btn" onclick="copierLienApprenant(${idx}, this)">Copier son lien</button>` : ''}
           </div>
+          ${m.email ? `<div class="fm-actions">
+            <button class="fm-pdf-btn" id="fm-pdf-btn" onclick="telechargerPortraitMembre(${idx})">Portrait PDF</button>
+            <button class="fm-pdf-btn" onclick="ouvrirEnvoiCoach('apprenant', ${idx})">Envoyer au coach</button>
+            <button class="fm-pdf-btn" onclick="voirCommeApprenant(${idx}, this)">Voir comme lui</button>
+            <button class="fm-pdf-btn" onclick="copierLienApprenant(${idx}, this)">Copier son lien</button>
+          </div>` : ''}
           <div class="fm-section"><div class="fm-section-titre">Comment le manager</div>${mgrHtml}</div>
           ${fiabHtml}
           ${coutHtml}
@@ -1452,19 +1454,39 @@ function parcoursSinea(titre){ return SINEA_PARCOURS[titre] || "Parcours sur-mes
       .catch(function () { if (btn) { btn.disabled = false; btn.textContent = label; } alert('Réseau indisponible.'); });
   }
 
+  // Tout appel réseau porte une limite de temps : une API muette ne fige plus l'écran.
+  function postJson(url, corps, ms){
+    const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    const minuteur = setTimeout(function(){ if (ctrl) ctrl.abort(); }, ms || 15000);
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps), signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r2) {
+        clearTimeout(minuteur);
+        return r2.json().catch(function () { return { error: 'Le serveur a répondu ' + r2.status + '.' }; });
+      })
+      .catch(function (e) {
+        clearTimeout(minuteur);
+        return { error: (e && e.name === 'AbortError') ? "Le serveur ne répond pas, réessayez dans un instant." : "Réseau indisponible." };
+      });
+  }
+
   function voirCommeApprenant(idx, btn){
     const m = repsCourants[idx];
     if (!m || !m.email) return;
     const label = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Ouverture...'; }
-    fetch(LIEN_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cle: cleAcces, email: m.email }) })
-      .then(function (r2) { return r2.json(); })
-      .then(function (dj) {
-        if (btn) { btn.disabled = false; btn.textContent = label; }
-        if (dj && dj.ok && dj.lien) window.open(dj.lien, '_blank');
-        else alert((dj && dj.error) || 'Lien indisponible.');
-      })
-      .catch(function () { if (btn) { btn.disabled = false; btn.textContent = label; } alert('Réseau indisponible.'); });
+    // L'onglet doit naître du clic lui-même. Ouvert après la réponse réseau,
+    // il est traité comme une fenêtre surgissante et bloqué silencieusement.
+    const onglet = window.open('', '_blank');
+    postJson(LIEN_URL, { cle: cleAcces, email: m.email }, 12000).then(function (dj) {
+      if (btn) { btn.disabled = false; btn.textContent = label; }
+      if (dj && dj.ok && dj.lien) {
+        if (onglet && !onglet.closed) { onglet.location.href = dj.lien; return; }
+        window.prompt('Son lien personnel, à copier :', dj.lien);
+        return;
+      }
+      if (onglet && !onglet.closed) onglet.close();
+      alert((dj && dj.error) || 'Lien indisponible.');
+    });
   }
 
   function ouvrirEnvoiCoach(mode, idx){
