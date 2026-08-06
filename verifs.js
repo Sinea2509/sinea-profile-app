@@ -67,7 +67,7 @@ eval(fs.readFileSync('visuels.js', 'utf8'));
 const V = window.Visuels;
 const compsV = C.scorer({ O: 58, C: 38, E: 72, A: 78, N: 45 }, { C: 18 });
 const qv = V.quadrantSvg(compsV, { deltas: { developpement_autres: { avant: 41, apres: 58 } } });
-verifie('quadrant : 16 points', (qv.match(/q16-pt/g) || []).length === 16);
+verifie('quadrant : un point par compétence', (qv.match(/q16-pt/g) || []).length === C.REFERENTIEL.length);
 verifie('quadrant : les zones du moteur nommées avec leur compte', (qv.match(/VOS FORCES · |EN RETRAIT · /g) || []).length >= 2 && qv.indexOf('data-case=') > 0 && qv.indexOf('SUR-RÉGIME') < 0);
 verifie('quadrant : flèche d\'évolution', (qv.match(/url\(#q16f\)/g) || []).length === 1);
 verifie('quadrant : groupes équilibrés', (qv.match(/<g /g) || []).length === (qv.match(/<\/g>/g) || []).length);
@@ -155,7 +155,7 @@ verifie('engagements : état relié aux défis', srcCtrl.indexOf('compsDefis.has
 console.log('\n== 0octies. Retours terrain v72 ==');
 const qz = V.quadrantSvg(compsV);
 verifie('quadrant : échelle zoomée sur la plage réelle', qz.indexOf('>0</text>') < 0 && qz.indexOf('>100</text>') < 0);
-verifie('quadrant : seize points cliquables sur option', (V.quadrantSvg(compsV, { clic: 'X' }).match(/X\(&quot;/g) || []).length === 16);
+verifie('quadrant : tous les points cliquables sur option', (V.quadrantSvg(compsV, { clic: 'X' }).match(/X\(&quot;/g) || []).length === C.REFERENTIEL.length);
 const fvv2 = V.forcesVigilancesHtml(compsV, C.prioriser(compsV, 'manager'));
 verifie('forces : intro pédagogique, définitions, familles', fvv2.indexOf('fv-intro') > 0 && (fvv2.match(/fv-def/g) || []).length >= 6 && (fvv2.match(/fv-dot/g) || []).length === 8);
 verifie('largeurs fluides : restitution et espace à 94vw', (cssTxt2().match(/min\(1680px, 94vw\)/g) || []).length >= 6);
@@ -222,15 +222,15 @@ verifie('miroir : le pari est replié par défaut', srcCtrl2().indexOf('pari-ope
 verifie('accueil : le résumé est posé et rangé', idxH2.indexOf('id="espace-accueil-resume"') > 0 && srcCtrl2().indexOf('acc-resume') > 0 && srcCtrl2().indexOf("dev: ['espace-accueil-resume'") > 0);
 
 console.log('\n== 0terdecies. Les facettes et la défithèque ==');
-verifie('facettes : 32, deux par compétence, ids uniques', (() => {
+verifie('facettes : deux par compétence, ids uniques', (() => {
   let n = 0; const ids = [];
   const ok = C.REFERENTIEL.every(r => { const f = C.FACETTES[r.id]; if (!f || f.length !== 2) return false; f.forEach(x => { n++; ids.push(x.id); }); return true; });
-  return ok && n === 32 && new Set(ids).size === 32;
+  return ok && n === C.REFERENTIEL.length * 2 && new Set(ids).size === n;
 })());
-verifie('défithèque : 160 micro-défis exactement', (() => {
-  let n = 64;
+verifie('défithèque : quatre paliers et trois défis par facette, sans trou', (() => {
+  let n = C.REFERENTIEL.length * 4;
   Object.values(C.FACETTES).forEach(f => f.forEach(x => { n += x.defis.length; }));
-  return n === 160 && Object.values(C.FACETTES).every(f => f.every(x => x.defis.length === 3 && x.defis.every(d2 => d2.length >= 25) && x.def.length >= 30));
+  return n === C.REFERENTIEL.length * 10 && Object.values(C.FACETTES).every(f => f.every(x => x.defis.length === 3 && x.defis.every(d2 => d2.length >= 25) && x.def.length >= 30));
 })());
 verifie('portail : les facettes entrent dans la modal', srcDash.indexOf('cx-fac') > 0 && srcDash.indexOf('facettesHtml') > 0);
 verifie('espace : les facettes entrent dans la fiche focus', srcCtrl2().indexOf('fcx-fac') > 0 && srcCtrl2().indexOf('FACETTES[id]') > 0);
@@ -374,7 +374,7 @@ verifie('plan : la fête du Fait', srcCtrl2().indexOf('planc-fete') > 0 && cssTx
 verifie('constellation : cadre premium et glossaire', srcCtrl2().indexOf('Ma Constellation') > 0 && srcCtrl2().indexOf('Découvrir ma Constellation') > 0 && srcCtrl2().indexOf('function ouvrirGlossaire(') > 0 && srcCtrl2().indexOf('glos-grid') > 0 && srcCtrl2().indexOf("getComputedStyle(mat).display === 'none'") > 0 && cssTxt2().indexOf('.cstl svg{display:block;max-width:620px') > 0 && cssTxt2().indexOf('.cstl svg{min-width:640px;}') > 0 && srcCtrl2().indexOf('cstl-hint') > 0);
 verifie('glossaire : coupe au mot et pastille de zone personnelle', srcCtrl2().indexOf('function coupeMot(') > 0 && srcCtrl2().indexOf('ZONES_GLOS') > 0 && srcCtrl2().indexOf('chipDe(r.id)') > 0);
 verifie('carte : les étiquettes vont à la valeur, la lecture accompagne', srcCtrl2().indexOf('function idsAValeur(') > 0 && srcCtrl2().indexOf('labels: idsAValeur(comps)') > 0 && srcCtrl2().indexOf('function lectureCarte(') > 0 && srcCtrl2().indexOf('La lecture de votre carte') > 0 && cssTxt2().indexOf('.cstl-grid{display:grid') > 0);
-verifie('glossaire : les trente-deux facettes se montrent', srcCtrl2().indexOf('glos-f') > 0 && srcCtrl2().indexOf('Competences.FACETTES[r.id]') > 0 && srcCtrl2().indexOf('16 compétences, 32 facettes') > 0);
+verifie('glossaire : les facettes se montrent', srcCtrl2().indexOf('glos-f') > 0 && srcCtrl2().indexOf('Competences.FACETTES[r.id]') > 0 && srcCtrl2().indexOf('Competences.FACETTES') > 0);
 verifie('constellation : l\'étoile choisie s\'allume et la fiche défile', require("fs").readFileSync("visuels.js", "utf8").indexOf("data-comp=") > 0 && srcCtrl2().indexOf("g[data-comp=") > 0 && srcCtrl2().indexOf('q16-sel') > 0 && srcCtrl2().indexOf("behavior: 'smooth', block: 'center'") > 0);
 verifie('personnage : la carte-portrait déborde du hero, en majesté', cssTxt2().indexOf('.espace-hero-perso{position:absolute;right:34px;bottom:-46px') > 0 && cssTxt2().indexOf('.espace-hero-perso::before{content:none;}') > 0);
 verifie('restitution : le bouton de notation a quitté l\'Essentiel', srcRes2().indexOf('ess-avis') < 0 && srcRes2().indexOf('Result.noterPortrait = function') > 0);
@@ -400,7 +400,7 @@ console.log('\n== 1. Moteur de compétences : déterminisme et bornes ==');
 const bf = { O: 58, C: 38, E: 72, A: 78, N: 45 };
 const c1 = C.scorer(bf, { C: 18 });
 verifie('déterminisme du scorer', JSON.stringify(c1) === JSON.stringify(C.scorer(bf, { C: 18 })));
-verifie('16 compétences', c1.length === 16);
+verifie('le scorer rend une ligne par compétence', c1.length === C.REFERENTIEL.length);
 verifie('valeurs bornées 0-100', c1.every(x => x.potentiel >= 0 && x.potentiel <= 100 && x.expression >= 0 && x.expression <= 100));
 verifie('zones valides', c1.every(x => ['appui', 'opportunite', 'neutre', 'economie'].includes(x.zone)));
 
@@ -433,7 +433,7 @@ const equipeMixte = [
 ];
 const collMixte = C.collectif(equipeMixte);
 verifie('équipe contrastée : des référents émergent', collMixte.referents.length >= 3);
-verifie('matrice complète exposée', (collMixte.matrice || []).length === 16);
+verifie('matrice complète exposée', (collMixte.matrice || []).length === C.REFERENTIEL.length);
 verifie('chantiers au plus 3 avec motif', collMixte.chantiers.length <= 3 && collMixte.chantiers.every(x => x.motif));
 const equipeBasse = [1, 2, 3].map(i => ({ nom: 'B' + i, bigFive: { O: 30, C: 30, E: 30, A: 30, N: 70 }, ecarts: null }));
 verifie('équipe au potentiel bas : orphelines détectées', C.collectif(equipeBasse).orphelines.length > 0);
@@ -867,11 +867,80 @@ verifie('déploiement : seuil trois partout, trois défis en cours, suivi riche'
   && srcCtrl2().indexOf('cartes.slice(0, 3)') > 0 && srcCtrl2().indexOf('plan-avenir') > 0
   && srcCtrl2().indexOf("premier_pas: a.premier_pas") > 0
   && cssTxt2().indexOf('.plan-avenir{') > 0);
+verifie('architecture : le bloc c360 vit dans la fermeture, plus rien après',
+  (function () {
+    const src = srcCtrl2();
+    const fin = src.indexOf('\n})();');
+    return src.indexOf('const C360_URL') > 0 && src.indexOf('const C360_URL') < fin
+      && src.indexOf('return { c360: c360Api,') > 0
+      && src.slice(fin).indexOf('API_BASE') < 0;
+  })());
+verifie('audit : scroll rendu, Néa protégée, familles en .webp, code libre',
+  (function () {
+    const css = cssTxt2();
+    const res = require('fs').readFileSync('result.js', 'utf8');
+    const idx = require('fs').readFileSync('index.html', 'utf8');
+    return css.indexOf('height:auto') > 0 && css.indexOf('#screen-result,#screen-question,#screen-chapter') > 0
+      && css.indexOf('.chap-nea{flex-shrink:0') > 0
+      && res.split(".webp").length >= 4 && res.indexOf("slugC + '.webp'") > 0
+      && srcCtrl2().indexOf("typeof vid.play === 'function'") > 0
+      && srcCtrl2().indexOf("sinea_chap_classic'); } catch") > 0
+      && idx.indexOf('maxlength="12"') > 0;
+  })());
+verifie('design : plus aucune rayure blanche, familles et héros en dégradés pleins',
+  (function () {
+    const css = cssTxt2();
+    const i = css.indexOf('.cph:before{');
+    return css.indexOf('repeating-linear-gradient(-58deg') < 0
+      && i > 0 && css.slice(i, i + 220).indexOf('repeating') < 0
+      && css.indexOf('.fk-vt{') > 0;
+  })());
+verifie('dashboard : aucun appel ne peut figer la page, boutons repliables',
+  (function () {
+    const js = require('fs').readFileSync('dashboard.js', 'utf8');
+    const html = require('fs').readFileSync('dashboard.html', 'utf8');
+    return js.indexOf('function postJson(') > 0 && js.indexOf('AbortController') > 0
+      && js.indexOf('ne répond pas, réessayez') > 0
+      && js.indexOf('postJson(LIEN_URL') > 0
+      && html.indexOf('.fm-head{flex-wrap:wrap') > 0
+      && html.indexOf('flex:1 1 calc(50% - 8px)') > 0;
+  })());
+verifie('référentiel 1.1 : dix-neuf compétences, aucune mention chiffrée en dur',
+  (function () {
+    const R = window.Competences.REFERENTIEL;
+    const ids = R.map(function (r) { return r.id; });
+    const neuves = ['gestion_conflits', 'orientation_client', 'recevoir_feedback'];
+    const poidsOk = R.every(function (r) {
+      var t = 0; Object.keys(r.poids).forEach(function (k) { t += r.poids[k]; });
+      return Math.abs(t - 1) < 0.001;
+    });
+    return R.length === 19 && neuves.every(function (n) { return ids.indexOf(n) >= 0; })
+      && new Set(ids).size === R.length && poidsOk
+      && srcCtrl2().indexOf('seize étoiles') < 0 && srcCtrl2().indexOf('seize fronts') < 0
+      && srcCtrl2().indexOf('16 compétences') < 0
+      && require('fs').readFileSync('result.js', 'utf8').indexOf('seize comp') < 0;
+  })());
+verifie('qualité : seize items observables, un par compétence, sans trou',
+  (function () {
+    const src = srcCtrl2();
+    const i = src.indexOf('const C360_ITEMS = {');
+    if (i < 0) return false;
+    const table = new Function(src.slice(i, src.indexOf('};', i) + 2) + ' return C360_ITEMS;')();
+    return window.Competences.REFERENTIEL.every(function (r2) { return typeof table[r2.id] === 'string' && table[r2.id].length > 20; })
+      && src.indexOf('C360_ITEMS[r2.id] || r2.def') > 0;
+  })());
+verifie('qualité : le rapport habillé, en-tête, familles, seize repliées',
+  srcCtrl2().indexOf('c360-rap-tete') > 0 && srcCtrl2().indexOf('Rapport Feedback 360 · Sinéa') > 0
+  && srcCtrl2().indexOf("' compétences, par famille") > 0 && srcCtrl2().indexOf('c360-fdot') > 0
+  && cssTxt2().indexOf('.c360-rap-tete{') > 0 && cssTxt2().indexOf('.c360-tout{') > 0);
+verifie('vérification : les fenêtres fantômes bannies, le rapport protégé du vide',
+  srcCtrl2().indexOf('window.dataEspaceCourant') < 0
+  && srcCtrl2().indexOf('.campagnes || [])[0]') > 0);
 verifie('finitions : auto-note du poste, clôture lisible, miroir refondé en étapes',
   srcCtrl2().indexOf('c360AutoNote') > 0 && srcCtrl2().indexOf('autoEval: { surMesure: c360Crea.auto }') > 0
   && srcCtrl2().indexOf("'vous ' + autoV * 20") > 0
   && srcCtrl2().indexOf('mirh-n') > 0 && srcCtrl2().indexOf('ÉTAPE 1 · INVITER') > 0
-  && srcCtrl2().indexOf('mir-msgs') > 0
+  && srcCtrl2().indexOf('mir-msgs') > 0 && srcCtrl2().indexOf('il vous en reste') > 0
   && cssTxt2().indexOf('.mirh{') > 0 && cssTxt2().indexOf('.mirh-p.ok{') > 0);
 verifie('360 Pro : la couche UX, héros du répondant, compte annoncé, envoi collant',
   srcCtrl2().indexOf('c360-compte') > 0 && srcCtrl2().indexOf("classList.add('fait')") > 0
@@ -905,7 +974,7 @@ verifie('360 Pro : le rapport par rôle, fusion anonyme, badges et défis',
   && cssTxt2().indexOf('.c360-rd{') > 0 && cssTxt2().indexOf('#c360-rap,#c360-rap *{visibility:visible}') > 0);
 verifie('360 Pro : répondant par jeton, création avec fiche, tableau par rôle',
   srcCtrl2().indexOf('c360=([a-f0-9]') > 0 && srcCtrl2().indexOf('rendreC360Repondant') > 0
-  && srcCtrl2().indexOf("action: 'contexte'") > 0 && srcCtrl2().indexOf('App.c360 = {') > 0
+  && srcCtrl2().indexOf("action: 'contexte'") > 0 && srcCtrl2().indexOf('const c360Api = {') > 0
   && srcCtrl2().indexOf('c360Html()') > 0 && srcCtrl2().indexOf("action: 'items_fiche'") > 0
   && cssTxt2().indexOf('.c360-ech{') > 0 && cssTxt2().indexOf('.c360-prog{') > 0);
 verifie('miroir 360 : la lucidité sur son ancre, les catégories positives, le répondant must-have',

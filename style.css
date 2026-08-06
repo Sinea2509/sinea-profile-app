@@ -14,7 +14,7 @@
   --shadow-lift:0 8px 30px rgba(21,20,22,0.12);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;}
+html,body{min-height:100%;height:auto;}
 body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font-size:17px;line-height:1.5;overflow-x:hidden;}
 
 /* ===== Conteneur app (mobile-first, centré sur desktop) ===== */
@@ -745,7 +745,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
   grid-template-columns:repeat(5, 1fr);
   grid-auto-rows:1fr;
   gap:2px;
-  opacity:0.5;
+  opacity:0.8;
 }
 .cm-tile{
   background-size:cover;background-position:center;
@@ -755,7 +755,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 /* Voile dégradé par-dessus la mosaïque pour la lisibilité du texte */
 .cover::after{
   content:"";position:absolute;inset:0;z-index:1;
-  background:radial-gradient(circle at 50% 34%, rgba(225,95,65,0.82) 0%, rgba(85,40,115,0.90) 44%, rgba(8,8,30,0.97) 100%);
+  background:radial-gradient(circle at 50% 34%, rgba(225,95,65,0.62) 0%, rgba(85,40,115,0.72) 44%, rgba(8,8,30,0.88) 100%);
 }
 /* le contenu passe au-dessus du voile */
 .cover-inner{z-index:3 !important;}
@@ -2663,7 +2663,7 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 .fk-prologue p{font-size:15px;line-height:1.7;margin:0;}
 .fk-voix{background:#fff;border-radius:18px;overflow:hidden;margin-bottom:11px;box-shadow:0 1px 2px rgba(34,29,69,.06),0 12px 30px rgba(34,29,69,.1);}
 .fk-voix.loin{opacity:.78;}
-.fk-vt{display:flex;align-items:baseline;gap:10px;padding:12px 15px;color:#fff;background:repeating-linear-gradient(-58deg,var(--c) 0 14px,color-mix(in srgb,var(--c) 78%,#fff) 14px 17px);}
+.fk-vt{display:flex;align-items:baseline;gap:10px;padding:12px 15px;color:#fff;background:linear-gradient(115deg,color-mix(in srgb,var(--c) 86%,#fff) 0%,var(--c) 45%,color-mix(in srgb,var(--c) 72%,#000) 100%);}
 .fk-vt b{font-size:15.5px;font-weight:800;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.2);}
 .fk-vt u{text-decoration:none;font-size:10px;font-weight:800;letter-spacing:1.5px;opacity:.95;}
 .fk-vt i{font-style:italic;font-size:11px;margin-left:auto;opacity:.95;text-align:right;}
@@ -2701,7 +2701,7 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 /* ===== Les compétences en héros ===== */
 .cph-liste{display:grid;gap:9px;margin-bottom:10px;}
 .cph{border-radius:15px;padding:12px 14px;color:#fff;display:flex;align-items:center;gap:11px;background:linear-gradient(120deg,var(--c),color-mix(in srgb,var(--c) 72%,#000));box-shadow:0 8px 20px color-mix(in srgb,var(--c) 38%,transparent);position:relative;overflow:hidden;}
-.cph:before{content:"";position:absolute;inset:0 auto 0 0;width:8px;background:repeating-linear-gradient(-45deg,rgba(255,255,255,.5) 0 5px,transparent 5px 10px);}
+.cph:before{content:"";position:absolute;inset:0 auto 0 0;width:8px;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.12));}
 .cph b{font-size:13.5px;flex:1;font-weight:800;}
 .cph u{text-decoration:none;font-size:8.5px;font-weight:800;letter-spacing:1.5px;background:rgba(255,255,255,.24);border-radius:9px;padding:4px 8px;}
 .cph-bar{width:70px;height:8px;border-radius:6px;background:rgba(255,255,255,.28);overflow:hidden;flex:none;}
@@ -2849,3 +2849,22 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 .mir-msgs summary{list-style:none;font-size:11.5px;font-weight:800;color:#221D45;cursor:pointer;padding:9px 11px;background:#F5F4F0;border-radius:11px;}
 .mir-msgs summary::-webkit-details-marker{display:none;}
 .mir-msgs[open] summary{margin-bottom:8px;}
+.c360-rap-tete{border-bottom:2px solid #221D45;padding-bottom:8px;margin-top:12px;}
+.c360-rap-tete b{display:block;font-size:13px;color:#221D45;}
+.c360-rap-tete span{font-size:10px;color:#6E6A85;font-weight:700;}
+.c360-fdot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:6px;}
+.c360-tout{margin-top:10px;}
+.c360-tout summary{list-style:none;font-size:11.5px;font-weight:800;color:#221D45;cursor:pointer;padding:9px 11px;background:#F5F4F0;border-radius:11px;}
+.c360-tout summary::-webkit-details-marker{display:none;}
+.c360-tout .c360-fam{display:flex;align-items:center;gap:6px;}
+
+/* ---- Audit : scroll rendu aux écrans, Néa protégée de l'étranglement ---- */
+#screen-result,#screen-question,#screen-chapter,#screen-resume,#screen-reveal,#screen-nea,#screen-loader{overflow-y:auto;}
+#screen-chapter .chap-nea,#screen-resume .chap-nea{flex-shrink:0;}
+#screen-chapter .chap-in,#screen-resume .chap-in{height:auto;justify-content:flex-start;}
+#screen-chapter .chap-in>*,#screen-resume .chap-in>*{flex-shrink:0;}
+
+/* ---- Le logo Sinéa, en image, sur les trois surfaces ---- */
+.cover-logo img,.q-aside-logo img{display:block;height:21px;width:auto;}
+.espace-signature-logo img{display:block;height:22px;width:auto;margin:0 auto 2px;}
+@media (min-width:768px){.cover-logo img,.q-aside-logo img{height:25px;}}
