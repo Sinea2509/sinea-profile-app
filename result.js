@@ -359,7 +359,7 @@ const Result = (() => {
       : '';
     return `
       <div class="r-fiab" style="border-color:${couleur}40;background:${couleur}0d">
-        <div class="r-fiab-txt"><div class="r-fiab-lab">Fiabilité de votre profil${tagPrecise}</div><div class="r-fiab-msg">${f.message || ''}</div></div>
+        <div class="r-fiab-txt"><div class="r-fiab-lab">Cohérence de vos réponses${tagPrecise}</div><div class="r-fiab-msg">${f.message || ''}</div></div>
         <div class="r-fiab-score" style="color:${couleur}">${f.score}%</div>
       </div>`;
   }
@@ -408,7 +408,7 @@ const Result = (() => {
         return '<div class="cph" style="--c:' + cc + '"><b>' + c.nom + '</b><u>OPPORTUNIT\u00c9</u><span class="cph-bar"><i style="width:' + Math.round(c.expression) + '%"></i></span></div>';
       }).join('');
       const CLEF = SINEA_DATA.familles_cle || {};
-      const methodo = '<div class="cph-methodo"><p><b>Seize comp\u00e9tences, quatre par famille</b>, chacune pes\u00e9e sur vos cinq grands traits. Le chiffre <b>nature</b> applique ces poids \u00e0 votre mesure, le chiffre <b>travail</b> vient de vos comportements d\u00e9clar\u00e9s. Deux chiffres, deux sources, la m\u00eame personne.</p>'
+      const methodo = '<div class="cph-methodo"><p><b>' + window.Competences.REFERENTIEL.length + ' comp\u00e9tences r\u00e9parties dans les quatre familles</b>, chacune pes\u00e9e sur vos cinq grands traits. Le chiffre <b>nature</b> applique ces poids \u00e0 votre mesure, le chiffre <b>travail</b> vient de vos comportements d\u00e9clar\u00e9s. Deux chiffres, deux sources, la m\u00eame personne.</p>'
         + ['RELATION', 'ACTION', 'STRUCTURE', 'VISION'].map(function (k) {
             const noms = window.Competences.REFERENTIEL.filter(function (r2) { return r2.famille === k; }).map(function (r2) { return r2.nom; }).join(' \u00b7 ');
             const g2 = CLEF[k] || {};
@@ -417,7 +417,7 @@ const Result = (() => {
               + '<span>' + noms + '</span></div>';
           }).join('')
         + '<p class="cph-met-src">Fond\u00e9 sur le Big Five, le cadre le plus valid\u00e9 de la psychologie diff\u00e9rentielle. La conscience est le pr\u00e9dicteur le plus robuste de la performance professionnelle, Barrick et Mount, 1991.</p><p class="cph-met-rh">Les chiffres de l\u2019instrument sur notre population r\u00e9elle, stabilit\u00e9 comprise : <a href="methode.html" target="_blank" rel="noopener">la m\u00e9thode, en chiffres</a>.</p></div>';
-      return `<div class="r-section-tag">Vos compétences, la lecture Sinéa</div>
+      return `<div class="r-section-tag" role="heading" aria-level="3">Vos compétences, la lecture Sinéa</div>
         <p class="cph-intro">Vos trois forces d'abord, puis vos deux terrains \u00e0 investir. La suite montre d'o\u00f9 ils sortent.</p>
         <div class="cph-liste">${heros}</div>
         <p class="cph-liaison">Voici la carte compl\u00e8te, vos ${window.Competences.REFERENTIEL.length} comp\u00e9tences situ\u00e9es entre nature et travail.</p>
@@ -437,7 +437,7 @@ const Result = (() => {
             <div class="q16-legende">${comps.map(c2 => `<button type="button" class="q16-leg-i" data-comp="${c2.id}"><i style="background:${(window.Competences && Competences.COULEURS_FAMILLES && Competences.COULEURS_FAMILLES[c2.famille]) || '#999'}"></i>${echapHtml(c2.nom)}</button>`).join('')}</div>
           </div>
           <div id="q16-def" class="q16-def"></div>
-          <p class="r-comp-pont">Survolez une compétence de la liste pour l'allumer sur la carte, touchez-la pour lire sa définition. Dans les pistes ci-dessous, choisissez au moins une action qui travaille vos opportunités : c'est là que l'effort rapporte le plus.</p>
+          <p class="r-comp-pont">Touchez ou survolez une compétence de la liste pour l'allumer sur la carte et lire sa définition. Dans les pistes ci-dessous, choisissez au moins une action qui travaille vos opportunités : c'est là que l'effort rapporte le plus.</p>
         </div></div>
         <p class="cph-legende"><b>Nature</b>, ce que vos cinq traits portent d\u2019eux-m\u00eames. <b>Travail</b>, ce que vos r\u00e9ponses sur votre quotidien montrent. La carte croise les deux, chaque comp\u00e9tence situ\u00e9e dans votre propre paysage, autour de votre moyenne. Le cercle violet signale une comp\u00e9tence port\u00e9e par le travail au-del\u00e0 de la nature, et les cases hors diagonale s\u2019ouvrent quand nature et travail divergent.</p>
         <div class="cph-cle4">
@@ -658,7 +658,7 @@ const Result = (() => {
       const q = qualif(val, low, high);
       const desc = (BF_ZONES[d] && (val >= 60 ? BF_ZONES[d].high : (val <= 40 ? BF_ZONES[d].low : BF_ZONES[d].mid))) || '';
       return `<div class="spectre-row">
-        <div class="spectre-top"><span class="spectre-name">${name}</span><span class="spectre-qualif">${q}</span></div>
+        <div class="spectre-top"><span class="spectre-name">${name}</span><span class="spectre-qualif">${q} \u00b7 <b class="spectre-val">${Math.round(val)}</b></span></div>
         <p class="spectre-desc">${desc}</p>
         <div class="spectre-ends"><span data-tip="${(POLE_TIPS[low]||'').replace(/"/g,'&quot;')}">${low}</span><span data-tip="${(POLE_TIPS[high]||'').replace(/"/g,'&quot;')}">${high}</span></div>
         <div class="spectre-track">
@@ -699,31 +699,31 @@ const Result = (() => {
         ${guideSituationnel(res)}
         <div class="spe-chap" id="spe-ch1">
           <div class="spe-chap-head"><span class="spe-chap-num">1</span><h3>Qui vous êtes comme manager</h3></div>
-          <div class="r-section-tag">Comment votre personnalité nourrit votre management</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Comment votre personnalité nourrit votre management</div>
           <div class="r-ia" id="ia-mgmt_croisement"><div class="r-ia-tag">Votre ADN de manager</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Votre rapport à la délégation</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Votre rapport à la délégation</div>
           <div class="r-ia" id="ia-dim_delegation"><div class="r-ia-tag">Votre délégation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Votre style de feedback</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Votre style de feedback</div>
           <div class="r-ia" id="ia-dim_feedback"><div class="r-ia-tag">Votre feedback</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Exigence et bienveillance</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Exigence et bienveillance</div>
           <div class="r-ia" id="ia-dim_exigence"><div class="r-ia-tag">Votre curseur d'exigence</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         </div>
         <div class="spe-chap" id="spe-ch2">
           <div class="spe-chap-head"><span class="spe-chap-num">2</span><h3>Vous en situation</h3></div>
-          <div class="r-section-tag">Vos moments clés de manager</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos moments clés de manager</div>
           <div class="r-ia" id="ia-mgmt_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Vos formulations en situation</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos formulations en situation</div>
           <div class="r-ia" id="ia-mgmt_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Vos leviers de motivation d'équipe</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos leviers de motivation d'équipe</div>
           <div class="r-ia" id="ia-mgmt_motivation_equipe"><div class="r-ia-tag">Motiver votre équipe</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Vos contextes de réussite</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos contextes de réussite</div>
           <div class="r-ia" id="ia-mgmt_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         </div>
         <div class="spe-chap" id="spe-ch3">
           <div class="spe-chap-head"><span class="spe-chap-num">3</span><h3>Votre synthèse et votre progression</h3></div>
-          <div class="r-section-tag">Le manager que vous êtes</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Le manager que vous êtes</div>
           <div class="r-ia" id="ia-mgmt_synthese_leadership"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos angles morts et votre plan de progression</div>
           <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         </div>
         <button type="button" class="spe-fiche-btn" id="fiche-btn" onclick="Result.telechargerFiche('fiche-btn')">Ma fiche réflexe (1 page PDF)</button>
@@ -738,31 +738,31 @@ const Result = (() => {
         ${guideSituationnel(res)}
         <div class="spe-chap" id="spe-ch1">
           <div class="spe-chap-head"><span class="spe-chap-num">1</span><h3>Qui vous êtes comme commercial</h3></div>
-          <div class="r-section-tag">Comment votre personnalité nourrit votre vente</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Comment votre personnalité nourrit votre vente</div>
           <div class="r-ia" id="ia-com_croisement"><div class="r-ia-tag">Votre ADN de commercial</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Votre rapport au closing</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Votre rapport au closing</div>
           <div class="r-ia" id="ia-dim_closing"><div class="r-ia-tag">Votre closing</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Votre posture face à l'objection</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Votre posture face à l'objection</div>
           <div class="r-ia" id="ia-dim_objection"><div class="r-ia-tag">Face aux objections</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Votre tempérament commercial</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Votre tempérament commercial</div>
           <div class="r-ia" id="ia-dim_chasseur"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         </div>
         <div class="spe-chap" id="spe-ch2">
           <div class="spe-chap-head"><span class="spe-chap-num">2</span><h3>Vous en situation</h3></div>
-          <div class="r-section-tag">Vos moments clés de vente</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos moments clés de vente</div>
           <div class="r-ia" id="ia-com_moments_cles"><div class="r-ia-tag">Votre posture en situation</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Vos formulations en situation</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos formulations en situation</div>
           <div class="r-ia" id="ia-com_formulations"><div class="r-ia-tag">Vos mots à vous</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Votre style de relation client</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Votre style de relation client</div>
           <div class="r-ia" id="ia-com_relation_client"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Vos contextes de réussite commerciale</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos contextes de réussite commerciale</div>
           <div class="r-ia" id="ia-com_contextes_reussite"><div class="r-ia-tag">Analyse Sinéa</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         </div>
         <div class="spe-chap" id="spe-ch3">
           <div class="spe-chap-head"><span class="spe-chap-num">3</span><h3>Votre synthèse et votre progression</h3></div>
-          <div class="r-section-tag">Le commercial que vous êtes</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Le commercial que vous êtes</div>
           <div class="r-ia" id="ia-com_synthese_vendeur"><div class="r-ia-tag">En synthèse</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-          <div class="r-section-tag">Vos angles morts et votre plan de progression</div>
+          <div class="r-section-tag" role="heading" aria-level="3">Vos angles morts et votre plan de progression</div>
           <div class="r-ia" id="ia-spe_plan"><div class="r-ia-tag">Votre plan de progression</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         </div>
         <button type="button" class="spe-fiche-btn" id="fiche-btn" onclick="Result.telechargerFiche('fiche-btn')">Ma fiche réflexe (1 page PDF)</button>
@@ -787,6 +787,7 @@ const Result = (() => {
       { href: 'b-familles', label: 'Les 4 familles' },
       { href: 'b1', label: 'Vous connaître' },
       { href: 'b-dims', label: 'Vos dimensions profondes' },
+      { href: 'b-pilotage', label: 'Vos dimensions de pilotage' },
       { href: 'b2', label: 'Lire les autres' },
       { href: 'b3', label: 'Passer à l\'action' },
     ];
@@ -893,29 +894,30 @@ const Result = (() => {
       <div class="r-bloc" id="b1">
         <div class="r-bloc-head"><span class="r-bloc-tag">Bloc 1</span><h2>Vous connaître en profondeur</h2></div>
         ${neaSection('Commençons par l\'essentiel : vous. Voici ce que vos réponses disent de votre façon de fonctionner.')}
-        <div class="r-section-tag">Qui vous êtes</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Qui vous êtes</div>
         <div class="r-ia" id="ia-ouverture"><div class="r-ia-tag">Votre portrait</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Comment vos forces jouent ensemble</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Comment vos forces jouent ensemble</div>
         <div class="r-card r-blend-card"><div class="r-blend">${blendSegs}</div><div class="r-chips">${chips}</div></div>
         <div class="r-ia" id="ia-alchimie"><div class="r-ia-tag">Lecture croisée</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div id="ia-dynamiques"><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos forces secondaires</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos forces secondaires</div>
         <div class="r-secs-grid">${secHtml}</div>
-        <div class="r-section-tag">Votre tempérament</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre tempérament</div>
         <div class="r-card"><div class="r-temperament"><div class="r-radar">${radarSvg(res.radarFamilles,color)}</div><div class="r-spectres">${spectres(res.scoresBigFive)}</div></div>${pepite(faitBigFive(res.scoresBigFive), 'pepite-trait')}</div>
         <div class="r-ia" id="ia-bigfive"><div class="r-ia-tag">Ce que révèle le croisement de vos dimensions</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre naturel et votre adaptation au travail</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre naturel et votre adaptation au travail</div>
         <p class="r-hint">L'écart entre qui vous êtes spontanément et comment vous agissez au travail révèle où vous fournissez un effort.</p>
         ${carteNaturelAdapte(res)}
         <div class="r-ia" id="ia-naturel"><div class="r-ia-tag">Naturel et adaptation, dimension par dimension</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos tensions intérieures</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos tensions intérieures</div>
         <div id="ia-tensions"><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vous en situation</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vous en situation</div>
         <div class="r-ia" id="ia-situation"><div class="r-ia-tag">Votre profil en action</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos forces, à valider</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos forces, à valider</div>
+        <p class="r-hint">Cochez-en deux ou trois : vos choix orientent votre plan d'action et vos défis.</p>
         <p class="r-hint">Cochez ce qui résonne le plus chez vous : <b>vos choix orientent les plans d'action et les défis</b> que nous vous proposerons ensuite.</p>
         <div class="r-validables-grid">${forcesVal}</div>
-        <div class="r-section-tag">La matrice de votre personnalité</div>
+        <div class="r-section-tag" role="heading" aria-level="3">La matrice de votre personnalité</div>
         <p class="r-hint">Une vue d'ensemble de vos forces, vigilances, leviers de développement et points de friction.</p>
         ${matriceSwot(res)}
       </div>
@@ -923,50 +925,50 @@ const Result = (() => {
       <div class="r-bloc" id="b-dims">
         <div class="r-bloc-head"><span class="r-bloc-tag">Approfondissement</span><h2>Vos dimensions profondes</h2></div>
         <p class="r-bloc-intro">Cinq registres révèlent comment vous fonctionnez face aux situations clés du quotidien professionnel.</p>
-        <div class="r-section-tag">Votre profil en un coup d'œil</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre profil en un coup d'œil</div>
         ${carteDimensions(res)}
-        <div class="r-section-tag">Votre rapport au stress</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre rapport au stress</div>
         <div class="r-ia" id="ia-dim_stress"><div class="r-ia-tag">Sous tension</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Vos moteurs profonds</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos moteurs profonds</div>
         <div class="r-ia" id="ia-dim_motivation"><div class="r-ia-tag">Vos moteurs</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre rapport au risque</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre rapport au risque</div>
         <div class="r-ia" id="ia-dim_risque"><div class="r-ia-tag">Votre boussole</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre rapport au changement</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre rapport au changement</div>
         <div class="r-ia" id="ia-dim_changement"><div class="r-ia-tag">Face au mouvement</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre posture face au conflit</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre posture face au conflit</div>
         <div class="r-ia" id="ia-dim_conflit"><div class="r-ia-tag">Dans la friction</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">La synthèse de vos dimensions profondes</div>
+        <div class="r-section-tag" role="heading" aria-level="3">La synthèse de vos dimensions profondes</div>
         <div class="r-ia r-ia-synthese" id="ia-dim_synthese"><div class="r-ia-tag">Le fil conducteur</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         ${Object.keys(res.contextuelPlus || {}).length ? `
-        <div class="r-bloc-head" style="margin-top:34px"><span class="r-bloc-tag">Pilotage</span><h2>Vos dimensions de pilotage</h2></div>
+        <div class="r-bloc-head" id="b-pilotage" style="margin-top:34px"><span class="r-bloc-tag">Pilotage</span><h2>Vos dimensions de pilotage</h2></div>
         <p class="r-bloc-intro">Quatre dimensions, fondées sur la Self-Determination Theory et le modèle SMART, révèlent comment vous piloter et travailler avec vous au quotidien.</p>
-        <div class="r-section-tag">Vos dimensions en un coup d'œil</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos dimensions en un coup d'œil</div>
         ${carteDimensionsPlus(res)}
-        <div class="r-section-tag">Votre énergie et votre rythme</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre énergie et votre rythme</div>
         <div class="r-ia" id="ia-dim_energie"><div class="r-ia-tag">Votre tempo</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre mode de collaboration</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre mode de collaboration</div>
         <div class="r-ia" id="ia-dim_collaboration"><div class="r-ia-tag">Avec les autres</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Votre rapport au cadre</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre rapport au cadre</div>
         <div class="r-ia" id="ia-dim_autorite"><div class="r-ia-tag">Vous et le cadre</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">Ce qui nourrit votre engagement</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Ce qui nourrit votre engagement</div>
         <div class="r-ia" id="ia-dim_reconnaissance"><div class="r-ia-tag">Votre carburant</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
-        <div class="r-section-tag">La synthèse de votre pilotage</div>
-        <div class="r-ia r-ia-synthese" id="ia-pilotage_synthese"><div class="r-ia-tag">Votre mode d'emploi managérial</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>` : ''}
+        <div class="r-section-tag" role="heading" aria-level="3">La synthèse de votre pilotage</div>
+        <div class="r-ia r-ia-synthese" id="ia-pilotage_synthese"><div class="r-ia-tag">Votre mode d'emploi managérial</div><p class="r-prive-note">Visible par vous seul. \u00c0 partager si vous le souhaitez.</p><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>` : ''}
       </div>
 
       <div class="r-bloc" id="b2">
         <div class="r-bloc-head"><span class="r-bloc-tag">Bloc 2</span><h2>Lire et comprendre les autres</h2></div>
         ${neaSection('Maintenant que je vous cerne, voyons comment vous percevez les autres et créez du lien.')}
         <p class="r-bloc-intro">Votre profil vous offre une grille de lecture des autres. En identifiant la famille de vos interlocuteurs, vous adaptez votre communication et désamorcez les tensions plus vite.</p>
-        <div class="r-section-tag">Votre carte des familles</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre carte des familles</div>
         <div class="r-card"><div class="r-radar">${radarSvg(res.radarFamilles,color)}</div></div>
-        <div class="r-section-tag">Communiquer avec chaque famille</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Communiquer avec chaque famille</div>
         <div class="r-fams-grid">${famBlocks}</div>
-        <div class="r-section-tag">Gérer les conflits</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Gérer les conflits</div>
         <div class="r-card"><div class="r-ia-tag">Votre style en conflit</div><p style="margin:0">${maCle.mon_conflit||maCle.en_conflit||''}</p></div>
         <p class="r-hint">Désamorcer selon le profil d'en face :</p>
         <div class="r-cf-grid">${conflitRows}</div>
-        <div class="r-section-tag">Vos angles morts relationnels</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos angles morts relationnels</div>
         <div class="r-ia" id="ia-angles"><div class="r-ia-tag">Vos angles morts</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
         <div class="r-ia" id="ia-angles-coaching"><div class="r-ia-tag">Pour progresser sur vos angles morts</div><div class="r-ia-loading"><span class="mini-spin"></span>Analyse...</div></div>
       </div>
@@ -974,18 +976,18 @@ const Result = (() => {
       <div class="r-bloc" id="b3">
         <div class="r-bloc-head"><span class="r-bloc-tag">Bloc 3</span><h2>Passer à l'action</h2></div>
         ${neaSection('Place au concret. Voici comment transformer cette lecture en élan, à votre main.')}
-        <div class="r-section-tag">Vos points de vigilance</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos points de vigilance</div>
         <p class="r-hint">Lesquels aimeriez-vous travailler ?</p>
         <div class="r-validables-grid">${vigVal}</div>
-        ${levVal ? `<div class="r-section-tag">Vos leviers de développement</div>
+        ${levVal ? `<div class="r-section-tag" role="heading" aria-level="3">Vos leviers de développement</div>
         <p class="r-hint">Lesquels aimeriez-vous explorer ?</p>
         <div class="r-validables-grid">${levVal}</div>` : ''}
-        <div class="r-section-tag">Votre moteur</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre moteur</div>
         <div class="r-validable r-val-moteur" id="v-moteur-0" onclick="Result.toggleValid('moteur',0)"><div class="r-val-check">✓</div><p>${dc.moteur||''}</p></div>
         ${competencesRestitutionHtml(res)}
-        <div class="r-section-tag">Vos pistes d'action</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Vos pistes d'action</div>
         <div class="r-ia" id="ia-actions"><div class="r-ia-tag">L'IA propose, vous choisissez</div><p class="r-hint" style="margin-top:0">Sélectionnez les habitudes à développer.</p><div class="r-ia-loading"><span class="mini-spin"></span>Génération...</div></div>
-        <div class="r-section-tag">Votre signature</div>
+        <div class="r-section-tag" role="heading" aria-level="3">Votre signature</div>
         <div id="combinaison-clef"></div>
       </div>
 
@@ -1027,13 +1029,7 @@ const Result = (() => {
         </div>
       </div>
 
-      <div class="r-compat-bloc" id="compat-bloc">
-        <div class="r-me-head">
-          <div class="r-me-kicker">En équipe</div>
-          <h2 class="r-me-title">Vos compatibilités d'équipe</h2>
-          <p class="r-me-sub">Comment votre profil se combine avec les autres familles.</p>
-        </div>
-        <div class="r-compat-grid" id="compat-grid"></div>
+      <!-- v142 : les compatibilites vivent dans Mon espace, le portrait ne les repete plus -->
       </div>
 
       <div class="r-fin-cta r-cloture">
@@ -1041,7 +1037,7 @@ const Result = (() => {
         <h3 class="r-cloture-titre">Ce portrait est le vôtre.</h3>
         <p>Il vit désormais dans votre espace, avec votre plan d'action et votre coach.</p>
         <div class="r-noter"><span class="r-noter-txt">Une minute pour nous dire ce qu'il vaut, c'est ce qui le fait progresser.</span><button type="button" class="r-noter-btn" onclick="Result.ouvrirNotation()">Je donne mon avis</button></div>
-        <button class="btn-primary btn-light r-cta-espace" onclick="App.goToEspace()">Accéder à mon espace</button>
+        <div class="r-sortie"><button class="btn-primary btn-light r-cta-espace" onclick="App.goToEspace()">Accéder à mon espace</button></div>
       </div>
     `;
     document.getElementById('r-body').innerHTML=html;
@@ -1087,7 +1083,7 @@ const Result = (() => {
 
     // Remplir les compatibilités d'équipe
     const compatGrid = document.getElementById('compat-grid');
-    if (compatGrid) compatGrid.innerHTML = htmlCompatibilites(dom.famille);
+    // v142 : plus de doublon, l'espace porte seul les compatibilites (Result.htmlCompatibilites reste servi au controleur).
 
     generateIA(res);
   }
@@ -1481,7 +1477,7 @@ const Result = (() => {
 
   function validItem(type, i, txt){
     validLabels[`${type}_${i}`]=txt;
-    return `<div class="r-validable" id="v-${type}-${i}" onclick="Result.toggleValid('${type}',${i})"><div class="r-val-check">✓</div><p>${txt}</p></div>`;
+    return `<div class="r-validable" id="v-${type}-${i}" role="checkbox" aria-checked="false" tabindex="0" onclick="Result.toggleValid('${type}',${i})" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();Result.toggleValid('${type}',${i});}"><div class="r-val-check">✓</div><p>${txt}</p></div>`;
   }
   // Forces situationnelles : formulées depuis les registres et le pilotage de la personne
   const FORCES_SITU = {
@@ -1505,7 +1501,9 @@ const Result = (() => {
   const validLabels={};
   function toggleValid(type,i){
     const key=`${type}_${i}`; validations[key]=!validations[key];
-    document.getElementById(`v-${type}-${i}`).classList.toggle('sel',validations[key]);
+    const el=document.getElementById(`v-${type}-${i}`);
+    el.classList.toggle('sel',validations[key]);
+    el.setAttribute('aria-checked', validations[key] ? 'true' : 'false');
     selValidated = false;
     sauvegarderInteractions();
     majBarreSelection();
@@ -1643,7 +1641,7 @@ const Result = (() => {
       + '<p class="clarif-intro">' + intro + '</p>'
       + '<div class="r-open">'
       + '<label class="r-open-q">' + clarif.question + '</label>'
-      + '<textarea class="r-open-input" id="clarif-input" rows="3" placeholder="Votre réponse (optionnelle)..."></textarea>'
+      + '<textarea class="r-open-input" id="clarif-input" rows="3" aria-label="Votre réponse, optionnelle" placeholder="Votre réponse (optionnelle)..."></textarea>'
       + '<button type="button" class="clarif-go" id="clarif-go">Valider ma précision</button>'
       + '</div>'
       + '<div id="clarif-retour"></div>';
@@ -1731,8 +1729,8 @@ const Result = (() => {
         '<div class="r-bloc-head"><span class="r-bloc-tag">Vos mots</span><h2>Pour aller vers l\'action</h2></div>' +
         intro +
         '<div class="r-open">' +
-          '<label class="r-open-q">' + q.question + '</label>' +
-          '<textarea class="r-open-input qr-input" data-q="' + q.id + '" rows="3" placeholder="' + (q.placeholder || '') + '">' + echapHtml(openAnswers[q.id] || '') + '</textarea>' +
+          '<label class="r-open-q" for="qr-' + q.id + '">' + q.question + '</label>' +
+          '<textarea class="r-open-input qr-input" id="qr-' + q.id + '" data-q="' + q.id + '" rows="3" placeholder="' + (q.placeholder || '') + '">' + echapHtml(openAnswers[q.id] || '') + '</textarea>' +
         '</div>';
       ancre.parentNode.insertBefore(bloc, ancre);
     });
@@ -1900,6 +1898,10 @@ const Result = (() => {
   // Backend IA (Vercel) : génère toutes les sections du portrait en parallèle.
   const BACKEND_URL = API_BASE + "/generer";
 
+  // v141 : pourcentage au format français, virgule décimale et espace insécable
+  function fmtPct(p){
+    return String(p).replace('.', ',') + '\u00a0%';
+  }
   // Convertit le gras markdown **texte** en <strong>
   function mdInline(t){
     return String(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -2479,9 +2481,9 @@ const Result = (() => {
         if (dyn && Array.isArray(dyn) && dyn.length) {
           dynEl.innerHTML = dyn.map(d => `
             <div class="dyn-card">
-              <div class="dyn-paire">${d.paire || ''}</div>
-              <div class="dyn-titre">${d.titre || ''}</div>
-              <p class="dyn-desc">${d.desc || ''}</p>
+              <div class="dyn-paire">${mdInline(String(d.paire || ''))}</div>
+              <div class="dyn-titre">${mdInline(String(d.titre || ''))}</div>
+              <p class="dyn-desc">${mdInline(String(d.desc || ''))}</p>
             </div>`).join('');
         } else {
           dynEl.innerHTML = `<div class="r-card"><p>Vos trois forces s'équilibrent et se renforcent mutuellement.</p></div>`;
@@ -2632,8 +2634,8 @@ const Result = (() => {
     }).join('');
     const textQs = m3.questions.filter(q => q.type === 'texte_court').map(q => `
       <div class="m3-field">
-        <label class="m3-q">${q.question}${q.optionnel ? ' <span class="m3-opt">(optionnel)</span>' : ''}</label>
-        <textarea class="m3-input" rows="2" placeholder="${q.placeholder}" oninput="Result.setAvis('${q.id}', this.value)"></textarea>
+        <label class="m3-q" for="m3i-${q.id}">${q.question}${q.optionnel ? ' <span class="m3-opt">(optionnel)</span>' : ''}</label>
+        <textarea class="m3-input" id="m3i-${q.id}" rows="2" placeholder="${q.placeholder}" oninput="Result.setAvis('${q.id}', this.value)"></textarea>
       </div>`).join('');
     scr.innerHTML = `
       <div class="m3-scroll">
@@ -2705,7 +2707,7 @@ const Result = (() => {
       if (b3 && !document.getElementById('reperes-agir')) {
         const rep = document.createElement('div');
         rep.id = 'reperes-agir';
-        rep.innerHTML = '<div class="r-section-tag">Trois repères pour agir</div><div class="r-card"><ul class="ess-liste">' + conseils.map(x => '<li>' + sansGras(x) + '</li>').join('') + '</ul></div>';
+        rep.innerHTML = '<div class="r-section-tag" role="heading" aria-level="3">Trois repères pour agir</div><div class="r-card"><ul class="ess-liste">' + conseils.map(x => '<li>' + sansGras(x) + '</li>').join('') + '</ul></div>';
         const tete = b3.querySelector('.r-bloc-head');
         if (tete && tete.nextSibling) b3.insertBefore(rep, tete.nextSibling.nextSibling || tete.nextSibling);
         else b3.appendChild(rep);
@@ -2715,7 +2717,7 @@ const Result = (() => {
     const f = res.fiabilite;
     if (f && typeof f.score === 'number'){
       const fort = (f.signaux || []).some(x => x && x.niveau === 'fort');
-      h += '<div class="ess-fiab">Fiabilité de la mesure : <b>' + f.score + '/100, ' + (f.niveau || '') + '</b>.' + (fort ? ' Un signal de cohérence a été détecté et retravaillé par vos précisions : l\'échange avec votre formateur affinera encore la lecture.' : '') + '</div>';
+      h += '<div class="ess-fiab">Cohérence de vos réponses : <b>' + f.score + '/100, ' + (f.niveau || '') + '</b>.' + (fort ? ' Un signal de cohérence a été détecté et retravaillé par vos précisions : l\'échange avec votre formateur affinera encore la lecture.' : '') + '</div>';
     }
     // Le regard des autres, une ligne : le 360 est la fonctionnalité à faire
     // connaître, une personne sur huit l'avait reçu au re-pilote.
@@ -2754,7 +2756,7 @@ const Result = (() => {
         const fvHtml = window.Visuels.forcesVigilancesHtml(compsFV, priFV);
         if (fvHtml) {
           const zfv = document.createElement('div');
-          zfv.innerHTML = '<div id="fv-bloc"><div class="r-section-tag">Vos forces et vos vigilances</div><div class="r-card">' + fvHtml + '</div></div>';
+          zfv.innerHTML = '<div id="fv-bloc"><div class="r-section-tag" role="heading" aria-level="3">Vos forces et vos vigilances</div><div class="r-card">' + fvHtml + '</div></div>';
           const blocEss = document.getElementById('essentiel-bloc');
           blocEss.parentNode.insertBefore(zfv.firstChild, blocEss.nextSibling);
         }
@@ -2919,6 +2921,7 @@ const Result = (() => {
         const det = document.createElement('details');
         det.className = 'q16-details';
         det.innerHTML = '<summary>Explorer la carte complète des ' + window.Competences.REFERENTIEL.length + ' compétences</summary>';
+        try { if (window.matchMedia && matchMedia('(min-width: 900px)').matches) det.open = true; } catch (e) {}
         zones.parentNode.insertBefore(det, lect || zones);
         if (lect) det.appendChild(lect);
         det.appendChild(zones);
@@ -2984,12 +2987,12 @@ const Result = (() => {
       const tuiles = [];
       if (appuis.length === 3) tuiles.push('<div class="r-ess-tuile"><div class="r-ess-k">Vos trois appuis</div><ul class="r-ess-list">' + appuis.map(function(n){ return '<li>' + n + '</li>'; }).join('') + '</ul></div>');
       if (tension) tuiles.push('<div class="r-ess-tuile"><div class="r-ess-k">Votre tension \u00e0 conna\u00eetre</div><p class="r-ess-p">' + tension + '.</p></div>');
-      if (rar.affichage || rar.pct) tuiles.push('<div class="r-ess-tuile"><div class="r-ess-k">Votre singularit\u00e9</div><div class="r-ess-num">' + (rar.affichage || (rar.pct + '%')) + '</div><p class="r-ess-p">partagent votre combinaison d\'arch\u00e9types.</p></div>');
+      if (rar.affichage || rar.pct) tuiles.push('<div class="r-ess-tuile"><div class="r-ess-k">Votre singularit\u00e9</div><div class="r-ess-num">' + (rar.affichage || fmtPct(rar.pct)) + '</div><p class="r-ess-p">partagent votre combinaison d\'arch\u00e9types.</p></div>');
       if (tuiles.length < 2) return;
       const d = document.createElement('section');
       d.id = 'r-essentiel';
       d.className = 'r-essentiel';
-      d.innerHTML = '<div class="r-ess-head"><span class="r-ess-kicker">L\'essentiel \u00b7 deux minutes</span><h2 class="r-ess-titre">' + String(res.dominante.nom) + ', en bref.</h2></div><div class="r-ess-grid">' + tuiles.join('') + '</div><button type="button" class="r-ess-btn" onclick="var b=document.querySelector(\'#screen-result .r-bloc\');if(b)b.scrollIntoView({behavior:\'smooth\',block:\'start\'});">Entrer dans le portrait</button>';
+      d.innerHTML = '<div class="r-ess-head"><span class="r-ess-kicker">L\'essentiel \u00b7 deux minutes</span><h2 class="r-ess-titre">' + String(res.dominante.nom) + ', en bref.</h2></div><div class="r-ess-grid">' + tuiles.join('') + '</div><button type="button" class="r-ess-btn" onclick="var b=document.querySelector(\'#screen-result .r-bloc\');if(b)b.scrollIntoView({behavior:\'smooth\',block:\'start\'});">Entrer dans le portrait</button><p class="r-ess-note">Lecture compl\u00e8te : <span id="r-duree-tot">\u2248 40 min</span>. Votre position se retient, vous reprenez o\u00f9 vous vous \u00eates arr\u00eat\u00e9.</p>';
       hero.parentNode.insertBefore(d, hero.nextSibling);
     } catch (e) { console.warn('[Sin\u00e9a]', e); }
   }
@@ -3014,7 +3017,12 @@ const Result = (() => {
       return { id: b.id, t: t };
     });
     const num = function(i){ return (i + 1 < 10 ? '0' : '') + (i + 1); };
-    const boutons = items.map(function(it, i){ return '<button type="button" class="somm-b" data-cible="' + it.id + '">' + num(i) + ' \u00b7 ' + it.t + '</button>'; }).join('');
+    // v142 : la duree reelle de chaque chapitre, comptee sur le texte rendu
+    const minutes = blocs.map(function(b){ return Math.max(1, Math.round((b.textContent || '').split(/\s+/).length / 200)); });
+    const totalMin = minutes.reduce(function(x, y){ return x + y; }, 0);
+    const dTot = document.getElementById('r-duree-tot');
+    if (dTot) dTot.textContent = '\u2248 ' + totalMin + ' min';
+    const boutons = items.map(function(it, i){ return '<button type="button" class="somm-b" data-cible="' + it.id + '">' + num(i) + ' \u00b7 ' + it.t + '<i class="somm-min">' + minutes[i] + ' min</i></button>'; }).join('');
     const nav = document.createElement('nav');
     nav.id = 'r-sommaire';
     nav.setAttribute('aria-label', 'Sommaire du portrait');
@@ -3061,10 +3069,27 @@ const Result = (() => {
         const cpt = document.getElementById('somm-cpt'); if (cpt) cpt.textContent = (idx + 1) + ' / ' + items.length;
         const cur = document.getElementById('somm-mob-cur'); if (cur) cur.textContent = num(idx) + ' \u00b7 ' + items[idx].t;
         const mc = document.getElementById('somm-mob-cpt'); if (mc) mc.textContent = (idx + 1) + ' / ' + items.length;
+        try { if (idx > 0) localStorage.setItem('sinea_reprise', JSON.stringify({ id: id, t: items[idx].t, n: idx + 1 })); } catch (e2) {}
       });
     }, { rootMargin: '-25% 0px -60% 0px' });
     blocs.forEach(function(b){ obs.observe(b); });
     scr.__sommObs = obs;
+    // v142 : la reprise de lecture, un bandeau discret quand une position est retenue
+    try {
+      const rep = JSON.parse(localStorage.getItem('sinea_reprise') || 'null');
+      if (rep && rep.id && document.getElementById(rep.id) && !document.getElementById('r-reprendre')) {
+        const bd = document.createElement('div');
+        bd.id = 'r-reprendre';
+        bd.innerHTML = '<button type="button" class="r-reprendre-btn">Reprendre au chapitre ' + (rep.n || '') + ' \u00b7 ' + (rep.t || '') + '</button>';
+        const ess = document.getElementById('r-essentiel');
+        if (ess && ess.parentNode) ess.parentNode.insertBefore(bd, ess.nextSibling);
+        bd.querySelector('button').onclick = function(){
+          const c = document.getElementById(rep.id);
+          if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          bd.remove();
+        };
+      }
+    } catch (e3) {}
   }
 
   // ===== La lecture par chapitres =====
@@ -3191,7 +3216,7 @@ const Result = (() => {
       const r = await fetch(API_BASE + '/normes');
       if (!r.ok) return;
       const d = await r.json();
-      if (!d || !d.traits || d.n < (d.min_requis || 10)) return;
+      if (!d || !d.traits || d.n < (d.min_requis || 200)) return; // v141 : un centile se mérite, deux cents profils au moins
       SINEA_DATA.normes = {};
       Object.keys(d.traits).forEach(function (t) { SINEA_DATA.normes[t] = d.traits[t].percentiles; });
       const bf = res.scoresBigFive;
@@ -3272,7 +3297,7 @@ const Result = (() => {
     const eq = parts.map(function (x) {
       return '<span class="cb-p" style="--c:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.nom + '<i>' + x.pct + '%</i></span>';
     }).join('<em>+</em>')
-      + '<em>=</em><span class="cb-r">cette combinaison<i>' + (rar && rar.pct ? rar.pct + '% des profils' : 'la v\u00f4tre') + '</i></span>';
+      + '<em>=</em><span class="cb-r">cette combinaison<i>' + (rar && rar.pct ? fmtPct(rar.pct) + ' des profils' : 'la v\u00f4tre') + '</i></span>';
     const tailles = [132, 92, 72];
     const persos = parts.map(function (x, i) {
       return '<span class="cb-a"><img src="' + SINEA_DATA.image(x.nom) + '.webp" alt="" style="width:' + tailles[i] + 'px;height:' + tailles[i] + 'px;border-color:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '"><b style="background:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.pct + '%</b></span>';
@@ -3283,7 +3308,7 @@ const Result = (() => {
       + '<div class="cb-trio">' + persos + '</div>'
       + '<div class="cb-sig"><div class="cb-l1">' + combis + ' combinaisons possibles. La v\u00f4tre :</div>'
       + '<div class="cb-combo">' + parts.map(function (x) { return '<s style="color:' + (COULEURS_FAM_R[x.fam] || '#5E59C7') + '">' + x.nom.replace(/^(Le |La |L\u2019|L')/, '') + ' ' + x.pct + '</s>'; }).join(' \u00b7 ') + '</div>'
-      + (sur1000 ? '<div class="cb-n">' + sur1000 + ' <em>personne' + (sur1000 > 1 ? 's' : '') + ' sur</em> 1\u00a0000 <em>la partage' + (sur1000 > 1 ? 'nt' : '') + '</em></div>' : '')
+      + (sur1000 ? '<div class="cb-n">' + sur1000 + ' <em>personne' + (sur1000 > 1 ? 's' : '') + ' sur</em> 1\u00a0000 <em>la partage' + (sur1000 > 1 ? 'nt' : '') + ', en th\u00e9orie</em></div>' : '')
       + '</div></div>';
   }
 

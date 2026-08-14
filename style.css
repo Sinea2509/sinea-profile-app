@@ -1,5 +1,5 @@
 :root{
-  --c-white:#FFFFFF; --c-beige:#F5F4F0; --c-medium-grey:#C9C9C9; --c-grey:#747474;
+  --c-white:#FFFFFF; --c-beige:#F5F4F0; --c-medium-grey:#C9C9C9; --c-grey:#5F5F5F;
   --c-dark-grey:#2D2D2D; --c-black:#151416; --c-dark:#1A1A1A;
   --c-red:#F98272; --c-orange:#F9A876; --c-pink:#E290EC; --c-pink-light:#F4BEFA;
   --c-purple:#8884F0; --c-purple-text:#5E59C7; --c-blue-purple:#5474F5; --c-blue:#3EADFF; --c-light-blue:#DCEEFF;
@@ -260,7 +260,7 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .spectre-ends{display:flex;justify-content:space-between;font-size:11px;color:var(--c-grey);margin-bottom:5px;}
 .spectre-track{position:relative;height:8px;background:#E4E2DC;border-radius:4px;}
 .spectre-fill{position:absolute;left:0;height:100%;border-radius:4px;background:var(--g-primary);}
-.spectre-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;background:var(--c-white);border:2.5px solid var(--c-purple);border-radius:50%;}
+.spectre-dot{position:absolute;top:50%;width:4px;height:18px;border-radius:3px;background:#1A1A2E;transform:translate(-50%,-50%);}
 
 /* Familles : à faire / à éviter */
 .r-fam{border-left:4px solid var(--fam-color,#F98272);background:var(--c-white);border-radius:14px;padding:18px;margin-bottom:12px;border:1px solid #EAE7E0;}
@@ -681,8 +681,8 @@ body{font-family:var(--font);background:var(--c-beige);color:var(--c-black);font
 .dimc-row{display:flex;flex-direction:column;gap:9px;}
 .dimc-titre{font-size:13px;font-weight:700;color:var(--c-dark-grey);text-transform:uppercase;letter-spacing:0.04em;}
 .dimc-opts{display:flex;flex-wrap:wrap;gap:7px;}
-.dimc-opt{font-size:13px;font-weight:600;color:var(--c-medium-grey);background:#F2F0EA;border-radius:100px;padding:6px 13px;transition:all 0.2s;}
-.dimc-sel{background:var(--g-orangepink);color:#fff;box-shadow:0 3px 12px rgba(226,144,236,0.28);}
+.dimc-opt{font-size:13px;font-weight:600;color:#6E6B7C;background:#F2F0EA;border-radius:100px;padding:6px 13px;transition:all 0.2s;}
+.dimc-sel{background:#5E59C7;color:#fff;box-shadow:0 3px 12px rgba(94,89,199,0.28);}
 
 /* Jauges Big Five enrichies : qualificatif + graduation */
 .spectre-qualif{font-size:12.5px;font-weight:600;color:var(--c-purple-text);font-style:italic;}
@@ -2412,7 +2412,7 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 .r-hero-carte img{width:100%;height:auto;display:block;border-radius:24px;border:3px solid rgba(255,255,255,0.25);box-shadow:0 26px 60px rgba(15,12,40,0.5);transform:rotate(-2.4deg);}
 @media (max-width:1100px){ .r-hero-carte{display:none;} }
 #screen-result{counter-reset:chapitre;}
-#screen-result .r-bloc-head .r-bloc-tag::before, #screen-result .r-section-tag::before{counter-increment:chapitre;content:counter(chapitre,decimal-leading-zero) " · ";letter-spacing:0.05em;}
+#screen-result .r-bloc-head .r-bloc-tag::before{counter-increment:chapitre;content:counter(chapitre,decimal-leading-zero) " · ";letter-spacing:0.05em;}
 #screen-result .r-bloc-head h2{font-size:25px;letter-spacing:-0.01em;line-height:1.2;}
 #screen-result .r-ia > p:first-of-type{font-size:19px;line-height:1.55;color:#26233A;}
 #screen-result .r-ia p{line-height:1.7;}
@@ -2430,7 +2430,7 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
   .espace-hero-perso img{border-radius:18px;border-width:2px;transform:rotate(3deg);}
 }
 #screen-result{counter-reset:chapitre;}
-#screen-result .r-bloc-head .r-bloc-tag::before, #screen-result .r-section-tag::before{counter-increment:chapitre;content:counter(chapitre,decimal-leading-zero) " \00b7  ";letter-spacing:0.05em;display:inline;}
+#screen-result .r-bloc-head .r-bloc-tag::before{counter-increment:chapitre;content:counter(chapitre,decimal-leading-zero) " \00b7  ";letter-spacing:0.05em;display:inline;}
 
 /* ===== v123 : la navigation respire, le portrait partout, la rareté en scène ===== */
 .esp-nav{position:sticky;top:10px;z-index:60;margin:0 0 18px;padding:8px;background:rgba(245,244,240,0.9);backdrop-filter:blur(10px);border:1px solid #E7E4DB;border-radius:18px;width:fit-content;display:flex;gap:8px;flex-wrap:wrap;}
@@ -2868,3 +2868,62 @@ g[data-comp].q16-hi circle:last-of-type{stroke:#221D45;stroke-width:2.5;}
 .cover-logo img,.q-aside-logo img{display:block;height:21px;width:auto;}
 .espace-signature-logo img{display:block;height:22px;width:auto;margin:0 auto 2px;}
 @media (min-width:768px){.cover-logo img,.q-aside-logo img{height:25px;}}
+
+/* ===== v137 : le tunnel 360 dans le bon ordre, messages verrouillés avant le lien ===== */
+.mir-cta-large{width:100%;margin-top:2px;font-size:14.5px;padding:13px 20px;}
+.mir-verrou .esp-mir-msg-txt,.mir-verrou .esp-mir-msg-cible{opacity:.45;}
+.mir-verrou .esp-mir-msg{position:relative;}
+.mir-verrou .esp-mir-msg::after{content:"";position:absolute;inset:0;border-radius:13px;background:rgba(245,244,240,.35);pointer-events:none;}
+.mir-note-verrou{font-size:11.5px;font-weight:700;color:#9A96AD;margin:2px 0 0;}
+.mir-lien-injecte{background:rgba(94,89,199,.12);border-radius:6px;padding:1px 5px;color:#5E59C7;font-weight:700;font-style:normal;word-break:break-all;}
+details.mir-msgs summary{font-size:12.5px;font-weight:700;color:#5E59C7;cursor:pointer;margin:2px 0 6px;}
+/* Deux règles .mir-et cohabitent, celle des boutons de filtre impose un poids 800
+   dont la carte d'étape hérite. Le guide retrouve ici son poids de lecture. */
+.mir-et .esp-mir-guide{font-weight:400;}
+.mir-et{cursor:default;}
+.mir-etapes .mir-et{cursor:pointer;}
+
+/* ===== v138 : hiérarchie des actions, légende des scores, barre opaque, déconnexion discrète, bandeau du jour ===== */
+.esp-cp-legende{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:0 0 12px;font-size:12px;font-weight:700;color:#4A4757;}
+.esp-cp-legende span{display:inline-flex;align-items:center;gap:7px;}
+.esp-cp-leg-pot{width:26px;height:9px;border-radius:5px;background:linear-gradient(90deg,#B9A6E8,#5E59C7);}
+.esp-cp-leg-expr{width:3px;height:15px;border-radius:2px;background:#F98272;}
+.esp-cp-leg-nb{color:#6B6B72;font-weight:600;}
+.espace-pdf-lien{display:inline-block;background:none;border:none;padding:6px 0;margin:8px 0 0;font-family:var(--font);font-size:12.5px;font-weight:700;color:#6E6A85;text-decoration:underline;cursor:pointer;}
+.espace-pdf-lien:disabled{opacity:0.5;cursor:default;}
+.esp-res-btn-sec{background:rgba(255,255,255,0.14);color:#fff;border:1px solid rgba(255,255,255,0.4);}
+.esp-nav{width:100%;justify-content:center;background:rgba(245,244,240,0.97);}
+#screen-espace [id^="espace-"]{scroll-margin-top:70px;}
+.esp-quit-lien{background:none;border:none;font-family:var(--font);font-size:12.5px;font-weight:700;color:#8B8896;text-decoration:underline;cursor:pointer;padding:8px 0;min-height:40px;}
+.esp-footer-quit{display:flex;justify-content:flex-end;margin:4px 0 0;}
+.acc-jour{flex:1;min-width:180px;font-size:13.5px;color:#fff;font-weight:700;line-height:1.4;}
+.acc-jour small{display:block;font-size:10.5px;font-weight:800;letter-spacing:1.4px;color:#F6C477;margin-bottom:2px;}
+@media (max-width:640px){ .acc-jour{min-width:100%;} }
+
+/* ===== v139 : accessibilité, titres marqués, focus visible, contrastes, cibles tactiles ===== */
+:focus-visible{outline:3px solid #5E59C7;outline-offset:2px;}
+.r-chat-input:focus{border-color:var(--c-purple);}
+@media (max-width:768px){
+  .esp-nav-b,.esp-rem-btn,.esp-res-btn,.esp-btn,.ckl-cta,.ckl-deja,.esp-mir-msg-btn,.esp-mir-copie,.esp-quit-lien,.espace-pdf-lien{min-height:44px;}
+}
+
+/* ===== v140 : conversion et rétention, module ouvert à la demande, checklist en cases, sparring au choix ===== */
+.ckl-ic{border:none;background:none;font-family:inherit;font-size:16px;color:#9A96AD;cursor:pointer;padding:6px 8px;min-height:40px;border-radius:10px;}
+.ckl-ic:hover{background:#F1EFE8;color:#2E9E6B;}
+.esp-lock-btn{display:inline-block;margin-top:9px;font-size:12.5px;font-weight:800;color:#5E59C7;text-decoration:underline;}
+.spar-lab{display:block;font-size:11.5px;font-weight:800;letter-spacing:0.04em;color:#6E6A85;margin:2px 0 5px;}
+#spar-sujet::placeholder{color:#AFACBB;font-weight:500;}
+.espace-legal{margin-top:14px;font-size:11.5px;line-height:1.7;color:#8B8896;display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center;}
+.espace-legal a{color:#6E6A85;font-weight:700;}
+@media (max-width:768px){ .ckl-ic{min-height:44px;} }
+
+/* ===== v142 : lisibilite de la restitution, durees, reprise, cadrages ===== */
+.somm-min{display:block;font-style:normal;font-size:10px;font-weight:700;color:#9A96AD;margin-top:1px;}
+.r-ess-note{margin:10px 0 0;font-size:12px;color:#8B8896;font-weight:600;}
+.r-reprendre-btn{display:block;margin:10px auto 0;border:1.5px solid #5E59C7;background:#fff;color:#5E59C7;font-family:var(--font);font-size:13px;font-weight:800;padding:10px 18px;border-radius:22px;cursor:pointer;}
+.r-prive-note{font-size:11.5px;font-weight:700;color:#8B8896;margin:2px 0 8px;}
+.r-sortie{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.25);}
+.r-hint{font-size:12.5px;color:#6E6A85;font-weight:600;margin:2px 0 10px;}
+
+/* ===== v143 : le spectre affiche sa valeur, le marqueur ne singe plus un reglage ===== */
+.spectre-val{font-weight:800;color:#1A1A2E;}

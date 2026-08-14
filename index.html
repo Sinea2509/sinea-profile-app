@@ -2,11 +2,11 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sinéa Profile</title>
-<meta name="description" content="Découvrez votre archétype professionnel, vos seize compétences et votre plan de développement personnalisé.">
+<meta name="description" content="Découvrez votre archétype professionnel, vos dix-neuf compétences et votre plan de développement personnalisé.">
 <meta property="og:title" content="Sinéa Profile">
-<meta property="og:description" content="Découvrez votre archétype professionnel, vos seize compétences et votre plan de développement personnalisé.">
+<meta property="og:description" content="Découvrez votre archétype professionnel, vos dix-neuf compétences et votre plan de développement personnalisé.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#221D45">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23221D45'/%3E%3Ccircle cx='24' cy='38' r='7' fill='%235E59C7'/%3E%3Ccircle cx='40' cy='24' r='5' fill='%23E8951A'/%3E%3Ccircle cx='44' cy='42' r='3.5' fill='%23F5F4F0'/%3E%3Cpath d='M24 38 L40 24 L44 42' stroke='%23F5F4F0' stroke-width='1.6' fill='none' opacity='0.55'/%3E%3C/svg%3E">
@@ -124,19 +124,18 @@
       <div class="espace-hero" id="espace-hero">
         <div class="espace-hero-txt">
           <div class="espace-hi">Votre espace personnel</div>
-          <div class="espace-name" id="espace-name">Bonjour</div>
+          <div class="espace-name" id="espace-name" role="heading" aria-level="1">Bonjour</div>
           <div class="espace-arch" id="espace-arch"></div>
           <div class="espace-accueil" id="espace-accueil"></div>
 
         </div>
         <div class="espace-hero-perso" id="espace-hero-perso"></div>
-        <button type="button" class="esp-quit" id="esp-quit" onclick="App.seDeconnecter()">Me déconnecter</button>
       </div>
-      <div class="esp-nav" role="tablist">
+      <nav class="esp-nav" aria-label="Sections de votre espace">
         <button type="button" class="esp-nav-b on" data-t="accueil" aria-pressed="true" onclick="App.espTab('accueil')">Mon portrait</button>
         <button type="button" class="esp-nav-b" data-t="dev" aria-pressed="false" onclick="App.espTab('dev')">Mon plan</button>
         <button type="button" class="esp-nav-b" data-t="miroir" aria-pressed="false" onclick="App.espTab('miroir')">Mon regard 360</button>
-      </div>
+      </nav>
       <!-- Onglet Lire : les analyses d'abord, la carte longue repliée en dernier -->
       <div id="espace-banniere"></div>
       <div id="espace-resultats"></div>
@@ -159,9 +158,14 @@
       </div>
       <div class="espace-signature">
         <div class="espace-signature-logo"><img src="logo-sinea.svg" alt="Sinéa" /></div>
-        <div class="espace-signature-tag">Votre espace évolue avec vous. Revenez quand vous le souhaitez, avec votre email.</div>
+        <div class="espace-signature-tag">Votre espace évolue avec vous. Vos regards 360 arrivent ici, votre re-mesure des 90 jours aussi, revenez avec votre email.</div>
+        <div class="espace-legal">
+          <span>Vos réponses restent confidentielles et servent uniquement votre accompagnement.</span>
+          <span class="espace-legal-liens"><a href="mentions.html" target="_blank" rel="noopener">Mentions légales</a> · <a href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a> · <a href="mailto:contact@sineaformation.fr">Contact</a></span>
+        </div>
       </div>
     </div>
+      <div class="esp-footer-quit"><button type="button" class="esp-quit-lien" id="esp-quit" onclick="App.seDeconnecter()">Me déconnecter</button></div>
   </section>
 
   <section class="screen" id="screen-question">

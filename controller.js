@@ -1,6 +1,6 @@
 // Marqueur de version et garde d'erreurs globale (source unique)
-console.log("Sinea Profile v136 servie");
-window.addEventListener('error', function (e) { console.error('[Sinéa v136]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
+console.log("Sinea Profile v143 servie");
+window.addEventListener('error', function (e) { console.error('[Sinéa v143]', e.message, (e.filename || '') + ':' + (e.lineno || '')); });
 
 // ============================================================
 // CONTRÔLEUR D'AFFICHAGE · App v2 mobile-first premium
@@ -723,6 +723,7 @@ const App = (() => {
         poserMiroir(data, carte);
         try { checklistCtx = { data: dataEspaceCourant, carte: carte }; poserChecklist(dataEspaceCourant, carte); } catch (e) { console.warn('[Sinéa]', e); }
         try { poserCockpit(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
+        try { poserBandeauJour(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         try { poserCompetencesEspace(dataEspaceCourant, carte); } catch (e) { console.warn("[Sinéa]", e); }
         try { poserBanniere(dataEspaceCourant); } catch (e) { console.warn("[Sinéa]", e); }
         try { poserSparring(dataEspaceCourant); } catch (e) { console.warn("[Sinéa]", e); }
@@ -859,6 +860,15 @@ const App = (() => {
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
+    // v137 : le changement d'onglet remonte au haut du panneau et y pose le focus.
+    // La garde évite le défilement parasite quand la personne est déjà en haut de page.
+    const nav = document.querySelector('.esp-nav');
+    if (nav && nav.getBoundingClientRect().top <= 12) {
+      const doux = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+      window.scrollTo({ top: nav.offsetTop - 10, behavior: doux });
+    }
+    const premier = (groupes[t] || []).map(function (id) { return document.getElementById(id); }).find(Boolean);
+    if (premier) { premier.setAttribute('tabindex', '-1'); premier.focus({ preventScroll: true }); }
   }
 
   // ===== Le cockpit : l'action du jour et les engagements =====
@@ -885,7 +895,7 @@ const App = (() => {
       + (gFam.symbole ? '<span class="esp-ban-emb" style="color:' + c + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + gFam.symbole + '</svg></span>' : '')
       + '<span class="esp-ban-txt"><b>' + dom.nom + '</b><i>Famille ' + libFam + (verbe ? ' · ' + verbe : '') + '</i></span>'
       + '<button type="button" class="esp-ban-copie" onclick="App.copierBanniere(this)" data-t="'
-      + echapValeur(dom.nom + ' · Famille ' + libFam + (verbe ? ' · ' + verbe : '') + ' · Sinéa Profile') + '">Copier</button>'
+      + echapValeur(dom.nom + ' · Famille ' + libFam + (verbe ? ' · ' + verbe : '') + ' · Sinéa Profile') + '" aria-live="polite">Copier ma carte</button>'
       + '</div>';
   }
   function copierBanniere(btn) {
@@ -899,7 +909,7 @@ const App = (() => {
   // On s'entraîne contre un personnage type du référentiel, jamais contre une
   // personne nommée. Trois minutes d'échange, puis le débrief en trois points.
   let sparEtat = null;
-  let sparFam = 'STRUCTURE';
+  let sparFam = '';  // v140 : aucun tempérament présélectionné, la personne choisit.
   const SPAR_SITUATIONS = ['Annoncer un retard', 'Demander des moyens', 'Recadrer sans casser'];
   function poserSparring(data) {
     const slot = document.getElementById('espace-sparring');
@@ -912,17 +922,18 @@ const App = (() => {
         + '<span class="spar-fam-txt"><b>' + (g.verbe || k) + '</b><i>' + (g.repere || '') + '</i></span></button>';
     }).join('');
     const sits = SPAR_SITUATIONS.map(function (t, i) {
-      return '<button type="button" class="spar-sit-b' + (i === 0 ? ' on' : '') + '" onclick="App.sparSituation(this)">' + t + '</button>';
+      return '<button type="button" class="spar-sit-b" onclick="App.sparSituation(this)">' + t + '</button>';
     }).join('');
     slot.innerHTML = '<div class="esp-rem spar">'
       + '<div class="esp-rem-kicker">Sparring · Entraînez la conversation</div>'
-      + '<div class="esp-rem-titre">Votre interlocuteur est plutôt…</div>'
+      + '<div class="esp-rem-titre" role="heading" aria-level="2">Choisissez le tempérament de votre interlocuteur</div>'
       + '<div class="spar-fam">' + fams + '</div>'
       + '<p class="spar-p">Vous vous entraînez contre le tempérament d\'une famille, jamais contre une personne nommée.</p>'
       + '<div class="spar-sit">' + sits + '</div>'
       + '<div class="spar-form">'
-      + '<input id="spar-sujet" type="text" maxlength="200" value="Annoncer un retard">'
-      + '<button type="button" class="esp-rem-btn" onclick="App.sparDemarrer()">Démarrer l\'entraînement</button></div>'
+      + '<label class="spar-lab" for="spar-sujet">Votre situation, en une phrase</label>'
+      + '<input id="spar-sujet" type="text" maxlength="200" placeholder="Annoncer un retard, demander des moyens…">'
+      + '<button type="button" class="esp-rem-btn" id="spar-go" onclick="App.sparDemarrer()"' + (sparFam ? '' : ' disabled') + '>Démarrer l\'entraînement</button></div>'
       + '<div id="spar-fil"></div>'
       + '<div id="spar-saisie" style="display:none"><textarea id="spar-msg" rows="2" maxlength="600" placeholder="Votre réplique"></textarea>'
       + '<div class="spar-boutons"><button type="button" class="esp-rem-btn" onclick="App.sparEnvoyer()">Envoyer</button>'
@@ -931,7 +942,9 @@ const App = (() => {
       + '</div>';
   }
   function sparChoisirFam(btn) {
-    sparFam = btn.getAttribute('data-fam') || 'STRUCTURE';
+    sparFam = btn.getAttribute('data-fam') || '';
+    const go = document.getElementById('spar-go');
+    if (go) go.disabled = !sparFam;
     document.querySelectorAll('.spar-fam-b').forEach(function (b2) { b2.classList.toggle('on', b2 === btn); });
   }
   function sparSituation(btn) {
@@ -990,6 +1003,57 @@ const App = (() => {
       document.getElementById('spar-saisie').style.display = 'none';
     } catch (e) { v.innerHTML = '<p class="spar-p">Le débrief est indisponible, réessayez.</p>'; }
   }
+  // v138 : le calcul de l'action du jour, partagé entre le cockpit et le bandeau du plan.
+  // Retourne null quand aucune action ne se distingue, chaque appelant garde son repli.
+  function calculerActionDuJour(data, carte){
+    const socle = (data && data.analyses && data.analyses.socle) || {};
+    const dateSocle = (socle.date || (socle.profil && socle.profil.date)) ? new Date(socle.date || socle.profil.date).getTime() : null;
+    const jour = dateSocle ? Math.max(0, Math.round((Date.now() - dateSocle) / 86400000)) : null;
+    const sd = (carte && carte.seedup && Array.isArray(carte.seedup.liste)) ? carte.seedup.liste : [];
+    const remFaite = !!(carte && carte.remesure && Array.isArray(carte.remesure.liste) && carte.remesure.liste.length);
+    const mir = (carte && carte.miroir) || {};
+    const nbRegards = Array.isArray(mir.reponses) ? mir.reponses.length : 0;
+    const aJeton = !!mir.jeton;
+    const pistes = [];
+    Object.values(carte || {}).forEach(function (it) {
+      if (it && Array.isArray(it.pistes_libelles)) it.pistes_libelles.forEach(function (l) { if (l && pistes.indexOf(l) < 0) pistes.push(l); });
+    });
+    const joursAncres = Array.from(new Set(sd.map(function (x) { return String(x.d || '').slice(0, 10); }).filter(Boolean))).sort().reverse();
+    let act = null;
+    if (jour !== null && jour >= 83 && !remFaite) {
+      act = { t: 'Votre re-mesure des 90 jours est ouverte', p: 'Dix minutes pour mesurer le chemin parcouru depuis votre portrait.', cta: 'Faire ma re-mesure', fn: "App.cockpitVers('espace-remesure')" };
+    } else if (aJeton && nbRegards === 0) {
+      act = { t: 'Votre Feedback 360 attend ses premiers regards', p: 'Trois messages prêts à copier vous attendent, trois minutes pour vos collègues.', cta: 'Ouvrir les invitations', fn: "App.allerFeedback('inviter')" };
+    } else if (aJeton && !mir.prediction && nbRegards < 3) {
+      act = { t: 'Faites votre pronostic Feedback 360', p: 'Trente secondes pour prédire le regard des autres. À l\'arrivée de leurs réponses : votre score de lucidité.', cta: 'Faire mon pronostic', fn: "App.allerFeedback('pari')" };
+    } else if (!pistes.length) {
+      act = { t: 'Choisissez vos premières actions', p: 'Vos opportunités sont identifiées : reliez-les à des actions concrètes pour lancer le programme.', cta: 'Voir mes compétences', fn: "App.cockpitVers('espace-competences')" };
+    } else if (sd.length) {
+      const dernier = joursAncres.length ? Math.round((Date.now() - new Date(joursAncres[0] + 'T12:00:00').getTime()) / 86400000) : 99;
+      if (dernier >= 3) act = { t: 'Votre prochain défi vous attend', p: 'Dernier défi ancré il y a ' + dernier + ' jours. Une petite action aujourd\'hui relance la dynamique.', cta: 'Voir mes défis', fn: "App.cockpitVers('espace-seedup')" };
+      else act = { t: 'La dynamique est en route', p: 'Continuez sur votre lancée, un défi ancré à la fois.', cta: 'Voir mes défis', fn: "App.cockpitVers('espace-seedup')" };
+    } else if (!aJeton && jour !== null && jour >= 7) {
+      act = { t: 'Et si vous demandiez un regard extérieur ?', p: 'Le Feedback 360 confronte votre lecture à celle de vos collègues, en trois minutes pour eux.', cta: 'Découvrir le Feedback 360', fn: "App.allerFeedback('haut')" };
+    }
+    return act;
+  }
+
+  // v138 : le bandeau du plan affiche l'action réelle du jour, jamais l'écran courant.
+  function poserBandeauJour(data, carte){
+    const resumeEl = document.getElementById('espace-accueil-resume');
+    if (!resumeEl) return;
+    const archetype = monArchetype || (data && data.archetype) || '';
+    const famKey = (SINEA_DATA.famille(archetype) || '').toUpperCase();
+    const coulFam = (window.Competences && Competences.COULEURS_FAMILLES && Competences.COULEURS_FAMILLES[famKey]) || '#FDFCF8';
+    const act = calculerActionDuJour(data, carte)
+      || { t: 'Reprenez vos prochaines étapes', cta: 'Voir mes étapes', fn: "App.cockpitVers('espace-checklist')" };
+    resumeEl.innerHTML = '<div class="acc-resume">'
+      + '<span class="acc-chip" style="border-color:' + coulFam + '">' + echapValeur(archetype || '') + (famKey ? ' · ' + famKey.charAt(0) + famKey.slice(1).toLowerCase() : '') + '</span>'
+      + '<span class="acc-jour"><small>AUJOURD\'HUI</small>' + act.t + '</span>'
+      + '<button type="button" class="esp-nav-b acc-cta" onclick="' + act.fn + '">' + act.cta + '</button>'
+      + '</div>';
+  }
+
   function poserCockpit(data, carte){
     const slot = document.getElementById('espace-cockpit');
     if (!slot || !data) return;
@@ -1016,22 +1080,8 @@ const App = (() => {
         else break;
       }
     }
-    let act = null;
-    if (jour !== null && jour >= 83 && !remFaite) {
-      act = { t: 'Votre re-mesure des 90 jours est ouverte', p: 'Dix minutes pour mesurer le chemin parcouru depuis votre portrait.', cta: 'Faire ma re-mesure', fn: "App.cockpitVers('espace-remesure')" };
-    } else if (aJeton && nbRegards === 0) {
-      act = { t: 'Votre Feedback 360 attend ses premiers regards', p: 'Trois messages prêts à copier vous attendent, trois minutes pour vos collègues.', cta: 'Ouvrir les invitations', fn: "App.allerFeedback('inviter')" };
-    } else if (aJeton && !mir.prediction && nbRegards < 3) {
-      act = { t: 'Faites votre pronostic Feedback 360', p: 'Trente secondes pour prédire le regard des autres. À l\'arrivée de leurs réponses : votre score de lucidité.', cta: 'Faire mon pronostic', fn: "App.allerFeedback('pari')" };
-    } else if (!pistes.length) {
-      act = { t: 'Choisissez vos premières actions', p: 'Vos opportunités sont identifiées : reliez-les à des actions concrètes pour lancer le programme.', cta: 'Voir mes compétences', fn: "App.cockpitVers('espace-competences')" };
-    } else if (sd.length) {
-      const dernier = joursAncres.length ? Math.round((Date.now() - new Date(joursAncres[0] + 'T12:00:00').getTime()) / 86400000) : 99;
-      if (dernier >= 3) act = { t: 'Votre prochain défi vous attend', p: 'Dernier défi ancré il y a ' + dernier + ' jours. Une petite action aujourd\'hui relance la dynamique.', cta: 'Voir mes défis', fn: "App.cockpitVers('espace-seedup')" };
-      else act = { t: 'La dynamique est en route', p: 'Continuez sur votre lancée, un défi ancré à la fois.', cta: 'Voir mes défis', fn: "App.cockpitVers('espace-seedup')" };
-    } else if (!aJeton && jour !== null && jour >= 7) {
-      act = { t: 'Et si vous demandiez un regard extérieur ?', p: 'Le Feedback 360 confronte votre lecture à celle de vos collègues, en trois minutes pour eux.', cta: 'Découvrir le Feedback 360', fn: "App.allerFeedback('haut')" };
-    }
+    // v138 : le calcul vit dans calculerActionDuJour, partagé avec le bandeau du plan.
+    const act = calculerActionDuJour(data, carte);
     if (window.Visuels) {
     }
     let planRapide = '';
@@ -1048,7 +1098,7 @@ const App = (() => {
     let eng = '';
     if (pistes.length && window.Competences) {
       const compsDefis = new Set(sd.map(function (x) { const mm = Competences.matcherCompetence(x.t || ''); return mm && mm.id; }).filter(Boolean));
-      eng = '<div class="esp-cp-titre" style="margin-top:14px">Vos engagements</div>' + pistes.slice(0, 3).map(function (l) {
+      eng = '<div class="esp-cp-titre" role="heading" aria-level="3" style="margin-top:14px">Vos engagements</div>' + pistes.slice(0, 3).map(function (l) {
         const mm = Competences.matcherCompetence(l);
         const enCours = mm && compsDefis.has(mm.id);
         return '<div class="ck-eng"><span class="ck-eng-etat' + (enCours ? ' on' : '') + '">' + (enCours ? '✓ en cours' : 'à lancer') + '</span><span class="ck-eng-txt">' + echapValeur(l) + (mm ? ' <i>· ' + echapValeur(mm.nom) + '</i>' : '') + '</span></div>';
@@ -1058,7 +1108,7 @@ const App = (() => {
     const kick = 'Aujourd' + String.fromCharCode(39) + 'hui';
     slot.innerHTML = '<div class="esp-rem ck">'
       + (act
-        ? '<div class="esp-rem-kicker">' + kick + (serie >= 2 ? ' · série de ' + serie + ' jours' : '') + '</div><div class="esp-rem-titre">' + act.t + '</div><p class="ck-p">' + act.p + '</p><button type="button" class="esp-rem-btn" onclick="' + act.fn + '">' + act.cta + '</button>'
+        ? '<div class="esp-rem-kicker">' + kick + (serie >= 2 ? ' · série de ' + serie + ' jours' : '') + '</div><div class="esp-rem-titre" role="heading" aria-level="2">' + act.t + '</div><p class="ck-p">' + act.p + '</p><button type="button" class="esp-rem-btn" onclick="' + act.fn + '">' + act.cta + '</button>'
         : '<div class="esp-rem-kicker">Votre programme des 90 jours</div>')
       + planRapide + eng + '</div>';
   }
@@ -1108,15 +1158,16 @@ const App = (() => {
     }
     let h = '<div class="esp-rem esp-cp">'
       + '<div class="esp-rem-kicker">Vos compétences · la lecture Sinéa</div>'
-      + '<div class="esp-rem-titre">Là où votre nature vous porte</div>'
-      + '<p class="esp-cp-intro">Le potentiel vient de votre nature profonde, l\'expression de votre comportement au travail. Touchez une compétence pour voir ce qu\'elle recouvre et comment la faire grandir.</p>';
+      + '<div class="esp-rem-titre" role="heading" aria-level="2">Là où votre nature vous porte</div>'
+      + '<p class="esp-cp-intro">Le potentiel vient de votre nature profonde, l\'expression de votre comportement au travail. Touchez une compétence pour voir ce qu\'elle recouvre et comment la faire grandir.</p>'
+      + '<div class="esp-cp-legende"><span><i class="esp-cp-leg-pot"></i>Potentiel, votre nature</span><span><i class="esp-cp-leg-expr"></i>Expression au travail</span><span class="esp-cp-leg-nb">Les nombres : potentiel · expression</span></div>';
     if (pri.appuis.length){
-      h += '<div class="esp-cp-titre">Vos terrains d\'appui</div>' + pri.appuis.map(function (c) { return ligne(c, false); }).join('');
+      h += '<div class="esp-cp-titre" role="heading" aria-level="3">Vos terrains d\'appui</div>' + pri.appuis.map(function (c) { return ligne(c, false); }).join('');
     }
     h += '<button type="button" class="esp-rem-btn esp-cp-mat-btn" id="esp-cp-deplier" onclick="App.deplierCompetences()">Voir toute ma carte des compétences</button>'
       + '<div id="esp-cp-suite" style="display:none">';
     if (pri.opportunites.length){
-      h += '<div class="esp-cp-titre">Vos opportunités à investir</div>' + pri.opportunites.map(function (c) { return ligne(c, true); }).join('')
+      h += '<div class="esp-cp-titre" role="heading" aria-level="3">Vos opportunités à investir</div>' + pri.opportunites.map(function (c) { return ligne(c, true); }).join('')
         + '<p class="esp-cp-pont">Le moteur est là, la pratique fera le reste' + (seedupActif ? ' : vos défis de terrain SeedUp travaillent précisément ces opportunités.' : '.') + '</p>';
     }
     // La carte des 16, avec les flèches d'évolution si une re-mesure existe
@@ -1301,7 +1352,7 @@ const App = (() => {
 
     slot.innerHTML = '<div class="esp-rem esp-sd">'
       + '<div class="esp-rem-kicker">SeedUp · Vos défis de terrain</div>'
-      + '<div class="esp-rem-titre">' + (liste.length ? liste.length + ' défi' + (liste.length > 1 ? 's' : '') + ' ancré' + (liste.length > 1 ? 's' : '') : proposes.length + ' défi' + (proposes.length > 1 ? 's' : '') + ' proposé' + (proposes.length > 1 ? 's' : '')) + '</div>'
+      + '<div class="esp-rem-titre" role="heading" aria-level="2">' + (liste.length ? liste.length + ' défi' + (liste.length > 1 ? 's' : '') + ' ancré' + (liste.length > 1 ? 's' : '') : proposes.length + ' défi' + (proposes.length > 1 ? 's' : '') + ' proposé' + (proposes.length > 1 ? 's' : '')) + '</div>'
       + '<p class="jr-pourquoi">Quatre-vingt-dix jours pour transformer votre portrait en habitudes, un défi de terrain à la fois.</p>'
       + (planInfo.total > 0 ? '<p class="jr-plan-note">' + planInfo.faites + ' piste' + (planInfo.faites > 1 ? 's' : '') + ' de votre plan menée' + (planInfo.faites > 1 ? 's' : '') + ' au bout, sur ' + planInfo.total + '. <button type="button" class="jr-plan-btn" onclick="App.ouvrirPlanDepuisResto(\'' + planInfo.mod + '\')">Ouvrir mon plan</button></p>' : '')
       + '<div class="esp-sd-stats">'
@@ -1355,7 +1406,7 @@ const App = (() => {
   function rendreInvitationRemesure(slot) {
     slot.innerHTML = `<div class="esp-rem">
       <div class="esp-rem-kicker">Re-mesure express</div>
-      <div class="esp-rem-titre">Votre adaptation a-t-elle évolué ?</div>
+      <div class="esp-rem-titre" role="heading" aria-level="2">Votre adaptation a-t-elle évolué ?</div>
       <p class="esp-rem-txt">Votre nature est stable, votre adaptation au travail évolue. Dix questions, deux minutes, et vous voyez le chemin parcouru depuis votre bilan.</p>
       <button type="button" class="esp-rem-btn" id="esp-rem-go">Commencer la re-mesure</button>
     </div>`;
@@ -1373,7 +1424,7 @@ const App = (() => {
       </div>`).join('');
     slot.innerHTML = `<div class="esp-rem">
       <div class="esp-rem-kicker">Re-mesure express</div>
-      <div class="esp-rem-titre">Votre comportement réel au travail, aujourd'hui</div>
+      <div class="esp-rem-titre" role="heading" aria-level="2">Votre comportement réel au travail, aujourd'hui</div>
       <p class="esp-rem-txt">Répondez avec spontanéité, en pensant à vos dernières semaines.</p>
       ${lignes}
       <button type="button" class="esp-rem-btn" id="esp-rem-valider" disabled>Voir mon évolution</button>
@@ -1423,7 +1474,7 @@ const App = (() => {
     const dateTxt = mesure.date ? new Date(mesure.date).toLocaleDateString('fr-FR') : '';
     slot.innerHTML = `<div class="esp-rem">
       <div class="esp-rem-kicker">Votre évolution</div>
-      <div class="esp-rem-titre">Coût d'adaptation : ${avant !== null ? avant + ' <span class="esp-rem-fleche">›</span> ' : ''}${apres}</div>
+      <div class="esp-rem-titre" role="heading" aria-level="2">Coût d'adaptation : ${avant !== null ? avant + ' <span class="esp-rem-fleche">›</span> ' : ''}${apres}</div>
       <div class="esp-rem-cout">Niveau ${mesure.cout}${dateTxt ? ' · re-mesuré le ' + dateTxt : ''}</div>
       <div class="esp-nea" style="margin-top:12px"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display='none'"/></span><div class="esp-nea-txt"><div class="esp-nea-label">Néa · votre coach</div><p>${phrase}</p></div></div>
       ${proposerNouvelle ? '<button type="button" class="esp-rem-btn" id="esp-rem-encore">Re-mesurer à nouveau</button>' : ''}
@@ -1432,8 +1483,8 @@ const App = (() => {
     if (enc) enc.onclick = function () { ouvrirFormRemesure(slot); };
   }
 
-  // ---- Miroir 360 léger : le regard des collègues, comparé au profil ----
-  // Deux collègues au moins répondent à cinq questions par un lien anonyme.
+  // ---- Miroir 360 : le regard des collègues, comparé au profil ----
+  // Trois collègues au moins répondent à treize questions par un lien anonyme.
   // L'écart entre leur perception et le profil adapté devient une analyse.
   const MIROIR_QUESTIONS = [
     { d: 'E', label: 'Aller vers les autres', texte: 'Cette personne va spontanément vers les autres et prend sa place dans un groupe.' },
@@ -1594,17 +1645,29 @@ const App = (() => {
     return percu;
   }
 
-  function guideMiroirHtml(){
+  // v137 : les chiffres du miroir sortent d'une seule constante pour empêcher la redérive.
+  // La durée correspond au questionnaire réel du répondant, treize questions.
+  const MIROIR_CHIFFRES = { invites: '3 à 5', duree: '3 minutes', seuil: 3 };
+  function guideMiroirHtml(lien){
     const msgs = [
-      { cible: 'À un pair', txt: "Salut ! Je viens de faire mon profil Sinéa et il me propose un miroir 360 : ton regard extérieur en 3 minutes, anonyme et agrégé avec d'autres. Ça m'aiderait vraiment à progresser. Voici le lien : [LIEN]. Merci !" },
-      { cible: 'À votre manager', txt: "Bonjour, dans le cadre de mon parcours Sinéa, je recueille quelques regards extérieurs sur mes compétences (3 minutes, réponses agrégées). Votre point de vue compterait beaucoup pour cibler mes axes de progression. Le lien : [LIEN]. Merci d'avance." },
-      { cible: 'À un collaborateur ou client interne', txt: "Bonjour, je travaille sur mon développement et j'aimerais votre regard honnête sur ma façon de collaborer (3 minutes, anonyme dans l'agrégat). Votre avis m'est précieux : [LIEN]. Merci beaucoup !" },
+      { cible: 'À un pair', txt: "Salut ! Je viens de faire mon profil Sinéa et il me propose un miroir 360 : ton regard extérieur en " + MIROIR_CHIFFRES.duree + ", anonyme et agrégé avec d'autres. Ça m'aiderait vraiment à progresser. Voici le lien : [LIEN]. Merci !" },
+      { cible: 'À votre manager', txt: "Bonjour, dans le cadre de mon parcours Sinéa, je recueille quelques regards extérieurs sur mes compétences (" + MIROIR_CHIFFRES.duree + ", réponses agrégées). Votre point de vue compterait beaucoup pour cibler mes axes de progression. Le lien : [LIEN]. Merci d'avance." },
+      { cible: 'À un collaborateur ou client interne', txt: "Bonjour, je travaille sur mon développement et j'aimerais votre regard honnête sur ma façon de collaborer (" + MIROIR_CHIFFRES.duree + ", anonyme dans l'agrégat). Votre avis m'est précieux : [LIEN]. Merci beaucoup !" },
     ];
+    // v137 : sans lien, les messages restent en aperçu verrouillé, boutons désactivés.
+    // Avec lien, le lien réel s'injecte dans le texte affiché et dans le texte copié.
+    const verrou = !lien;
     return '<div class="esp-mir-guide">'
       + '<p class="esp-mir-principe"><b>Le principe.</b> Vous vous êtes décrit ; le miroir recueille comment les autres vous vivent. L\'écart entre les deux est la matière la plus riche du développement : ce que vous sous-estimez, ce que vous surestimez, ce que tout le monde voit sauf vous.</p>'
-      + '<p class="esp-mir-principe"><b>À qui demander.</b> Visez 3 à 5 personnes qui vous voient vraiment travailler, en mélangeant les angles : votre manager, un ou deux pairs, quelqu\'un que vous encadrez ou un client interne. Les réponses sont agrégées : personne n\'est identifiable.</p>'
-      + '<div class="esp-mir-msgs">' + msgs.map(function (m) {
-        return '<div class="esp-mir-msg"><div class="esp-mir-msg-cible">' + m.cible + '</div><p class="esp-mir-msg-txt">' + m.txt.replace('[LIEN]', '<i>[votre lien]</i>') + '</p><button type="button" class="esp-rem-btn esp-mir-msg-btn" data-msg="' + echapValeur(m.txt) + '" onclick="App.copierMsgMiroir(this)">Copier ce message</button></div>';
+      + '<p class="esp-mir-principe"><b>À qui demander.</b> Visez ' + MIROIR_CHIFFRES.invites + ' personnes qui vous voient vraiment travailler, en mélangeant les angles : votre manager, un ou deux pairs, quelqu\'un que vous encadrez ou un client interne. Les réponses sont agrégées : personne n\'est identifiable.</p>'
+      + '<div class="esp-mir-msgs' + (verrou ? ' mir-verrou' : '') + '">' + msgs.map(function (m) {
+        const affiche = verrou
+          ? m.txt.replace('[LIEN]', '<i>[votre lien]</i>')
+          : m.txt.replace('[LIEN]', '<span class="mir-lien-injecte">' + lien + '</span>');
+        const bouton = verrou
+          ? '<button type="button" class="esp-rem-btn esp-mir-msg-btn" disabled>Copier ce message</button><p class="mir-note-verrou">Créez d\'abord votre lien d\'invitation.</p>'
+          : '<button type="button" class="esp-rem-btn esp-mir-msg-btn" data-msg="' + echapValeur(m.txt.replace('[LIEN]', lien)) + '" aria-live="polite" onclick="App.copierMsgMiroir(this)">Copier ce message</button>';
+        return '<div class="esp-mir-msg"><div class="esp-mir-msg-cible">' + m.cible + '</div><p class="esp-mir-msg-txt">' + affiche + '</p>' + bouton + '</div>';
       }).join('') + '</div></div>';
   }
 
@@ -1616,6 +1679,11 @@ const App = (() => {
         const corps = document.querySelector('.pari-corps');
         if (corps && corps.classList.contains('esp-hide')) corps.classList.remove('esp-hide');
       }
+      // v137 : le volet des messages s'ouvre avant le défilement, sinon la cible reste invisible.
+      if (cible === 'inviter') {
+        const volet = document.querySelector('details.mir-msgs');
+        if (volet) volet.open = true;
+      }
       const sel = cible === 'pari' ? '.pari-open' : cible === 'inviter' ? '.esp-mir-msg' : '#espace-miroir';
       const el = document.querySelector(sel) || document.getElementById('espace-miroir');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: cible === 'haut' ? 'start' : 'center' });
@@ -1624,7 +1692,8 @@ const App = (() => {
   function copierMsgMiroir(btn){
     const inp = document.getElementById('esp-mir-input');
     const lien = (inp && inp.value) || '';
-    const txt = String(btn.getAttribute('data-msg') || '').replace('[LIEN]', lien || '[créez votre lien ci-dessous]');
+    // v137 : le lien vit déjà dans data-msg ; le remplacement reste en filet de sécurité.
+    const txt = String(btn.getAttribute('data-msg') || '').replace('[LIEN]', lien);
     const fini = function(lib){ const av = btn.textContent; btn.textContent = lib || 'Copié ✓'; setTimeout(function(){ btn.textContent = av; }, 2000); };
     if (navigator.share) { navigator.share({ text: txt }).then(function () { fini('Partagé ✓'); }).catch(function () {}); return; }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { fini(); }).catch(function(){});
@@ -1650,6 +1719,8 @@ const App = (() => {
     const aPlan = Object.values(carte).some(function (it) { return it && Array.isArray(it.pistes_libelles) && it.pistes_libelles.length; });
     const aAvis = window.__avisFait === true || Object.values(carte).some(function (it) { return it && it.avis && (it.avis.AVIS_RESSEMBLANCE || it.avis.AVIS_UTILITE || it.avis.AVIS_CLARTE); });
     const ITEMS = [
+      { id: 'questionnaire', label: 'Répondre au questionnaire', pts: 5, fait: true, cta: '', lab: '' },
+      { id: 'portrait', label: 'Recevoir votre portrait', pts: 5, fait: true, cta: '', lab: '' },
       { id: 'lecture', label: 'Lire votre analyse', pts: 10, fait: !!jal.lecture || false, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
       { id: 'voeux', label: 'Trois questions au coach', pts: 15, fait: !!jal.voeux || (Number(carte.voeux) || 0) >= 3, cta: 'App.revoirAnalyse(&quot;' + modP + '&quot;)', lab: 'Ouvrir' },
       { id: 'avis', label: 'Noter votre portrait', pts: 10, fait: !!jal.avis || aAvis, cta: 'if(window.Result&&Result.noterPortrait)Result.noterPortrait()', lab: 'Noter · 30 s' },
@@ -1664,10 +1735,9 @@ const App = (() => {
     const aFaire = ITEMS.filter(function (x) { return !x.fait; });
 
     const prochaines = aFaire.slice(0, 3).map(function (x) {
-      return '<div class="ckl-row"><span class="ckl-ic">○</span>'
+      return '<div class="ckl-row"><button type="button" class="ckl-ic" aria-label="Marquer « ' + x.label + ' » comme faite" title="Marquer comme faite" onclick="App.marquerFait(&quot;' + x.id + '&quot;, this)">○</button>'
         + '<span class="ckl-lab">' + x.label + '</span>'
-        + '<button type="button" class="ckl-cta" onclick="' + x.cta + '">' + x.lab + '</button>'
-        + '<button type="button" class="ckl-deja" onclick="App.marquerFait(&quot;' + x.id + '&quot;, this)">Déjà fait ?</button></div>';
+        + '<button type="button" class="ckl-cta" onclick="' + x.cta + '">' + x.lab + '</button></div>';
     }).join('');
     const chipsFaits = faits.length
       ? '<div class="ckl-faits">' + faits.map(function (x) { return '<span class="ckl-fait-chip">✓ ' + x.label + '</span>'; }).join('') + '</div>'
@@ -1675,7 +1745,7 @@ const App = (() => {
     slot.innerHTML = '<div class="ckl">'
       + '<div class="ckl-tete"><b>Vos prochaines étapes</b><span>' + faits.length + '/' + ITEMS.length + ' étape' + (faits.length > 1 ? 's' : '') + ' faite' + (faits.length > 1 ? 's' : '') + '</span></div>'
       + '<div class="ckl-bar"><i style="width:' + Math.round(faits.length / ITEMS.length * 100) + '%"></i></div>'
-      + (aFaire.length ? '<div class="ckl-next-t">À faire maintenant</div>' + prochaines : '<p class="ckl-plus">Parcours complet, les neuf étapes sont faites.</p>')
+      + (aFaire.length ? '<div class="ckl-next-t">À faire maintenant</div>' + prochaines : '<p class="ckl-plus">Parcours complet, les onze étapes sont faites.</p>')
       + (aFaire.length > 3 ? '<p class="ckl-plus">Et ' + (aFaire.length - 3) + ' autre' + (aFaire.length - 3 > 1 ? 's' : '') + ' étape' + (aFaire.length - 3 > 1 ? 's' : '') + ' suivront, une à la fois.</p>' : '')
       + chipsFaits
       + '</div>';
@@ -1739,10 +1809,10 @@ const App = (() => {
   function pariMiroirHtml(mir){
     if (mir && mir.prediction) {
       const p = mir.prediction;
-      return '<div class="pari-bloc pari-scelle"><div class="esp-cp-titre">Votre pronostic est scellé</div><p class="pari-p">Vous découvrirez votre score de lucidité dès trois regards reçus.</p><div class="pari-vals">'
+      return '<div class="pari-bloc pari-scelle"><div class="esp-cp-titre" role="heading" aria-level="3">Votre pronostic est scellé</div><p class="pari-p">Vous découvrirez votre score de lucidité dès trois regards reçus.</p><div class="pari-vals">'
         + AXES_PARI.map(function (a) { return '<span class="pari-val">' + a[1] + '<b>' + (typeof p[a[0]] === 'number' ? p[a[0]] : '·') + '</b></span>'; }).join('') + '</div></div>';
     }
-    return '<div class="pari-bloc"><div class="esp-cp-titre">Avant leurs regards, le vôtre</div>'
+    return '<div class="pari-bloc"><div class="esp-cp-titre" role="heading" aria-level="3">Avant leurs regards, le vôtre</div>'
       + '<p class="pari-p">Trente secondes, cinq curseurs, avant que leurs réponses n\'arrivent.</p>'
       + '<p class="pari-why"><b>Pourquoi un pronostic ?</b> Prédisez le regard de vos collègues avant leurs réponses. L\'écart entre votre prédiction et leur perception devient votre <b>score de lucidité</b> : vos angles morts et vos forces cachées, chiffrés.</p>'
       + '<button type="button" class="esp-rem-btn pari-open" onclick="this.nextElementSibling.classList.toggle(&quot;esp-hide&quot;)">Sceller mon pronostic · 30 s</button>'
@@ -1796,11 +1866,14 @@ const App = (() => {
     const reponsesTous = mir.reponses || [];
     const reponses = filtreMiroirRel ? reponsesTous.filter(function (rp) { return (rp.r || {}).relation === filtreMiroirRel; }) : reponsesTous;
     if (!jeton) {
+      // v137 : la création du lien passe en tête, seule action de l'écran.
+      // Les messages restent en aperçu verrouillé tant que le lien n'existe pas.
       slot.innerHTML = `<div class="esp-rem esp-mir">
         <div class="esp-rem-kicker">Mon regard 360</div>
-        <div class="esp-rem-titre">Le regard de vos collègues</div>
-        <p class="esp-rem-txt">Invitez trois collègues à répondre à cinq questions, une minute, réponses anonymes. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
-        ${guideMiroirHtml()}<button type="button" class="esp-rem-btn" id="esp-mir-init">Créer mon lien d'invitation</button>
+        <div class="esp-rem-titre" role="heading" aria-level="2">Le regard de vos collègues</div>
+        <p class="esp-rem-txt">Invitez ${MIROIR_CHIFFRES.invites} collègues à répondre à un questionnaire de ${MIROIR_CHIFFRES.duree}, réponses anonymes. L'analyse s'ouvre dès ${MIROIR_CHIFFRES.seuil} réponses. Vous découvrez l'écart entre la perception des autres et votre propre lecture.</p>
+        <button type="button" class="esp-rem-btn mir-cta-large" id="esp-mir-init">Créer mon lien d'invitation</button>
+        ${guideMiroirHtml('')}
       </div>`;
       const b = document.getElementById('esp-mir-init');
       if (b) b.onclick = function () {
@@ -1821,22 +1894,24 @@ const App = (() => {
     }
     const lien = location.origin + location.pathname + '?miroir=' + jeton;
     const pariHtml = pariMiroirHtml(mir);
-    const blocLien = guideMiroirHtml() + `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
+    // v137 : le bouton du lien est nommé, le lien s'injecte dans les messages,
+    // et le volet reste ouvert tant qu'aucune réponse n'est reçue.
+    const lienHtml = `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie" aria-live="polite">Copier le lien</button></div>`;
+    const blocLien = lienHtml + guideMiroirHtml(lien);
     if (reponses.length < 3) {
       const attente = reponses.length === 2
         ? '2 réponses reçues. L\'analyse s\'ouvre à la troisième, pour préserver l\'anonymat.'
         : reponses.length === 1
           ? '1 réponse reçue. L\'analyse s\'ouvre à la troisième, pour préserver l\'anonymat.'
-          : 'Aucune réponse pour l\'instant. Envoyez ce lien à trois collègues, leurs réponses restent anonymes.';
+          : 'Aucune réponse pour l\'instant. Partagez ce lien avec ' + MIROIR_CHIFFRES.invites + ' collègues, leurs réponses restent anonymes. L\'analyse s\'ouvre à la troisième.';
       const n3 = reponses.length;
       const pastilles = [0, 1, 2].map(function (i2) { return '<i class="mirh-p' + (i2 < n3 ? ' ok' : '') + '"></i>'; }).join('');
-      const lienHtml = `<div class="esp-mir-lien"><input type="text" class="esp-mir-input" id="esp-mir-input" value="${lien}" readonly /><button type="button" class="esp-rem-btn esp-mir-copie" id="esp-mir-copie">Copier</button></div>`;
       slot.innerHTML = `<div class="esp-rem esp-mir">
         <div class="mirh"><div class="esp-rem-kicker">Mon regard 360</div>
           <div class="mirh-ligne"><span class="mirh-n">${n3}<small> / 3</small></span><span class="mirh-ps">${pastilles}</span></div>
           <p class="mirh-txt">${attente}</p></div>
         <div class="mir-et"><u>ÉTAPE 1 · INVITER</u>${lienHtml}
-          <details class="mir-msgs"><summary>Les trois messages prêts à envoyer, et à qui demander</summary>${guideMiroirHtml()}</details></div>
+          <details class="mir-msgs"${n3 === 0 ? ' open' : ''}><summary>Les trois messages prêts à envoyer, et à qui demander</summary>${guideMiroirHtml(lien)}</details></div>
         <div class="mir-et"><u>ÉTAPE 2 · VOTRE PRONOSTIC</u>${pariHtml}</div>
         ${c360Html()}
       </div>`;
@@ -1856,7 +1931,7 @@ const App = (() => {
         tableau.push({ q: q, p: p, v: v, g: g });
       });
       tableau.sort(function (a, b) { return Math.abs(b.g) - Math.abs(a.g); });
-      const lignes = '<div class="esp-cp-titre" style="margin-top:4px">Tous les regards, du plus grand écart au plus petit</div>'
+      const lignes = '<div class="esp-cp-titre" role="heading" aria-level="3" style="margin-top:4px">Tous les regards, du plus grand écart au plus petit</div>'
         + tableau.map(function (t, i) {
           const delta = (t.g > 0 ? '+' : '') + Math.round(t.g);
           return `<div class="esp-mir-row${i < 2 && Math.abs(t.g) >= 10 ? ' esp-mir-gapmax' : ''}" data-d="${t.q.d}"><span class="esp-mir-lab">${t.q.label}</span><span class="esp-mir-vals"><span class="esp-mir-col">Eux <b>${Math.round(t.p)}</b></span><span class="esp-mir-col">Vous <b>${Math.round(t.v)}</b></span><span class="esp-mir-delta${t.g >= 0 ? ' pos' : ' neg'}">${delta}</span></span></div>`;
@@ -1890,7 +1965,7 @@ const App = (() => {
       const radarHtml = (window.Visuels && window.Visuels.radarMiroirSvg) ? Visuels.radarMiroirSvg(vous, percu, pariM) : '';
       const conseilsRecus = reponses.map(function (rep) { return String((rep.r || {}).conseil || '').trim(); }).filter(function (t) { return t.length > 2; }).slice(0, 6);
       const conseilsHtml = conseilsRecus.length
-        ? '<div class="esp-cp-titre" style="margin-top:14px">Les conseils reçus</div>' + conseilsRecus.map(function (t) { return '<p class="esp-mir-conseil">« ' + echapValeur(t) + ' »</p>'; }).join('')
+        ? '<div class="esp-cp-titre" role="heading" aria-level="3" style="margin-top:14px">Les conseils reçus</div>' + conseilsRecus.map(function (t) { return '<p class="esp-mir-conseil">« ' + echapValeur(t) + ' »</p>'; }).join('')
         : '';
       let phrase;
       if (Math.abs(maxGap) < 12) {
@@ -1902,7 +1977,7 @@ const App = (() => {
       }
       slot.innerHTML = `<div class="esp-rem esp-mir">
         <div class="esp-rem-kicker">Mon regard 360 · ${reponses.length} regards${repartition}</div>
-        <div class="esp-rem-titre">Vu par vos collègues, comparé à vous au travail</div>
+        <div class="esp-rem-titre" role="heading" aria-level="2">Vu par vos collègues, comparé à vous au travail</div>
         ${chipsRel}
         ${impactHtml}
         ${radarHtml}
@@ -1974,7 +2049,7 @@ const App = (() => {
       }).join('') + '</div></div>';
     ov.innerHTML = '<div class="mir-card">' +
       '<div class="mir-head"><span class="esp-nea-img"><img src="Nea_detoure_full.png.webp" alt="Néa" onerror="this.style.display=\'none\'"/></span>' +
-      '<div><div class="esp-rem-kicker">Feedback 360 · Sinéa</div><div class="esp-rem-titre">Votre regard sur un collègue</div></div></div>' +
+      '<div><div class="esp-rem-kicker">Feedback 360 · Sinéa</div><div class="esp-rem-titre" role="heading" aria-level="2">Votre regard sur un collègue</div></div></div>' +
       '<p class="esp-rem-txt">Une personne de votre entourage professionnel vous invite à partager votre perception. Douze regards et un conseil, trois minutes. Vos réponses sont anonymes et agrégées avec celles d\'autres collègues.</p>' +
       relationHtml +
       lignes +
@@ -2002,10 +2077,10 @@ const App = (() => {
         .then(function (r) { return r.json(); })
         .then(function (d) {
           const carteMerci = d && d.ok
-            ? '<div class="mir-merci-sym">✦</div><div class="esp-rem-titre">Merci, votre regard compte.</div><p class="esp-rem-txt">Votre perception est enregistrée, anonyme, agrégée à partir de trois regards. Elle aidera votre collègue à se voir plus juste.</p>'
+            ? '<div class="mir-merci-sym">✦</div><div class="esp-rem-titre" role="heading" aria-level="2">Merci, votre regard compte.</div><p class="esp-rem-txt">Votre perception est enregistrée, anonyme, agrégée à partir de trois regards. Elle aidera votre collègue à se voir plus juste.</p>'
             : (d && d.raison === 'complet'
-              ? '<div class="esp-rem-titre">Ce miroir est complet</div><p class="esp-rem-txt">Cette personne a déjà reçu le nombre maximal de regards. Merci pour votre intention.</p>'
-              : '<div class="esp-rem-titre">Lien inconnu</div><p class="esp-rem-txt">Ce lien d\'invitation ne correspond à aucun profil. Demandez un nouveau lien à la personne qui vous a invité.</p>');
+              ? '<div class="esp-rem-titre" role="heading" aria-level="2">Ce miroir est complet</div><p class="esp-rem-txt">Cette personne a déjà reçu le nombre maximal de regards. Merci pour votre intention.</p>'
+              : '<div class="esp-rem-titre" role="heading" aria-level="2">Lien inconnu</div><p class="esp-rem-txt">Ce lien d\'invitation ne correspond à aucun profil. Demandez un nouveau lien à la personne qui vous a invité.</p>');
           ov.innerHTML = '<div class="mir-card">' + carteMerci + '</div>';
         })
         .catch(function () {
@@ -2107,15 +2182,7 @@ const App = (() => {
       const phraseFam = ACCUEIL_ARCHETYPE[SINEA_DATA.slug(archetype)] || ACCUEIL_FAMILLE[famKey] || "Voici votre espace personnel, le reflet de votre singularité.";
       const phraseAv = phraseAvancement(analyses, droitsTxt);
       accueilEl.innerHTML = `<span class="espace-accueil-fam">${phraseFam}</span> <span class="espace-accueil-av">${phraseAv}</span>`;
-      const resumeEl = document.getElementById('espace-accueil-resume');
-      if (resumeEl) {
-        const coulFam = (window.Competences && Competences.COULEURS_FAMILLES && Competences.COULEURS_FAMILLES[famKey]) || '#FDFCF8';
-        resumeEl.innerHTML = '<div class="acc-resume">'
-          + '<span class="acc-chip" style="border-color:' + coulFam + '">' + echapValeur(archetype || '') + (famKey ? ' · ' + famKey.charAt(0) + famKey.slice(1).toLowerCase() : '') + '</span>'
-          + '<span class="acc-txt">Votre action du jour vous attend.</span>'
-          + '<button type="button" class="esp-nav-b acc-cta" onclick="App.espTab(&quot;dev&quot;)">Ouvrir mon plan</button>'
-          + '</div>';
-      }
+      // v138 : le bandeau du plan se remplit à l'arrivée de la carte, voir poserBandeauJour.
     }
 
     // Barre de progression globale du parcours
@@ -2177,11 +2244,11 @@ const App = (() => {
     const faits = ['socle', 'commercial', 'manager'].filter(m => analyses[m]);
     let resultatsHtml = '';
     if (faits.length) {
-      resultatsHtml = '<div class="espace-label">Mes résultats</div>';
+      resultatsHtml = '<div class="espace-label" role="heading" aria-level="2">Mes résultats</div>';
       faits.forEach(m => { resultatsHtml += carteResultat(m, (analyses[m] && analyses[m].date) || '', archetype); });
     }
     if (analyses.socle) {
-      resultatsHtml += `<button class="espace-pdf-btn" id="espace-pdf-btn" onclick="App.telechargerPortraitEspace()">Télécharger mon portrait complet (PDF)</button>`;
+      resultatsHtml += `<button class="espace-pdf-lien" id="espace-pdf-btn" onclick="App.telechargerPortraitEspace()">Télécharger mon portrait complet (PDF)</button>`;
     }
     // Fiche connue, aucune analyse retrouvée : le dire clairement plutôt que
     // de renvoyer la personne vers une passation qu'elle a peut-être déjà faite.
@@ -2211,9 +2278,9 @@ const App = (() => {
     });
     let parcoursHtml = '';
     if (cards.length) {
-      parcoursHtml = '<div class="espace-label">Votre parcours</div>' + cards.join('');
+      parcoursHtml = '<div class="espace-label" role="heading" aria-level="2">Votre parcours</div>' + cards.join('');
     }
-    const codexCta = '<div class="espace-label">Explorer</div>' +
+    const codexCta = '<div class="espace-label" role="heading" aria-level="2">Explorer</div>' +
       '<button class="espace-codex-btn" id="espace-codex-btn">' +
         '<span class="espace-codex-ic">✦</span>' +
         '<span class="espace-codex-txt"><span class="espace-codex-t">Le codex des personnages</span>' +
@@ -2405,17 +2472,17 @@ const App = (() => {
     const dateLigne = dateTxt ? `<div class="esp-res-date">Réalisé le ${dateTxt}</div>` : '';
     // personnage de l'archétype (affiché pour le socle, qui porte le portrait de personnalité)
     const slug = archetype ? SINEA_DATA.image(archetype) : '';
-    const persoHtml = (mod === 'socle' && slug) ? `<div class="esp-res-perso"><img src="${srcPerso(slug)}" alt="${archetype}" onerror="${onerrPerso(slug)}"/></div>` : '';
+    const persoHtml = (mod === 'socle' && slug) ? `<div class="esp-res-perso"><img src="${srcPerso(slug)}" alt="${archetype}" loading="lazy" decoding="async" width="512" height="512" onerror="${onerrPerso(slug)}"/></div>` : '';
     return `<div class="esp-resultat">
       <div class="esp-res-glow"></div>
       <div class="esp-res-in">
         <div class="esp-res-texte">
           <div class="esp-res-badge">Complété · 100%</div>
-          <div class="esp-res-title">${l.titre}</div>
+          <div class="esp-res-title" role="heading" aria-level="3">${l.titre}</div>
           ${dateLigne}
           <div class="esp-res-actions">
-            <button class="esp-res-btn" data-revoir="${mod}">Consulter mon analyse</button>
-            <button class="esp-res-btn esp-res-btn-plan" data-plan="${mod}">Mon plan d'action</button>
+            <button class="esp-res-btn" data-revoir="${mod}">Lire mon analyse</button>
+            <button class="esp-res-btn esp-res-btn-plan esp-res-btn-sec" data-plan="${mod}">Mon plan d'action</button>
           </div>
         </div>
         ${persoHtml}
@@ -2428,7 +2495,7 @@ const App = (() => {
     if (etat === 'go') {
       return `<div class="esp-card">
         <div class="esp-icon esp-ic-go">→</div>
-        <div class="esp-body"><span class="esp-status esp-st-go">À découvrir</span><div class="esp-title">${l.titre}</div><div class="esp-sub">${l.sub}</div></div>
+        <div class="esp-body"><span class="esp-status esp-st-go">À découvrir</span><div class="esp-title" role="heading" aria-level="3">${l.titre}</div><div class="esp-sub">${l.sub}</div></div>
         <button class="esp-btn esp-btn-purple" data-commencer="${mod}">Commencer</button>
       </div>`;
     }
@@ -2437,7 +2504,7 @@ const App = (() => {
         <div class="esp-icon esp-ic-go">▷</div>
         <div class="esp-body">
           <span class="esp-status esp-st-go">En cours · ${pct}%</span>
-          <div class="esp-title">${l.titre}</div>
+          <div class="esp-title" role="heading" aria-level="3">${l.titre}</div>
           <div class="esp-progress"><div class="esp-progress-fill" style="width:${pct}%"></div></div>
         </div>
         <button class="esp-btn esp-btn-purple" data-commencer="${mod}">Continuer</button>
@@ -2446,12 +2513,13 @@ const App = (() => {
     if (etat === 'attente') {
       return `<div class="esp-card esp-locked">
         <div class="esp-icon esp-ic-lock">◔</div>
-        <div class="esp-body"><span class="esp-status esp-st-lock">Bientôt</span><div class="esp-title">${l.titre}</div><div class="esp-lock-note">Disponible après votre portrait de personnalité.</div></div>
+        <div class="esp-body"><span class="esp-status esp-st-lock">Bientôt</span><div class="esp-title" role="heading" aria-level="3">${l.titre}</div><div class="esp-lock-note">Disponible après votre portrait de personnalité.</div></div>
       </div>`;
     }
     return `<div class="esp-card esp-locked">
       <div class="esp-icon esp-ic-lock">🔒</div>
-      <div class="esp-body"><span class="esp-status esp-st-lock">Verrouillé</span><div class="esp-title">${l.titre}</div><div class="esp-lock-note">Ce module n'est pas inclus dans votre accès.</div></div>
+      <div class="esp-body"><span class="esp-status esp-st-lock">Verrouillé</span><div class="esp-title" role="heading" aria-level="3">${l.titre}</div><div class="esp-lock-note">Ce module n'est pas inclus dans votre accès. Trente et une questions, un style dominant et trois dimensions métier.</div>
+      <a class="esp-lock-btn" href="mailto:contact@sineaformation.fr?subject=${encodeURIComponent('Demande d\'accès au module ' + l.titre)}&body=${encodeURIComponent('Bonjour,\n\nJe souhaite activer le module « ' + l.titre + ' » sur mon espace Sinéa Profile.\n\nMerci de me dire comment procéder.\n')}">Demander cet accès</a></div>
     </div>`;
   }
 
@@ -4330,7 +4398,7 @@ const App = (() => {
       ouvertes: { continuer: (document.getElementById('c360-continuer') || {}).value || '', oser: (document.getElementById('c360-oser') || {}).value || '' },
     }).then(function (r2) {
       corps.innerHTML = r2 && r2.ok
-        ? '<div class="mir-merci-sym">✦</div><div class="esp-rem-titre">Merci, votre regard compte.</div><p class="c360-charge">Anonyme, agrégé avec les autres regards de son rôle.</p>'
+        ? '<div class="mir-merci-sym">✦</div><div class="esp-rem-titre" role="heading" aria-level="2">Merci, votre regard compte.</div><p class="c360-charge">Anonyme, agrégé avec les autres regards de son rôle.</p>'
         : '<p class="c360-charge">' + echapValeur((r2 && r2.erreur) || 'Envoi impossible, réessayez.') + '</p>';
     });
   }

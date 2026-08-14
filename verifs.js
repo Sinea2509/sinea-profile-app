@@ -241,7 +241,7 @@ verifie('étapes : posées au chargement et rafraîchissables', srcCtrl2().index
 verifie('étapes : neuf jalons détectés', (srcCtrl2().match(/id: '/g) || []).length >= 9 && srcCtrl2().indexOf("id: 'remesure'") > 0);
 verifie('étapes : les détections lisent les vraies sources', srcCtrl2().indexOf('const jal = carte.jalons || {}') > 0 && srcCtrl2().indexOf('Number(carte.voeux)') > 0 && srcCtrl2().indexOf('mir.prediction') > 0 && srcCtrl2().indexOf('pistes_libelles') > 0);
 verifie('étapes : la notation s\'ouvre depuis l\'étape', srcCtrl2().indexOf('Result.noterPortrait()') > 0);
-verifie('étapes : trois prochaines et rattrapage', srcCtrl2().indexOf('aFaire.slice(0, 3)') > 0 && srcCtrl2().indexOf('Déjà fait ?') > 0 && srcCtrl2().indexOf('function marquerFait(') > 0);
+verifie('étapes : trois prochaines, case de rattrapage accessible', srcCtrl2().indexOf('aFaire.slice(0, 3)') > 0 && srcCtrl2().indexOf('class="ckl-ic" aria-label') > 0 && srcCtrl2().indexOf('function marquerFait(') > 0 && srcCtrl2().indexOf('Déjà fait ?') < 0);
 verifie('étapes : les jalons manuels comptent partout', (srcCtrl2().match(/!!jal\./g) || []).length === 9);
 verifie('feedback 360 : le nom est partout à l\'écran', idxH2.indexOf('Mon regard 360') > 0 && (srcCtrl2().match(/Mon regard 360/g) || []).length >= 3 && srcCtrl2().indexOf('pronostic Feedback 360') > 0);
 verifie('feedback 360 : chaque porte dépose au geste précis', srcCtrl2().indexOf('function allerFeedback(') > 0 && (srcCtrl2().match(/allerFeedback/g) || []).length >= 8 && srcCtrl2().indexOf("App.espTab('miroir')") < 0 && srcCtrl2().indexOf('espTab(&quot;miroir&quot;)') < 0);
@@ -308,7 +308,7 @@ verifie('terrain : le repli du plan varie ses pas et propose la relance', srcCtr
 verifie('terrain : le plan tient un seul gabarit et le parcours suit la charte', cssTxt2().indexOf('.plan-hero{max-width:100%') > 0 && cssTxt2().indexOf('linear-gradient(90deg,#5E59C7,#8884F0)') > 0);
 verifie('terrain : le halo de la carte des résultats reste décoratif, hors du flux', cssTxt2().indexOf('.esp-resultat .esp-res-glow{position:absolute;z-index:1;}') > 0 && cssTxt2().indexOf('linear-gradient(90deg,#F98272,#E8951A 40%') < 0);
 verifie('direction artistique : le personnage règne sur les deux heros et la famille teinte l\'espace', cssTxt2().indexOf('.espace-hero-perso{position:absolute;right:34px;bottom:-46px;top:auto;left:auto;width:min(280px,23vw)') > 0 && cssTxt2().indexOf('var(--fam,#5E59C7) 155%') > 0 && srcRes2().indexOf("carteP.id = 'r-hero-carte'") > 0 && srcCtrl2().indexOf("heroFam.style.setProperty('--fam'") > 0);
-verifie('direction artistique : chapitres numérotés, chapô et souffle éditorial', cssTxt2().indexOf('counter-reset:chapitre') > 0 && cssTxt2().indexOf('counter(chapitre,decimal-leading-zero)') > 0 && cssTxt2().indexOf('.r-ia > p:first-of-type{font-size:19px') > 0 && cssTxt2().indexOf('#screen-result .r-section-tag::before') > 0);
+verifie('direction artistique : chapitres numérotés, sections sans compteur (v142), chapô et souffle éditorial', cssTxt2().indexOf('counter-reset:chapitre') > 0 && cssTxt2().indexOf('counter(chapitre,decimal-leading-zero)') > 0 && cssTxt2().indexOf('.r-ia > p:first-of-type{font-size:19px') > 0 && cssTxt2().indexOf('#screen-result .r-section-tag::before') < 0);
 verifie('architecture : la navigation vit hors du hero, claire et collante', require('fs').readFileSync('index.html', 'utf8').indexOf('espace-hero-perso') < require('fs').readFileSync('index.html', 'utf8').indexOf('esp-nav') && cssTxt2().indexOf('.esp-nav{position:sticky;top:10px') > 0 && cssTxt2().indexOf('.esp-nav-b.on{background:#221D45') > 0);
 verifie('signature : le portrait habite aussi la carte des résultats et la rareté prend la scène', cssTxt2().indexOf('.esp-res-perso{flex-shrink:0;width:150px;margin:-30px') > 0 && cssTxt2().indexOf('.r-rare-num{font-size:64px') > 0);
 verifie('voix typographique : la display se charge et signe les titres majeurs', require('fs').readFileSync('index.html', 'utf8').indexOf('Bricolage+Grotesque') > 0 && cssTxt2().indexOf("--font-display:'Bricolage Grotesque'") > 0 && cssTxt2().indexOf('.espace-name{font-family:var(--font-display)') > 0 && cssTxt2().indexOf('.r-rare-num{font-family:var(--font-display)') > 0);
@@ -1020,7 +1020,44 @@ verifie('sparring : l\'entraînement vit dans l\'onglet Agir avec sa ligne éthi
   && srcCtrl2().indexOf('sparDebrief') > 0);
 verifie('preuve : les repères réels se posent au portrait via percentileTrait',
   srcRes2().indexOf('poserReperesReels') > 0 && srcRes2().indexOf('Engine.percentileTrait') > 0
-  && srcRes2().indexOf("d.n < (d.min_requis || 10)") > 0);
+  && srcRes2().indexOf("d.n < (d.min_requis || 200)") > 0);
+// ---- v141, lot A du volet 2 : la crédibilité de la restitution ----
+const srcRes3 = fs.readFileSync('result.js', 'utf8');
+verifie('dynamiques : le markdown passe par mdInline', srcRes3.indexOf('mdInline(String(d.desc') > 0 && srcRes3.indexOf('mdInline(String(d.titre') > 0);
+verifie('compétences : le nombre sort du référentiel, jamais en dur', srcRes3.indexOf('Seize comp') < 0 && srcRes3.indexOf("window.Competences.REFERENTIEL.length + ' comp") > 0);
+verifie('méta : dix-neuf compétences annoncées', fs.readFileSync('index.html', 'utf8').indexOf('vos dix-neuf compétences') > 0 && fs.readFileSync('index.html', 'utf8').indexOf('vos seize compétences') < 0);
+verifie('fiabilité : affichée comme cohérence des réponses', (srcRes3.match(/Cohérence de vos réponses/g) || []).length >= 2 && srcRes3.indexOf('Fiabilité de la mesure') < 0);
+verifie('repères réels : deux cents profils au moins', srcRes3.indexOf('d.min_requis || 200') > 0);
+verifie('pourcentages : virgule française et espace insécable', srcRes3.indexOf('function fmtPct') > 0 && srcRes3.indexOf('fmtPct(rar.pct)') > 0 && (function(){ const m = srcRes3.match(/function fmtPct\(p\)\{[^}]+\}/); if (!m) return false; let f; eval('f = ' + m[0].replace('function fmtPct', 'function')); return f(3.8) === '3,8\u00a0%'; })());
+verifie('rareté combinatoire : présentée comme théorique', srcRes3.indexOf('en th\\u00e9orie</em>') > 0);
+
+// ---- v142, lots B, C et D du volet 2 : lisibilite, accessibilite, valorisation ----
+const srcRes4 = fs.readFileSync('result.js', 'utf8');
+const cssTxt4 = fs.readFileSync('style.css', 'utf8');
+verifie('sommaire : le pilotage a son ancre et son entree', srcRes4.indexOf('id="b-pilotage"') > 0 && srcRes4.indexOf("href: 'b-pilotage'") > 0);
+verifie('sommaire : durees reelles calculees sur le texte rendu', srcRes4.indexOf('somm-min') > 0 && srcRes4.indexOf('/ 200)') > 0 && srcRes4.indexOf('r-duree-tot') > 0);
+verifie('lecture : la reprise se retient et se propose', srcRes4.indexOf("localStorage.setItem('sinea_reprise'") > 0 && srcRes4.indexOf('r-reprendre-btn') > 0);
+verifie('compteur : un seul, celui des chapitres', cssTxt4.indexOf('.r-section-tag::before') < 0 && cssTxt4.indexOf('.r-bloc-head .r-bloc-tag::before') > 0);
+verifie('doublon : les compatibilites ont quitte le portrait', srcRes4.indexOf('id="compat-bloc"') < 0 && srcRes4.indexOf('function htmlCompatibilites') > 0);
+verifie('validables : cases au clavier, role et etat', srcRes4.indexOf('role="checkbox"') > 0 && srcRes4.indexOf("aria-checked', validations[key]") > 0 && srcRes4.indexOf('onkeydown=') > 0);
+verifie('champs : chaque saisie porte son etiquette', srcRes4.indexOf('for="m3i-') > 0 && srcRes4.indexOf('for="qr-') > 0 && srcRes4.indexOf('aria-label="Votre réponse, optionnelle"') > 0);
+verifie('titres : les sections annoncent leur niveau', (srcRes4.match(/class="r-section-tag" role="heading" aria-level="3"/g) || []).length >= 50);
+verifie('pilotage : contrastes et palette au niveau', cssTxt4.indexOf('.dimc-opt{font-size:13px;font-weight:600;color:#6E6B7C') > 0 && cssTxt4.indexOf('.dimc-sel{background:#5E59C7') > 0);
+verifie('manageriale : la note de destinataire encadre le bloc', srcRes4.indexOf('r-prive-note') > 0);
+verifie('competences : la carte s\'ouvre sur grand ecran', srcRes4.indexOf("matchMedia('(min-width: 900px)').matches) det.open = true") > 0);
+verifie('cloture : avis et sortie sequences', srcRes4.indexOf('class="r-sortie"') > 0);
+verifie('forces : la consigne de selection guide le choix', srcRes4.indexOf('Cochez-en deux ou trois') > 0);
+
+// ---- v143 : spectres chiffres, chapitres branches, pages legales ----
+const srcRes5 = fs.readFileSync('result.js', 'utf8');
+const cssTxt5 = fs.readFileSync('style.css', 'utf8');
+verifie('spectres : la valeur chiffree accompagne le qualificatif', srcRes5.indexOf('<b class="spectre-val">${Math.round(val)}</b>') > 0);
+verifie('spectres : le marqueur est un trait, plus une poignee', cssTxt5.indexOf('.spectre-dot{position:absolute;top:50%;width:4px;height:18px') > 0 && cssTxt5.indexOf('border-radius:50%') === cssTxt5.lastIndexOf('border-radius:50%') || cssTxt5.indexOf('.spectre-dot{position:absolute;top:50%;width:4px') > 0);
+verifie('chapitres : la lecture par paliers est branchee au rendu', srcRes5.indexOf('poserChapitres()') > 0 && srcRes5.indexOf("CHAPITRES_PLIABLES = ['b-dims', 'b2', 'b3', 'b-spe']") > 0);
+verifie('legal : les deux pages existent et se repondent', fs.existsSync('mentions.html') && fs.existsSync('confidentialite.html') && fs.readFileSync('mentions.html', 'utf8').indexOf('confidentialite.html') > 0);
+verifie('legal : le pied de l\'espace pointe les vraies pages', fs.readFileSync('index.html', 'utf8').indexOf('href="mentions.html"') > 0 && fs.readFileSync('index.html', 'utf8').indexOf('href="confidentialite.html"') > 0);
+verifie('legal : le 360 informe sur l\'agregat et le seuil de trois', fs.readFileSync('confidentialite.html', 'utf8').indexOf('trois réponses') > 0);
+
 verifie('preuve : la page Méthode publie population et stabilité',
   fs.existsSync('methode.html')
   && fs.readFileSync('methode.html', 'utf8').indexOf('/api/normes') > 0
